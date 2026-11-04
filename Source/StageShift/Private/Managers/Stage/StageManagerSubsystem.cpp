@@ -21,6 +21,7 @@ bool UStageManagerSubsystem::SelectStage(const FGameplayTag& InStageTag)
 	{
 		CurrentStage = *Stage;
 		
+		/*@todo Make verify start StateTree Logic */
 		StateTreeComponent->SetStateTree(CurrentStage.StageStateTree);
 		StateTreeComponent->StartLogic();
 		
@@ -108,14 +109,17 @@ bool UStageManagerSubsystem::GetStageMemberData(const FGameplayTag& InMemberTag,
 	return false;
 }
 
-bool UStageManagerSubsystem::SetStageMemberData(const FStageMemberData& InMemberData)
+bool UStageManagerSubsystem::SetStageMemberState(const FGameplayTag& InMemberTag, const FGameplayTag& InMemberState)
 {
-	if (!CurrentStage.IsValid() || CurrentStage.StageMembers.IsEmpty() || !InMemberData.MemberTag.IsValid()) return false;
+	if (!CurrentStage.IsValid() || 
+		CurrentStage.StageMembers.IsEmpty() || 
+		!InMemberTag.IsValid() || 
+		!InMemberState.IsValid()) return false;
 	
-	if (auto MemberDataPtr = CurrentStage.StageMembers.FindByKey(InMemberData.MemberTag))
+	if (auto MemberDataPtr = CurrentStage.StageMembers.FindByKey(InMemberTag))
 	{
-		const bool bIsMemberStateChanged = MemberDataPtr->MemberState != InMemberData.MemberState;
-		*MemberDataPtr = InMemberData;
+		const bool bIsMemberStateChanged = MemberDataPtr->MemberState != InMemberState;
+		MemberDataPtr->MemberState = InMemberState;
 		
 		if (bIsMemberStateChanged) OnStageMemberStateChanged.Broadcast(*MemberDataPtr, MemberDataPtr->MemberState);
 		
@@ -125,9 +129,37 @@ bool UStageManagerSubsystem::SetStageMemberData(const FStageMemberData& InMember
 	return false;
 }
 
+bool UStageManagerSubsystem::SetStageMemberName(const FGameplayTag& InMemberTag, const FName& InMemberName)
+{
+	if (!CurrentStage.IsValid() || 
+		CurrentStage.StageMembers.IsEmpty() || 
+		!InMemberTag.IsValid() || 
+		InMemberName.IsNone()) return false;
+	
+	if (auto MemberDataPtr = CurrentStage.StageMembers.FindByKey(InMemberTag))
+	{
+		const bool bIsMemberNameChanged = MemberDataPtr->CurrentName != InMemberName;
+		MemberDataPtr->CurrentName = InMemberName;
+		
+		/* @todo Maybe make delegate OnStateMemberDataChanged
+		if (bIsMemberNameChanged) OnStageMemberStateChanged.Broadcast(*MemberDataPtr, MemberDataPtr->MemberState);*/
+		
+		return true;
+	}
+	
+	return false;
+}
+
 bool UStageManagerSubsystem::AddMember(const FStageMemberData& InMemberData)
 {
-	if (!InMemberData.MemberTag.IsValid() || !CurrentStage.IsValid()) return false;
+	if (!InMemberData.MemberTag.IsValid() || 
+		!CurrentStage.IsValid()) return false;
+	
+	if (!InMemberData.MemberActor.IsValid())
+	{
+		FFrame::KismetExecutionMessage(TEXT("AddMember: MemberActor must be valid"), ELogVerbosity::Error);
+		return false;
+	}
 	
 	if (CurrentStage.StageMembers.Contains(InMemberData)) return false;
 	

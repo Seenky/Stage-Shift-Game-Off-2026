@@ -80,8 +80,11 @@ public:
 		const FGameplayTag& InMemberTag, 
 		FStageMemberData& MemberData);
 	
-	UFUNCTION(BlueprintCallable, Category="StageManager|Member", meta=(AutoCreateRefTerm="InMemberData"))
-	bool SetStageMemberData(const FStageMemberData& InMemberData);
+	UFUNCTION(BlueprintCallable, Category="StageManager|Member", meta=(AutoCreateRefTerm="InMemberState, InMemberTag"))
+	bool SetStageMemberState(const FGameplayTag& InMemberTag, const FGameplayTag& InMemberState);
+	
+	UFUNCTION(BlueprintCallable, Category="StageManager|Member", meta=(AutoCreateRefTerm="InMemberName, InMemberTag"))
+	bool SetStageMemberName(const FGameplayTag& InMemberTag, const FName& InMemberName);
 	
 	UFUNCTION(BlueprintCallable, Category="StageManager|Member", meta=(AutoCreateRefTerm="InMemberData"))
 	bool AddMember(const FStageMemberData& InMemberData);
@@ -90,7 +93,7 @@ public:
 	bool RemoveMember(
 		UPARAM(meta=(Categories = "Stage.Member"))
 		const FGameplayTag& InMemberTag);
-	
+
 private:
 	
 	TObjectPtr<UStateTreeComponent> GetStateTreeComponentFromManager() const;

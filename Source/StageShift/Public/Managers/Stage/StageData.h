@@ -31,6 +31,9 @@ struct FStageMemberData
 	UPROPERTY(BlueprintReadWrite, meta=(Categories="Stage.MemberState"))
 	FGameplayTag MemberState = FGameplayTag::EmptyTag;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSoftObjectPtr<AActor> MemberActor = nullptr;
+	
 	bool operator==(const FStageMemberData& Other) const
 	{
 		return MemberTag == Other.MemberTag;
@@ -69,7 +72,7 @@ struct FStageData
 	FGameplayTag StageTag = FGameplayTag::EmptyTag;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FStageMemberData> StageMembers = {};
+	TArray<FStageMemberData> StageMembers;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UStateTree> StageStateTree = nullptr;
