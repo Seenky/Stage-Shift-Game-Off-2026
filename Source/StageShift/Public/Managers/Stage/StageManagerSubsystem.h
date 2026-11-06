@@ -98,7 +98,7 @@ private:
 	
 	TObjectPtr<UStateTreeComponent> GetStateTreeComponentFromManager() const;
 	void CheckStageManager();
-	bool SetStageStage(const EStageState& InStageState);
+	bool SetStageState(const EStageState& InStageState);
 	void FinishCurrentStage();
 	
 	/* Bindings */

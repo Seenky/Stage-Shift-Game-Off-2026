@@ -13,7 +13,7 @@ bool UStageManagerSubsystem::SelectStage(const FGameplayTag& InStageTag)
 	
 	if (!StateTreeComponent || 
 		!InStageTag.IsValid() || 
-		(CurrentStage.IsValid() && CurrentStage.StageState != EStageState::None)) 
+		CurrentStage.IsValid()) 
 		return false;
 	
 	const auto Stage = AvailableStages.FindByKey(InStageTag);
@@ -25,7 +25,7 @@ bool UStageManagerSubsystem::SelectStage(const FGameplayTag& InStageTag)
 		StateTreeComponent->SetStateTree(CurrentStage.StageStateTree);
 		StateTreeComponent->StartLogic();
 		
-		SetStageStage(EStageState::Active);
+		SetStageState(EStageState::Active);
 		OnStageStarted.Broadcast(CurrentStage);
 		return true;
 	}
@@ -37,14 +37,14 @@ bool UStageManagerSubsystem::RequestStopCurrentStage()
 {
 	if (!CurrentStage.IsValid() || CurrentStage.StageState != EStageState::Active) return false;
 	
-	return SetStageStage(EStageState::PendingToStop);
+	return SetStageState(EStageState::PendingToStop);
 }
 
 bool UStageManagerSubsystem::RequestFinishCurrentStage()
 {
 	if (!CurrentStage.IsValid() || CurrentStage.StageState != EStageState::Active) return false;
 	
-	return SetStageStage(EStageState::PendingToFinish);
+	return SetStageState(EStageState::PendingToFinish);
 }
 
 bool UStageManagerSubsystem::StopCurrentStage()
@@ -66,7 +66,7 @@ bool UStageManagerSubsystem::StopCurrentStage()
 	return true;
 }
 
-bool UStageManagerSubsystem::SetStageStage(const EStageState& InStageState)
+bool UStageManagerSubsystem::SetStageState(const EStageState& InStageState)
 {
 	if (!CurrentStage.IsValid() || CurrentStage.StageState == InStageState) return false;
 	
