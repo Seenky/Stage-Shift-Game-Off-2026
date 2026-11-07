@@ -3,9 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Animation/AnimNotifies/AnimNotify.h"
 #include "InteractionTypes.h"
 #include "Components/ActorComponent.h"
 #include "InteractionComponent.generated.h"
+
+class UAnimInstance;
+class UEnhancedInputComponent;
+class UInputAction;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class STAGESHIFT_API UInteractionComponent : public UActorComponent
@@ -14,6 +19,8 @@ class STAGESHIFT_API UInteractionComponent : public UActorComponent
 
 public:
 	UInteractionComponent();
+
+	void BindInput(UEnhancedInputComponent& Input, const UInputAction* Action);
 	
 	UFUNCTION(BlueprintCallable, Category = "Interaction Component")
 	EInteractionResult BeginInteraction(const FInteractionContext& InteractionContext, FInteractionPayload& OutPayload);
@@ -44,6 +51,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
+
+	// Keys come from the target's GetInteractionAnimationId implementation.
+	UPROPERTY(EditAnywhere, Category = "Interaction|Animation")
+	TMap<FName, FInteractionAnimation> Animations;
 	
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -60,6 +71,21 @@ private:
 	double PressStartTime = 0.0;
 	bool bDispatchingInteraction = false;
 	bool bEndingPlay = false;
+
+	TWeakObjectPtr<UAnimInstance> PlaybackInstance;
+	TWeakObjectPtr<UAnimMontage> PlayingMontage;
+	int32 ReleaseMontageId = INDEX_NONE;
+	float ReleasedHoldDuration = 0.0f;
+
+	void OnInputStarted();
+	void OnInputReleased();
+	const FInteractionAnimation* FindAnimation(const FInteractionPayload& Payload) const;
+	bool PlaySection(const FInteractionAnimation& Animation, FName Section);
+	void StopInteractionMontage();
+	void OnReleaseMontageEnded(UAnimMontage* Montage, bool bInterrupted, int32 InstanceId);
+
+	UFUNCTION()
+	void OnMontageNotify(FName Name, const FBranchingPointNotifyPayload& Payload);
 
 	bool FinishInteraction(bool bCancelled);
 	void ClearActiveInteraction();

@@ -58,6 +58,12 @@ EInteractionResult AStagePhysicsActor::OnInteraction_Implementation(const FInter
 	return InteractionType == EPhysicsInteractionType::Carry ? EInteractionResult::Latched : EInteractionResult::Active;
 }
 
+FName AStagePhysicsActor::GetInteractionAnimationId_Implementation() const
+{
+	static const FName CarryAnimationId(TEXT("Carry"));
+	return InteractionType == EPhysicsInteractionType::Carry ? CarryAnimationId : NAME_None;
+}
+
 void AStagePhysicsActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (UPhysicsManipulationComponent* Manipulator = ActiveManipulator.Get())

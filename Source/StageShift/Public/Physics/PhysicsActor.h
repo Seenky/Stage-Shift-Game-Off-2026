@@ -22,7 +22,11 @@ public:
 	//** IInteractionInterface
 	virtual bool CanInteract_Implementation(const FInteractionContext& InteractionContext) const override;
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& InteractionContext) override;
+	virtual FName GetInteractionAnimationId_Implementation() const override;
 	//** IInteractionInterface
+	
+	UFUNCTION(BlueprintPure)
+	EPhysicsInteractionType GetInteractionType() const { return InteractionType; }
 	
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

@@ -1,0 +1,79 @@
+#include "Animation/StageShiftAnimInstance.h"
+
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "KismetAnimationLibrary.h"
+
+namespace
+{
+	const FName SpeedDataCurve(TEXT("Speed_Data"));
+	const FName PlayRateCurve(TEXT("PlayRate"));
+	const FName GaitCurve(TEXT("Gait"));
+
+	constexpr float WalkStride = 0.5f;
+	constexpr float MinimumMovingSpeed = 1.0f;
+	constexpr float FootIKResponse = 12.0f;
+}
+
+void UStageShiftAnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+
+	GroundSpeed = 0.0f;
+	Direction = 0.0f;
+	Stride = 0.0f;
+	Gait = 0.0f;
+	PlayRate = 1.0f;
+	FootIKAlpha = 0.0f;
+}
+
+void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	const APawn* Pawn = TryGetPawnOwner();
+	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
+	GroundSpeed = Velocity.Size2D();
+
+	// Speed_Data is baked at unit mesh scale. Compare against movement in the same units.
+	const USkeletalMeshComponent* Mesh = GetOwningComponent();
+	const FVector PlanarVelocity(Velocity.X, Velocity.Y, 0.0);
+	const float MeshSpaceSpeed = Mesh
+		? Mesh->GetComponentTransform().InverseTransformVector(PlanarVelocity).Size()
+		: GroundSpeed;
+
+	Direction = 0.0f;
+	Stride = 0.0f;
+	if (Pawn && GroundSpeed >= MinimumMovingSpeed)
+	{
+		const FRotator Facing(0.0, Pawn->GetActorRotation().Yaw, 0.0);
+		Direction = UKismetAnimationLibrary::CalculateDirection(PlanarVelocity, Facing);
+
+		const float AbsDirection = FMath::Abs(Direction);
+		const bool bFront = AbsDirection <= 90.0f;
+		const FStageShiftGaitSpeeds& From = bFront ? ForwardSpeeds : SideSpeeds;
+		const FStageShiftGaitSpeeds& To = bFront ? SideSpeeds : BackwardSpeeds;
+		const float DirectionAlpha = (bFront ? AbsDirection : AbsDirection - 90.0f) / 90.0f;
+		const float WalkSpeed = FMath::Max(FMath::Lerp(From.Walk, To.Walk, DirectionAlpha), MinimumMovingSpeed);
+		const float RunSpeed = FMath::Max(FMath::Lerp(From.Run, To.Run, DirectionAlpha), WalkSpeed + 1.0f);
+
+		Stride = MeshSpaceSpeed <= WalkSpeed
+			? WalkStride * MeshSpaceSpeed / WalkSpeed
+			: FMath::GetMappedRangeValueClamped(FVector2f(WalkSpeed, RunSpeed), FVector2f(WalkStride, 1.0f), MeshSpaceSpeed);
+	}
+
+	// These curves come from the last evaluated pose. Only playback speed feeds back into the graph.
+	GetCurveValueWithDefault(GaitCurve, Stride * 2.0f, Gait);
+	float SourceRate = 1.0f;
+	GetCurveValueWithDefault(PlayRateCurve, 1.0f, SourceRate);
+	const float ReferenceSpeed = GetCurveValue(SpeedDataCurve) * FMath::Abs(SourceRate);
+	const float TargetPlayRate = GroundSpeed >= MinimumMovingSpeed && ReferenceSpeed >= MinimumMovingSpeed
+		? FMath::Clamp(MeshSpaceSpeed / ReferenceSpeed, MinPlayRate, FMath::Max(MinPlayRate, MaxPlayRate))
+		: 1.0f;
+	PlayRate = FMath::FInterpTo(PlayRate, TargetPlayRate, DeltaSeconds, PlayRateResponse);
+
+	const ACharacter* Character = Cast<ACharacter>(Pawn);
+	const bool bGrounded = Character && Character->GetCharacterMovement()->IsMovingOnGround();
+	FootIKAlpha = FMath::FInterpTo(FootIKAlpha, bEnableFootIK && bGrounded ? 1.0f : 0.0f, DeltaSeconds, FootIKResponse);
+}

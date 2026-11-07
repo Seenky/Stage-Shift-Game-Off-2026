@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class UPhysicalMontageComponent;
 class UInputAction;
 class UInputMappingContext;
 class UInteractionComponent;
@@ -25,6 +26,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void UnPossessed() override;
 	
+	virtual void Tick(float DeltaSeconds) override;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> MappingContext = nullptr;
 	
@@ -37,6 +40,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpInputAction = nullptr;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> SprintInputAction = nullptr;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UInteractionComponent> InteractionComponent = nullptr;
 
@@ -44,11 +50,26 @@ protected:
 	TObjectPtr<UPhysicsManipulationComponent> PhysicsManipulationComponent = nullptr;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPhysicalMontageComponent> PhysicalMontageComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<USceneComponent> CarryPoint = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
 	FName CarrySocketName = TEXT("hand_r");
-
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta=(ClampMin = 0.0f, UIMin = 0.0f))
+	float MovementBlendSpeed = 10.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float WalkSpeed = 150.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float SprintSpeed = 500.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float JumpLaunchSpeed = 500.0f;
+	
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -57,8 +78,10 @@ private:
 	void OnMovementInput(const FInputActionInstance& Instance);
 	
 	UFUNCTION()
-	void OnInteractionInput(const FInputActionInstance& Instance);
+	void OnJumpInput(const FInputActionInstance& Instance);
 	
 	UFUNCTION()
-	void OnJumpInput(const FInputActionInstance& Instance);
+	void OnSprintInput(const FInputActionInstance& Instance);
+	
+	float TargetSpeed = 0.0f;
 };

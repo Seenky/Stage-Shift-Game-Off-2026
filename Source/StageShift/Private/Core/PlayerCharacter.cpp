@@ -7,6 +7,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/Physics/PhysicalMontageComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 
@@ -17,6 +19,7 @@ APlayerCharacter::APlayerCharacter()
 	
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>("Interaction Component");
 	PhysicsManipulationComponent = CreateDefaultSubobject<UPhysicsManipulationComponent>("Physics Manipulation Component");
+	PhysicalMontageComponent = CreateDefaultSubobject<UPhysicalMontageComponent>("Physical Montage Component");
 	CarryPoint = CreateDefaultSubobject<USceneComponent>("Carry Point");
 	CarryPoint->SetupAttachment(GetRootComponent());
 	CarryPoint->SetRelativeLocation(FVector(75.0, 0.0, 25.0));
@@ -26,6 +29,9 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	TargetSpeed = WalkSpeed;
+	
 	PhysicsManipulationComponent->SetCarryPoint(CarryPoint);
 	if (!CarrySocketName.IsNone() && GetMesh()->DoesSocketExist(CarrySocketName))
 	{
@@ -52,6 +58,15 @@ void APlayerCharacter::UnPossessed()
 	Super::UnPossessed();
 }
 
+void APlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	if (!GetCharacterMovement()) return;
+	
+	GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->MaxWalkSpeed, TargetSpeed, DeltaSeconds, MovementBlendSpeed);
+}
+
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -64,16 +79,18 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		Input->BindAction(MoveInputAction, ETriggerEvent::Triggered, this, &ThisClass::OnMovementInput);
 	}
 	
-	if (InteractInputAction)
-	{
-		Input->BindAction(InteractInputAction, ETriggerEvent::Started, this, &ThisClass::OnInteractionInput);
-		Input->BindAction(InteractInputAction, ETriggerEvent::Completed, this, &ThisClass::OnInteractionInput);
-		Input->BindAction(InteractInputAction, ETriggerEvent::Canceled, this, &ThisClass::OnInteractionInput);
-	}
-	
+	InteractionComponent->BindInput(*Input, InteractInputAction);
+
 	if (JumpInputAction)
 	{
 		Input->BindAction(JumpInputAction, ETriggerEvent::Started, this, &ThisClass::OnJumpInput);
+	}
+	
+	if (SprintInputAction)
+	{
+		Input->BindAction(SprintInputAction, ETriggerEvent::Started, this, &ThisClass::OnSprintInput);
+		Input->BindAction(SprintInputAction, ETriggerEvent::Completed, this, &ThisClass::OnSprintInput);
+		Input->BindAction(SprintInputAction, ETriggerEvent::Canceled, this, &ThisClass::OnSprintInput);
 	}
 }
 
@@ -95,31 +112,24 @@ void APlayerCharacter::OnMovementInput(const FInputActionInstance& Instance)
 	AddMovementInput(Right, Axis.Y);
 }
 
-void APlayerCharacter::OnInteractionInput(const FInputActionInstance& Instance)
-{
-	switch (Instance.GetTriggerEvent())
-	{
-	case ETriggerEvent::Started:
-		{
-			FInteractionPayload Payload;
-			InteractionComponent->BeginInteraction(FInteractionContext(), Payload);
-			break;
-		}
-	case ETriggerEvent::Canceled:
-		{
-			InteractionComponent->CancelInteraction();
-			break;
-		}
-	case ETriggerEvent::Completed:
-		{
-			InteractionComponent->EndInteraction();
-			break;
-		}
-	default: return;
-	}
-}
-
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)
 {
+	if (!GetCharacterMovement()->IsMovingOnGround() || PhysicalMontageComponent->IsPhysicsMontageActive()) return;
+
+	const FVector LaunchVelocity = GetActorForwardVector() * JumpLaunchSpeed + GetActorUpVector() * (0.25f * JumpLaunchSpeed);
+	LaunchCharacter(LaunchVelocity, false, false);
+	PhysicalMontageComponent->StartPhysicsMontage(TEXT("Jump"));
+}
+
+void APlayerCharacter::OnSprintInput(const FInputActionInstance& Instance)
+{
+	if (Instance.GetTriggerEvent() == ETriggerEvent::Started)
+	{
+		TargetSpeed = SprintSpeed;
+	}
+	else if (Instance.GetTriggerEvent() == ETriggerEvent::Completed || Instance.GetTriggerEvent() == ETriggerEvent::Canceled)
+	{
+		TargetSpeed = WalkSpeed;
+	}
 }
 
