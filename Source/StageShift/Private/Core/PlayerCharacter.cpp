@@ -5,10 +5,12 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/CollisionProfile.h"
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 
@@ -16,6 +18,9 @@
 APlayerCharacter::APlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	ConfigureMovementCollision();
+	GetCharacterMovement()->InitialPushForceFactor = 75.0f;
+	GetCharacterMovement()->PushForceFactor = 3000.0f;
 	
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>("Interaction Component");
 	PhysicsManipulationComponent = CreateDefaultSubobject<UPhysicsManipulationComponent>("Physics Manipulation Component");
@@ -26,8 +31,24 @@ APlayerCharacter::APlayerCharacter()
 	PhysicsManipulationComponent->SetCarryPoint(CarryPoint);
 }
 
+void APlayerCharacter::ConfigureMovementCollision()
+{
+	UCapsuleComponent* Capsule = GetCapsuleComponent();
+	Capsule->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
+	Capsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	Capsule->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Block);
+
+	USkeletalMeshComponent* Mesh = GetMesh();
+	Mesh->SetCollisionProfileName(TEXT("CharacterMesh"));
+	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	Mesh->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+
+	GetCharacterMovement()->bEnablePhysicsInteraction = true;
+}
+
 void APlayerCharacter::BeginPlay()
 {
+	ConfigureMovementCollision();
 	Super::BeginPlay();
 	
 	TargetSpeed = WalkSpeed;
@@ -61,6 +82,12 @@ void APlayerCharacter::UnPossessed()
 void APlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	if (bStumblePending)
+	{
+		bStumblePending = false;
+		PhysicalMontageComponent->StartPhysicsMontage(TEXT("Fall"));
+	}
 	
 	if (!GetCharacterMovement()) return;
 	
@@ -131,5 +158,28 @@ void APlayerCharacter::OnSprintInput(const FInputActionInstance& Instance)
 	{
 		TargetSpeed = WalkSpeed;
 	}
+}
+
+void APlayerCharacter::MoveBlockedBy(const FHitResult& Impact)
+{
+	Super::MoveBlockedBy(Impact);
+
+	if (bStumblePending || PhysicalMontageComponent->IsPhysicsMontageActive() ||
+		!GetCharacterMovement()->IsMovingOnGround() || !Impact.IsValidBlockingHit()) return;
+
+	const UPrimitiveComponent* Obstacle = Impact.GetComponent();
+	if (!Obstacle || Obstacle == PhysicsManipulationComponent->GetManipulatedComponent() ||
+		!Obstacle->IsSimulatingPhysics(Impact.BoneName)) return;
+
+	const FVector Velocity = GetVelocity();
+	if (Velocity.SizeSquared2D() < FMath::Square(150.0)) return;
+
+	const FVector ToHit = (Impact.ImpactPoint - GetActorLocation()).GetSafeNormal2D();
+	if (FVector::DotProduct(Velocity.GetSafeNormal2D(), ToHit) < 0.45) return;
+
+	const float KneeZ = FMath::Min(GetMesh()->GetSocketLocation(TEXT("calf_l")).Z, GetMesh()->GetSocketLocation(TEXT("calf_r")).Z);
+	if (Obstacle->Bounds.GetBox().Max.Z > KneeZ - 5.0f || Impact.ImpactPoint.Z > KneeZ) return;
+	
+	bStumblePending = true;
 }
 

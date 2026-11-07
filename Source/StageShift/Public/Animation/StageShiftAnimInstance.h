@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Animation/AnimInstance.h"
+#include "Animation/PoseSnapshot.h"
 #include "StageShiftAnimInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -23,6 +24,14 @@ class STAGESHIFT_API UStageShiftAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	bool BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime);
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Recovery")
+	FPoseSnapshot RecoveryPose;
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Recovery")
+	float RecoveryPoseAlpha = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly, Transient, Category = "Locomotion")
 	float GroundSpeed = 0.0f;
@@ -63,4 +72,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Play Rate", meta = (ClampMin = "0.0"))
 	float PlayRateResponse = 10.0f;
+
+private:
+	float RecoveryBlendTime = 0.0f;
+	float RecoveryBlendElapsed = 0.0f;
 };

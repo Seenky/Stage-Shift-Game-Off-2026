@@ -20,7 +20,7 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void StartPhysicsMontage(FName MontageName);
-	bool IsPhysicsMontageActive() const { return bMeshCollisionSaved; }
+	bool IsPhysicsMontageActive() const { return bMeshCollisionSaved || bIsRecovering; }
 
 	UFUNCTION(BlueprintCallable)
 	void ActivatePhysics(FName MontageName);
@@ -48,18 +48,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.1, UIMin = 0.1))
 	float TimeToRecovery = 1.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = "0.0", Units = "s"))
+	float RecoveryPoseBlendTime = 0.28f;
+
 private:
 	bool PreparePhysics(FName MontageName);
 	void RestoreMeshCollision();
+	void OnRecoveryMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	FTimerHandle ActivationTimerHandle;
 	FTimerHandle RecoveryTimerHandle;
 	FTransform MeshRelativeTransform;
 	FCollisionResponseContainer CurrentCollisionResponses;
 	TEnumAsByte<ECollisionChannel> CurrentCollisionObjectType = ECC_Pawn;
+	ECollisionResponse SavedCapsulePhysicsBodyResponse = ECR_Ignore;
 	float SavedStrength = 1.0f;
 	bool bMeshCollisionSaved = false;
 	FName CurrentCollisionProfile = TEXT("");
 	TEnumAsByte<ECollisionEnabled::Type> CurrentCollisionEnabled = ECollisionEnabled::NoCollision;
 	bool bIsSimActive = false;
+	bool bIsRecovering = false;
 };

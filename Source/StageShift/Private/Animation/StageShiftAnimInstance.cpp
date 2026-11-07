@@ -26,17 +26,44 @@ void UStageShiftAnimInstance::NativeInitializeAnimation()
 	Gait = 0.0f;
 	PlayRate = 1.0f;
 	FootIKAlpha = 0.0f;
+	RecoveryPose.Reset();
+	RecoveryPoseAlpha = 0.0f;
+	RecoveryBlendTime = 0.0f;
+	RecoveryBlendElapsed = 0.0f;
+}
+
+bool UStageShiftAnimInstance::BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime)
+{
+	const USkeletalMeshComponent* Mesh = GetOwningComponent();
+	if (!Mesh || !Pose.bIsValid || Pose.LocalTransforms.IsEmpty() || BlendTime <= 0.0f)
+	{
+		RecoveryPoseAlpha = 0.0f;
+		return false;
+	}
+	
+	const FTransform OldToNewMesh = PreviousMeshTransform.GetRelativeTransform(Mesh->GetComponentTransform());
+	Pose.LocalTransforms[0] = Pose.LocalTransforms[0] * OldToNewMesh;
+	RecoveryPose = MoveTemp(Pose);
+	RecoveryPoseAlpha = 1.0f;
+	RecoveryBlendTime = BlendTime;
+	RecoveryBlendElapsed = 0.0f;
+	return true;
 }
 
 void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
+	if (RecoveryPoseAlpha > 0.0f)
+	{
+		RecoveryBlendElapsed += DeltaSeconds;
+		RecoveryPoseAlpha = 1.0f - FMath::SmoothStep(0.0f, RecoveryBlendTime, RecoveryBlendElapsed);
+	}
+
 	const APawn* Pawn = TryGetPawnOwner();
 	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
 	GroundSpeed = Velocity.Size2D();
-
-	// Speed_Data is baked at unit mesh scale. Compare against movement in the same units.
+	
 	const USkeletalMeshComponent* Mesh = GetOwningComponent();
 	const FVector PlanarVelocity(Velocity.X, Velocity.Y, 0.0);
 	const float MeshSpaceSpeed = Mesh
@@ -62,8 +89,7 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			? WalkStride * MeshSpaceSpeed / WalkSpeed
 			: FMath::GetMappedRangeValueClamped(FVector2f(WalkSpeed, RunSpeed), FVector2f(WalkStride, 1.0f), MeshSpaceSpeed);
 	}
-
-	// These curves come from the last evaluated pose. Only playback speed feeds back into the graph.
+	
 	GetCurveValueWithDefault(GaitCurve, Stride * 2.0f, Gait);
 	float SourceRate = 1.0f;
 	GetCurveValueWithDefault(PlayRateCurve, 1.0f, SourceRate);
@@ -75,5 +101,5 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	const ACharacter* Character = Cast<ACharacter>(Pawn);
 	const bool bGrounded = Character && Character->GetCharacterMovement()->IsMovingOnGround();
-	FootIKAlpha = FMath::FInterpTo(FootIKAlpha, bEnableFootIK && bGrounded ? 1.0f : 0.0f, DeltaSeconds, FootIKResponse);
+	FootIKAlpha = FMath::FInterpTo(FootIKAlpha, bEnableFootIK && bGrounded && RecoveryPoseAlpha <= 0.0f ? 1.0f : 0.0f, DeltaSeconds, FootIKResponse);
 }

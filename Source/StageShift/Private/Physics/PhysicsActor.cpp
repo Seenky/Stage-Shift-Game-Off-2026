@@ -11,6 +11,7 @@ AStagePhysicsActor::AStagePhysicsActor()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	GetStaticMeshComponent()->SetCollisionProfileName(TEXT("PhysicsActor"));
+	GetStaticMeshComponent()->CanCharacterStepUpOn = ECB_No;
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
 	SetMobility(EComponentMobility::Movable);
 }

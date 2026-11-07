@@ -27,6 +27,7 @@ protected:
 	virtual void UnPossessed() override;
 	
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void MoveBlockedBy(const FHitResult& Impact) override;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> MappingContext = nullptr;
@@ -58,6 +59,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
 	FName CarrySocketName = TEXT("hand_r");
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+	TSet<FName> HitBoneNames = {};
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement", meta=(ClampMin = 0.0f, UIMin = 0.0f))
 	float MovementBlendSpeed = 10.0f;
 	
@@ -74,6 +78,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 private:
+	void ConfigureMovementCollision();
+
 	UFUNCTION()
 	void OnMovementInput(const FInputActionInstance& Instance);
 	
@@ -84,4 +90,5 @@ private:
 	void OnSprintInput(const FInputActionInstance& Instance);
 	
 	float TargetSpeed = 0.0f;
+	bool bStumblePending = false;
 };
