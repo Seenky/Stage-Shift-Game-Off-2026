@@ -21,6 +21,7 @@ APlayerCharacter::APlayerCharacter()
 	ConfigureMovementCollision();
 	GetCharacterMovement()->InitialPushForceFactor = 75.0f;
 	GetCharacterMovement()->PushForceFactor = 3000.0f;
+	GetCharacterMovement()->StandingDownwardForceScale = 0.0f;
 	
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>("Interaction Component");
 	PhysicsManipulationComponent = CreateDefaultSubobject<UPhysicsManipulationComponent>("Physics Manipulation Component");
@@ -38,10 +39,10 @@ void APlayerCharacter::ConfigureMovementCollision()
 	Capsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	Capsule->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Block);
 
-	USkeletalMeshComponent* Mesh = GetMesh();
-	Mesh->SetCollisionProfileName(TEXT("CharacterMesh"));
-	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	Mesh->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+	MeshComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	MeshComponent->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
 
 	GetCharacterMovement()->bEnablePhysicsInteraction = true;
 }

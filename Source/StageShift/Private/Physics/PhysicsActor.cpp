@@ -11,9 +11,22 @@ AStagePhysicsActor::AStagePhysicsActor()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	GetStaticMeshComponent()->SetCollisionProfileName(TEXT("PhysicsActor"));
-	GetStaticMeshComponent()->CanCharacterStepUpOn = ECB_No;
+	ConfigureCharacterContact();
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
 	SetMobility(EComponentMobility::Movable);
+}
+
+void AStagePhysicsActor::BeginPlay()
+{
+	ConfigureCharacterContact();
+	Super::BeginPlay();
+}
+
+void AStagePhysicsActor::ConfigureCharacterContact()
+{
+	UStaticMeshComponent* MeshComponent = GetStaticMeshComponent();
+	MeshComponent->CanCharacterStepUpOn = ECB_No;
+	MeshComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.0f));
 }
 
 bool AStagePhysicsActor::CanInteract_Implementation(const FInteractionContext& InteractionContext) const

@@ -29,12 +29,15 @@ public:
 	EPhysicsInteractionType GetInteractionType() const { return InteractionType; }
 	
 protected:
+	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	EPhysicsInteractionType InteractionType = EPhysicsInteractionType::None;
 
 private:
+	void ConfigureCharacterContact();
+
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;
 };

@@ -116,6 +116,7 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	if (!bMeshCollisionSaved && !PreparePhysics(MontageName)) return;
 
 	GetWorld()->GetTimerManager().ClearTimer(ActivationTimerHandle);
+	Mesh->HandleExistingParallelEvaluationTask(true, true);
 	Mesh->SetCollisionProfileName(RagdollProfile);
 	Mesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	const FBodyInstance* Pelvis = Mesh->GetBodyInstance(PelvisBone);
@@ -139,6 +140,8 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	Movement->DisableMovement();
 
 	SetStrengthMultiplyer(0.0f);
+	Mesh->UpdateKinematicBonesToAnim(Mesh->GetComponentSpaceTransforms(), ETeleportType::TeleportPhysics,
+		false, EAllowKinematicDeferral::DisallowDeferral);
 	Mesh->SetAllBodiesBelowSimulatePhysics(PelvisBone, true, true);
 	Mesh->SetAllBodiesBelowPhysicsBlendWeight(PelvisBone, 1.0f);
 	Mesh->SetAllPhysicsLinearVelocity(InitialVelocity);
