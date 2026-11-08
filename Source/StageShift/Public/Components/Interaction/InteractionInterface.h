@@ -26,4 +26,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	EInteractionResult OnInteraction(const FInteractionContext& InteractionContext);
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& InteractionContext);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	FName GetInteractionAnimationId() const;
+	virtual FName GetInteractionAnimationId_Implementation() const;
 };

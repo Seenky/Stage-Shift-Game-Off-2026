@@ -3,9 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/TimerHandle.h"
 #include "InteractionTypes.h"
 #include "Components/ActorComponent.h"
 #include "InteractionComponent.generated.h"
+
+class UAnimInstance;
+class UEnhancedInputComponent;
+class UInputAction;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class STAGESHIFT_API UInteractionComponent : public UActorComponent
@@ -14,6 +19,8 @@ class STAGESHIFT_API UInteractionComponent : public UActorComponent
 
 public:
 	UInteractionComponent();
+
+	void BindInput(UEnhancedInputComponent& Input, const UInputAction* Action);
 	
 	UFUNCTION(BlueprintCallable, Category = "Interaction Component")
 	EInteractionResult BeginInteraction(const FInteractionContext& InteractionContext, FInteractionPayload& OutPayload);
@@ -29,6 +36,11 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Interaction Component")
 	bool HasActiveInteraction() const { return ActiveInteraction.IsValid(); }
+
+	bool IsPreparingRelease() const { return HasActiveInteraction() && ActiveResult == EInteractionResult::Active && ReleaseMontageId == INDEX_NONE; }
+	bool IsPlayingReleaseAnimation() const;
+
+	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
 	
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -45,6 +57,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	bool bDebug = false;
+
+	// Keys come from the target's GetInteractionAnimationId implementation.
+	UPROPERTY(EditAnywhere, Category = "Interaction|Animation")
+	TMap<FName, FInteractionAnimation> Animations;
+	
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
@@ -60,6 +79,22 @@ private:
 	double PressStartTime = 0.0;
 	bool bDispatchingInteraction = false;
 	bool bEndingPlay = false;
+
+	TWeakObjectPtr<UAnimInstance> PlaybackInstance;
+	TWeakObjectPtr<UAnimMontage> PlayingMontage;
+	int32 ReleaseMontageId = INDEX_NONE;
+	float ReleasedHoldDuration = 0.0f;
+	FTimerHandle ReleaseTimer;
+	FName ReleaseSectionName;
+
+	void OnInputStarted();
+	void OnInputReleased();
+	const FInteractionAnimation* FindAnimation(const FInteractionPayload& Payload) const;
+	bool PlaySection(const FInteractionAnimation& Animation, FName Section);
+	void StopInteractionMontage();
+	void OnReleaseMontageEnded(UAnimMontage* Montage, bool bInterrupted, int32 InstanceId);
+
+	void CommitRelease();
 
 	bool FinishInteraction(bool bCancelled);
 	void ClearActiveInteraction();

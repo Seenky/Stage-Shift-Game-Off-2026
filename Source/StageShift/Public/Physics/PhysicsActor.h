@@ -22,15 +22,22 @@ public:
 	//** IInteractionInterface
 	virtual bool CanInteract_Implementation(const FInteractionContext& InteractionContext) const override;
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& InteractionContext) override;
+	virtual FName GetInteractionAnimationId_Implementation() const override;
 	//** IInteractionInterface
 	
+	UFUNCTION(BlueprintPure)
+	EPhysicsInteractionType GetInteractionType() const { return InteractionType; }
+	
 protected:
+	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	EPhysicsInteractionType InteractionType = EPhysicsInteractionType::None;
 
 private:
+	void ConfigureCharacterContact();
+
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;
 };

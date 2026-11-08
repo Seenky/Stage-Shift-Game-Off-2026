@@ -7,6 +7,8 @@
 #include "GameplayTagContainer.h"
 #include "InteractionTypes.generated.h"
 
+class UAnimMontage;
+
 UENUM(BlueprintType)
 enum class EInteractionPhase : uint8
 {
@@ -68,4 +70,26 @@ struct STAGESHIFT_API FInteractionPayload
 		InteractedActor.Reset();
 		InteractedComponent.Reset();
 	}
+};
+
+USTRUCT(BlueprintType)
+struct STAGESHIFT_API FInteractionAnimation
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UAnimMontage> Montage = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	FName StartSection;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	FName ResumeSection;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	FName ReleaseSection;
+
+	// Seconds from the start of ReleaseSection to applying the interaction result.
+	UPROPERTY(EditAnywhere, Category = "Animation", meta = (ClampMin = "0.0", Units = "s"))
+	float ReleaseDelay = 0.12f;
 };

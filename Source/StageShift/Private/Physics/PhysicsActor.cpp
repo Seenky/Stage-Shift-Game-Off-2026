@@ -11,8 +11,22 @@ AStagePhysicsActor::AStagePhysicsActor()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	GetStaticMeshComponent()->SetCollisionProfileName(TEXT("PhysicsActor"));
+	ConfigureCharacterContact();
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
 	SetMobility(EComponentMobility::Movable);
+}
+
+void AStagePhysicsActor::BeginPlay()
+{
+	ConfigureCharacterContact();
+	Super::BeginPlay();
+}
+
+void AStagePhysicsActor::ConfigureCharacterContact()
+{
+	UStaticMeshComponent* MeshComponent = GetStaticMeshComponent();
+	MeshComponent->CanCharacterStepUpOn = ECB_No;
+	MeshComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.0f));
 }
 
 bool AStagePhysicsActor::CanInteract_Implementation(const FInteractionContext& InteractionContext) const
@@ -56,6 +70,12 @@ EInteractionResult AStagePhysicsActor::OnInteraction_Implementation(const FInter
 	
 	ActiveManipulator = Manipulator;
 	return InteractionType == EPhysicsInteractionType::Carry ? EInteractionResult::Latched : EInteractionResult::Active;
+}
+
+FName AStagePhysicsActor::GetInteractionAnimationId_Implementation() const
+{
+	static const FName CarryAnimationId(TEXT("Carry"));
+	return InteractionType == EPhysicsInteractionType::Carry ? CarryAnimationId : NAME_None;
 }
 
 void AStagePhysicsActor::EndPlay(const EEndPlayReason::Type EndPlayReason)

@@ -13,3 +13,8 @@ EInteractionResult IInteractionInterface::OnInteraction_Implementation(const FIn
 {
 	return EInteractionResult::Rejected;
 }
+
+FName IInteractionInterface::GetInteractionAnimationId_Implementation() const
+{
+	return NAME_None;
+}
