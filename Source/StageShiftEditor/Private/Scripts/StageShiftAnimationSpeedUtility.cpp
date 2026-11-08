@@ -46,7 +46,7 @@ namespace
 		return Sample;
 	}
 
-	TArray<double> GetStanceSpeeds(TConstArrayView<FVector> AnklePositions, const FVector& Forward, double SecondsPerFrame)
+	TArray<double> GetStanceSpeeds(TConstArrayView<FVector> AnklePositions, TConstArrayView<float> Contacts, const FVector& Forward, double SecondsPerFrame)
 	{
 		if (AnklePositions.Num() < 2)
 		{
@@ -67,7 +67,10 @@ namespace
 		{
 			const FVector& Previous = AnklePositions[Index - 1];
 			const FVector& Current = AnklePositions[Index];
-			if ((Previous.Z + Current.Z) * 0.5 <= ContactHeight)
+			const bool bContact = Contacts.Num() == AnklePositions.Num()
+				? FMath::Min(Contacts[Index - 1], Contacts[Index]) >= 0.95f
+				: (Previous.Z + Current.Z) * 0.5 <= ContactHeight;
+			if (bContact)
 			{
 				const double Speed = FVector::DotProduct(Previous - Current, Forward) / SecondsPerFrame;
 				if (Speed >= 1.0)
@@ -83,6 +86,7 @@ namespace
 	{
 		TArray<FVector> Ankles;
 		TArray<double> Heights;
+		TArray<float> Contacts;
 	};
 
 	double SampleFeet(const UAnimSequence& Animation, const FReferenceSkeleton& Skeleton, FFootSamples (&Samples)[2])
@@ -93,6 +97,10 @@ namespace
 		const bool bHasFoot[] = {Skeleton.FindBoneIndex(Feet[0]) != INDEX_NONE, Skeleton.FindBoneIndex(Feet[1]) != INDEX_NONE};
 		const bool bHasBall[] = {Skeleton.FindBoneIndex(Balls[0]) != INDEX_NONE, Skeleton.FindBoneIndex(Balls[1]) != INDEX_NONE};
 		const int32 NumFrames = Animation.GetNumberOfSampledKeys();
+		const IAnimationDataModel* Model = Animation.GetDataModel();
+		const FFloatCurve* ContactCurves[] = {
+			Model->FindFloatCurve(FAnimationCurveIdentifier(TEXT("FootPlant_L"), ERawCurveTrackTypes::RCT_Float)),
+			Model->FindFloatCurve(FAnimationCurveIdentifier(TEXT("FootPlant_R"), ERawCurveTrackTypes::RCT_Float))};
 		FAnimPoseEvaluationOptions Options;
 		Options.bShouldRetarget = false;
 		Options.bEvaluateCurves = false;
@@ -102,7 +110,8 @@ namespace
 		for (int32 Frame = 0; Frame < NumFrames; ++Frame)
 		{
 			FAnimPose Pose;
-			UAnimPoseExtensions::GetAnimPoseAtFrame(&Animation, Frame, Options, Pose);
+			// Source and compressed sampling rates can differ after editing a clip.
+			UAnimPoseExtensions::GetAnimPoseAtTime(&Animation, Animation.GetPlayLength() * Frame / (NumFrames - 1), Options, Pose);
 			const FVector CurrentRoot = UAnimPoseExtensions::GetBonePose(Pose, Root, EAnimPoseSpaces::World).GetTranslation();
 			if (Frame > 0)
 			{
@@ -120,6 +129,7 @@ namespace
 						: Ankle.Z;
 					Samples[Side].Ankles.Add(Ankle);
 					Samples[Side].Heights.Add(ToeHeight - CurrentRoot.Z);
+					if (ContactCurves[Side]) Samples[Side].Contacts.Add(ContactCurves[Side]->FloatCurve.Eval(Animation.GetPlayLength() * Frame / (NumFrames - 1)));
 				}
 			}
 		}
@@ -139,8 +149,8 @@ namespace
 			return 0.0;
 		}
 		const double SecondsPerFrame = Duration / (NumFrames - 1);
-		TArray<double> Speeds = GetStanceSpeeds(Samples[0].Ankles, Forward, SecondsPerFrame);
-		Speeds.Append(GetStanceSpeeds(Samples[1].Ankles, Forward, SecondsPerFrame));
+		TArray<double> Speeds = GetStanceSpeeds(Samples[0].Ankles, Samples[0].Contacts, Forward, SecondsPerFrame);
+		Speeds.Append(GetStanceSpeeds(Samples[1].Ankles, Samples[1].Contacts, Forward, SecondsPerFrame));
 		if (Speeds.IsEmpty())
 		{
 			return 0.0;
@@ -248,6 +258,8 @@ namespace
 			const FName CurveNames[] = {TEXT("FootPlant_L"), TEXT("FootPlant_R")};
 			for (int32 Side = 0; Side < 2; ++Side)
 			{
+				// Speed baking preserves authored contacts; BakeFootPlant explicitly regenerates them.
+				if (!bContactsOnly && Model->FindFloatCurve(FAnimationCurveIdentifier(CurveNames[Side], ERawCurveTrackTypes::RCT_Float))) continue;
 				const TArray<FRichCurveKey> Keys = MakeContactKeys(Feet[Side], Sample.Forward, Duration, Speed, RootDistance >= 0.5, bIdle);
 				if (!Keys.IsEmpty() && !WriteCurve(Controller, *Model, CurveNames[Side], Keys))
 				{

@@ -14,6 +14,7 @@
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
+#include "Animation/AnimInstance.h"
 
 
 APlayerCharacter::APlayerCharacter()
@@ -96,6 +97,42 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	if (!GetCharacterMovement()) return;
 	
 	GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->MaxWalkSpeed, TargetSpeed, DeltaSeconds, MovementBlendSpeed);
+	UpdateSquash(DeltaSeconds);
+}
+
+void APlayerCharacter::UpdateSquash(float DeltaSeconds)
+{
+	const bool bGrounded = GetCharacterMovement()->IsMovingOnGround() && !PhysicalMontageComponent->IsPhysicsMontageActive();
+	const UAnimInstance* Animation = GetMesh()->GetAnimInstance();
+	const FVector2D Contact(Animation ? Animation->GetCurveValue(TEXT("FootPlant_L")) : 0.0f,
+		Animation ? Animation->GetCurveValue(TEXT("FootPlant_R")) : 0.0f);
+	if (bGrounded && bWasGrounded && GetVelocity().SizeSquared2D() > FMath::Square(20.0f) &&
+		((Contact.X >= 0.8 && PreviousFootContact.X < 0.8) || (Contact.Y >= 0.8 && PreviousFootContact.Y < 0.8)))
+	{
+		SquashVelocity += StepSquash * 60.0f * FMath::Clamp(GetVelocity().Size2D() / 150.0f, 0.6f, 1.5f);
+	}
+	PreviousFootContact = Contact;
+	bWasGrounded = bGrounded;
+	FMath::SpringDamper(SquashAmount, SquashVelocity, 0.0f, 0.0f, DeltaSeconds, 5.0f, 0.6f);
+	SquashAmount = FMath::Clamp(SquashAmount, -0.012f, 0.04f);
+	TInlineComponentArray<USkeletalMeshComponent*> Parts(this);
+	for (USkeletalMeshComponent* Part : Parts)
+	{
+		// Shared values keep all interchangeable character parts on the same deformation.
+		Part->SetCustomPrimitiveDataFloat(0, SquashAmount);
+		Part->SetCustomPrimitiveDataFloat(1, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		Part->SetCustomPrimitiveDataFloat(2, bGrounded ? 1.0f : 0.0f);
+	}
+}
+
+void APlayerCharacter::Landed(const FHitResult& Hit)
+{
+	const float ImpactSpeed = FMath::Abs(GetVelocity().Z);
+	Super::Landed(Hit);
+	if (!PhysicalMontageComponent->IsPhysicsMontageActive())
+	{
+		SquashVelocity += LandingSquash * 60.0f * FMath::Clamp(ImpactSpeed / 600.0f, 0.0f, 1.5f);
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

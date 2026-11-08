@@ -56,7 +56,8 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		bAiming = true;
 		bGamepad = StickInput.SizeSquared() > FMath::Square(StickDeadZone);
 		AimDirection = Pawn->GetActorForwardVector().GetSafeNormal2D();
-		PC->ProjectWorldLocationToScreen(Pawn->GetActorLocation() + AimDirection * AimDistance, ScreenPosition);
+		const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
+		PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition);
 		bSavedOrientToMovement = Movement->bOrientRotationToMovement;
 		bSavedControllerYaw = Pawn->bUseControllerRotationYaw;
 		bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
@@ -86,11 +87,12 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		{
 			if (StickInput.SizeSquared() > FMath::Square(StickDeadZone))
 			{
-				const float CameraYaw = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraRotation().Yaw : Pawn->GetActorRotation().Yaw;
+				const float CameraYaw = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraRotation().Yaw : PC->GetControlRotation().Yaw;
 				const FRotationMatrix Basis(FRotator(0, CameraYaw, 0));
 				AimDirection = (Basis.GetUnitAxis(EAxis::X) * StickInput.Y + Basis.GetUnitAxis(EAxis::Y) * StickInput.X).GetSafeNormal2D();
 			}
-			PC->ProjectWorldLocationToScreen(Pawn->GetActorLocation() + AimDirection * AimDistance, ScreenPosition);
+			const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
+			PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition);
 		}
 		else
 		{

@@ -29,6 +29,7 @@ protected:
 	
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void MoveBlockedBy(const FHitResult& Impact) override;
+	virtual void Landed(const FHitResult& Hit) override;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> MappingContext = nullptr;
@@ -77,12 +78,19 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float SprintSpeed = 500.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Visual|Squash", meta=(ClampMin="0.0", ClampMax="0.03"))
+	float StepSquash = 0.008f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Visual|Squash", meta=(ClampMin="0.0", ClampMax="0.05"))
+	float LandingSquash = 0.025f;
 	
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 private:
 	void ConfigureMovementCollision();
+	void UpdateSquash(float DeltaSeconds);
 
 	UFUNCTION()
 	void OnMovementInput(const FInputActionInstance& Instance);
@@ -99,4 +107,8 @@ private:
 	float TargetSpeed = 0.0f;
 	bool bStumblePending = false;
 	FVector StumbleVelocity = FVector::ZeroVector;
+	float SquashAmount = 0.0f;
+	float SquashVelocity = 0.0f;
+	FVector2D PreviousFootContact = FVector2D::ZeroVector;
+	bool bWasGrounded = false;
 };
