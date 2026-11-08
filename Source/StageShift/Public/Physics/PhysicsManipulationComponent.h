@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Animation/AnimNotifies/AnimNotify.h"
 #include "PhysicsTypes.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "PhysicsManipulationComponent.generated.h"
@@ -30,6 +31,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
 
+	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
+
 	virtual void ReleaseComponent() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -54,6 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0"))
 	float ThrowUpwardBias = 0.2f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pickup")
+	FName GripSocket = TEXT("Grip");
+
 private:
 	UPROPERTY(Transient)
 	TWeakObjectPtr<USceneComponent> CarryPoint;
@@ -69,6 +75,21 @@ private:
 	bool bWasSimulatingPhysics = false;
 	FVector DragTarget = FVector::ZeroVector;
 	float DragHeightOffset = 0.0f;
+	FVector LocalGripLocation = FVector::ZeroVector;
+	FVector GrabLocation = FVector::ZeroVector;
+	TWeakObjectPtr<class UAnimInstance> PickupInstance;
+	TWeakObjectPtr<class UAnimMontage> PickupMontage;
+	bool bPickupPending = false;
+	bool bCarryAttached = false;
+
+	bool AttachCarriedObject(bool bKeepWorldTransform);
+	void ClearPickupPlayback();
+
+	UFUNCTION()
+	void OnPickupNotify(FName Name, const struct FBranchingPointNotifyPayload& Payload);
+
+	UFUNCTION()
+	void OnPickupMontageEnded(class UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
 	void OnManipulatedActorEndPlay(AActor* Actor, EEndPlayReason::Type EndPlayReason);

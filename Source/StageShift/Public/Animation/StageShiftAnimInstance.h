@@ -54,6 +54,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Locomotion|Foot IK")
 	bool bEnableFootIK = true;
 
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Pickup")
+	FVector PickupTarget = FVector::ZeroVector;
+
+	UPROPERTY(Transient)
+	FVector PickupHandOffset = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Pickup")
+	float PickupAlpha = 0.0f;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Gait Speeds")
 	FStageShiftGaitSpeeds ForwardSpeeds;

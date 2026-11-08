@@ -107,6 +107,13 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		Input->BindAction(MoveInputAction, ETriggerEvent::Triggered, this, &ThisClass::OnMovementInput);
 	}
 	
+	if (CameraInputAction)
+	{
+		Input->BindAction(CameraInputAction, ETriggerEvent::Triggered, this, &ThisClass::OnCameraInput);
+		Input->BindAction(CameraInputAction, ETriggerEvent::Completed, this, &ThisClass::OnCameraInput);
+		Input->BindAction(CameraInputAction, ETriggerEvent::Canceled, this, &ThisClass::OnCameraInput);
+	}
+	
 	InteractionComponent->BindInput(*Input, InteractInputAction);
 
 	if (JumpInputAction)
@@ -138,6 +145,33 @@ void APlayerCharacter::OnMovementInput(const FInputActionInstance& Instance)
 
 	AddMovementInput(Forward, Axis.X);
 	AddMovementInput(Right, Axis.Y);
+}
+
+void APlayerCharacter::OnCameraInput(const FInputActionInstance& Instance)
+{
+	if (Instance.GetTriggerEvent() == ETriggerEvent::Completed || Instance.GetTriggerEvent() == ETriggerEvent::Canceled)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationYaw = false;
+		return;
+	}
+	
+	if (!InteractionComponent->HasActiveInteraction()) return;
+	
+	const APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC || !PC->PlayerCameraManager) return;
+
+	const FVector2D Axis = Instance.GetValue().Get<FVector2D>();
+	
+    GetCharacterMovement()->bOrientRotationToMovement = false;
+
+	const float CameraYaw = PC->PlayerCameraManager->GetCameraRotation().Yaw;
+
+	const FRotationMatrix Basis(FRotator(0.f, CameraYaw, 0.f));
+
+	const FVector Direction = Basis.GetUnitAxis(EAxis::X) * Axis.Y * -1.0f + Basis.GetUnitAxis(EAxis::Y) * Axis.X;
+
+	SetActorRotation(Direction.Rotation());
 }
 
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)

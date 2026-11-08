@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "Physics/PhysicsManipulationComponent.h"
 
 namespace
 {
@@ -19,6 +20,7 @@ namespace
 
 void UStageShiftAnimInstance::NativeInitializeAnimation()
 {
+	PickupAlpha = 0.0f;
 	Super::NativeInitializeAnimation();
 
 	GroundSpeed = 0.0f;
@@ -76,6 +78,17 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	const APawn* Pawn = TryGetPawnOwner();
+	float TargetPickupAlpha = 0.0f;
+	const UPhysicsManipulationComponent* Manipulation = Pawn ? Pawn->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
+	if (Manipulation)
+	{
+		Manipulation->GetPickupTarget(PickupTarget, TargetPickupAlpha, &PickupHandOffset);
+	}
+	// Reach follows the contact curve exactly; release eases out even after the montage ends.
+	PickupAlpha = TargetPickupAlpha >= PickupAlpha ? TargetPickupAlpha
+		: FMath::FInterpTo(PickupAlpha, TargetPickupAlpha, DeltaSeconds, 10.0f);
+	if (!Manipulation || !Manipulation->GetManipulatedComponent() || (GetOwningComponent() && GetOwningComponent()->IsAnySimulatingPhysics())) PickupAlpha = 0.0f;
+	if (PickupAlpha < KINDA_SMALL_NUMBER) PickupAlpha = 0.0f;
 	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
 	GroundSpeed = Velocity.Size2D();
 	

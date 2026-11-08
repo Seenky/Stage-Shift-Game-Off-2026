@@ -39,6 +39,9 @@ protected:
 	TObjectPtr<UInputAction> InteractInputAction = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> CameraInputAction = nullptr;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpInputAction = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -79,6 +82,9 @@ private:
 
 	UFUNCTION()
 	void OnMovementInput(const FInputActionInstance& Instance);
+	
+	UFUNCTION()
+	void OnCameraInput(const FInputActionInstance& Instance);
 	
 	UFUNCTION()
 	void OnJumpInput(const FInputActionInstance& Instance);

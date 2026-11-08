@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Animation/AnimNotifies/AnimNotify.h"
+#include "Engine/TimerHandle.h"
 #include "InteractionTypes.h"
 #include "Components/ActorComponent.h"
 #include "InteractionComponent.generated.h"
@@ -36,6 +36,8 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Interaction Component")
 	bool HasActiveInteraction() const { return ActiveInteraction.IsValid(); }
+
+	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
 	
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -51,6 +53,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	bool bDebug = false;
 
 	// Keys come from the target's GetInteractionAnimationId implementation.
 	UPROPERTY(EditAnywhere, Category = "Interaction|Animation")
@@ -76,6 +81,7 @@ private:
 	TWeakObjectPtr<UAnimMontage> PlayingMontage;
 	int32 ReleaseMontageId = INDEX_NONE;
 	float ReleasedHoldDuration = 0.0f;
+	FTimerHandle ReleaseTimer;
 
 	void OnInputStarted();
 	void OnInputReleased();
@@ -84,8 +90,7 @@ private:
 	void StopInteractionMontage();
 	void OnReleaseMontageEnded(UAnimMontage* Montage, bool bInterrupted, int32 InstanceId);
 
-	UFUNCTION()
-	void OnMontageNotify(FName Name, const FBranchingPointNotifyPayload& Payload);
+	void CommitRelease();
 
 	bool FinishInteraction(bool bCancelled);
 	void ClearActiveInteraction();

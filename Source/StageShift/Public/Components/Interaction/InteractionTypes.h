@@ -88,4 +88,8 @@ struct STAGESHIFT_API FInteractionAnimation
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	FName ReleaseSection;
+
+	// Seconds from the start of ReleaseSection to applying the interaction result.
+	UPROPERTY(EditAnywhere, Category = "Animation", meta = (ClampMin = "0.0", Units = "s"))
+	float ReleaseDelay = 0.12f;
 };

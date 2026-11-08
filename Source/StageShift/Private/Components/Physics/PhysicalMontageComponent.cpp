@@ -234,8 +234,7 @@ void UPhysicalMontageComponent::RestorePhysics()
 		{
 			const float Angle = FMath::DegreesToRadians(Direction * 45.0f);
 			const FVector Offset(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, 0.0);
-			bFoundFloor = FindRecoveryLocation(*Capsule, *Movement, SavedCapsulePhysicsBodyResponse,
-				PelvisLocation + Offset, RecoveryLocation);
+			bFoundFloor = FindRecoveryLocation(*Capsule, *Movement, SavedCapsulePhysicsBodyResponse, PelvisLocation + Offset, RecoveryLocation);
 		}
 	}
 	if (!bFoundFloor)

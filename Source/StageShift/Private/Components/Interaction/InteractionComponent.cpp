@@ -7,9 +7,13 @@
 
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/OverlapResult.h"
+#include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
+#include "TimerManager.h"
 
 
 UInteractionComponent::UInteractionComponent()
@@ -29,6 +33,13 @@ void UInteractionComponent::BindInput(UEnhancedInputComponent& Input, const UInp
 void UInteractionComponent::OnInputStarted()
 {
 	const bool bResuming = ActiveResult == EInteractionResult::Latched;
+	if (bResuming)
+	{
+		const FInteractionAnimation* Animation = FindAnimation(ActiveInteraction);
+		const UAnimInstance* Instance = PlaybackInstance.Get();
+		if (Animation && Instance && Instance->Montage_IsPlaying(PlayingMontage.Get()) &&
+			Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == Animation->StartSection) return;
+	}
 	FInteractionPayload Payload;
 	if (BeginInteraction(FInteractionContext(), Payload) == EInteractionResult::Rejected) return;
 
@@ -48,13 +59,20 @@ void UInteractionComponent::OnInputReleased()
 		UAnimInstance* Instance = PlaybackInstance.Get();
 		if (const FAnimMontageInstance* Montage = Instance ? Instance->GetActiveInstanceForMontage(PlayingMontage.Get()) : nullptr)
 		{
-			// Charge ends at input release. The notify only decides when the result takes effect.
+			// Charge stops now; the timer decides when the result takes effect.
 			ReleasedHoldDuration = GetWorld()->GetTimeSeconds() - PressStartTime;
 			ReleaseMontageId = Montage->GetInstanceID();
-			Instance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &ThisClass::OnMontageNotify);
 			FOnMontageEnded OnEnded;
 			OnEnded.BindUObject(this, &ThisClass::OnReleaseMontageEnded, ReleaseMontageId);
 			Instance->Montage_SetEndDelegate(OnEnded, PlayingMontage.Get());
+			if (Animation->ReleaseDelay > 0.0f)
+			{
+				GetWorld()->GetTimerManager().SetTimer(ReleaseTimer, this, &ThisClass::CommitRelease, Animation->ReleaseDelay, false);
+			}
+			else
+			{
+				CommitRelease();
+			}
 			return;
 		}
 	}
@@ -65,8 +83,12 @@ void UInteractionComponent::OnInputReleased()
 
 const FInteractionAnimation* UInteractionComponent::FindAnimation(const FInteractionPayload& Payload) const
 {
-	AActor* Target = Payload.InteractedActor.Get();
-	if (!Target) return nullptr;
+	return FindAnimationForTarget(Payload.InteractedActor.Get());
+}
+
+const FInteractionAnimation* UInteractionComponent::FindAnimationForTarget(AActor* Target) const
+{
+	if (!IsValid(Target) || !Target->Implements<UInteractionInterface>()) return nullptr;
 
 	return Animations.Find(IInteractionInterface::Execute_GetInteractionAnimationId(Target));
 }
@@ -98,12 +120,18 @@ bool UInteractionComponent::PlaySection(const FInteractionAnimation& Animation, 
 	return true;
 }
 
-void UInteractionComponent::OnMontageNotify(FName Name, const FBranchingPointNotifyPayload& Payload)
+void UInteractionComponent::CommitRelease()
 {
-	static const FName CommitNotify(TEXT("CommitInteraction"));
-	if (ReleaseMontageId != INDEX_NONE && Payload.MontageInstanceID == ReleaseMontageId && Name == CommitNotify)
+	if (ReleaseMontageId == INDEX_NONE) return;
+	const UAnimInstance* Instance = PlaybackInstance.Get();
+	const FAnimMontageInstance* Montage = Instance ? Instance->GetActiveInstanceForMontage(PlayingMontage.Get()) : nullptr;
+	if (Montage && Montage->GetInstanceID() == ReleaseMontageId && Instance->Montage_IsPlaying(PlayingMontage.Get()))
 	{
 		EndInteraction();
+	}
+	else
+	{
+		CancelInteraction();
 	}
 }
 
@@ -111,15 +139,8 @@ void UInteractionComponent::OnReleaseMontageEnded(UAnimMontage* Montage, bool bI
 {
 	if (ReleaseMontageId != InstanceId) return;
 
-	// A missing notify still completes a montage that reached its end.
-	if (bInterrupted)
-	{
-		CancelInteraction();
-	}
-	else
-	{
-		EndInteraction();
-	}
+	// A stopped or finished montage cannot leave a delayed release pending.
+	CancelInteraction();
 }
 
 void UInteractionComponent::StopInteractionMontage()
@@ -168,20 +189,75 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 
 	ClearActiveInteraction();
 	
-	TArray<FHitResult> HitResults;
+	TArray<FOverlapResult> Overlaps;
 	FCollisionQueryParams CollisionParams(SCENE_QUERY_STAT(Interaction), false, GetOwner());
 	const FVector TraceStart = GetOwner()->GetActorLocation();
-	const FVector TraceEnd = TraceStart + GetOwner()->GetActorForwardVector() * InteractionLength;
-	
-	GetWorld()->SweepMultiByChannel(HitResults, TraceStart, TraceEnd, FQuat::Identity, TraceChannel, FCollisionShape::MakeCapsule(CapsuleRadius, FMath::Max(CapsuleHalfHeight, CapsuleRadius)), CollisionParams);
-	
-	HitResults.Sort([](const FHitResult& A, const FHitResult& B)
-	{
-		return A.Distance < B.Distance;
-	}); 
+	const FVector Forward = GetOwner()->GetActorForwardVector();
+	const FVector TraceEnd = TraceStart + Forward * InteractionLength;
+	GetWorld()->OverlapMultiByChannel(Overlaps, TraceEnd, FQuat::Identity, TraceChannel, FCollisionShape::MakeCapsule(CapsuleRadius, FMath::Max(CapsuleHalfHeight, CapsuleRadius)), CollisionParams);
 
-	for (const FHitResult& Hit : HitResults)
+	FVector ReachStart = TraceStart;
+	if (const ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{
+		const USkeletalMeshComponent* Mesh = Character->GetMesh();
+		const int32 Shoulder = Mesh ? Mesh->GetBoneIndex(TEXT("upperarm_r")) : INDEX_NONE;
+		if (Shoulder != INDEX_NONE) ReachStart = Mesh->GetBoneTransform(Shoulder).GetLocation();
+	}
+
+	struct FCandidate
+	{
+		FHitResult Hit;
+		double Score;
+	};
+	TArray<FCandidate> Candidates;
+	TSet<UPrimitiveComponent*> Visited;
+	for (const FOverlapResult& Overlap : Overlaps)
+	{
+		UPrimitiveComponent* Component = Overlap.GetComponent();
+		AActor* Target = Overlap.GetActor();
+		if (!IsValid(Component) || !IsValid(Target) || !Target->Implements<UInteractionInterface>() || Visited.Contains(Component)) continue;
+		Visited.Add(Component);
+
+		FVector Point;
+		const bool bHasGrip = Component->DoesSocketExist(TEXT("Grip"));
+		if (bHasGrip) Point = Component->GetSocketLocation(TEXT("Grip"));
+		else if (Component->GetClosestPointOnCollision(ReachStart, Point) < 0.0f)
+			Point = Component->Bounds.GetBox().GetClosestPointTo(ReachStart);
+
+		const FVector Offset = Point - ReachStart;
+		const FVector Direction = Offset.GetSafeNormal();
+		FHitResult Obstacle;
+		const bool bBlocked = GetWorld()->LineTraceSingleByChannel(Obstacle, ReachStart,
+			Point + Direction, TraceChannel, CollisionParams) && Obstacle.GetActor() != Target;
+		if (bDebug)
+		{
+			DrawDebugLine(GetWorld(), ReachStart, Point, bBlocked ? FColor::Red : FColor::Green, false, 5.0f);
+			DrawDebugSphere(GetWorld(), Point, 2.0f, 8, bBlocked ? FColor::Red : FColor::Green, false, 5.0f);
+		}
+		if (bBlocked) continue;
+
+		FHitResult Hit(Target, Component, Point, -Direction);
+		// Preserve the physical bone when the candidate is a skeletal component.
+		FHitResult SurfaceHit;
+		if (Component->LineTraceComponent(SurfaceHit, ReachStart, Point + Direction, CollisionParams)) Hit = SurfaceHit;
+		Hit.ImpactPoint = Point;
+		Hit.Location = Point;
+		Hit.TraceStart = ReachStart;
+		Hit.TraceEnd = Point;
+		Hit.Distance = Offset.Size();
+		const double Score = 1.0 - FVector::DotProduct(Forward, Direction) + 0.1 * Hit.Distance / FMath::Max(InteractionLength + CapsuleRadius, 1.0f);
+		Candidates.Add({Hit, Score});
+	}
+	Candidates.Sort([](const FCandidate& A, const FCandidate& B) { return A.Score < B.Score; });
+	if (bDebug)
+	{
+		DrawDebugCapsule(GetWorld(), TraceEnd, FMath::Max(CapsuleHalfHeight, CapsuleRadius), CapsuleRadius, FQuat::Identity, Candidates.IsEmpty() ? FColor::Red : FColor::Green, false, 5.0f);
+		UE_LOG(LogTemp, Display, TEXT("Interaction: %d overlaps, %d reachable candidates"), Overlaps.Num(), Candidates.Num());
+	}
+
+	for (const FCandidate& Candidate : Candidates)
+	{
+		const FHitResult& Hit = Candidate.Hit;
 		AActor* Target = Hit.GetActor();
 		if (IsValid(Target) && Target->Implements<UInteractionInterface>())
 		{
@@ -206,11 +282,10 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 						Target->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnTargetEndPlay);
 					}
 				}
-				return Result;
+				if (Result != EInteractionResult::Rejected) return Result;
 			}
 		}
 	
-		if (Hit.bBlockingHit) break;
 	}
 	return EInteractionResult::Rejected;
 }
@@ -247,16 +322,13 @@ bool UInteractionComponent::FinishInteraction(bool bCancelled)
 
 void UInteractionComponent::ClearActiveInteraction()
 {
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(ReleaseTimer);
 	if (AActor* Target = ActiveInteraction.InteractedActor.Get())
 	{
 		Target->OnEndPlay.RemoveDynamic(this, &ThisClass::OnTargetEndPlay);
 	}
 	if (ReleaseMontageId != INDEX_NONE)
 	{
-		if (UAnimInstance* Instance = PlaybackInstance.Get())
-		{
-			Instance->OnPlayMontageNotifyBegin.RemoveDynamic(this, &ThisClass::OnMontageNotify);
-		}
 		ReleaseMontageId = INDEX_NONE;
 		ReleasedHoldDuration = 0.0f;
 	}
