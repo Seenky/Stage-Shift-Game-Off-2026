@@ -13,6 +13,7 @@
 #include "Engine/CollisionProfile.h"
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
+#include "Components/Interaction/ThrowAimComponent.h"
 
 
 APlayerCharacter::APlayerCharacter()
@@ -26,6 +27,7 @@ APlayerCharacter::APlayerCharacter()
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>("Interaction Component");
 	PhysicsManipulationComponent = CreateDefaultSubobject<UPhysicsManipulationComponent>("Physics Manipulation Component");
 	PhysicalMontageComponent = CreateDefaultSubobject<UPhysicalMontageComponent>("Physical Montage Component");
+	ThrowAimComponent = CreateDefaultSubobject<UThrowAimComponent>("Throw Aim Component");
 	CarryPoint = CreateDefaultSubobject<USceneComponent>("Carry Point");
 	CarryPoint->SetupAttachment(GetRootComponent());
 	CarryPoint->SetRelativeLocation(FVector(75.0, 0.0, 25.0));
@@ -77,6 +79,7 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::UnPossessed()
 {
 	InteractionComponent->CancelInteraction();
+	ThrowAimComponent->StopAiming();
 	Super::UnPossessed();
 }
 
@@ -149,29 +152,8 @@ void APlayerCharacter::OnMovementInput(const FInputActionInstance& Instance)
 
 void APlayerCharacter::OnCameraInput(const FInputActionInstance& Instance)
 {
-	if (Instance.GetTriggerEvent() == ETriggerEvent::Completed || Instance.GetTriggerEvent() == ETriggerEvent::Canceled)
-	{
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-		bUseControllerRotationYaw = false;
-		return;
-	}
-	
-	if (!InteractionComponent->HasActiveInteraction()) return;
-	
-	const APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC || !PC->PlayerCameraManager) return;
-
-	const FVector2D Axis = Instance.GetValue().Get<FVector2D>();
-	
-    GetCharacterMovement()->bOrientRotationToMovement = false;
-
-	const float CameraYaw = PC->PlayerCameraManager->GetCameraRotation().Yaw;
-
-	const FRotationMatrix Basis(FRotator(0.f, CameraYaw, 0.f));
-
-	const FVector Direction = Basis.GetUnitAxis(EAxis::X) * Axis.Y * -1.0f + Basis.GetUnitAxis(EAxis::Y) * Axis.X;
-
-	SetActorRotation(Direction.Rotation());
+	const bool bReleased = Instance.GetTriggerEvent() == ETriggerEvent::Completed || Instance.GetTriggerEvent() == ETriggerEvent::Canceled;
+	ThrowAimComponent->SetStickInput(bReleased ? FVector2D::ZeroVector : Instance.GetValue().Get<FVector2D>());
 }
 
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)

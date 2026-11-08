@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Interaction Component")
 	bool HasActiveInteraction() const { return ActiveInteraction.IsValid(); }
 
+	bool IsPreparingRelease() const { return HasActiveInteraction() && ActiveResult == EInteractionResult::Active && ReleaseMontageId == INDEX_NONE; }
+	bool IsPlayingReleaseAnimation() const;
+
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
 	
 protected:
@@ -82,6 +85,7 @@ private:
 	int32 ReleaseMontageId = INDEX_NONE;
 	float ReleasedHoldDuration = 0.0f;
 	FTimerHandle ReleaseTimer;
+	FName ReleaseSectionName;
 
 	void OnInputStarted();
 	void OnInputReleased();

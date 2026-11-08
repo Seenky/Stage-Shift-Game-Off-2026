@@ -13,6 +13,7 @@ class UInputMappingContext;
 class UInteractionComponent;
 class UPhysicsManipulationComponent;
 class USceneComponent;
+class UThrowAimComponent;
 
 UCLASS()
 class STAGESHIFT_API APlayerCharacter : public ACharacter
@@ -58,6 +59,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<USceneComponent> CarryPoint = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UThrowAimComponent> ThrowAimComponent = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
 	FName CarrySocketName = TEXT("hand_r");

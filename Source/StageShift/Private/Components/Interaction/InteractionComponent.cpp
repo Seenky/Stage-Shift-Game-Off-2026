@@ -62,6 +62,7 @@ void UInteractionComponent::OnInputReleased()
 			// Charge stops now; the timer decides when the result takes effect.
 			ReleasedHoldDuration = GetWorld()->GetTimeSeconds() - PressStartTime;
 			ReleaseMontageId = Montage->GetInstanceID();
+			ReleaseSectionName = Animation->ReleaseSection;
 			FOnMontageEnded OnEnded;
 			OnEnded.BindUObject(this, &ThisClass::OnReleaseMontageEnded, ReleaseMontageId);
 			Instance->Montage_SetEndDelegate(OnEnded, PlayingMontage.Get());
@@ -120,6 +121,13 @@ bool UInteractionComponent::PlaySection(const FInteractionAnimation& Animation, 
 	return true;
 }
 
+bool UInteractionComponent::IsPlayingReleaseAnimation() const
+{
+	const UAnimInstance* Instance = PlaybackInstance.Get();
+	return Instance && !ReleaseSectionName.IsNone() && Instance->Montage_IsPlaying(PlayingMontage.Get()) &&
+		Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == ReleaseSectionName;
+}
+
 void UInteractionComponent::CommitRelease()
 {
 	if (ReleaseMontageId == INDEX_NONE) return;
@@ -149,6 +157,7 @@ void UInteractionComponent::StopInteractionMontage()
 	UAnimMontage* Montage = PlayingMontage.Get();
 	PlaybackInstance.Reset();
 	PlayingMontage.Reset();
+	ReleaseSectionName = NAME_None;
 	if (Instance && Montage)
 	{
 		Instance->Montage_Stop(0.08f, Montage);

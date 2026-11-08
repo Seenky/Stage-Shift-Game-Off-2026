@@ -182,6 +182,7 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 	UPrimitiveComponent* Component = ManipulatedComponent.Get();
 	const bool bCarry = bCarryAttached;
 	const bool bThrow = bCarry && !bCancelled && HoldDuration > TapDuration;
+	const FVector Forward = !ThrowDirection.IsNearlyZero() ? ThrowDirection : GetOwner() ? GetOwner()->GetActorForwardVector() : FVector::ForwardVector;
 
 	ReleaseComponent();
 	
@@ -193,7 +194,7 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 		{
 			const float Charge = FMath::Clamp((HoldDuration - TapDuration) / FMath::Max(MaxChargeDuration, UE_SMALL_NUMBER), 0.0f, 1.0f);
 			const float Speed = FMath::Lerp(MinThrowSpeed, FMath::Max(MinThrowSpeed, MaxThrowSpeed), Charge);
-			const FVector Direction = (GetOwner()->GetActorForwardVector() + FVector::UpVector * ThrowUpwardBias).GetSafeNormal();
+			const FVector Direction = (Forward + FVector::UpVector * ThrowUpwardBias).GetSafeNormal();
 			Component->SetPhysicsLinearVelocity(GetOwner()->GetVelocity());
 			Component->AddImpulse(Direction * Speed, NAME_None, true);
 		}
@@ -222,6 +223,7 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 	ActiveType = EPhysicsInteractionType::None;
 	bPickupPending = false;
 	bCarryAttached = false;
+	ThrowDirection = FVector::ZeroVector;
 	SetComponentTickEnabled(false);
 	Super::ReleaseComponent();
 }

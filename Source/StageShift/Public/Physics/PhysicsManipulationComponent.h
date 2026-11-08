@@ -30,6 +30,8 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
+	bool IsCarrying() const { return bCarryAttached; }
+	void SetThrowDirection(const FVector& Direction) { ThrowDirection = Direction.GetSafeNormal2D(); }
 
 	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
 
@@ -77,6 +79,7 @@ private:
 	float DragHeightOffset = 0.0f;
 	FVector LocalGripLocation = FVector::ZeroVector;
 	FVector GrabLocation = FVector::ZeroVector;
+	FVector ThrowDirection = FVector::ZeroVector;
 	TWeakObjectPtr<class UAnimInstance> PickupInstance;
 	TWeakObjectPtr<class UAnimMontage> PickupMontage;
 	bool bPickupPending = false;
