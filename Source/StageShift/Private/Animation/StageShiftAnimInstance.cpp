@@ -1,6 +1,7 @@
 #include "Animation/StageShiftAnimInstance.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
@@ -35,14 +36,28 @@ void UStageShiftAnimInstance::NativeInitializeAnimation()
 bool UStageShiftAnimInstance::BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime)
 {
 	const USkeletalMeshComponent* Mesh = GetOwningComponent();
-	if (!Mesh || !Pose.bIsValid || Pose.LocalTransforms.IsEmpty() || BlendTime <= 0.0f)
+	const USkeletalMesh* SkeletalMesh = Mesh ? Mesh->GetSkeletalMeshAsset() : nullptr;
+	if (!SkeletalMesh || !Pose.bIsValid || Pose.LocalTransforms.IsEmpty() ||
+		Pose.LocalTransforms.Num() != Pose.BoneNames.Num() || BlendTime <= 0.0f)
 	{
 		RecoveryPoseAlpha = 0.0f;
 		return false;
 	}
 	
 	const FTransform OldToNewMesh = PreviousMeshTransform.GetRelativeTransform(Mesh->GetComponentTransform());
-	Pose.LocalTransforms[0] = Pose.LocalTransforms[0] * OldToNewMesh;
+	const FReferenceSkeleton& Skeleton = SkeletalMesh->GetRefSkeleton();
+	const FTransform& ReferenceRoot = Skeleton.GetRefBonePose()[0];
+	const FTransform RootOffset = (Pose.LocalTransforms[0] * OldToNewMesh).GetRelativeTransform(ReferenceRoot);
+	
+	for (int32 PoseIndex = 1; PoseIndex < Pose.LocalTransforms.Num(); ++PoseIndex)
+	{
+		const int32 BoneIndex = Skeleton.FindBoneIndex(Pose.BoneNames[PoseIndex]);
+		if (BoneIndex != INDEX_NONE && Skeleton.GetParentIndex(BoneIndex) == 0)
+		{
+			Pose.LocalTransforms[PoseIndex] *= RootOffset;
+		}
+	}
+	Pose.LocalTransforms[0] = ReferenceRoot;
 	RecoveryPose = MoveTemp(Pose);
 	RecoveryPoseAlpha = 1.0f;
 	RecoveryBlendTime = BlendTime;

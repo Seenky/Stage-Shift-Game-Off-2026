@@ -87,7 +87,7 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	if (bStumblePending)
 	{
 		bStumblePending = false;
-		PhysicalMontageComponent->StartPhysicsMontage(TEXT("Fall"));
+		PhysicalMontageComponent->StartPhysicsMontage(TEXT("Fall"), StumbleVelocity);
 	}
 	
 	if (!GetCharacterMovement()) return;
@@ -143,9 +143,6 @@ void APlayerCharacter::OnMovementInput(const FInputActionInstance& Instance)
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)
 {
 	if (!GetCharacterMovement()->IsMovingOnGround() || PhysicalMontageComponent->IsPhysicsMontageActive()) return;
-
-	const FVector LaunchVelocity = GetActorForwardVector() * JumpLaunchSpeed + GetActorUpVector() * (0.25f * JumpLaunchSpeed);
-	LaunchCharacter(LaunchVelocity, false, false);
 	PhysicalMontageComponent->StartPhysicsMontage(TEXT("Jump"));
 }
 
@@ -181,6 +178,7 @@ void APlayerCharacter::MoveBlockedBy(const FHitResult& Impact)
 	const float KneeZ = FMath::Min(GetMesh()->GetSocketLocation(TEXT("calf_l")).Z, GetMesh()->GetSocketLocation(TEXT("calf_r")).Z);
 	if (Obstacle->Bounds.GetBox().Max.Z > KneeZ - 5.0f || Impact.ImpactPoint.Z > KneeZ) return;
 	
+	StumbleVelocity = FVector(Velocity.X, Velocity.Y, 0.0);
 	bStumblePending = true;
 }
 

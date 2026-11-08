@@ -71,9 +71,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float SprintSpeed = 500.0f;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
-	float JumpLaunchSpeed = 500.0f;
-	
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
@@ -91,4 +88,5 @@ private:
 	
 	float TargetSpeed = 0.0f;
 	bool bStumblePending = false;
+	FVector StumbleVelocity = FVector::ZeroVector;
 };
