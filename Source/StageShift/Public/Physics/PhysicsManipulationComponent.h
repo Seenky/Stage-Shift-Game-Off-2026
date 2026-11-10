@@ -31,6 +31,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
 	bool IsCarrying() const { return bCarryAttached; }
+	bool IsDragging() const { return ActiveType == EPhysicsInteractionType::Drag && ManipulatedComponent.IsValid(); }
+	float GetDragMovementScale() const;
+	FVector ConstrainDragMovement(const FVector& Delta) const;
+	bool GetDragPose(FVector& LeftHand, FVector& RightHand, FVector& Facing, float& Effort) const;
 	void SetThrowDirection(const FVector& Direction) { ThrowDirection = Direction.GetSafeNormal2D(); bHasThrowTarget = false; }
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Throw")
@@ -44,10 +48,34 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
+	virtual void BeginPlay() override;
+	virtual void OnUnregister() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
 	float DragDistance = 100.0f;
+
+	// Force is in Newtons; converted to Unreal's kg*cm/s^2 at application.
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "N"))
+	float DragMaxForce = 650.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0"))
+	float DragMaxAcceleration = 800.0f; // cm/s^2; limits light props as well as the absolute force limit.
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0"))
+	float DragSpringStiffness = 1800.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.1", ClampMax = "2.0"))
+	float DragDampingRatio = 1.1f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.0"))
+	float DragAngularDamping = 3.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.1", Units = "kg"))
+	float DragReferenceMass = 25.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.05", ClampMax = "1.0"))
+	float DragSpeedMultiplier = 0.55f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	float DragMinimumSpeedMultiplier = 0.10f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
+	float DragHandSpacing = 32.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
+	float DragBreakDistance = 180.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0", Units = "s"))
 	float TapDuration = 0.2f;
@@ -80,8 +108,18 @@ private:
 	EPhysicsInteractionType ActiveType = EPhysicsInteractionType::None;
 	ECollisionEnabled::Type PreviousCollision = ECollisionEnabled::QueryAndPhysics;
 	bool bWasSimulatingPhysics = false;
-	FVector DragTarget = FVector::ZeroVector;
-	float DragHeightOffset = 0.0f;
+	TWeakObjectPtr<class ACharacter> DragCharacter;
+	FName DragBoneName;
+	FVector DragLocalHands[2] = {FVector::ZeroVector, FVector::ZeroVector};
+	float DragMass = 0.0f;
+	float DragRestDistance = 0.0f;
+	float DragReach = 0.0f;
+	float DragEffort = 0.0f;
+	float SavedDragAngularDamping = 0.0f;
+	float AppliedDragAngularDamping = 0.0f;
+	bool bSavedOrientToMovement = false;
+	bool bSavedControllerDesiredRotation = false;
+	bool bSavedControllerYaw = false;
 	FVector LocalGripLocation = FVector::ZeroVector;
 	FVector GrabLocation = FVector::ZeroVector;
 	FVector ThrowDirection = FVector::ZeroVector;
@@ -94,6 +132,10 @@ private:
 	bool bCarryAttached = false;
 
 	bool AttachCarriedObject(bool bKeepWorldTransform);
+	void BeginDrag(const FHitResult& Hit);
+	void UpdateDrag(float DeltaTime);
+	void CancelManipulation();
+	FTransform GetDragFrame() const;
 	void ClearPickupPlayback();
 	FVector CalculateThrowVelocity(const UPrimitiveComponent& Component, const FVector& Target, float Speed) const;
 

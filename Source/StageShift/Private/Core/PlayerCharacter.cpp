@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Engine/LocalPlayer.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
@@ -66,7 +67,9 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 
 	if (!GetCharacterMovement()) return;
 	
-	GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->MaxWalkSpeed, TargetSpeed, DeltaSeconds, MovementBlendSpeed);
+	// Movement applies the mass-dependent Drag multiplier; sprint cannot bypass it.
+	GetCharacterMovement()->MaxWalkSpeed = PhysicsManipulationComponent->IsDragging() ? WalkSpeed
+		: FMath::FInterpTo(GetCharacterMovement()->MaxWalkSpeed, TargetSpeed, DeltaSeconds, MovementBlendSpeed);
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -129,7 +132,7 @@ void APlayerCharacter::OnCameraInput(const FInputActionInstance& Instance)
 
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)
 {
-	if (!GetCharacterMovement()->IsMovingOnGround() || PhysicalMontageComponent->IsPhysicsMontageActive()) return;
+	if (PhysicsManipulationComponent->IsDragging() || !GetCharacterMovement()->IsMovingOnGround() || PhysicalMontageComponent->IsPhysicsMontageActive()) return;
 	PhysicalMontageComponent->StartPhysicsMontage(TEXT("Jump"));
 }
 

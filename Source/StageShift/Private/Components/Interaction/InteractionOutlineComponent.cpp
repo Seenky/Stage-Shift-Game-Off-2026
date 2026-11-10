@@ -13,7 +13,7 @@ UInteractionOutlineComponent::UInteractionOutlineComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
 	bAutoActivate = true;
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/DEV/MATERIALS/PostProcess/M_InteractionOutline"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/MATERIALS/PostProcess/M_InteractionOutline"));
 	OutlineMaterial = Material.Object;
 }
 

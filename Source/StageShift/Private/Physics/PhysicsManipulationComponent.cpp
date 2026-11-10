@@ -12,11 +12,20 @@
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/StageShiftCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "PhysicsEngine/BodyInstance.h"
 
 UPhysicsManipulationComponent::UPhysicsManipulationComponent()
 {
 	bAutoActivate = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+}
+
+void UPhysicsManipulationComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	if (const ACharacter* Character = Cast<ACharacter>(GetOwner())) AddTickPrerequisiteComponent(Character->GetCharacterMovement());
 }
 
 void UPhysicsManipulationComponent::SetCarryPoint(USceneComponent* NewCarryPoint)
@@ -39,7 +48,10 @@ bool UPhysicsManipulationComponent::CanManipulate(const FHitResult& Hit, EPhysic
 		return CarryPoint.IsValid() && CarryPoint->GetOwner() == GetOwner() && Component == Component->GetOwner()->GetRootComponent();
 	}
 	
-	return Type == EPhysicsInteractionType::Drag;
+	const ACharacter* Character = Cast<ACharacter>(GetOwner());
+	const AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(GetOwner());
+	return Type == EPhysicsInteractionType::Drag && Character && Character->GetCharacterMovement()->IsMovingOnGround() &&
+		(!Doll || !Doll->IsPhysicsMontageActive());
 }
 
 bool UPhysicsManipulationComponent::BeginManipulation(const FHitResult& Hit, EPhysicsInteractionType Type)
@@ -79,19 +91,145 @@ bool UPhysicsManipulationComponent::BeginManipulation(const FHitResult& Hit, EPh
 	}
 	else
 	{
-		GrabComponentAtLocation(Component, Hit.BoneName, Hit.ImpactPoint);
-		if (GetGrabbedComponent() != Component)
-		{
-			ReleaseComponent();
-			return false;
-		}
-		DragTarget = Hit.ImpactPoint;
-		DragHeightOffset = DragTarget.Z - GetOwner()->GetActorLocation().Z;
+		BeginDrag(Hit);
 		SetComponentTickEnabled(true);
 	}
 
 	ManipulatedActor->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnManipulatedActorEndPlay);
 	return true;
+}
+
+FTransform UPhysicsManipulationComponent::GetDragFrame() const
+{
+	const UPrimitiveComponent* Component = ManipulatedComponent.Get();
+	if (!Component) return FTransform::Identity;
+	return DragBoneName.IsNone() ? Component->GetComponentTransform() : Component->GetSocketTransform(DragBoneName);
+}
+
+void UPhysicsManipulationComponent::BeginDrag(const FHitResult& Hit)
+{
+	UPrimitiveComponent* Component = ManipulatedComponent.Get();
+	DragCharacter = Cast<ACharacter>(GetOwner());
+	DragBoneName = Hit.BoneName;
+	const FBodyInstance* Body = Component->GetBodyInstance(DragBoneName);
+	DragMass = FMath::Max(Body ? Body->GetBodyMass() : Component->GetMass(), 0.1f);
+	SavedDragAngularDamping = Component->GetAngularDamping();
+	AppliedDragAngularDamping = FMath::Max(SavedDragAngularDamping, DragAngularDamping);
+	if (AppliedDragAngularDamping != SavedDragAngularDamping) Component->SetAngularDamping(AppliedDragAngularDamping);
+	const FVector Facing = (Hit.ImpactPoint - GetOwner()->GetActorLocation()).GetSafeNormal2D();
+	const FVector Right = FVector::CrossProduct(FVector::UpVector, Facing).GetSafeNormal();
+	const FTransform Frame = GetDragFrame();
+	for (int32 Side = 0; Side < 2; ++Side)
+	{
+		const FName Socket = Side == 0 ? FName(TEXT("DragGrip_L")) : FName(TEXT("DragGrip_R"));
+		FVector Point = Hit.ImpactPoint + Right * (DragHandSpacing * (Side == 0 ? -0.5f : 0.5f));
+		if (Component->DoesSocketExist(Socket)) Point = Component->GetSocketLocation(Socket);
+		else
+		{
+			FVector Surface;
+			if (Component->GetClosestPointOnCollision(Point - Facing * 8.0f, Surface, DragBoneName) >= 0.0f) Point = Surface - Facing * 6.0f;
+		}
+		DragLocalHands[Side] = Frame.InverseTransformPosition(Point);
+	}
+	const FVector Center = Frame.TransformPosition((DragLocalHands[0] + DragLocalHands[1]) * 0.5);
+	const float Distance = FVector::Dist2D(Center, GetOwner()->GetActorLocation());
+	DragRestDistance = FMath::Min(Distance, FMath::Max(DragDistance, 1.0f));
+	DragReach = FMath::Max(Distance + 12.0f, DragRestDistance + 18.0f);
+	DragEffort = 0.0f;
+	if (ACharacter* Character = DragCharacter.Get())
+	{
+		UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+		bSavedOrientToMovement = Movement->bOrientRotationToMovement;
+		bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
+		bSavedControllerYaw = Character->bUseControllerRotationYaw;
+		Movement->bOrientRotationToMovement = false;
+		Movement->bUseControllerDesiredRotation = false;
+		Character->bUseControllerRotationYaw = false;
+	}
+}
+
+float UPhysicsManipulationComponent::GetDragMovementScale() const
+{
+	if (!IsDragging()) return 1.0f;
+	const float MassRatio = FMath::Max(DragMass / FMath::Max(DragReferenceMass, 0.1f), 1.0f);
+	const float BaseScale = FMath::Clamp(DragSpeedMultiplier, 0.01f, 1.0f);
+	return FMath::Clamp(BaseScale / FMath::Sqrt(MassRatio),
+		FMath::Clamp(DragMinimumSpeedMultiplier, 0.01f, BaseScale), BaseScale);
+}
+
+bool UPhysicsManipulationComponent::GetDragPose(FVector& LeftHand, FVector& RightHand, FVector& Facing, float& Effort) const
+{
+	if (!IsDragging() || !GetOwner()) return false;
+	const FTransform Frame = GetDragFrame();
+	LeftHand = Frame.TransformPosition(DragLocalHands[0]);
+	RightHand = Frame.TransformPosition(DragLocalHands[1]);
+	Facing = ((LeftHand + RightHand) * 0.5 - GetOwner()->GetActorLocation()).GetSafeNormal2D();
+	Effort = DragEffort;
+	return true;
+}
+
+FVector UPhysicsManipulationComponent::ConstrainDragMovement(const FVector& Delta) const
+{
+	if (!IsDragging() || !GetOwner()) return Delta;
+	const FVector Center = GetDragFrame().TransformPosition((DragLocalHands[0] + DragLocalHands[1]) * 0.5);
+	const FVector From = (GetOwner()->GetActorLocation() - Center) * FVector(1, 1, 0);
+	const FVector Proposed = From + Delta * FVector(1, 1, 0);
+	// Never teleport the player inward when the object itself moves away.
+	const double Radius = FMath::Max(static_cast<double>(DragReach), From.Size());
+	FVector Position = Proposed.GetClampedToMaxSize(Radius);
+	const double MinimumRadius = FMath::Min(FMath::Max(DragRestDistance - 12.0f, 0.0f), static_cast<float>(From.Size()));
+	if (Position.SizeSquared() < FMath::Square(MinimumRadius)) Position = Position.GetSafeNormal(UE_SMALL_NUMBER, From.GetSafeNormal()) * MinimumRadius;
+	const FVector Limited = Position - From;
+	return FVector(Limited.X, Limited.Y, Delta.Z);
+}
+
+void UPhysicsManipulationComponent::CancelManipulation()
+{
+	if (UInteractionComponent* Interaction = GetOwner() ? GetOwner()->FindComponentByClass<UInteractionComponent>() : nullptr)
+	{
+		Interaction->CancelInteraction();
+	}
+	ReleaseComponent();
+}
+
+void UPhysicsManipulationComponent::UpdateDrag(float DeltaTime)
+{
+	ACharacter* Character = DragCharacter.Get();
+	UPrimitiveComponent* Component = ManipulatedComponent.Get();
+	const AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(Character);
+	if (!Character || !Component || !Component->IsRegistered() || !Component->IsSimulatingPhysics(DragBoneName) ||
+		!Character->GetCharacterMovement()->IsMovingOnGround() || (Doll && Doll->IsPhysicsMontageActive()))
+	{
+		CancelManipulation();
+		return;
+	}
+	FVector Left, Right, Facing;
+	float Effort;
+	GetDragPose(Left, Right, Facing, Effort);
+	const FVector Center = (Left + Right) * 0.5;
+	const FVector OwnerLocation = Character->GetActorLocation();
+	if (FVector::Dist(OwnerLocation, Center) > FMath::Max(DragBreakDistance, DragReach + 30.0f))
+	{
+		CancelManipulation();
+		return;
+	}
+	if (!Facing.IsNearlyZero()) Character->SetActorRotation(FMath::RInterpTo(Character->GetActorRotation(), Facing.Rotation(), DeltaTime, 8.0f));
+	const FVector Target = OwnerLocation + Facing * DragRestDistance;
+	const FVector Error = (Target - Center) * FVector(1, 1, 0);
+	const UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+	const FVector Input = Movement->GetCurrentAcceleration();
+	const FVector DriveVelocity = Input.IsNearlyZero() ? Character->GetVelocity()
+		: (Input / FMath::Max(Movement->GetMaxAcceleration(), 1.0f)).GetClampedToMaxSize(1.0) * Movement->GetMaxSpeed();
+	// Input keeps exerting effort when the player's reach leash blocks further movement.
+	const FVector RelativeVelocity = (DriveVelocity - Component->GetPhysicsLinearVelocity(DragBoneName)) * FVector(1, 1, 0);
+	const float Stiffness = FMath::Max(DragSpringStiffness, 1.0f);
+	const float Damping = 2.0f * FMath::Max(DragDampingRatio, 0.1f) * FMath::Sqrt(Stiffness * DragMass);
+	const double ForceLimit = FMath::Min(FMath::Max(DragMaxForce, 1.0f) * 100.0,
+		static_cast<double>(DragMass * FMath::Max(DragMaxAcceleration, 1.0f)));
+	const FVector Force = (Error * Stiffness + RelativeVelocity * Damping).GetClampedToMaxSize(ForceLimit);
+	// Force mode, not acceleration mode. No vertical spring or kinematic handle to lift the prop.
+	if (!Force.IsNearlyZero(1.0)) Component->AddForce(Force, DragBoneName, false);
+	DragEffort = FMath::FInterpTo(DragEffort, static_cast<float>(Force.Size() / ForceLimit), DeltaTime, 6.0f);
 }
 
 bool UPhysicsManipulationComponent::AttachCarriedObject(bool bKeepWorldTransform)
@@ -245,6 +383,23 @@ FVector UPhysicsManipulationComponent::CalculateThrowVelocity(const UPrimitiveCo
 void UPhysicsManipulationComponent::ReleaseComponent()
 {
 	ClearPickupPlayback();
+	if (IsDragging())
+	{
+		if (UPrimitiveComponent* Component = ManipulatedComponent.Get(); Component &&
+			Component->GetAngularDamping() == AppliedDragAngularDamping && AppliedDragAngularDamping != SavedDragAngularDamping)
+		{
+			Component->SetAngularDamping(SavedDragAngularDamping);
+		}
+	}
+	if (ACharacter* Character = DragCharacter.Get())
+	{
+		Character->GetCharacterMovement()->bOrientRotationToMovement = bSavedOrientToMovement;
+		Character->GetCharacterMovement()->bUseControllerDesiredRotation = bSavedControllerDesiredRotation;
+		Character->bUseControllerRotationYaw = bSavedControllerYaw;
+	}
+	DragCharacter.Reset();
+	DragBoneName = NAME_None;
+	DragEffort = 0.0f;
 	if (AActor* Actor = ManipulatedActor.Get())
 	{
 		Actor->OnEndPlay.RemoveDynamic(this, &ThisClass::OnManipulatedActorEndPlay);
@@ -272,6 +427,11 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 
 void UPhysicsManipulationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (IsDragging())
+	{
+		UpdateDrag(DeltaTime);
+		return;
+	}
 	if (bPickupPending)
 	{
 		UAnimInstance* Instance = PickupInstance.Get();
@@ -283,22 +443,14 @@ void UPhysicsManipulationComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		}
 		return;
 	}
-	if (!ManipulatedComponent.IsValid() || !ManipulatedComponent->IsRegistered() || !ManipulatedComponent->IsSimulatingPhysics(GrabbedBoneName) || !IsValid(GetOwner()))
-	{
-		ReleaseComponent();
-		return;
-	}
-	
-	const FVector OwnerLocation = GetOwner()->GetActorLocation();
-	const FVector Offset = DragTarget - OwnerLocation;
-	if (Offset.SizeSquared2D() > FMath::Square(DragDistance))
-	{
-		DragTarget = OwnerLocation + Offset.GetSafeNormal2D() * DragDistance;
-	}
-	
-	DragTarget.Z = OwnerLocation.Z + DragHeightOffset;
-	SetTargetLocation(DragTarget);
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// A disabled/destroyed body cannot leave a stale active interaction behind.
+	CancelManipulation();
+}
+
+void UPhysicsManipulationComponent::OnUnregister()
+{
+	CancelManipulation();
+	Super::OnUnregister();
 }
 
 void UPhysicsManipulationComponent::OnManipulatedActorEndPlay(AActor* Actor, EEndPlayReason::Type EndPlayReason)

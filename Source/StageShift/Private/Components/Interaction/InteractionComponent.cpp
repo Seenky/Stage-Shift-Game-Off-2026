@@ -16,6 +16,7 @@
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
 #include "Misc/ScopeExit.h"
+#include "DrawDebugHelpers.h"
 
 
 UInteractionComponent::UInteractionComponent()

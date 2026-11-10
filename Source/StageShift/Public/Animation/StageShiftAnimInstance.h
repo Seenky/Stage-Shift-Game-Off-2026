@@ -18,6 +18,15 @@ struct FStageShiftDollPose
 	FVector HeadLean = FVector::ZeroVector;
 };
 
+struct FStageShiftDragPose
+{
+	FVector Hands[2] = {FVector::ZeroVector, FVector::ZeroVector};
+	FVector Facing = FVector::ForwardVector;
+	FVector Lean = FVector::ZeroVector;
+	float Alpha = 0.0f;
+	float Effort = 0.0f;
+};
+
 USTRUCT(BlueprintType)
 struct FStageShiftGaitSpeeds
 {
@@ -44,6 +53,7 @@ public:
 	void UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact,
 		FName HitBodyBone = NAME_None);
 	const FStageShiftDollPose& GetDollPose() const { return DollMotion.Pose; }
+	const FStageShiftDragPose& GetDragPose() const { return DragPose; }
 	bool IsDollPhysicsActive() const { return bDollPhysicsActive; }
 
 	UPROPERTY(BlueprintReadOnly, Transient, Category = "Recovery")
@@ -108,6 +118,7 @@ protected:
 	float MotionInertiaScale = 1.0f;
 
 private:
+	FStageShiftDragPose DragPose;
 	void UpdateDollMotion(const AStageShiftCharacter* Character, const FVector& PlanarVelocity, bool bGrounded, float DeltaSeconds);
 
 	struct
