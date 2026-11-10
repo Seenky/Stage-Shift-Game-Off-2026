@@ -2,10 +2,10 @@
 
 #include "Engine/World.h"
 #include "Misc/ScopeExit.h"
-#include "Managers/Stage/Data/StageRecoveryRulesDataAsset.h"
-#include "Managers/Stage/StageAction.h"
-#include "Managers/Stage/StageManager.h"
-#include "Managers/Stage/StageMemberCommand.h"
+#include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
+#include "Stage/Core/StageAction.h"
+#include "Stage/Core/StageManager.h"
+#include "Stage/Core/StageMemberCommand.h"
 #include "StatusesComponent.h"
 
 UStageMemberComponent::UStageMemberComponent()
@@ -274,7 +274,7 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		const bool bRequirementsMet = StatusComponent.IsValid() &&
 			Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses());
 		if (Command->GetState() == EStageExecutionState::Running &&
-			(!bRequirementsMet || !Main->CanContinue(Command->Context))) Main->RequestStop(EStageActionStopReason::Interrupted);
+			(!bRequirementsMet || !Main->CanContinue())) Main->RequestStop(EStageActionStopReason::Interrupted);
 		return;
 	}
 	if (Command->GetState() == EStageExecutionState::Finished)

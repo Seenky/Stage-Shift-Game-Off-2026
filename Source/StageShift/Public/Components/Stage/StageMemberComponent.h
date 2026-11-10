@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Managers/Stage/Data/StageData.h"
+#include "Stage/Core/Data/StageData.h"
 #include "StageMemberComponent.generated.h"
 
 class UStageAction;

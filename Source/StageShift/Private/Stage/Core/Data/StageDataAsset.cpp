@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Managers/Stage/Data/StageDataAsset.h"
+#include "Stage/Core/Data/StageDataAsset.h"
 #include "Components/Stage/StageMemberComponent.h"
-#include "Managers/Stage/StageMemberCommand.h"
+#include "Stage/Core/StageMemberCommand.h"
 
 void UStageDataAsset::RecalculateEstimatedScore()
 {

@@ -1,4 +1,4 @@
-#include "Managers/Stage/SequenceStageMemberCommand.h"
+#include "Stage/Core/SequenceStageMemberCommand.h"
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "StageCommandContainerHelpers.h"

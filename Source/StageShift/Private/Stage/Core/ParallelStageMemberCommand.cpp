@@ -1,4 +1,4 @@
-#include "Managers/Stage/ParallelStageMemberCommand.h"
+#include "Stage/Core/ParallelStageMemberCommand.h"
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "StageCommandContainerHelpers.h"

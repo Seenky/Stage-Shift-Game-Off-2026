@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Managers/Stage/Data/StageData.h"
+#include "Stage/Core/Data/StageData.h"
 #include "UObject/Object.h"
 #include "StageAction.generated.h"
 
@@ -19,7 +19,7 @@ public:
 	void Start(const FStageExecutionContext& InContext);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Stage|Action")
-	bool CanContinue(const FStageExecutionContext& InContext) const;
+	bool CanContinue() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Stage|Action")
 	void RequestStop(EStageActionStopReason Reason);
@@ -46,7 +46,7 @@ protected:
 	EStageActionStopMode GetStopMode(EStageActionStopReason Reason) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Action")
-	void StopNative(EStageActionStopMode Mode);
+	void OnStop(EStageActionStopMode Mode);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Action")
 	void Cleanup();

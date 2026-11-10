@@ -1,9 +1,9 @@
-#include "Managers/Stage/StageManager.h"
+#include "Stage/Core/StageManager.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"
-#include "Managers/Stage/Data/StageDataAsset.h"
-#include "Managers/Stage/Data/StageRecoveryRulesDataAsset.h"
-#include "Managers/Stage/StageMemberCommand.h"
+#include "Stage/Core/Data/StageDataAsset.h"
+#include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
+#include "Stage/Core/StageMemberCommand.h"
 #include "StatusesComponent.h"
 #include "UObject/Package.h"
 

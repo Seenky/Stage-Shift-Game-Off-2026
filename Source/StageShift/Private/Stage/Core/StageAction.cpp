@@ -1,4 +1,4 @@
-#include "Managers/Stage/StageAction.h"
+#include "Stage/Core/StageAction.h"
 
 #include "Components/Stage/StageMemberComponent.h"
 
@@ -18,7 +18,7 @@ void UStageAction::Start(const FStageExecutionContext& InContext)
 	Execute();
 }
 
-bool UStageAction::CanContinue_Implementation(const FStageExecutionContext& InContext) const
+bool UStageAction::CanContinue_Implementation() const
 {
 	return true;
 }
@@ -31,9 +31,9 @@ void UStageAction::RequestStop(EStageActionStopReason Reason)
 	const EStageActionStopMode PreviousStopMode = ActionStopMode;
 	if (bWasStopping)
 	{
-		const bool bStrongerReason =
+		const bool bFinalStopAfterInterruption =
 			(Reason == EStageActionStopReason::Finished && ActionStopReason == EStageActionStopReason::Interrupted);
-		if (!bStrongerReason) return;
+		if (!bFinalStopAfterInterruption) return;
 	}
 
 	ActionStopReason = Reason;
@@ -46,7 +46,7 @@ void UStageAction::RequestStop(EStageActionStopReason Reason)
 		? EStageActionStopMode::StopAction : RequestedMode;
 	if (!bWasStopping || ActionStopMode != PreviousStopMode)
 	{
-		StopNative(ActionStopMode);
+		OnStop(ActionStopMode);
 	}
 }
 
@@ -83,7 +83,7 @@ EStageActionStopMode UStageAction::GetStopMode_Implementation(EStageActionStopRe
 	return EStageActionStopMode::StopAction;
 }
 
-void UStageAction::StopNative_Implementation(EStageActionStopMode Mode)
+void UStageAction::OnStop_Implementation(EStageActionStopMode Mode)
 {
 	if (Mode == EStageActionStopMode::StopAction)
 	{

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Managers/Stage/Data/StageData.h"
+#include "Stage/Core/Data/StageData.h"
 #include "StageManager.generated.h"
 
 

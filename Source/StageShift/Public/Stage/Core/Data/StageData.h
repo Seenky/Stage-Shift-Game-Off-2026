@@ -104,15 +104,6 @@ enum class EStageActionStopMode : uint8
 	FinishAction
 };
 
-UENUM(BlueprintType)
-enum class EStageResolveDecision : uint8
-{
-	CompleteCommand,
-	FailCommand,
-	StartAction,
-	WaitForRecovery,
-};
-
 // Structs
 
 // Member Command
@@ -263,22 +254,4 @@ struct FStageCommandExecution
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Stage|Runtime")
 	float RecoveryWaitDeadline = -1.0f;
-};
-
-USTRUCT(BlueprintType)
-struct FStageResolveResult
-{
-	GENERATED_BODY()
-
-	UPROPERTY(Transient, BlueprintReadOnly, Category = "Stage|Runtime")
-	EStageResolveDecision Decision = EStageResolveDecision::FailCommand;
-
-	UPROPERTY(Transient, BlueprintReadOnly, Category = "Stage|Runtime")
-	TObjectPtr<UStageAction> Action = nullptr;
-
-	UPROPERTY(Transient, BlueprintReadOnly, Category = "Stage|Runtime")
-	EStageActionPurpose Purpose = EStageActionPurpose::Main;
-
-	UPROPERTY(Transient, BlueprintReadOnly, Category = "Stage|Runtime")
-	FText Reason;
 };

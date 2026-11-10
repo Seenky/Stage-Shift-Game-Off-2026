@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Managers/Stage/StageMemberCommand.h"
+#include "Stage/Core/StageMemberCommand.h"
 #include "ParallelStageMemberCommand.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced, HideCategories = (Scoring))

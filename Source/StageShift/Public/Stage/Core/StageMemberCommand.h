@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Managers/Stage/Data/StageData.h"
+#include "Stage/Core/Data/StageData.h"
 #include "UObject/Object.h"
 #include "StageMemberCommand.generated.h"
 

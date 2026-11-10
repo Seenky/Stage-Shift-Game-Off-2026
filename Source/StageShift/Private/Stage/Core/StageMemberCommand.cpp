@@ -1,8 +1,8 @@
-#include "Managers/Stage/StageMemberCommand.h"
+#include "Stage/Core/StageMemberCommand.h"
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"
-#include "Managers/Stage/StageAction.h"
+#include "Stage/Core/StageAction.h"
 
 void UStageMemberCommand::Start(const FStageExecutionContext& InContext)
 {
