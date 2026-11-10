@@ -67,6 +67,7 @@ UStageAction* UStageMemberCommand::CreateMainAction_Implementation(const FStageE
 void UStageMemberCommand::NotifyMainActionStarted()
 {
 	if (CommandState != EStageExecutionState::Running || CurrentStartTime >= 0.0f) return;
+	bHasStartedMainAction = true;
 	if (const UWorld* World = GetWorld()) CurrentStartTime = static_cast<float>(World->GetTimeSeconds());
 }
 
@@ -150,6 +151,7 @@ void UStageMemberCommand::ResetRuntime(
 	AccumulatedActiveTime = 0.0f;
 	CurrentStartTime = -1.0f;
 	bUseShortVersion = false;
+	bHasStartedMainAction = false;
 	bHasSuccessfulMainAction = false;
 	OnFinished.Clear();
 }

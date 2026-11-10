@@ -457,7 +457,7 @@ void UStageMemberComponent::HandleCommandFinished(UStageMemberCommand* Command, 
 	Manager->AccountCommandResult(Command, Result);
 	OnCommandFinished.Broadcast(Command, Result);
 	if (Result == EStageCommandResult::Succeeded && Command->OnSuccessEventTag.IsValid() &&
-		(Command->IsComposite() || Command->HasSuccessfulMainAction())) ReportStageEvent(Command->BuildSuccessEvent());
+		(Command->IsComposite() || Command->HasStartedMainAction())) ReportStageEvent(Command->BuildSuccessEvent());
 }
 
 void UStageMemberComponent::ReportStageEvent(const FStageEvent& Event)

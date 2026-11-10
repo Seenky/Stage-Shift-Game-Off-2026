@@ -84,6 +84,9 @@ public:
 	bool IsUsingShortVersion() const { return bUseShortVersion; }
 
 	UFUNCTION(BlueprintPure, Category = "Stage|Command")
+	bool HasStartedMainAction() const { return bHasStartedMainAction; }
+
+	UFUNCTION(BlueprintPure, Category = "Stage|Command")
 	bool HasSuccessfulMainAction() const { return bHasSuccessfulMainAction; }
 
 protected:
@@ -131,5 +134,6 @@ private:
 	// Start time of current main action
 	float CurrentStartTime = -1.0f;
 	bool bUseShortVersion = false;
+	bool bHasStartedMainAction = false;
 	bool bHasSuccessfulMainAction = false;
 };

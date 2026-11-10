@@ -485,7 +485,7 @@ void AStageManager::AccountCommandResult(UStageMemberCommand* Command, EStageCom
 		MaxLatenessSeconds = FMath::Max(MaxLatenessSeconds, CurrentLatenessSeconds);
 		CurrentLatenessLevel = ResolveLatenessLevel(CurrentLatenessSeconds);
 	}
-	if (Result != EStageCommandResult::Succeeded || Command->IsComposite() || !Command->HasSuccessfulMainAction()) return;
+	if (Result != EStageCommandResult::Succeeded || Command->IsComposite() || !Command->HasStartedMainAction()) return;
 	float Multiplier = 1.0f;
 	if (Entry->CommandType == EStageCommandType::Scenario)
 		if (const float* Value = ScoreMultipliers.Find(ResolveLatenessLevel(GetCommandLateness(Command)))) Multiplier = *Value;
