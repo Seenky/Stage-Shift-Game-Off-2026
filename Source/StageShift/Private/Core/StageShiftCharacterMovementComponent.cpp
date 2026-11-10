@@ -6,9 +6,30 @@
 #include "Engine/World.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "PhysicsEngine/SkeletalBodySetup.h"
+#include "Physics/PhysicsManipulationComponent.h"
 
-bool UStageShiftCharacterMovementComponent::MoveUpdatedComponentImpl(const FVector& Delta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit, ETeleportType Teleport)
+void UStageShiftCharacterMovementComponent::InitializeComponent()
 {
+	Super::InitializeComponent();
+	Manipulation = GetOwner()->FindComponentByClass<UPhysicsManipulationComponent>();
+}
+
+float UStageShiftCharacterMovementComponent::GetMaxSpeed() const
+{
+	return Super::GetMaxSpeed() * (Manipulation.IsValid() ? Manipulation->GetDragMovementScale() : 1.0f);
+}
+
+float UStageShiftCharacterMovementComponent::GetMaxAcceleration() const
+{
+	const float Scale = Manipulation.IsValid() && Manipulation->IsDragging()
+		? FMath::Clamp(Manipulation->GetDragMovementScale(), 0.15f, 0.4f) : 1.0f;
+	return Super::GetMaxAcceleration() * Scale;
+}
+
+bool UStageShiftCharacterMovementComponent::MoveUpdatedComponentImpl(const FVector& RequestedDelta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit, ETeleportType Teleport)
+{
+	const FVector Delta = bSweep && Teleport == ETeleportType::None && Manipulation.IsValid()
+		? Manipulation->ConstrainDragMovement(RequestedDelta) : RequestedDelta;
 	if (const auto* Character = Cast<AStageShiftCharacter>(CharacterOwner); Character && Character->IsDollPhysicsActive())
 	{
 		if (Teleport != ETeleportType::None) Character->GetDollPhysics()->ResetAfterTeleport();

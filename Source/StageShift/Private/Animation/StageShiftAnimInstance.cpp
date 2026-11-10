@@ -37,6 +37,7 @@ void UStageShiftAnimInstance::NativeInitializeAnimation()
 	RecoveryBlendTime = 0.0f;
 	RecoveryBlendElapsed = 0.0f;
 	DollMotion = {};
+	DragPose = {};
 }
 
 bool UStageShiftAnimInstance::BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime)
@@ -86,6 +87,15 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bDollPhysicsActive = StageCharacter && StageCharacter->IsDollPhysicsActive();
 	float TargetPickupAlpha = 0.0f;
 	const UPhysicsManipulationComponent* Manipulation = Pawn ? Pawn->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
+	const bool bDragging = Manipulation && Manipulation->GetDragPose(DragPose.Hands[0], DragPose.Hands[1], DragPose.Facing, DragPose.Effort) &&
+		(!StageCharacter || !StageCharacter->IsPhysicsMontageActive());
+	DragPose.Alpha = FMath::FInterpTo(DragPose.Alpha, bDragging ? 1.0f : 0.0f, DeltaSeconds, bDragging ? 10.0f : 12.0f);
+	if (StageCharacter && StageCharacter->IsPhysicsMontageActive()) DragPose.Alpha = 0.0f;
+	if (DragPose.Alpha < KINDA_SMALL_NUMBER) DragPose.Alpha = 0.0f;
+	const ACharacter* DragCharacter = Cast<ACharacter>(Pawn);
+	const FVector Intent = DragCharacter ? DragCharacter->GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D() : FVector::ZeroVector;
+	const FVector TargetDragLean = bDragging ? DragPose.Facing * FVector::DotProduct(Intent, DragPose.Facing) * (0.04f + 0.08f * DragPose.Effort) : FVector::ZeroVector;
+	DragPose.Lean = FMath::VInterpTo(DragPose.Lean, TargetDragLean, DeltaSeconds, 8.0f);
 	if (Manipulation)
 	{
 		Manipulation->GetPickupTarget(PickupTarget, TargetPickupAlpha, &PickupHandOffset);

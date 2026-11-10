@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Engine/EngineTypes.h"
+#include "Components/PrimitiveComponent.h"
 #include "InteractionOutlineComponent.generated.h"
 
 class UInteractionComponent;
