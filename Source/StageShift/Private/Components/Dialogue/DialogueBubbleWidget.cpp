@@ -2,18 +2,70 @@
 
 
 #include "Components/Dialogue/DialogueBubbleWidget.h"
+
+#include "Components/Border.h"
+#include "Components/Dialogue/DialogueTextWidget.h"
 #include "Components/Dialogue/DialogueViewModel.h"
 
-void UDialogueBubbleWidget::OnDialogueViewModelSet_Implementation(UDialogueViewModel* ViewModel)
+void UDialogueBubbleWidget::SetDialogueViewModel(UDialogueViewModel* ViewModel)
 {
-	DialogueViewModel = ViewModel;
-	
-	if (DialogueViewModel)
+	if (BoundViewModel.Get() == ViewModel)
 	{
-		DialogueViewModel->OnDialogueLineEnded.AddDynamic(this, &ThisClass::OnDialogueLineEnded);
+		return;
+	}
+
+	if (UDialogueViewModel* Previous = BoundViewModel.Get())
+	{
+		Previous->OnPlaybackStateChanged.RemoveAll(this);
+		Previous->OnDialogueLineEnded.RemoveDynamic(this, &ThisClass::EndBubble);
+	}
+
+	if (DialogueText && DialogueBorder)
+	{
+		if (!DialogueText->OnOpacityChanged.IsBoundToObject(this))
+		{
+			BorderColor = DialogueBorder->GetBrushColor();
+			DialogueText->OnOpacityChanged.BindUObject(this, &ThisClass::SetBorderOpacity);
+		}
+		DialogueText->ResetPlayback();
+		SetBorderOpacity(0.0f);
+	}
+
+	BoundViewModel = ViewModel;
+	if (ViewModel)
+	{
+		ViewModel->OnPlaybackStateChanged.AddUObject(this, &ThisClass::UpdateBubble);
+		ViewModel->OnDialogueLineEnded.AddUniqueDynamic(this, &ThisClass::EndBubble);
+	}
+	OnDialogueViewModelSet(ViewModel);
+}
+
+void UDialogueBubbleWidget::UpdateBubble(const FDialoguePlaybackState& State)
+{
+	if (DialogueText)
+	{
+		DialogueText->UpdatePlayback(State);
 	}
 }
 
-void UDialogueBubbleWidget::OnDialogueLineEnded_Implementation(FGuid PlaybackId, EDialogueEndReason Reason)
+void UDialogueBubbleWidget::EndBubble(FGuid PlaybackId, EDialogueEndReason Reason)
+{
+	if (DialogueText)
+	{
+		DialogueText->EndPlayback(PlaybackId, Reason);
+	}
+}
+
+void UDialogueBubbleWidget::SetBorderOpacity(float Opacity)
+{
+	FLinearColor Color = BorderColor;
+	Color.A *= Opacity;
+	if (DialogueBorder && DialogueBorder->GetBrushColor() != Color)
+	{
+		DialogueBorder->SetBrushColor(Color);
+	}
+}
+
+void UDialogueBubbleWidget::OnDialogueViewModelSet_Implementation(UDialogueViewModel* ViewModel)
 {
 }

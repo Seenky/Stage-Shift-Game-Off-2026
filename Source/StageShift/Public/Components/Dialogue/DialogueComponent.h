@@ -7,6 +7,8 @@
 #include "Components/ActorComponent.h"
 #include "DialogueComponent.generated.h"
 
+class UDialogueBubbleWidget;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class STAGESHIFT_API UDialogueComponent : public UActorComponent
 {
@@ -41,14 +43,14 @@ public:
 	FOnDialogueLineEnded OnDialogueLineEnded;
 	
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta=(UseComponentPicker, AllowedClasses = "/Script/Engine.WidgetComponent"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta=(UseComponentPicker, AllowedClasses = "/Script/UMG.WidgetComponent"))
 	FComponentReference DialogueWidgetReference;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta=(AllowedClasses = "/Script/StageShift.DialogueWidget"))
-	TSubclassOf<UUserWidget> DialogueWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Settings")
+	TObjectPtr<UDialogueBubbleWidget> DialogueWidgetTemplate;
 	
 private:
-	void RevealNextWord();
+	void RevealNextLetter();
 	
 	void BeginHold();
 	
@@ -62,9 +64,9 @@ private:
 	
 	FString ResolvedText = {};
 	
-	int32 RevealedWordCount = 0;
+	int32 RevealedLetterCount = 0;
 	
-	TArray<int32> WordEndOffsets;
+	TArray<int32> LetterEndOffsets;
 	
 	FTimerHandle RevealTimerHandle;
 	FTimerHandle HoldTimerHandle;

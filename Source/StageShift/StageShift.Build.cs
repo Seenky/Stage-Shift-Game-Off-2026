@@ -13,9 +13,12 @@ public class StageShift : ModuleRules
 			"Core", 
 			"CoreUObject", 
 			"Engine",
+			"AnimGraphRuntime",
 			"InputCore", 
 			"EnhancedInput", 
 			"GameplayTags", 
+			"UMG",
+			"SlateCore",
 			
 		});
 
@@ -25,14 +28,13 @@ public class StageShift : ModuleRules
 			"StateTreeModule", 
 			"GameplayStateTreeModule", 
 			"GameplayTags", 
-			"AnimGraphRuntime",
 			"AnimationCore",
+			"OptimusCore",
+			"ComputeFramework",
 			"ControlRig", 
 			"RigVM",
 			"PBIK",
-			"UMG", 
 			"Slate",
-			"SlateCore",
 			"ModelViewViewModel"
 			
 		});

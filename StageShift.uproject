@@ -13,6 +13,11 @@
 			"Name": "StageShiftEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "StageShiftAnimGraph",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -33,6 +38,14 @@
 		},
 		{
 			"Name": "FullBodyIK",
+			"Enabled": true
+		},
+		{
+			"Name": "DeformerGraph",
+			"Enabled": true
+		},
+		{
+			"Name": "ComputeFramework",
 			"Enabled": true
 		}
 	]

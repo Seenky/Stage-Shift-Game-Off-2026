@@ -4,6 +4,20 @@
 #include "Animation/PoseSnapshot.h"
 #include "StageShiftAnimInstance.generated.h"
 
+class AStageShiftCharacter;
+
+struct FStageShiftDollPose
+{
+	float Compression = 0.0f;
+	float HeadCompression = 0.0f;
+	float ContactOffset = 0.0f;
+	FVector ContactNormal = FVector::ZeroVector;
+	FVector ContactAnchor = FVector::ZeroVector;
+	FName ContactBone = NAME_None;
+	FVector ChestLean = FVector::ZeroVector;
+	FVector HeadLean = FVector::ZeroVector;
+};
+
 USTRUCT(BlueprintType)
 struct FStageShiftGaitSpeeds
 {
@@ -26,6 +40,10 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	bool BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime);
+	void AddLandingSquash(float Strength);
+	void UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact,
+		FName HitBodyBone = NAME_None);
+	const FStageShiftDollPose& GetDollPose() const { return DollMotion.Pose; }
 
 	UPROPERTY(BlueprintReadOnly, Transient, Category = "Recovery")
 	FPoseSnapshot RecoveryPose;
@@ -82,7 +100,32 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Play Rate", meta = (ClampMin = "0.0"))
 	float PlayRateResponse = 10.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Doll Motion", meta = (ClampMin = "0.0", ClampMax = "2.0"))
+	float ContactSquashScale = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Doll Motion", meta = (ClampMin = "0.0", ClampMax = "2.0"))
+	float MotionInertiaScale = 1.0f;
+
 private:
+	void UpdateDollMotion(const AStageShiftCharacter* Character, const FVector& PlanarVelocity, bool bGrounded, float DeltaSeconds);
+
+	struct
+	{
+		FStageShiftDollPose Pose;
+		FVector2D PreviousFootContact = FVector2D::ZeroVector;
+		FVector PreviousVelocity = FVector::ZeroVector;
+		double PreviousYaw = 0.0;
+		bool bWasGrounded = false;
+		float CompressionVelocity = 0.0f;
+		float HeadCompressionVelocity = 0.0f;
+		float ContactVelocity = 0.0f;
+		float ContactHold = 0.0f;
+		float ContactHoldTime = 0.0f;
+		FVector LastProjectedImpact = FVector::ZeroVector;
+		FVector ChestLeanVelocity = FVector::ZeroVector;
+		FVector HeadLeanVelocity = FVector::ZeroVector;
+	} DollMotion;
+
 	float RecoveryBlendTime = 0.0f;
 	float RecoveryBlendElapsed = 0.0f;
 };

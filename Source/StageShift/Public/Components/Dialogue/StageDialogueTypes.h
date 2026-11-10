@@ -13,11 +13,15 @@ struct FDialogueLine
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText Text = {};
 	
+	// Additional pause when the next letter follows whitespace.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0f, UIMin = 0.0f))
 	float WordInterval = 0.25f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0f, UIMin = 0.0f))
 	float HoldDuration = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0f, UIMin = 0.0f))
+	float LetterInterval = 0.035f;
 };
 
 UENUM(BlueprintType)
@@ -44,7 +48,7 @@ struct FDialoguePlaybackState
 	FDialogueLine Line;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EDialoguePlaybackPhase Phase;
+	EDialoguePlaybackPhase Phase = EDialoguePlaybackPhase::Idle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText VisibleText;

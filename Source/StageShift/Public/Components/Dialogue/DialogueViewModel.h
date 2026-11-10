@@ -8,6 +8,8 @@
 
 class UDialogueComponent;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FDialogueViewPlaybackStateChanged, const FDialoguePlaybackState&);
+
 UCLASS(BlueprintType)
 class STAGESHIFT_API UDialogueViewModel : public UMVVMViewModelBase
 {
@@ -22,6 +24,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
 	FOnDialogueLineEnded OnDialogueLineEnded;
+
+	FDialogueViewPlaybackStateChanged OnPlaybackStateChanged;
 
 	FText GetVisibleText() const { return VisibleText; }
 	FGuid GetPlaybackId() const { return PlaybackId; }

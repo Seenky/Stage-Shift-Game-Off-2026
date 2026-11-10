@@ -10,6 +10,6 @@ public class StageShiftEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_8;
-		ExtraModuleNames.AddRange(new[] { "StageShift", "StageShiftEditor" });
+		ExtraModuleNames.AddRange(new[] { "StageShift", "StageShiftEditor", "StageShiftAnimGraph" });
 	}
 }

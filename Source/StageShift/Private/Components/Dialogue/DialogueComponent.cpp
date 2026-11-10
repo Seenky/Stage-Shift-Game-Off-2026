@@ -5,6 +5,7 @@
 #include "Components/Dialogue/DialogueBubbleWidget.h"
 
 #include "Engine/World.h"
+#include "Internationalization/BreakIterator.h"
 #include "Misc/Char.h"
 #include "TimerManager.h"
 
@@ -18,33 +19,32 @@ void UDialogueComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    UWidgetComponent* WidgetComponent = Cast<UWidgetComponent>(DialogueWidgetReference.GetComponent(GetOwner()));
+    auto* WidgetComponent = Cast<UWidgetComponent>(DialogueWidgetReference.GetComponent(GetOwner()));
+    const UDialogueBubbleWidget* Template = DialogueWidgetTemplate.Get();
 
-    if (!IsValid(WidgetComponent) || !DialogueWidgetClass)
+    if (!IsValid(WidgetComponent) || !IsValid(Template))
     {
-        UE_LOG(LogTemp, Warning, TEXT("DialogueComponent on %s: missing widget component or widget class."), *GetNameSafe(GetOwner()));
-
-        DestroyComponent();
         return;
     }
 
-    WidgetComponent->SetWidgetClass(DialogueWidgetClass);
-    WidgetComponent->InitWidget();
-
-    UDialogueBubbleWidget* DialogueWidget = Cast<UDialogueBubbleWidget>(WidgetComponent->GetUserWidgetObject());
+    auto* DialogueWidget = DuplicateObject<UDialogueBubbleWidget>(DialogueWidgetTemplate.Get(), WidgetComponent);
 
     if (!IsValid(DialogueWidget))
     {
-        UE_LOG(LogTemp, Warning, TEXT("DialogueComponent on %s: widget must derive from UDialogueBubbleWidget."), *GetNameSafe(GetOwner()));
-
-        DestroyComponent();
         return;
     }
 
+    if (ULocalPlayer* LocalPlayer = WidgetComponent->GetOwnerPlayer())
+    {
+        DialogueWidget->SetOwningLocalPlayer(LocalPlayer);
+    }
+
+    DialogueWidget->Initialize();
+    WidgetComponent->SetWidget(DialogueWidget);
+
     DialogueViewModel = NewObject<UDialogueViewModel>(this);
     DialogueViewModel->Init(this);
-
-    DialogueWidget->OnDialogueViewModelSet(DialogueViewModel);
+    DialogueWidget->SetDialogueViewModel(DialogueViewModel);
 }
 
 void UDialogueComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -66,8 +66,8 @@ void UDialogueComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     PlaybackState.Phase = EDialoguePlaybackPhase::Idle;
 
     ResolvedText.Reset();
-    WordEndOffsets.Reset();
-    RevealedWordCount = 0;
+    LetterEndOffsets.Reset();
+    RevealedLetterCount = 0;
 
     Super::EndPlay(EndPlayReason);
 }
@@ -116,36 +116,28 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 
     ResolvedText = LineToPlay.Text.ToString();
 
-    WordEndOffsets.Reset();
-    RevealedWordCount = 0;
+    LetterEndOffsets.Reset();
+    RevealedLetterCount = 0;
 
-    const int32 TextLength = ResolvedText.Len();
-
-    for (int32 Index = 0; Index < TextLength; ++Index)
+    const TSharedRef<IBreakIterator> Characters = FBreakIterator::CreateCharacterBoundaryIterator();
+    Characters->SetStringRef(ResolvedText);
+    int32 Start = Characters->ResetToBeginning();
+    for (int32 End = Characters->MoveToNext(); End != INDEX_NONE; End = Characters->MoveToNext())
     {
-        const bool bIsWordEnd = !FChar::IsWhitespace(ResolvedText[Index]) && (Index + 1 == TextLength || FChar::IsWhitespace(ResolvedText[Index + 1]));
-
-        if (bIsWordEnd)
+        if (!FChar::IsWhitespace(ResolvedText[Start]))
         {
-            WordEndOffsets.Add(Index + 1);
+            LetterEndOffsets.Add(End);
         }
+        Start = End;
     }
     
-    if (WordEndOffsets.IsEmpty())
+    if (LetterEndOffsets.IsEmpty())
     {
         FinishPlayback(EDialogueEndReason::Completed);
         return;
     }
     
-    if (LineToPlay.WordInterval <= 0.0f)
-    {
-        RevealAllWords();
-        return;
-    }
-    
-    TimerManager.SetTimer(RevealTimerHandle, this, &ThisClass::RevealNextWord, LineToPlay.WordInterval, true);
-
-    RevealNextWord();
+    RevealNextLetter();
 }
 
 void UDialogueComponent::RevealAllWords()
@@ -163,34 +155,30 @@ void UDialogueComponent::StopPlayback()
     FinishPlayback(EDialogueEndReason::Interrupted);
 }
 
-void UDialogueComponent::RevealNextWord()
+void UDialogueComponent::RevealNextLetter()
 {
     if (PlaybackState.Phase != EDialoguePlaybackPhase::Revealing)
     {
         return;
     }
 
-    if (!WordEndOffsets.IsValidIndex(RevealedWordCount))
+    while (++RevealedLetterCount < LetterEndOffsets.Num())
     {
-        FinishPlayback(EDialogueEndReason::Completed);
-        return;
+        const int32 EndOffset = LetterEndOffsets[RevealedLetterCount - 1];
+        const bool bWordBreak = FChar::IsWhitespace(ResolvedText[EndOffset]);
+        const float Delay = FMath::Max(0.0f, PlaybackState.Line.LetterInterval)
+            + (bWordBreak ? FMath::Max(0.0f, PlaybackState.Line.WordInterval) : 0.0f);
+        if (Delay > 0.0f)
+        {
+            GetWorld()->GetTimerManager().SetTimer(RevealTimerHandle, this, &ThisClass::RevealNextLetter, Delay, false);
+            PlaybackState.VisibleText = FText::FromString(ResolvedText.Left(EndOffset));
+            const FDialoguePlaybackState StateSnapshot = PlaybackState;
+            OnDialoguePlaybackStateChanged.Broadcast(StateSnapshot);
+            return;
+        }
     }
 
-    const int32 EndOffset = WordEndOffsets[RevealedWordCount];
-
-    ++RevealedWordCount;
-    
-    if (RevealedWordCount == WordEndOffsets.Num())
-    {
-        BeginHold();
-        return;
-    }
-
-    PlaybackState.VisibleText = FText::FromString(ResolvedText.Left(EndOffset));
-    
-    const FDialoguePlaybackState StateSnapshot = PlaybackState;
-
-    OnDialoguePlaybackStateChanged.Broadcast(StateSnapshot);
+    BeginHold();
 }
 
 void UDialogueComponent::BeginHold()
@@ -213,7 +201,7 @@ void UDialogueComponent::BeginHold()
     TimerManager.ClearTimer(RevealTimerHandle);
     TimerManager.ClearTimer(HoldTimerHandle);
 
-    RevealedWordCount = WordEndOffsets.Num();
+    RevealedLetterCount = LetterEndOffsets.Num();
 
     PlaybackState.VisibleText = PlaybackState.Line.Text;
     PlaybackState.Phase = EDialoguePlaybackPhase::Holding;
@@ -259,8 +247,8 @@ void UDialogueComponent::FinishPlayback(const EDialogueEndReason EndReason)
     PlaybackState.Phase = EDialoguePlaybackPhase::Idle;
 
     ResolvedText.Reset();
-    WordEndOffsets.Reset();
-    RevealedWordCount = 0;
+    LetterEndOffsets.Reset();
+    RevealedLetterCount = 0;
     
     OnDialogueLineEnded.Broadcast(EndedPlaybackId, EndReason);
 }
