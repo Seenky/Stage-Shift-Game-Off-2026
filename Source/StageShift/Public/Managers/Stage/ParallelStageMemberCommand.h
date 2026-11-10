@@ -1,0 +1,36 @@
+#pragma once
+
+#include "Managers/Stage/StageMemberCommand.h"
+#include "ParallelStageMemberCommand.generated.h"
+
+UCLASS(BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced, HideCategories = (Scoring))
+class STAGESHIFT_API UParallelStageMemberCommand : public UStageMemberCommand
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Stage|Command")
+	TArray<TObjectPtr<UStageMemberCommand>> Children;
+
+	virtual bool IsComposite() const override { return true; }
+	virtual const TArray<TObjectPtr<UStageMemberCommand>>& GetChildCommands() const override { return Children; }
+	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
+		float InPlannedStartTime, float InPlannedEndTime) override;
+
+protected:
+	virtual float GetNeededTime_Implementation() const override;
+	virtual float GetRemainingTime_Implementation() const override;
+	virtual void BeginWork_Implementation() override;
+	virtual void StopWork_Implementation(EStageActionStopReason Reason) override;
+	virtual void FreezeFinaleChoice_Implementation(const FStageExecutionContext& InContext) override;
+
+private:
+	void CheckChildrenResults();
+	void TryFinish();
+
+	UFUNCTION()
+	void HandleChildFinished(UStageMemberCommand* Command, EStageCommandResult Result);
+
+	TArray<EStageCommandResult> ChildResults;
+	bool bIssuingChildren = false;
+};

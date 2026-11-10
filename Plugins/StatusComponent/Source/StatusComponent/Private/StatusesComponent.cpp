@@ -166,12 +166,11 @@ void UStatusesComponent::ChangeOrAddCurrentActiveStatus_Implementation(const FGa
 	
 	// Remove old current active status
 	if(!GetIsEqualCurrentActiveStatus(NewCurrentActiveStatus) && bIsChangeActiveStatus) RemoveActiveStatus();
-
+	
+	CurrentActiveStatus = NewCurrentActiveStatus;
+	
 	// Add new current active status
 	AddConstantStatuses(NewCurrentActiveStatus.GetSingleTagContainer());
-
-	CurrentActiveStatus = NewCurrentActiveStatus;
-
 	OnChangeCurrentActiveStatus.Broadcast(CurrentActiveStatus);
 }
 
@@ -190,48 +189,42 @@ void UStatusesComponent::AddStatusesWithInfo_Implementation(const FStatusesInfoA
 		bool bLocalFlag = false;
 		switch (StatusContainerToAdd.StatusesState)
 		{
-		case Constant:
-			bLocalFlag = AddStatuses(StatusContainerToAdd.Statuses);
-			break;
-		case Temporary:
-			bLocalFlag = AddTemporaryStatuses(StatusContainerToAdd.Statuses, StatusContainerToAdd.TemporaryTimeStatus,
-			                     StatusContainerToAdd.bIsClearTimer);
-			break;
-		default:
-			break;
+			case Constant:
+				bLocalFlag = AddStatuses(StatusContainerToAdd.Statuses);
+				break;
+			case Temporary:
+				bLocalFlag = AddTemporaryStatuses(StatusContainerToAdd.Statuses, StatusContainerToAdd.TemporaryTimeStatus,
+				                     StatusContainerToAdd.bIsClearTimer);
+				break;
+			default:
+				break;
 		}
 		if(bLocalFlag) bLocalResult = true;
 	}
-
-	// Check New Gameplay Tag
-	TArray<FGameplayTag> LocalNewStatusesArray;
-	Statuses.GetGameplayTagArray(LocalNewStatusesArray);
-	const auto LocalAddedStatuses = FGameplayTagContainer::CreateFromArray(
-		LocalNewStatusesArray.FilterByPredicate([&](const FGameplayTag LocalFindedTag)
-		{
-			return !LocalOldStatusesArray.Contains(LocalFindedTag);
-		})
-		);
-	
-	if (bLocalResult && !LocalAddedStatuses.IsEmpty()) OnAddStatuses.Broadcast(LocalAddedStatuses);
-}
-
-bool UStatusesComponent::AddStatus(const FStatusesInfo& StatusToAdd)
-{
-	if (GetIsContainStatuses(StatusToAdd.Statuses, true) || !StatusToAdd.Statuses.IsValid()) return false;
-	Statuses.AppendTags(StatusToAdd.Statuses);
-	return true;
 }
 
 bool UStatusesComponent::AddStatuses(const FGameplayTagContainer& StatusesToAdd)
 {
 	if (GetIsContainStatuses(StatusesToAdd, true, true) || !StatusesToAdd.IsValid()) return false;
+	FGameplayTagContainer NewStatusesToAdd;
 	for (auto Tag : StatusesToAdd)
 	{
 		FStatusesInfo LocalAddTag(Tag.GetSingleTagContainer());
-		AddStatus(LocalAddTag);
+		
+		if (GetIsContainStatus(Tag, true, true))
+		{
+			NewStatusesToAdd.AddTagFast(Tag);
+			Statuses.AddTagFast(Tag);
+		}
 	}
-	return true;
+	
+	if (!NewStatusesToAdd.IsEmpty())
+	{
+		OnAddStatuses.Broadcast(NewStatusesToAdd);
+		return true;
+	}
+	
+	return false;
 }
 
 void UStatusesComponent::RemoveActiveStatus_Implementation()
@@ -297,8 +290,12 @@ bool UStatusesComponent::MakeTemporaryStatus(const FGameplayTag& StatusToAdd, co
 {
 	if(!GetWorld()) return false;
 	const FStatusesInfo LocalAddTempTag(StatusToAdd.GetSingleTagContainer(),EStatusState::Temporary,TimeToDeleteStatus);
-	AddStatus(LocalAddTempTag);
-	if (!bClearTimer && TemporaryTags.Contains(StatusToAdd)) return false;
+	
+	if (!bClearTimer && TemporaryTags.Contains(StatusToAdd))
+	{
+		AddStatuses(StatusToAdd.GetSingleTagContainer());
+		return false;
+	}
 	ClearTemporaryStatusTimer(StatusToAdd);
 	FTimerHandle LocalHandle;
 	FTimerDelegate TemporaryTagDelegate;
@@ -306,6 +303,7 @@ bool UStatusesComponent::MakeTemporaryStatus(const FGameplayTag& StatusToAdd, co
 	GetWorld()->GetTimerManager().SetTimer(LocalHandle, TemporaryTagDelegate, TimeToDeleteStatus, false);
 	
 	TemporaryTags.AddUnique(FTemporaryStatusInfo(StatusToAdd, LocalHandle));
+	AddStatuses(StatusToAdd.GetSingleTagContainer());
 	
 	return true;
 }

@@ -144,7 +144,6 @@ private:
     bool GetStatusInfo(const FGameplayTag& StatusToGet, FStatusesInfo& ReturnStatusInfo) const;
 
     // Add Logic
-    bool AddStatus(const FStatusesInfo& StatusToAdd);
     bool AddStatuses(const FGameplayTagContainer& StatusesToAdd);
     bool AddTemporaryStatuses(const FGameplayTagContainer& StatusesToAdd, const float TimeToDeleteStatuses, const bool bClearTimer = false);
 };
