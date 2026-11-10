@@ -300,13 +300,6 @@ void AStageManager::BeginFinale()
 	State = EStageState::Finalizing;
 	bIssuingCommands = true;
 	const auto Prepared = PrepareCommands(ActiveStage->Finale, EStageCommandType::Finale, INDEX_NONE);
-	for (UStageMemberCommand* Command : Prepared)
-	{
-		FStageExecutionContext Context;
-		Context.Manager = this;
-		if (const auto* Entry = FindRoot(Command)) Context.MemberComponent = Entry->MemberComponent;
-		Command->FreezeFinaleChoice(Context);
-	}
 	const auto Snapshot = BoundMembers;
 	for (const auto& Member : Snapshot) if (Member.IsValid()) Member->RequestStopCommands();
 	IssueCommands(Prepared);

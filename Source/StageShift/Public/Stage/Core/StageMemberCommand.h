@@ -47,7 +47,7 @@ public:
 	float GetRemainingTime() const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Stage|Command")
-	bool IsTaskSatisfied(const FStageExecutionContext& InContext) const;
+	bool IsResultAchieved(const FStageExecutionContext& InContext) const;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stage|Command")
 	UStageAction* CreateMainAction(const FStageExecutionContext& InContext);
@@ -58,9 +58,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Stage|Command")
 	FStageEvent BuildSuccessEvent() const;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stage|Command")
-	void FreezeFinaleChoice(const FStageExecutionContext& InContext);
-	
 	virtual void ResetRuntime( 
 		const FStageExecutionContext& InContext, 
 		UStageMemberCommand* InRoot,
@@ -96,21 +93,21 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
 	void Finish(EStageCommandResult InResult);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
-	void BeginWork();
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
-	void StopWork(EStageActionStopReason Reason);
-
-	// Base timing is saved first; a subclass then reads its own progress from Action.
-	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
-	void OnMainActionResult(UStageAction* Action, EStageActionResult ActionResult);
-
-	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
-	void ResetProgress();
-
 	UFUNCTION(BlueprintCallable, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
 	void UseShortVersion();
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
+	void OnStart();
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
+	void OnStop(EStageActionStopReason Reason);
+
+/*
+Called every time when main action call finish
+(preferred to save progress)
+*/
+	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
+	void OnMainActionResult(UStageAction* Action, EStageActionResult ActionResult);
 
 private:
 	friend class UStageMemberComponent;

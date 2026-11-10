@@ -51,7 +51,7 @@ void UParallelStageMemberCommand::CheckChildrenResults()
 	}
 }
 
-void UParallelStageMemberCommand::BeginWork_Implementation()
+void UParallelStageMemberCommand::OnStart_Implementation()
 {
 	if (!StageCommandContainer::HasValidChildren(this) || !Context.MemberComponent.IsValid())
 	{
@@ -78,7 +78,7 @@ void UParallelStageMemberCommand::HandleChildFinished(UStageMemberCommand* Comma
 	TryFinish();
 }
 
-void UParallelStageMemberCommand::StopWork_Implementation(EStageActionStopReason Reason)
+void UParallelStageMemberCommand::OnStop_Implementation(EStageActionStopReason Reason)
 {
 	CheckChildrenResults();
 	const bool bWasIssuingChildren = bIssuingChildren;
@@ -102,10 +102,4 @@ void UParallelStageMemberCommand::TryFinish()
 	for (UStageMemberCommand* Child : Children)
 		if (IsValid(Child)) Child->OnFinished.RemoveDynamic(this, &UParallelStageMemberCommand::HandleChildFinished);
 	Finish(GetState() == EStageExecutionState::Stopping ? EStageCommandResult::Cancelled : Result);
-}
-
-void UParallelStageMemberCommand::FreezeFinaleChoice_Implementation(const FStageExecutionContext& InContext)
-{
-	if (!StageCommandContainer::HasValidChildren(this)) return;
-	for (UStageMemberCommand* Child : Children) Child->FreezeFinaleChoice(InContext);
 }

@@ -40,7 +40,7 @@ protected:
 	void Finish(EStageActionResult InResult);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Action")
-	void Execute();
+	void OnStart();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Action")
 	EStageActionStopMode GetStopMode(EStageActionStopReason Reason) const;
@@ -54,6 +54,6 @@ protected:
 private:
 	EStageExecutionState ActionState = EStageExecutionState::NotStarted;
 	EStageActionResult ActionResult = EStageActionResult::None;
-	EStageActionStopReason ActionStopReason = EStageActionStopReason::Interrupted;
+	EStageActionStopReason ActionStopReason = EStageActionStopReason::Interrupt;
 	EStageActionStopMode ActionStopMode = EStageActionStopMode::StopAction;
 };

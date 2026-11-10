@@ -31,10 +31,10 @@ enum class EStageState : uint8
 UENUM(BlueprintType)
 enum class EStageExecutionState : uint8
 {
-	NotStarted,
-	Running,
-	Stopping,
-	Finished
+	NotStarted, // None
+	Running, // Working
+	Stopping, // Stop requested
+	Finished // Finished
 };
 
 UENUM(BlueprintType)
@@ -67,13 +67,6 @@ enum class EStageCommandType : uint8
 };
 
 UENUM(BlueprintType)
-enum class EStageActionPurpose : uint8
-{
-	Main,
-	Recovery
-};
-
-UENUM(BlueprintType)
 enum class EStageLatenessLevel : uint8
 {
 	OnTime,
@@ -93,8 +86,8 @@ enum class EStageCatchUpPolicy : uint8
 UENUM(BlueprintType)
 enum class EStageActionStopReason : uint8
 {
-	Interrupted,
-	Finished
+	Interrupt,
+	Cancel
 };
 
 UENUM(BlueprintType)

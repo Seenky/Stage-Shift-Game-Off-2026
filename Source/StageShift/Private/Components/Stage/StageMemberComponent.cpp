@@ -85,7 +85,7 @@ void UStageMemberComponent::RequestStopCommands()
 		PendingCommands.Remove(Root);
 		if (PendingReaction == Root) PendingReaction = nullptr;
 		if (Root->GetState() == EStageExecutionState::NotStarted) CompleteBeforeStart(Root, EStageCommandResult::Cancelled);
-		else Root->RequestStop(EStageActionStopReason::Finished);
+		else Root->RequestStop(EStageActionStopReason::Cancel);
 	}
 	EndDispatch();
 }
@@ -117,14 +117,14 @@ void UStageMemberComponent::StartPreparedCommand(UStageMemberCommand* Command)
 	}
 	if (!Command->IsComposite())
 	{
-		const bool bSatisfied = Command->IsTaskSatisfied(Command->Context);
+		const bool bResultAchieved = Command->IsResultAchieved(Command->Context);
 		if (Command->GetState() != EStageExecutionState::NotStarted) return;
 		if (bClosingMember || Root->GetState() == EStageExecutionState::Stopping || Root->GetState() == EStageExecutionState::Finished)
 		{
 			CompleteBeforeStart(Command, EStageCommandResult::Cancelled);
 			return;
 		}
-		if (bSatisfied)
+		if (bResultAchieved)
 		{
 			CompleteBeforeStart(Command, EStageCommandResult::Succeeded);
 			return;
@@ -274,7 +274,7 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		const bool bRequirementsMet = StatusComponent.IsValid() &&
 			Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses());
 		if (Command->GetState() == EStageExecutionState::Running &&
-			(!bRequirementsMet || !Main->CanContinue())) Main->RequestStop(EStageActionStopReason::Interrupted);
+			(!bRequirementsMet || !Main->CanContinue())) Main->RequestStop(EStageActionStopReason::Interrupt);
 		return;
 	}
 	if (Command->GetState() == EStageExecutionState::Finished)
@@ -292,9 +292,9 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	const EStageCommandResult Admission = Manager->CheckCommandStart(Command);
 	if (!FindExecution(Command) || Command->GetState() != EStageExecutionState::Running) return;
 	if (Admission != EStageCommandResult::None) { FinishExecution(Command, Admission); return; }
-	const bool bSatisfied = Command->IsTaskSatisfied(Command->Context);
+	const bool bResultAchieved = Command->IsResultAchieved(Command->Context);
 	if (!FindExecution(Command) || Command->GetState() != EStageExecutionState::Running) return;
-	if (bSatisfied)
+	if (bResultAchieved)
 	{
 		FinishExecution(Command, EStageCommandResult::Succeeded);
 		return;
@@ -397,8 +397,8 @@ void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageAct
 		FinishExecution(Command, Command->GetResult());
 	else if (Result == EStageActionResult::Succeeded)
 	{
-		const bool bSatisfied = Command->IsTaskSatisfied(Command->Context);
-		if (FindExecution(Command)) FinishExecution(Command, bSatisfied ? EStageCommandResult::Succeeded : EStageCommandResult::Failed);
+		const bool bResultAchieved = Command->IsResultAchieved(Command->Context);
+		if (FindExecution(Command)) FinishExecution(Command, bResultAchieved ? EStageCommandResult::Succeeded : EStageCommandResult::Failed);
 	}
 	else if (Result == EStageActionResult::Interrupted) bUpdateRequested = true;
 	else FinishExecution(Command, EStageCommandResult::Failed);
@@ -408,7 +408,7 @@ void UStageMemberComponent::RemoveRecoveryWaiter(UStageMemberCommand* Command)
 {
 	RecoveryWaiters.Remove(Command);
 	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction)
-		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Finished);
+		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
 }
 
 void UStageMemberComponent::StopExecution(UStageMemberCommand* Command, EStageActionStopReason Reason)
@@ -479,10 +479,10 @@ void UStageMemberComponent::EndStageMember()
 		if (IsValid(Command))
 		{
 			if (Command->GetState() == EStageExecutionState::NotStarted) CompleteBeforeStart(Command, EStageCommandResult::Cancelled);
-			else Command->RequestStop(EStageActionStopReason::Finished);
+			else Command->RequestStop(EStageActionStopReason::Cancel);
 		}
 	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction)
-		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Finished);
+		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
 	EndDispatch();
 }
 

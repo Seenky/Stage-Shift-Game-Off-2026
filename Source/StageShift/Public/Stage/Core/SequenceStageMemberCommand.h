@@ -20,9 +20,8 @@ public:
 protected:
 	virtual float GetNeededTime_Implementation() const override;
 	virtual float GetRemainingTime_Implementation() const override;
-	virtual void BeginWork_Implementation() override;
-	virtual void StopWork_Implementation(EStageActionStopReason Reason) override;
-	virtual void FreezeFinaleChoice_Implementation(const FStageExecutionContext& InContext) override;
+	virtual void OnStart_Implementation() override;
+	virtual void OnStop_Implementation(EStageActionStopReason Reason) override;
 
 private:
 	void CheckChildrenResults();

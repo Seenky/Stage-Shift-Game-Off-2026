@@ -15,7 +15,7 @@ void UStageAction::Start(const FStageExecutionContext& InContext)
 		return;
 	}
 
-	Execute();
+	OnStart();
 }
 
 bool UStageAction::CanContinue_Implementation() const
@@ -32,7 +32,7 @@ void UStageAction::RequestStop(EStageActionStopReason Reason)
 	if (bWasStopping)
 	{
 		const bool bFinalStopAfterInterruption =
-			(Reason == EStageActionStopReason::Finished && ActionStopReason == EStageActionStopReason::Interrupted);
+			(Reason == EStageActionStopReason::Cancel && ActionStopReason == EStageActionStopReason::Interrupt);
 		if (!bFinalStopAfterInterruption) return;
 	}
 
@@ -60,7 +60,7 @@ void UStageAction::Finish(EStageActionResult InResult)
 		(InResult == EStageActionResult::Interrupted || InResult == EStageActionResult::Cancelled ||
 		 (InResult == EStageActionResult::Succeeded && ActionStopMode == EStageActionStopMode::StopAction)))
 	{
-		InResult = ActionStopReason == EStageActionStopReason::Interrupted
+		InResult = ActionStopReason == EStageActionStopReason::Interrupt
 			? EStageActionResult::Interrupted : EStageActionResult::Cancelled;
 	}
 	
@@ -73,7 +73,7 @@ void UStageAction::Finish(EStageActionResult InResult)
 	if (Member.IsValid()) Member->EndDispatch();
 }
 
-void UStageAction::Execute_Implementation()
+void UStageAction::OnStart_Implementation()
 {
 	Finish(EStageActionResult::Failed);
 }
@@ -87,7 +87,7 @@ void UStageAction::OnStop_Implementation(EStageActionStopMode Mode)
 {
 	if (Mode == EStageActionStopMode::StopAction)
 	{
-		Finish(ActionStopReason == EStageActionStopReason::Interrupted
+		Finish(ActionStopReason == EStageActionStopReason::Interrupt
 			? EStageActionResult::Interrupted : EStageActionResult::Cancelled);
 	}
 }

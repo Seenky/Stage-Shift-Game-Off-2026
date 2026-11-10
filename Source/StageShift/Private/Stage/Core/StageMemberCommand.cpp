@@ -20,7 +20,7 @@ void UStageMemberCommand::Start(const FStageExecutionContext& InContext)
 
 	const TWeakObjectPtr<UStageMemberComponent> Member = Context.MemberComponent;
 	if (Member.IsValid()) Member->BeginDispatch();
-	BeginWork();
+	OnStart();
 	if (Member.IsValid()) Member->EndDispatch();
 }
 
@@ -31,7 +31,7 @@ void UStageMemberCommand::RequestStop(EStageActionStopReason Reason)
 	CommandState = EStageExecutionState::Stopping;
 	const TWeakObjectPtr<UStageMemberComponent> Member = Context.MemberComponent;
 	if (Member.IsValid()) Member->BeginDispatch();
-	StopWork(Reason);
+	OnStop(Reason);
 	if (Member.IsValid()) Member->EndDispatch();
 }
 
@@ -52,7 +52,7 @@ float UStageMemberCommand::GetRemainingTime_Implementation() const
 	return FMath::Max(0.0f, GetNeededTime() - GetAccumulatedActiveTime());
 }
 
-bool UStageMemberCommand::IsTaskSatisfied_Implementation(const FStageExecutionContext& InContext) const
+bool UStageMemberCommand::IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const
 {
 	return bHasSuccessfulMainAction;
 }
@@ -117,12 +117,11 @@ FStageEvent UStageMemberCommand::BuildSuccessEvent_Implementation() const
 	return Event;
 }
 
-void UStageMemberCommand::FreezeFinaleChoice_Implementation(const FStageExecutionContext& InContext)
-{
-}
-
-void UStageMemberCommand::ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
-	float InPlannedStartTime, float InPlannedEndTime)
+void UStageMemberCommand::ResetRuntime(
+	const FStageExecutionContext& InContext, 
+	UStageMemberCommand* InRoot,
+	float InPlannedStartTime, 
+	float InPlannedEndTime)
 {
 	Context = InContext;
 	RootCommand = InRoot ? InRoot : this;
@@ -135,20 +134,15 @@ void UStageMemberCommand::ResetRuntime(const FStageExecutionContext& InContext, 
 	bUseShortVersion = false;
 	bHasSuccessfulMainAction = false;
 	OnFinished.Clear();
-	ResetProgress();
 }
 
-void UStageMemberCommand::ResetProgress_Implementation()
-{
-}
-
-void UStageMemberCommand::BeginWork_Implementation()
+void UStageMemberCommand::OnStart_Implementation()
 {
 	if (UStageMemberComponent* Member = Context.MemberComponent.Get()) Member->BeginExecution(this);
 	else Finish(EStageCommandResult::Failed);
 }
 
-void UStageMemberCommand::StopWork_Implementation(EStageActionStopReason Reason)
+void UStageMemberCommand::OnStop_Implementation(EStageActionStopReason Reason)
 {
 	if (UStageMemberComponent* Member = Context.MemberComponent.Get()) Member->StopExecution(this, Reason);
 	else Finish(EStageCommandResult::Cancelled);
