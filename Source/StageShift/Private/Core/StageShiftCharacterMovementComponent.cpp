@@ -78,7 +78,7 @@ bool UStageShiftCharacterMovementComponent::SweepCharacterBody(const FVector& De
 	if (!PhysicsAsset || !World) return false;
 
 	FCollisionQueryParams Query(SCENE_QUERY_STAT(StageShiftBodyContact), false, Character);
-	Query.AddIgnoredComponent(Character->GetHeldPhysicsComponent());
+	if (!Manipulation.IsValid() || !Manipulation->IsDragging()) Query.AddIgnoredComponent(Character->GetHeldPhysicsComponent());
 	const FCollisionObjectQueryParams Objects(ECC_TO_BITFIELD(ECC_WorldStatic) | ECC_TO_BITFIELD(ECC_WorldDynamic) | ECC_TO_BITFIELD(ECC_PhysicsBody));
 	const FVector MoveDirection = Delta.GetSafeNormal2D();
 	TArray<FHitResult> Hits;

@@ -3,9 +3,11 @@
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 
 #include "Components/PrimitiveComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
+#include "Components/Interaction/ThrowAimComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "GameFramework/Character.h"
@@ -117,25 +119,7 @@ void UPhysicsManipulationComponent::BeginDrag(const FHitResult& Hit)
 	SavedDragAngularDamping = Component->GetAngularDamping();
 	AppliedDragAngularDamping = FMath::Max(SavedDragAngularDamping, DragAngularDamping);
 	if (AppliedDragAngularDamping != SavedDragAngularDamping) Component->SetAngularDamping(AppliedDragAngularDamping);
-	const FVector Facing = (Hit.ImpactPoint - GetOwner()->GetActorLocation()).GetSafeNormal2D();
-	const FVector Right = FVector::CrossProduct(FVector::UpVector, Facing).GetSafeNormal();
-	const FTransform Frame = GetDragFrame();
-	for (int32 Side = 0; Side < 2; ++Side)
-	{
-		const FName Socket = Side == 0 ? FName(TEXT("DragGrip_L")) : FName(TEXT("DragGrip_R"));
-		FVector Point = Hit.ImpactPoint + Right * (DragHandSpacing * (Side == 0 ? -0.5f : 0.5f));
-		if (Component->DoesSocketExist(Socket)) Point = Component->GetSocketLocation(Socket);
-		else
-		{
-			FVector Surface;
-			if (Component->GetClosestPointOnCollision(Point - Facing * 8.0f, Surface, DragBoneName) >= 0.0f) Point = Surface - Facing * 6.0f;
-		}
-		DragLocalHands[Side] = Frame.InverseTransformPosition(Point);
-	}
-	const FVector Center = Frame.TransformPosition((DragLocalHands[0] + DragLocalHands[1]) * 0.5);
-	const float Distance = FVector::Dist2D(Center, GetOwner()->GetActorLocation());
-	DragRestDistance = FMath::Min(Distance, FMath::Max(DragDistance, 1.0f));
-	DragReach = FMath::Max(Distance, DragRestDistance) + FMath::Max(DragReachSlack, 1.0f);
+	SetDragGrip(Hit.ImpactPoint);
 	DragEffort = 0.0f;
 	if (ACharacter* Character = DragCharacter.Get())
 	{
@@ -148,9 +132,59 @@ void UPhysicsManipulationComponent::BeginDrag(const FHitResult& Hit)
 		Character->bUseControllerRotationYaw = false;
 		if (AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(Character))
 		{
-			Doll->GetDollPhysics()->SetDragCollisionExclusions(Component, DragBoneName);
+			Doll->GetDollPhysics()->SetDragging(true);
 		}
 	}
+}
+
+void UPhysicsManipulationComponent::SetDragGrip(const FVector& GripPoint)
+{
+	UPrimitiveComponent* Component = ManipulatedComponent.Get();
+	const ACharacter* Character = DragCharacter.Get();
+	const USkeletalMeshComponent* Mesh = Character ? Character->GetMesh() : nullptr;
+	const FVector Facing = (GripPoint - GetOwner()->GetActorLocation()).GetSafeNormal2D(UE_SMALL_NUMBER, GetOwner()->GetActorForwardVector());
+	const FVector Right = FVector::CrossProduct(FVector::UpVector, Facing).GetSafeNormal();
+	const FTransform Frame = GetDragFrame();
+	FVector ReachCenter = FVector::ZeroVector;
+	for (int32 Side = 0; Side < 2; ++Side)
+	{
+		const FName Shoulder = Side == 0 ? FName(TEXT("upperarm_l")) : FName(TEXT("upperarm_r"));
+		const FName Hand = Side == 0 ? FName(TEXT("hand_l")) : FName(TEXT("hand_r"));
+		const FName Socket = Side == 0 ? FName(TEXT("DragGrip_L")) : FName(TEXT("DragGrip_R"));
+		const FVector ReachStart = Mesh && Mesh->GetBoneIndex(Shoulder) != INDEX_NONE
+			? Mesh->GetSocketLocation(Shoulder) : GetOwner()->GetActorLocation();
+		ReachCenter += ReachStart * 0.5;
+		FVector Point = GripPoint + Right * (DragHandSpacing * (Side == 0 ? -0.5f : 0.5f));
+		if (Component->DoesSocketExist(Socket)) Point = Component->GetSocketLocation(Socket);
+		else
+		{
+			const FVector Probe = Point + (ReachStart - Point).GetSafeNormal(UE_SMALL_NUMBER, -Facing) * 8.0;
+			FVector Surface;
+			if (Component->GetClosestPointOnCollision(Probe, Surface, DragBoneName) >= 0.0f)
+			{
+				const FVector Normal = (Probe - Surface).GetSafeNormal(UE_SMALL_NUMBER, -Facing);
+				double Clearance = 6.0;
+				if (const FBodyInstance* HandBody = Mesh ? Mesh->GetBodyInstance(Hand) : nullptr)
+				{
+					const FBox Bounds = HandBody->GetBodyBounds();
+					if (Bounds.IsValid)
+					{
+						const FVector Offset = Bounds.GetCenter() - Mesh->GetSocketLocation(Hand);
+						Clearance = FMath::Max(Clearance,
+							FVector::DotProduct(Bounds.GetExtent(), Normal.GetAbs()) - FVector::DotProduct(Offset, Normal) + 1.0);
+					}
+				}
+				Point = Surface + Normal * Clearance;
+			}
+		}
+		DragLocalHands[Side] = Frame.InverseTransformPosition(Point);
+	}
+	DragLocalGripNormal = Frame.InverseTransformVectorNoScale((ReachCenter - GripPoint).GetSafeNormal());
+	const FVector Center = Frame.TransformPosition((DragLocalHands[0] + DragLocalHands[1]) * 0.5);
+	const float Distance = FVector::Dist2D(Center, GetOwner()->GetActorLocation());
+	DragTargetYaw = (Center - GetOwner()->GetActorLocation()).GetSafeNormal2D(UE_SMALL_NUMBER, Facing).Rotation().Yaw;
+	DragRestDistance = FMath::Min(Distance, FMath::Max(DragDistance, 1.0f));
+	DragReach = FMath::Max(Distance, DragRestDistance) + FMath::Max(DragReachSlack, 1.0f);
 }
 
 float UPhysicsManipulationComponent::GetDragMovementScale() const
@@ -159,7 +193,8 @@ float UPhysicsManipulationComponent::GetDragMovementScale() const
 	// No flat speed plateau below the reference mass: 1 kg stays light, 35 kg is a load.
 	const float Load = FMath::Max(DragMass - 1.0f, 0.0f) / FMath::Max(DragReferenceMass, 0.1f);
 	const float BaseScale = FMath::Clamp(DragSpeedMultiplier, 0.01f, 1.0f);
-	return FMath::Clamp(BaseScale / (1.0f + Load),
+	// Keep an intentional two-hand grip useful compared with nudging the prop.
+	return FMath::Clamp(BaseScale / FMath::Sqrt(1.0f + Load),
 		FMath::Clamp(DragMinimumSpeedMultiplier, 0.01f, BaseScale), BaseScale);
 }
 
@@ -169,7 +204,16 @@ bool UPhysicsManipulationComponent::GetDragPose(FVector& LeftHand, FVector& Righ
 	const FTransform Frame = GetDragFrame();
 	LeftHand = Frame.TransformPosition(DragLocalHands[0]);
 	RightHand = Frame.TransformPosition(DragLocalHands[1]);
-	Facing = ((LeftHand + RightHand) * 0.5 - GetOwner()->GetActorLocation()).GetSafeNormal2D();
+	const FVector ToGrip = (LeftHand + RightHand) * 0.5 - GetOwner()->GetActorLocation();
+	const ACharacter* Character = DragCharacter.Get();
+	const float FacingRadius = Character ? Character->GetCapsuleComponent()->GetScaledCapsuleRadius() : 0.0f;
+	// Keep facing stable while the grip passes underneath the character.
+	Facing = ToGrip.SizeSquared2D() > FMath::Square(FacingRadius)
+		? ToGrip.GetSafeNormal2D() : GetOwner()->GetActorForwardVector();
+	// A rolling prop may reverse its stored anchors. Keep each hand on its own
+	// side of the character instead of asking the IK to cross the arms.
+	const FVector RightDirection = FVector::CrossProduct(FVector::UpVector, Facing);
+	if (FVector::DotProduct(RightHand - LeftHand, RightDirection) < 0.0) Swap(LeftHand, RightHand);
 	Effort = DragEffort;
 	return true;
 }
@@ -212,22 +256,79 @@ void UPhysicsManipulationComponent::UpdateDrag(float DeltaTime)
 	FVector Left, Right, Facing;
 	float Effort;
 	GetDragPose(Left, Right, Facing, Effort);
-	const FVector Center = (Left + Right) * 0.5;
+	FVector Center = (Left + Right) * 0.5;
 	const FVector OwnerLocation = Character->GetActorLocation();
 	if (FVector::Dist(OwnerLocation, Center) > FMath::Max(DragBreakDistance, DragReach + 30.0f))
 	{
 		CancelManipulation();
 		return;
 	}
-	if (!Facing.IsNearlyZero()) Character->SetActorRotation(FMath::RInterpTo(Character->GetActorRotation(), Facing.Rotation(), DeltaTime, 8.0f));
-	const FVector Target = OwnerLocation + Facing * DragRestDistance;
-	const FVector Error = (Target - Center) * FVector(1, 1, 0);
+	float Distance = FVector::Dist2D(OwnerLocation, Center);
+	const float ReachSlack = FMath::Max(DragReachSlack, 1.0f);
+	const USkeletalMeshComponent* Mesh = Character->GetMesh();
+	const FVector ReachStart = Mesh && Mesh->GetBoneIndex(TEXT("upperarm_r")) != INDEX_NONE
+		? Mesh->GetSocketLocation(TEXT("upperarm_r")) : OwnerLocation;
+	const FVector GripNormal = GetDragFrame().TransformVectorNoScale(DragLocalGripNormal);
+	const bool bGripTurnedAway = FVector::DotProduct(GripNormal, (ReachStart - Center).GetSafeNormal()) < 0.25;
+	if (Distance + ReachSlack < DragRestDistance || bGripTurnedAway)
+	{
+		// Recover a reachable surface after the prop falls or rolls over the old grip.
+		// Only the hands/reach change; the prop stays fully simulated and collidable.
+		FVector Surface;
+		if (Component->GetClosestPointOnCollision(ReachStart, Surface, DragBoneName) >= 0.0f)
+		{
+			SetDragGrip(Surface);
+			GetDragPose(Left, Right, Facing, Effort);
+			Center = (Left + Right) * 0.5;
+			Distance = FVector::Dist2D(OwnerLocation, Center);
+		}
+		else
+		{
+			DragRestDistance = Distance;
+			DragReach = Distance + ReachSlack;
+		}
+	}
+	const FVector ToGrip = (Center - OwnerLocation) * FVector(1, 1, 0);
+	const UThrowAimComponent* Aim = GetOwner()->FindComponentByClass<UThrowAimComponent>();
+	FVector CursorTarget;
+	const bool bCursorSteering = Aim && Aim->GetAimTarget(CursorTarget);
+	const float GripYaw = Facing.Rotation().Yaw;
+	const float MaxTurnSpeed = FMath::Max(DragTurnSpeed, 1.0f);
+	float FacingYaw = GripYaw;
+	FVector Error = ToGrip.GetSafeNormal() * (DragRestDistance - Distance);
+	FVector TurnVelocity = FVector::ZeroVector;
+	if (bCursorSteering && DeltaTime > UE_SMALL_NUMBER)
+	{
+		const FVector CursorDirection = (CursorTarget - OwnerLocation).GetSafeNormal2D(UE_SMALL_NUMBER, Character->GetActorForwardVector());
+		const float PreviousYaw = DragTargetYaw;
+		const float Turn = FMath::FindDeltaAngleDegrees(PreviousYaw, static_cast<float>(CursorDirection.Rotation().Yaw));
+		DragTargetYaw = FMath::UnwindDegrees(PreviousYaw + FMath::Clamp(Turn, -MaxTurnSpeed * DeltaTime, MaxTurnSpeed * DeltaTime));
+		// Advance the grip around the character along an arc. Limit the lead when
+		// a heavy/blocked prop lags, so the spring does not pull it through the torso.
+		const float Lead = FMath::FindDeltaAngleDegrees(GripYaw, DragTargetYaw);
+		DragTargetYaw = FMath::UnwindDegrees(GripYaw + FMath::Clamp(Lead, -45.0f, 45.0f));
+		// Let the torso anticipate the turn slightly, but keep the real grip in
+		// front even when the cursor is behind us or the prop cannot move yet.
+		const float FacingLead = Distance > Character->GetCapsuleComponent()->GetScaledCapsuleRadius()
+			? FMath::Clamp(Lead, -12.0f, 12.0f) : 0.0f;
+		FacingYaw = GripYaw + FacingLead;
+		const FVector TargetDirection = FRotator(0.0, DragTargetYaw, 0.0).Vector();
+		Error = TargetDirection * DragRestDistance - ToGrip;
+		const float ActualTurn = FMath::FindDeltaAngleDegrees(PreviousYaw, DragTargetYaw);
+		const float TurnRate = FMath::DegreesToRadians(FMath::Clamp(ActualTurn / DeltaTime, -MaxTurnSpeed, MaxTurnSpeed));
+		TurnVelocity = FVector::CrossProduct(FVector::UpVector, TargetDirection) * (DragRestDistance * TurnRate);
+	}
+	else
+	{
+		DragTargetYaw = GripYaw;
+	}
+	Character->SetActorRotation(FMath::RInterpConstantTo(Character->GetActorRotation(), FRotator(0.0, FacingYaw, 0.0), DeltaTime, MaxTurnSpeed));
 	const UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
 	const FVector Input = Movement->GetCurrentAcceleration();
 	const FVector DriveVelocity = Input.IsNearlyZero() ? Character->GetVelocity()
 		: (Input / FMath::Max(Movement->GetMaxAcceleration(), 1.0f)).GetClampedToMaxSize(1.0) * Movement->GetMaxSpeed();
 	// Input keeps exerting effort when the player's reach leash blocks further movement.
-	const FVector RelativeVelocity = (DriveVelocity - Component->GetPhysicsLinearVelocity(DragBoneName)) * FVector(1, 1, 0);
+	const FVector RelativeVelocity = (DriveVelocity + TurnVelocity - Component->GetPhysicsLinearVelocity(DragBoneName)) * FVector(1, 1, 0);
 	// Tune all force-related settings in units of the same reference load.
 	// 100 kg at a 100 kg reference has the response of 25 kg at the default 25 kg reference.
 	constexpr float TuningReferenceMass = 25.0f;
@@ -408,7 +509,7 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 	{
 		if (AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(Character))
 		{
-			Doll->GetDollPhysics()->SetDragCollisionExclusions(nullptr);
+			Doll->GetDollPhysics()->SetDragging(false);
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = bSavedOrientToMovement;
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = bSavedControllerDesiredRotation;
@@ -417,6 +518,7 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 	DragCharacter.Reset();
 	DragBoneName = NAME_None;
 	DragEffort = 0.0f;
+	DragTargetYaw = 0.0f;
 	if (AActor* Actor = ManipulatedActor.Get())
 	{
 		Actor->OnEndPlay.RemoveDynamic(this, &ThisClass::OnManipulatedActorEndPlay);

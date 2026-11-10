@@ -125,6 +125,7 @@ bool UDollPhysicsComponent::StartDriving()
 		Driven.bWasCCD = Body->bUseCCD;
 		Driven.bWasNotifying = Body->bNotifyRigidBodyCollision;
 		Driven.BlendWeight = Body->PhysicsBlendWeight;
+		TotalDrivenMass += FMath::Max(Body->GetBodyMass(), 0.0f);
 		Body->SetInstanceNotifyRBCollision(true);
 	}
 	if (DrivenBodies.IsEmpty())
@@ -143,7 +144,7 @@ bool UDollPhysicsComponent::StartDriving()
 		CreateBodyModifier(BodyMesh, Driven.Bone, DollSet, Modifier);
 	}
 	bDriving = true;
-	SetDragCollisionExclusions(DragCollisionTarget.Get(), DragCollisionBone);
+	SetDragging(bDragging);
 	bResetPending = true;
 	PreviousComponentTransform = BodyMesh->GetComponentTransform();
 	return true;
@@ -152,7 +153,7 @@ bool UDollPhysicsComponent::StartDriving()
 void UDollPhysicsComponent::StopDriving(bool bRestoreAnimation)
 {
 	if (!DrivenBodies.IsEmpty()) DestroyAllControlsAndBodyModifiers();
-	DragCollisionControls.Reset();
+	DragSelfCollisionControls.Reset();
 	if (USkeletalMeshComponent* BodyMesh = Mesh.Get(); BodyMesh && bMeshSettingsSaved)
 	{
 		for (const FDrivenBody& Driven : DrivenBodies)
@@ -185,8 +186,11 @@ void UDollPhysicsComponent::StopDriving(bool bRestoreAnimation)
 		}
 	}
 	DrivenBodies.Reset();
+	TotalDrivenMass = 0.0f;
 	Contacts.Reset();
 	InteractionNormal = FVector::ZeroVector;
+	DynamicContactComponent.Reset();
+	DynamicContactMass = 0.0f;
 	LastDynamicContactTime = -1.0e10;
 	bDriving = false;
 	bMeshSettingsSaved = false;
@@ -198,36 +202,30 @@ void UDollPhysicsComponent::SuspendForRagdoll()
 	bSuspended = true;
 }
 
-void UDollPhysicsComponent::SetDragCollisionExclusions(UPrimitiveComponent* Target, FName TargetBone)
+void UDollPhysicsComponent::SetDragging(bool bIsDragging)
 {
-	for (FName Control : DragCollisionControls) DestroyControl(Control, true, false);
-	DragCollisionControls.Reset();
-	DragCollisionTarget = Target;
-	DragCollisionBone = TargetBone;
+	for (FName Control : DragSelfCollisionControls) DestroyControl(Control, true, false);
+	DragSelfCollisionControls.Reset();
+	bDragging = bIsDragging;
 	USkeletalMeshComponent* BodyMesh = Mesh.Get();
-	if (!bDriving || !BodyMesh || !Target) return;
+	if (!bDriving || !BodyMesh || !bDragging) return;
 
-	// Zero-drive controls use the existing Physics Control lifecycle for pairwise collision filtering.
-	// They do not constrain either body or apply forces. Floor/world collision stays enabled.
+	// Only filter opposing leg pairs during the low reach pose. The dragged prop
+	// keeps colliding with every character body, including both feet and hands.
 	FPhysicsControlData Data;
 	Data.bUseSkeletalAnimation = false;
 	Data.bDisableCollision = true;
-	const FName Set(TEXT("DragCollisionExclusions"));
-	const auto Exclude = [&](FName ParentBone, UPrimitiveComponent* Other, FName OtherBone)
+	const FName Set(TEXT("DragSelfCollisionExclusions"));
+	const auto Exclude = [&](FName ParentBone, FName ChildBone)
 	{
 		const FBodyInstance* Parent = BodyMesh->GetBodyInstance(ParentBone);
-		const FBodyInstance* Child = Other->GetBodyInstance(OtherBone);
+		const FBodyInstance* Child = BodyMesh->GetBodyInstance(ChildBone);
 		if (!Parent || !Child || !Parent->IsValidBodyInstance() || !Child->IsValidBodyInstance()) return;
-		const FName Control = CreateControl(BodyMesh, ParentBone, Other, OtherBone, Data, FPhysicsControlTarget(), Set);
-		if (!Control.IsNone()) DragCollisionControls.Add(Control);
+		const FName Control = CreateControl(BodyMesh, ParentBone, BodyMesh, ChildBone, Data, FPhysicsControlTarget(), Set);
+		if (!Control.IsNone()) DragSelfCollisionControls.Add(Control);
 	};
 	const FName Left[] = {TEXT("thigh_l"), TEXT("calf_l"), TEXT("foot_l")};
 	const FName Right[] = {TEXT("thigh_r"), TEXT("calf_r"), TEXT("foot_r")};
-	for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
-	{
-		Exclude(Left[Index], Target, TargetBone);
-		Exclude(Right[Index], Target, TargetBone);
-	}
 	// A low two-hand reach must not make the two legs jam against each other.
 	const UPhysicsAsset* Asset = BodyMesh->GetPhysicsAsset();
 	if (!Asset) return;
@@ -239,7 +237,7 @@ void UDollPhysicsComponent::SetDragCollisionExclusions(UPrimitiveComponent* Targ
 			const int32 RightIndex = Asset->FindBodyIndex(RightBone);
 			if (LeftIndex != INDEX_NONE && RightIndex != INDEX_NONE && Asset->IsCollisionEnabled(LeftIndex, RightIndex))
 			{
-				Exclude(LeftBone, BodyMesh, RightBone);
+				Exclude(LeftBone, RightBone);
 			}
 		}
 	}
@@ -283,6 +281,8 @@ void UDollPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		ResetBodyModifiersInSetToCachedBoneTransforms(DollSet);
 		Contacts.Reset();
 		InteractionNormal = FVector::ZeroVector;
+		DynamicContactComponent.Reset();
+		DynamicContactMass = 0.0f;
 		LastDynamicContactTime = -1.0e10;
 	}
 	UpdateDriveTargets(DeltaTime);
@@ -377,6 +377,15 @@ void UDollPhysicsComponent::UpdateLegJointLimits()
 void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 {
 	const float InteractionWeight = 1.0f - FMath::Clamp(static_cast<float>((GetWorld()->GetTimeSeconds() - LastDynamicContactTime - 0.08) / 0.15), 0.0f, 1.0f);
+	const UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+	const bool bPassivePushing = HasPassivePushContact() &&
+		(FVector::DotProduct(Movement->GetCurrentAcceleration(), InteractionNormal) < -UE_KINDA_SMALL_NUMBER ||
+		 FVector::DotProduct(Character->GetVelocity(), InteractionNormal) < -1.0);
+	// All drives use acceleration mode. Divide one shared force budget across their
+	// total mass, including the diagonal worst case for the two horizontal axes.
+	const float PassiveAcceleration = FMath::Max(MaxPassivePushForce, 1.0f) * 100.0f /
+		(FMath::Max(TotalDrivenMass, 0.1f) * FMath::Sqrt(2.0f));
+	const float PassiveTorqueScale = FMath::Min(1.0f, PassiveAcceleration / FMath::Max(MaxInteractionAcceleration, 100.0f));
 	for (FDrivenBody& Driven : DrivenBodies)
 	{
 		const FBodyInstance* Body = Mesh->GetBodyInstance(Driven.Bone);
@@ -395,6 +404,16 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 			Multiplier.MaxForceMultiplier = FVector::OneVector - InteractionNormal.GetAbs() * ((1.0f - ForceScale) * InteractionWeight);
 			const float TorqueScale = FMath::Min(1.0f, MaxInteractionAngularAcceleration / FMath::Max(Settings.MaxAngularAcceleration, 1.0f));
 			Multiplier.MaxTorqueMultiplier = FMath::Lerp(1.0f, TorqueScale, InteractionWeight);
+		}
+		if (bPassivePushing)
+		{
+			// Cap the whole body's push, rather than granting the full budget to each
+			// foot/limb. Vertical support and collisions remain fully active.
+			const float ForceScale = FMath::Min(1.0f, PassiveAcceleration / FMath::Max(Settings.MaxAcceleration, 100.0f));
+			Multiplier.MaxForceMultiplier.X = FMath::Min(Multiplier.MaxForceMultiplier.X, static_cast<double>(ForceScale));
+			Multiplier.MaxForceMultiplier.Y = FMath::Min(Multiplier.MaxForceMultiplier.Y, static_cast<double>(ForceScale));
+			const float TorqueScale = FMath::Min(1.0f, MaxInteractionAngularAcceleration * PassiveTorqueScale / FMath::Max(Settings.MaxAngularAcceleration, 1.0f));
+			Multiplier.MaxTorqueMultiplier = FMath::Min(Multiplier.MaxTorqueMultiplier, TorqueScale);
 		}
 		SetControlMultiplier(Driven.Control, Multiplier);
 		const FTransform Desired = GetCachedBoneTransform(Mesh.Get(), Driven.Bone);
@@ -422,27 +441,55 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 	}
 }
 
+bool UDollPhysicsComponent::HasPassivePushContact() const
+{
+	return !bDragging && DynamicContactComponent.IsValid() && DynamicContactComponent->IsRegistered() &&
+		DynamicContactComponent.Get() != Character->GetHeldPhysicsComponent() &&
+		GetWorld()->GetTimeSeconds() - LastDynamicContactTime < 0.12 && !InteractionNormal.IsNearlyZero();
+}
+
 FVector UDollPhysicsComponent::ConstrainMovement(const FVector& Delta) const
 {
 	if (!bDriving || bResetPending || !Mesh.IsValid()) return Delta;
+	FVector LimitedDelta = Delta;
+	if (HasPassivePushContact())
+	{
+		const FVector Into = -InteractionNormal;
+		const double SpeedInto = FVector::DotProduct(Character->GetVelocity(), Into);
+		const double MoveInto = FVector::DotProduct(LimitedDelta, Into);
+		const float PushSpeed = FMath::Max(MaxPassivePushSpeed, 1.0f) / FMath::Sqrt(1.0f + FMath::Max(DynamicContactMass, 0.0f) / 25.0f);
+		if (MoveInto > 0.0 && SpeedInto > PushSpeed)
+		{
+			// Sprint cannot bypass this cap. Backing away and sliding along the prop
+			// keep their full movement; active Drag uses its own mass/reach limits.
+			LimitedDelta -= Into * (MoveInto * (1.0 - PushSpeed / SpeedInto));
+		}
+	}
 	const FDrivenBody* Root = DrivenBodies.FindByPredicate([](const FDrivenBody& Body) { return Body.Bone == DollPelvisBone; });
 	const FBodyInstance* Body = Mesh->GetBodyInstance(DollPelvisBone);
-	if (!Root || !Body) return Delta;
+	if (!Root || !Body) return LimitedDelta;
 	const FVector Error = (Root->AnimationTarget.GetLocation() - Body->GetUnrealWorldTransform().GetLocation()) * FVector(1.0, 1.0, 0.0);
-	const FVector Proposed = Error + FVector(Delta.X, Delta.Y, 0.0);
-	if (Proposed.SizeSquared() <= FMath::Square(RootLeash)) return Delta;
+	const FVector Proposed = Error + FVector(LimitedDelta.X, LimitedDelta.Y, 0.0);
+	if (Proposed.SizeSquared() <= FMath::Square(RootLeash)) return LimitedDelta;
 	const FVector Away = Proposed.GetSafeNormal();
-	const double SeparatingMove = FVector::DotProduct(Delta, Away);
-	return Delta - Away * FMath::Clamp(Proposed.Size() - RootLeash, 0.0, FMath::Max(SeparatingMove, 0.0));
+	const double SeparatingMove = FVector::DotProduct(LimitedDelta, Away);
+	return LimitedDelta - Away * FMath::Clamp(Proposed.Size() - RootLeash, 0.0, FMath::Max(SeparatingMove, 0.0));
 }
 
 void UDollPhysicsComponent::OnBodyHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (!bDriving || !OtherComponent || OtherActor == GetOwner() || OtherComponent == Character->GetHeldPhysicsComponent()) return;
+	if (!bDriving || !OtherComponent || OtherActor == GetOwner()) return;
 	if (OtherComponent->IsSimulatingPhysics(Hit.BoneName))
 	{
-		InteractionNormal = Hit.ImpactNormal.GetSafeNormal2D();
-		LastDynamicContactTime = GetWorld()->GetTimeSeconds();
+		const FVector Normal = Hit.ImpactNormal.GetSafeNormal2D();
+		if (!Normal.IsNearlyZero())
+		{
+			InteractionNormal = Normal;
+			DynamicContactComponent = OtherComponent;
+			const FBodyInstance* OtherBody = OtherComponent->GetBodyInstance(Hit.BoneName);
+			DynamicContactMass = FMath::Max(OtherBody ? OtherBody->GetBodyMass() : OtherComponent->GetMass(), 0.1f);
+			LastDynamicContactTime = GetWorld()->GetTimeSeconds();
+		}
 	}
 	Character->ConsiderStumble(Hit);
 	const FName Bone = Hit.MyBoneName;

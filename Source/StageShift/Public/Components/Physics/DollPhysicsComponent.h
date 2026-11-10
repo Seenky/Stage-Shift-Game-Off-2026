@@ -62,7 +62,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Doll Physics")
 	void ResetAfterTeleport();
 	FVector ConstrainMovement(const FVector& Delta) const;
-	void SetDragCollisionExclusions(UPrimitiveComponent* Target, FName TargetBone = NAME_None);
+	void SetDragging(bool bIsDragging);
 	TConstArrayView<FStageShiftDollContact> GetContacts() const { return Contacts; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Doll Physics")
@@ -101,6 +101,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Doll Physics|Interaction", meta = (ClampMin = "1.0"))
 	float MaxInteractionAngularAcceleration = 900.0f;
 
+	// Shared horizontal motor budget while walking into an unheld physics body.
+	UPROPERTY(EditAnywhere, Category = "Doll Physics|Interaction", meta = (ClampMin = "1.0", Units = "N"))
+	float MaxPassivePushForce = 120.0f;
+	UPROPERTY(EditAnywhere, Category = "Doll Physics|Interaction", meta = (ClampMin = "1.0", Units = "cm/s"))
+	float MaxPassivePushSpeed = 45.0f;
+
 	UPROPERTY(EditAnywhere, Category = "Doll Physics|Squash", meta = (ClampMin = "0.0", ClampMax = "5.0", Units = "cm"))
 	float MaxContactDepth = 3.5f;
 
@@ -110,6 +116,7 @@ private:
 	void UpdateLegTargets();
 	void UpdateLegJointLimits();
 	void UpdateDriveTargets(float DeltaTime);
+	bool HasPassivePushContact() const;
 	void UpdateContacts(float DeltaTime);
 	const FStageShiftDollDrive& GetDrive(FName Bone) const;
 
@@ -133,12 +140,14 @@ private:
 	TWeakObjectPtr<AStageShiftCharacter> Character;
 	TWeakObjectPtr<USkeletalMeshComponent> Mesh;
 	TArray<FDrivenBody> DrivenBodies;
-	TArray<FName> DragCollisionControls;
-	TWeakObjectPtr<UPrimitiveComponent> DragCollisionTarget;
-	FName DragCollisionBone;
+	TArray<FName> DragSelfCollisionControls;
+	bool bDragging = false;
 	TArray<FStageShiftDollContact> Contacts;
 	FTransform PreviousComponentTransform = FTransform::Identity;
 	FVector InteractionNormal = FVector::ZeroVector;
+	TWeakObjectPtr<UPrimitiveComponent> DynamicContactComponent;
+	float DynamicContactMass = 0.0f;
+	float TotalDrivenMass = 0.0f;
 	double LastDynamicContactTime = -1.0e10;
 	FCollisionResponseContainer SavedResponses;
 	TEnumAsByte<ECollisionChannel> SavedObjectType = ECC_Pawn;
