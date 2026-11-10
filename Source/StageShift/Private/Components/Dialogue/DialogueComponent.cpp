@@ -83,8 +83,10 @@ void UDialogueComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     PlaybackState.Phase = EDialoguePlaybackPhase::Idle;
 
     ResolvedText.Reset();
-    LetterEndOffsets.Reset();
-    RevealedLetterCount = 0;
+    RevealedLineData.Reset();
+    LastPlaybackState = {};
+    LastRevealedLineData.Reset();
+    LastRevealDelay = 0.0f;
 
     Super::EndPlay(EndPlayReason);
 }
@@ -133,10 +135,10 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 
     ResolvedText = LineToPlay.Text.ToString();
 
-    LetterEndOffsets.Reset();
-    RevealedLetterCount = 0;
-    WordStartOffsets.Reset();
-    RevealedWordCount = 0;
+    RevealedLineData.LetterEndOffsets.Reset();
+    RevealedLineData.RevealedLetterCount = 0;
+    RevealedLineData.WordStartOffsets.Reset();
+    RevealedLineData.RevealedWordCount = 0;
     bRevealAllRequested = false;
 
     const TSharedRef<IBreakIterator> Characters = FBreakIterator::CreateCharacterBoundaryIterator();
@@ -146,17 +148,17 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
     {
         if (!FChar::IsWhitespace(ResolvedText[Start]))
         {
-            LetterEndOffsets.Add(End);
+            RevealedLineData.LetterEndOffsets.Add(End);
             if (Start == 0 || FChar::IsWhitespace(ResolvedText[Start - 1]))
             {
-                WordStartOffsets.Add(Start);
+                RevealedLineData.WordStartOffsets.Add(Start);
             }
         }
 
         Start = End;
     }
 
-    if (LetterEndOffsets.IsEmpty())
+    if (RevealedLineData.LetterEndOffsets.IsEmpty())
     {
         const FGuid EmptyPlaybackId = PlaybackState.PlaybackId;
         OnRevealCompleted.Broadcast(EmptyPlaybackId);
@@ -168,6 +170,57 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
     }
 
     RevealNextLetter();
+}
+
+void UDialogueComponent::ResumeLine()
+{
+    if (bEndingPlay || !HasBegunPlay() || !GetWorld())
+    {
+        return;
+    }
+
+    if (IsPlaying() || !LastRevealedLineData.IsValid() || !LastPlaybackState.IsValid() || LastPlaybackState.Phase != EDialoguePlaybackPhase::Revealing)
+    {
+        return;
+    }
+
+    UWorld* World = GetWorld();
+
+    if (!World)
+    {
+        return;
+    }
+
+    FTimerManager& TimerManager = World->GetTimerManager();
+
+    TimerManager.ClearTimer(RevealTimerHandle);
+    TimerManager.ClearTimer(HoldTimerHandle);
+
+    PlaybackState = LastPlaybackState;
+
+    PlaybackState.PlaybackId = FGuid::NewGuid();
+    ResolvedText = PlaybackState.Line.Text.ToString();
+    RevealedLineData = LastRevealedLineData;
+    bRevealAllRequested = false;
+
+    const float Delay = LastRevealDelay;
+    LastPlaybackState = {};
+    LastRevealedLineData.Reset();
+    LastRevealDelay = 0.0f;
+
+    const FTimerDelegate ContinuePlayback = FTimerDelegate::CreateUObject(this, &ThisClass::RevealNextLetter);
+
+    if (Delay > 0.0f)
+    {
+        TimerManager.SetTimer(RevealTimerHandle, ContinuePlayback, Delay, false);
+    }
+    else
+    {
+        RevealTimerHandle = TimerManager.SetTimerForNextTick(ContinuePlayback);
+    }
+
+    const FDialoguePlaybackState StateSnapshot = PlaybackState;
+    OnDialoguePlaybackStateChanged.Broadcast(StateSnapshot);
 }
 
 void UDialogueComponent::RevealAllWords()
@@ -193,9 +246,9 @@ void UDialogueComponent::RevealAllWords()
 bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
 {
     const FGuid Id = PlaybackState.PlaybackId;
-    while (RevealedWordCount < WordStartOffsets.Num() && WordStartOffsets[RevealedWordCount] < EndOffset)
+    while (RevealedLineData.RevealedWordCount < RevealedLineData.WordStartOffsets.Num() && RevealedLineData.WordStartOffsets[RevealedLineData.RevealedWordCount] < EndOffset)
     {
-        const int32 WordIndex = RevealedWordCount++;
+        const int32 WordIndex = RevealedLineData.RevealedWordCount++;
         TArray<FDialogueCue, TInlineAllocator<4>> Cues;
         for (const FDialogueCue& Cue : PlaybackState.Line.Cues)
         {
@@ -204,9 +257,7 @@ bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
                 Cues.Add(Cue);
             }
         }
-
-        // A listener may skip, stop or replace playback. Defer nested skips until
-        // every cue on this word has been delivered; never continue an old line.
+        
         TGuardValue<bool> DispatchGuard(bDispatchingWord, true);
         TGuardValue<FGuid> PlaybackGuard(DispatchingPlaybackId, Id);
         OnWordRevealed.Broadcast(Id, WordIndex);
@@ -242,9 +293,9 @@ void UDialogueComponent::RevealNextLetter()
         return;
     }
 
-    while (RevealedLetterCount < LetterEndOffsets.Num())
+    while (RevealedLineData.RevealedLetterCount < RevealedLineData.LetterEndOffsets.Num())
     {
-        const int32 EndOffset = LetterEndOffsets[RevealedLetterCount++];
+        const int32 EndOffset = RevealedLineData.LetterEndOffsets[RevealedLineData.RevealedLetterCount++];
 
         if (!NotifyWordsUpTo(EndOffset))
         {
@@ -257,7 +308,7 @@ void UDialogueComponent::RevealNextLetter()
             return;
         }
 
-        if (RevealedLetterCount == LetterEndOffsets.Num())
+        if (RevealedLineData.RevealedLetterCount == RevealedLineData.LetterEndOffsets.Num())
         {
             BeginHold();
             return;
@@ -304,7 +355,7 @@ void UDialogueComponent::BeginHold()
     TimerManager.ClearTimer(RevealTimerHandle);
     TimerManager.ClearTimer(HoldTimerHandle);
 
-    RevealedLetterCount = LetterEndOffsets.Num();
+    RevealedLineData.RevealedLetterCount = RevealedLineData.LetterEndOffsets.Num();
 
     PlaybackState.VisibleText = PlaybackState.Line.Text;
     PlaybackState.Phase = EDialoguePlaybackPhase::Holding;
@@ -349,20 +400,36 @@ void UDialogueComponent::FinishPlayback(const EDialogueEndReason EndReason)
 
     const FGuid EndedPlaybackId = PlaybackState.PlaybackId;
 
+    const bool bCanResume = EndReason == EDialogueEndReason::Interrupted &&
+        PlaybackState.Phase == EDialoguePlaybackPhase::Revealing;
+    LastRevealDelay = 0.0f;
     if (UWorld* World = GetWorld())
     {
-        World->GetTimerManager().ClearTimer(RevealTimerHandle);
-        World->GetTimerManager().ClearTimer(HoldTimerHandle);
+        FTimerManager& TimerManager = World->GetTimerManager();
+        if (bCanResume)
+        {
+            LastRevealDelay = FMath::Max(TimerManager.GetTimerRemaining(RevealTimerHandle), 0.0f);
+        }
+        TimerManager.ClearTimer(RevealTimerHandle);
+        TimerManager.ClearTimer(HoldTimerHandle);
+    }
+
+    if (bCanResume)
+    {
+        LastPlaybackState = PlaybackState;
+        LastRevealedLineData = RevealedLineData;
+    }
+    else
+    {
+        LastPlaybackState = {};
+        LastRevealedLineData.Reset();
     }
 
     PlaybackState = FDialoguePlaybackState{};
     PlaybackState.Phase = EDialoguePlaybackPhase::Idle;
 
     ResolvedText.Reset();
-    LetterEndOffsets.Reset();
-    RevealedLetterCount = 0;
-    WordStartOffsets.Reset();
-    RevealedWordCount = 0;
+    RevealedLineData.Reset();
     bRevealAllRequested = false;
 
     OnDialogueLineEnded.Broadcast(EndedPlaybackId, EndReason);

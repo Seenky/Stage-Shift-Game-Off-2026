@@ -22,7 +22,7 @@ float UStageShiftCharacterMovementComponent::GetMaxSpeed() const
 float UStageShiftCharacterMovementComponent::GetMaxAcceleration() const
 {
 	const float Scale = Manipulation.IsValid() && Manipulation->IsDragging()
-		? FMath::Clamp(Manipulation->GetDragMovementScale(), 0.15f, 0.4f) : 1.0f;
+		? FMath::Clamp(Manipulation->GetDragMovementScale(), 0.15f, 1.0f) : 1.0f;
 	return Super::GetMaxAcceleration() * Scale;
 }
 

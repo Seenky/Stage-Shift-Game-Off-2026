@@ -143,6 +143,7 @@ bool UDollPhysicsComponent::StartDriving()
 		CreateBodyModifier(BodyMesh, Driven.Bone, DollSet, Modifier);
 	}
 	bDriving = true;
+	SetDragCollisionExclusions(DragCollisionTarget.Get(), DragCollisionBone);
 	bResetPending = true;
 	PreviousComponentTransform = BodyMesh->GetComponentTransform();
 	return true;
@@ -151,6 +152,7 @@ bool UDollPhysicsComponent::StartDriving()
 void UDollPhysicsComponent::StopDriving(bool bRestoreAnimation)
 {
 	if (!DrivenBodies.IsEmpty()) DestroyAllControlsAndBodyModifiers();
+	DragCollisionControls.Reset();
 	if (USkeletalMeshComponent* BodyMesh = Mesh.Get(); BodyMesh && bMeshSettingsSaved)
 	{
 		for (const FDrivenBody& Driven : DrivenBodies)
@@ -194,6 +196,53 @@ void UDollPhysicsComponent::SuspendForRagdoll()
 {
 	StopDriving(false);
 	bSuspended = true;
+}
+
+void UDollPhysicsComponent::SetDragCollisionExclusions(UPrimitiveComponent* Target, FName TargetBone)
+{
+	for (FName Control : DragCollisionControls) DestroyControl(Control, true, false);
+	DragCollisionControls.Reset();
+	DragCollisionTarget = Target;
+	DragCollisionBone = TargetBone;
+	USkeletalMeshComponent* BodyMesh = Mesh.Get();
+	if (!bDriving || !BodyMesh || !Target) return;
+
+	// Zero-drive controls use the existing Physics Control lifecycle for pairwise collision filtering.
+	// They do not constrain either body or apply forces. Floor/world collision stays enabled.
+	FPhysicsControlData Data;
+	Data.bUseSkeletalAnimation = false;
+	Data.bDisableCollision = true;
+	const FName Set(TEXT("DragCollisionExclusions"));
+	const auto Exclude = [&](FName ParentBone, UPrimitiveComponent* Other, FName OtherBone)
+	{
+		const FBodyInstance* Parent = BodyMesh->GetBodyInstance(ParentBone);
+		const FBodyInstance* Child = Other->GetBodyInstance(OtherBone);
+		if (!Parent || !Child || !Parent->IsValidBodyInstance() || !Child->IsValidBodyInstance()) return;
+		const FName Control = CreateControl(BodyMesh, ParentBone, Other, OtherBone, Data, FPhysicsControlTarget(), Set);
+		if (!Control.IsNone()) DragCollisionControls.Add(Control);
+	};
+	const FName Left[] = {TEXT("thigh_l"), TEXT("calf_l"), TEXT("foot_l")};
+	const FName Right[] = {TEXT("thigh_r"), TEXT("calf_r"), TEXT("foot_r")};
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(Left); ++Index)
+	{
+		Exclude(Left[Index], Target, TargetBone);
+		Exclude(Right[Index], Target, TargetBone);
+	}
+	// A low two-hand reach must not make the two legs jam against each other.
+	const UPhysicsAsset* Asset = BodyMesh->GetPhysicsAsset();
+	if (!Asset) return;
+	for (FName LeftBone : Left)
+	{
+		for (FName RightBone : Right)
+		{
+			const int32 LeftIndex = Asset->FindBodyIndex(LeftBone);
+			const int32 RightIndex = Asset->FindBodyIndex(RightBone);
+			if (LeftIndex != INDEX_NONE && RightIndex != INDEX_NONE && Asset->IsCollisionEnabled(LeftIndex, RightIndex))
+			{
+				Exclude(LeftBone, BodyMesh, RightBone);
+			}
+		}
+	}
 }
 
 void UDollPhysicsComponent::ResetAfterTeleport()

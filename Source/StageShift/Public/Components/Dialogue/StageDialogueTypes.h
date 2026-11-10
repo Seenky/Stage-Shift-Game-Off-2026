@@ -96,6 +96,11 @@ struct FDialoguePlaybackState
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FGuid PlaybackId;
+    
+    bool IsValid() const
+    {
+        return PlaybackId.IsValid() && !Line.Text.IsEmpty();
+    }
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialoguePlaybackStateChanged, const FDialoguePlaybackState&,

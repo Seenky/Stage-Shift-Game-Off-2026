@@ -27,6 +27,9 @@ public:
     void PlayLine(const FDialogueLine& Line, bool bForceStop = false);
 
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
+    void ResumeLine();
+
+    UFUNCTION(BlueprintCallable, Category = "Dialogue")
     void RevealAllWords();
 
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
@@ -43,7 +46,6 @@ public:
     {
         return PlaybackState.Phase != EDialoguePlaybackPhase::Idle;
     }
-    
 
     UPROPERTY(BlueprintAssignable)
     FOnDialoguePlaybackStateChanged OnDialoguePlaybackStateChanged;
@@ -68,6 +70,27 @@ protected:
     TObjectPtr<UDialogueBubbleWidget> DialogueWidgetTemplate;
 
 private:
+    struct FRevealedLineData
+    {
+        int32 RevealedLetterCount = 0;
+        TArray<int32> LetterEndOffsets = {};
+        TArray<int32> WordStartOffsets = {};
+        int32 RevealedWordCount = 0;
+
+        void Reset()
+        {
+            RevealedLetterCount = 0;
+            LetterEndOffsets.Reset();
+            WordStartOffsets.Reset();
+            RevealedWordCount = 0;
+        }
+
+        bool IsValid() const
+        {
+            return LetterEndOffsets.Num() > 0 && WordStartOffsets.Num() > 0;
+        }
+    };
+
     void RevealNextLetter();
 
     bool NotifyWordsUpTo(int32 EndOffset);
@@ -80,15 +103,17 @@ private:
     FDialoguePlaybackState PlaybackState = {};
 
     UPROPERTY(Transient)
+    FDialoguePlaybackState LastPlaybackState = {};
+
+    UPROPERTY(Transient)
     class UDialogueViewModel* DialogueViewModel = nullptr;
 
     FString ResolvedText = {};
 
-    int32 RevealedLetterCount = 0;
+    FRevealedLineData RevealedLineData;
+    FRevealedLineData LastRevealedLineData;
+    float LastRevealDelay = 0.0f;
 
-    TArray<int32> LetterEndOffsets;
-    TArray<int32> WordStartOffsets;
-    int32 RevealedWordCount = 0;
     bool bDispatchingWord = false;
     FGuid DispatchingPlaybackId;
     bool bRevealAllRequested = false;

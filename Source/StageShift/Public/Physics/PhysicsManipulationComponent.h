@@ -54,12 +54,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
 	float DragDistance = 100.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
+	float DragReachSlack = 24.0f;
 
-	// Force is in Newtons; converted to Unreal's kg*cm/s^2 at application.
+	// Force at a 25 kg reference load, in Newtons. Scales with DragReferenceMass.
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "N"))
 	float DragMaxForce = 650.0f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0"))
-	float DragMaxAcceleration = 800.0f; // cm/s^2; limits light props as well as the absolute force limit.
+	float DragMaxAcceleration = 1800.0f; // cm/s^2; limits light props as well as the absolute force limit.
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0"))
 	float DragSpringStiffness = 1800.0f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.1", ClampMax = "2.0"))
@@ -67,9 +69,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.0"))
 	float DragAngularDamping = 3.0f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.1", Units = "kg"))
+	// Raising the reference load increases pulling strength and spring stiffness as well as movement speed.
 	float DragReferenceMass = 25.0f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.05", ClampMax = "1.0"))
-	float DragSpeedMultiplier = 0.55f;
+	float DragSpeedMultiplier = 0.95f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.01", ClampMax = "1.0"))
 	float DragMinimumSpeedMultiplier = 0.10f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
