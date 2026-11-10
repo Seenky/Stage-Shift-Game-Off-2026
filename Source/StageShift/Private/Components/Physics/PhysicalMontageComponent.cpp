@@ -55,11 +55,6 @@ FPhysicalMontageSettings::FPhysicalMontageSettings()
 UPhysicalMontageComponent::UPhysicalMontageComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	MontageSettings.Add(TEXT("Fall"));
-	FPhysicalMontageSettings& JumpSettings = MontageSettings.Add(TEXT("Jump"));
-	JumpSettings.LaunchDelay = 0.15f;
-	JumpSettings.PhysicsActivationDelay = 0.25f;
-	JumpSettings.LaunchVelocity = FVector(500.0, 0.0, 125.0);
 }
 
 void UPhysicalMontageComponent::PostLoad()
@@ -101,43 +96,62 @@ void UPhysicalMontageComponent::StartPhysicsMontage(FName MontageName)
 
 void UPhysicalMontageComponent::StartPhysicsMontage(FName MontageName, const FVector& InitialVelocity)
 {
-	if (IsPhysicsMontageActive() || !PreparePhysics(MontageName, InitialVelocity)) return;
+	if (const FPhysicalMontageSettings* Settings = MontageSettings.Find(MontageName))
+	{
+		FPhysicalAnimationInput Input;
+		Input.InitialVelocity = InitialVelocity;
+		BeginPhysicsAnimation(*Settings, Input, MontageName);
+	}
+}
 
-	if (ActiveSettings.LaunchDelay > 0.0f)
+bool UPhysicalMontageComponent::PlayPhysicsAnimation(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input)
+{
+	return BeginPhysicsAnimation(Settings, Input, NAME_None);
+}
+
+bool UPhysicalMontageComponent::BeginPhysicsAnimation(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input, FName ActionName)
+{
+	if (IsPhysicsMontageActive() || !PreparePhysics(Settings, Input, ActionName)) return false;
+	OnPhysicsAnimationStarted.Broadcast();
+
+	if (ActiveSettings.bApplyLaunchVelocity && ActiveSettings.LaunchDelay > 0.0f)
 	{
 		GetWorld()->GetTimerManager().SetTimer(LaunchTimerHandle, this, &ThisClass::LaunchMontage, ActiveSettings.LaunchDelay, false);
 	}
-	else
+	else if (ActiveSettings.bApplyLaunchVelocity)
 	{
 		LaunchMontage();
 	}
 
-	const float ActivationDelay = FMath::Max(ActiveSettings.LaunchDelay, ActiveSettings.PhysicsActivationDelay);
+	const float ActivationDelay = FMath::Max(ActiveSettings.bApplyLaunchVelocity ? ActiveSettings.LaunchDelay : 0.0f, ActiveSettings.PhysicsActivationDelay);
 	if (ActivationDelay > 0.0f)
 	{
-		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::ActivatePhysics, MontageName);
+		FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::ActivatePhysics, ActionName);
 		GetWorld()->GetTimerManager().SetTimer(ActivationTimerHandle, Delegate, ActivationDelay, false);
 	}
 	else
 	{
-		ActivatePhysics(MontageName);
+		ActivatePhysics(ActionName);
 	}
+	return true;
 }
 
-bool UPhysicalMontageComponent::PreparePhysics(FName MontageName, const FVector& InitialVelocity)
+bool UPhysicalMontageComponent::PreparePhysics(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input, FName ActionName)
 {
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	const FPhysicalMontageSettings* Settings = MontageSettings.Find(MontageName);
 	USkeletalMeshComponent* Mesh = GetSkeletalMesh();
 	UAnimInstance* AnimInstance = Mesh ? Mesh->GetAnimInstance() : nullptr;
 	const UPhysicsAsset* Asset = Mesh ? Mesh->GetPhysicsAsset() : nullptr;
-	if (!Character || !Settings || !Settings->Montage || !AnimInstance ||
+	if (!Character || !AnimInstance ||
 		!Asset || Asset->FindBodyIndex(PelvisBone) == INDEX_NONE) return false;
-	if (AnimInstance->Montage_Play(Settings->Montage) <= 0.0f) return false;
+	if (!Settings.Montage && !Settings.bAllowWithoutAnimation) return false;
+	if (Settings.Montage && AnimInstance->Montage_Play(Settings.Montage) <= 0.0f) return false;
 
-	ActiveSettings = *Settings;
-	ActiveMontageName = MontageName;
-	MontageLaunchVelocity = InitialVelocity * ActiveSettings.InheritedVelocityScale + Character->GetActorRotation().RotateVector(ActiveSettings.LaunchVelocity);
+	ActiveSettings = Settings;
+	ActiveInput = Input;
+	if (!Settings.Montage) ActiveSettings.StrengthMultiplier = 0.0f;
+	ActiveMontageName = ActionName;
+	MontageLaunchVelocity = Input.InitialVelocity * ActiveSettings.InheritedVelocityScale + Character->GetActorRotation().RotateVector(ActiveSettings.LaunchVelocity);
 	SavedCapsulePhysicsBodyResponse = Character->GetCapsuleComponent()->GetCollisionResponseToChannel(ECC_PhysicsBody);
 	CurrentCollisionProfile = Mesh->GetCollisionProfileName();
 	CurrentCollisionEnabled = Mesh->GetCollisionEnabled();
@@ -150,7 +164,7 @@ bool UPhysicalMontageComponent::PreparePhysics(FName MontageName, const FVector&
 void UPhysicalMontageComponent::LaunchMontage()
 {
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	if (!Character || !bMeshCollisionSaved || bIsSimActive) return;
+	if (!Character || !bMeshCollisionSaved || bIsSimActive || !ActiveSettings.bApplyLaunchVelocity) return;
 
 	GetWorld()->GetTimerManager().ClearTimer(LaunchTimerHandle);
 	
@@ -165,7 +179,11 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	if (!Character || !Mesh || bIsSimActive || bIsRecovering) return;
 	if (!bMeshCollisionSaved)
 	{
-		if (!PreparePhysics(MontageName, Character->GetVelocity())) return;
+		const FPhysicalMontageSettings* Settings = MontageSettings.Find(MontageName);
+		FPhysicalAnimationInput Input;
+		Input.InitialVelocity = Character->GetVelocity();
+		if (!Settings || !PreparePhysics(*Settings, Input, MontageName)) return;
+		OnPhysicsAnimationStarted.Broadcast();
 		LaunchMontage();
 	}
 	if (MontageName != ActiveMontageName) return;
@@ -175,6 +193,7 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	}
 
 	GetWorld()->GetTimerManager().ClearTimer(ActivationTimerHandle);
+	const bool bPreserveSimulation = ActiveSettings.SimulationHandoff == EPhysicsSimulationHandoff::PreserveSimulation && Mesh->IsSimulatingPhysics(PelvisBone);
 	if (UDollPhysicsComponent* Doll = Character->FindComponentByClass<UDollPhysicsComponent>())
 	{
 		Doll->SuspendForRagdoll();
@@ -182,6 +201,7 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	Mesh->HandleExistingParallelEvaluationTask(true, true);
 	Mesh->SetCollisionProfileName(RagdollProfile);
 	Mesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	Mesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	const FBodyInstance* Pelvis = Mesh->GetBodyInstance(PelvisBone);
 	if (!Pelvis || !Pelvis->IsValidBodyInstance())
 	{
@@ -191,8 +211,8 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 
 	UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
 
-	Movement->HandlePendingLaunch();
-	const FVector InitialVelocity = Movement->Velocity;
+	if (ActiveSettings.bApplyLaunchVelocity) Movement->HandlePendingLaunch();
+	const FVector InitialVelocity = ActiveSettings.bApplyLaunchVelocity ? Movement->Velocity : ActiveInput.InitialVelocity;
 	MeshRelativeTransform = Mesh->GetRelativeTransform();
 	SavedStrength = StrengthMultiplyer;
 	Movement->StopMovementImmediately();
@@ -204,15 +224,24 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	PelvisDrive.bIsLocalSimulation = false;
 	PelvisDrive.PositionStrength = 0.0f;
 	PelvisDrive.VelocityStrength = 0.0f;
+	PelvisDrive.OrientationStrength *= ActiveSettings.RootAngularStrengthMultiplier;
+	PelvisDrive.AngularVelocityStrength *= ActiveSettings.RootAngularStrengthMultiplier;
 
 	ApplyPhysicalAnimationSettings(PelvisBone, PelvisDrive);
 	
 	SetStrengthMultiplyer(ActiveSettings.StrengthMultiplier);
 	
-	Mesh->UpdateKinematicBonesToAnim(Mesh->GetComponentSpaceTransforms(), ETeleportType::TeleportPhysics, false, EAllowKinematicDeferral::DisallowDeferral);
+	if (!bPreserveSimulation)
+	{
+		Mesh->UpdateKinematicBonesToAnim(Mesh->GetComponentSpaceTransforms(), ETeleportType::TeleportPhysics, false, EAllowKinematicDeferral::DisallowDeferral);
+	}
 	Mesh->SetAllBodiesBelowSimulatePhysics(PelvisBone, true, true);
 	Mesh->SetAllBodiesBelowPhysicsBlendWeight(PelvisBone, ActiveSettings.PhysicsBlendWeight);
-	Mesh->SetAllPhysicsLinearVelocity(InitialVelocity);
+	if (!bPreserveSimulation) Mesh->SetAllPhysicsLinearVelocity(InitialVelocity);
+	if (!ActiveInput.Impulse.IsNearlyZero())
+	{
+		Mesh->AddImpulseAtLocation(ActiveInput.Impulse, ActiveInput.ImpulseLocation, ActiveInput.ImpulseBone);
+	}
 	bIsSimActive = true;
 
 	GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);
@@ -258,13 +287,14 @@ void UPhysicalMontageComponent::RestorePhysics()
 		StageAnimInstance->SnapshotPose(RagdollPose);
 	}
 
+	const FPhysicsRecoverySelection Selection = RecoverySelector.IsBound() ? RecoverySelector.Execute(Mesh) : FPhysicsRecoverySelection();
+	UAnimMontage* SelectedRecovery = Selection.Montage ? Selection.Montage : RecoveryMontage.Get();
 	FRotator RecoveryRotation = Capsule->GetComponentRotation();
-	if (RecoveryMontage)
+	if (SelectedRecovery)
 	{
-		const FVector BodyDirection = Mesh->GetBoneLocation(TEXT("spine_03")) - PelvisLocation;
-		if (BodyDirection.SizeSquared2D() > FMath::Square(10.0))
+		if (!Selection.FacingDirection.IsNearlyZero())
 		{
-			RecoveryRotation.Yaw = BodyDirection.Rotation().Yaw;
+			RecoveryRotation.Yaw = Selection.FacingDirection.Rotation().Yaw;
 		}
 	}
 
@@ -283,24 +313,24 @@ void UPhysicalMontageComponent::RestorePhysics()
 		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 	const bool bHasPoseBlend = StageAnimInstance && StageAnimInstance->BlendFromRagdollPose(MoveTemp(RagdollPose), PreviousMeshTransform, RecoveryPoseBlendTime);
-	if (AnimInstance && RecoveryMontage)
+	if (AnimInstance && SelectedRecovery)
 	{
-		FAlphaBlendArgs BlendIn = RecoveryMontage->GetBlendInArgs();
+		FAlphaBlendArgs BlendIn = SelectedRecovery->GetBlendInArgs();
 		if (bHasPoseBlend)
 		{
 			BlendIn.BlendTime = 0.0f;
 		}
-		if (AnimInstance->Montage_PlayWithBlendIn(RecoveryMontage, BlendIn) > 0.0f)
+		if (AnimInstance->Montage_PlayWithBlendIn(SelectedRecovery, BlendIn) > 0.0f)
 		{
 			bIsRecovering = true;
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &ThisClass::OnRecoveryMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, RecoveryMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SelectedRecovery);
 		}
 	}
 	if (!bIsRecovering)
 	{
-		if (AnimInstance)
+		if (AnimInstance && ActiveSettings.Montage)
 		{
 			AnimInstance->Montage_Stop(0.0f, ActiveSettings.Montage);
 		}

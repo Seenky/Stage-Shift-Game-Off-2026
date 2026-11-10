@@ -8,6 +8,7 @@
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
 #include "Components/FacialAnimation/FacialAnimationProfile.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/Physics/CharacterPhysicsReactionComponent.h"
 #include "Components/Physics/DollPhysicsComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/WidgetComponent.h"
@@ -16,6 +17,7 @@
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "OptimusDeformerInstance.h"
+#include "PhysicsEngine/BodyInstance.h"
 #include "UObject/ConstructorHelpers.h"
 
 AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectInitializer)
@@ -25,6 +27,7 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 	ConfigureMovementCollision();
 
 	PhysicalMontageComponent = CreateDefaultSubobject<UPhysicalMontageComponent>("Physical Montage Component");
+	PhysicsReactionComponent = CreateDefaultSubobject<UCharacterPhysicsReactionComponent>(TEXT("Physics Reaction Component"));
 	DollPhysicsComponent = CreateDefaultSubobject<UDollPhysicsComponent>(TEXT("DollPhysicsComponent"));
 	DollPhysicsComponent->SetupAttachment(GetCapsuleComponent());
 
@@ -84,6 +87,7 @@ void AStageShiftCharacter::ConfigureMovementCollision()
 	MeshComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	MeshComponent->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
+	MeshComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	GetCharacterMovement()->bEnablePhysicsInteraction = false;
 }
@@ -171,7 +175,7 @@ void AStageShiftCharacter::Tick(float DeltaSeconds)
 	if (bStumblePending)
 	{
 		bStumblePending = false;
-		PhysicalMontageComponent->StartPhysicsMontage(TEXT("Fall"), StumbleVelocity);
+		PhysicsReactionComponent->PlayReaction(PendingPhysicsReaction, StumbleDirection, PendingPhysicsInput);
 	}
 }
 
@@ -205,6 +209,49 @@ void AStageShiftCharacter::MoveBlockedBy(const FHitResult& Impact)
 	ConsiderStumble(Impact);
 }
 
+void AStageShiftCharacter::ConsiderPhysicsHit(const FHitResult& Impact, const FVector& NormalImpulse)
+{
+	UPrimitiveComponent* Other = Impact.GetComponent();
+
+	if (!bEnablePhysicsHitKnockdown || bStumblePending || IsPhysicsMontageActive() || !Other ||
+		Other->GetOwner() == this || Other == GetHeldPhysicsComponent() || !Other->IsSimulatingPhysics(Impact.BoneName)) return;
+
+	const FBodyInstance* OtherBody = Other->GetBodyInstance(Impact.BoneName);
+	const FBodyInstance* HitBody = GetMesh()->GetBodyInstance(Impact.MyBoneName);
+
+	if (!OtherBody || !HitBody) return;
+
+	const double OtherMass = FMath::Max(OtherBody->GetBodyMass(), 0.1f);
+
+	if (OtherMass < FMath::Max(PhysicsHitMinMass, 0.0f)) return;
+
+	const FVector Normal = Impact.ImpactNormal.GetSafeNormal();
+
+	if (Normal.IsNearlyZero()) return;
+
+	const double Impulse = FMath::Abs(FVector::DotProduct(NormalImpulse, Normal));
+	if (Impulse < FMath::Max(PhysicsHitMinImpulse, 0.0f) * 100.0) return;
+
+	const double IncomingSpeed = FVector::DotProduct(Other->GetPhysicsLinearVelocityAtPoint(Impact.ImpactPoint, Impact.BoneName), Normal) + Impulse / OtherMass;
+	const double OwnSpeedBefore = FVector::DotProduct(GetMesh()->GetPhysicsLinearVelocityAtPoint(Impact.ImpactPoint, Impact.MyBoneName), Normal) - Impulse / FMath::Max(HitBody->GetBodyMass(), 0.1f);
+	const double ClosingSpeed = IncomingSpeed - OwnSpeedBefore;
+	const float Threshold = FMath::Max(PhysicsHitMinSpeed, 1.0f);
+
+	if (IncomingSpeed < Threshold || ClosingSpeed < Threshold) return;
+
+	const double CharacterMass = FMath::Max(GetMesh()->GetMass(), 1.0f);
+	const double ExtraImpulse = FMath::Clamp(Impulse * FMath::Max(PhysicsHitKnockbackScale, 0.0f), 0.0,
+		CharacterMass * FMath::Max(PhysicsHitMaxKnockbackSpeed, 0.0f));
+	PendingPhysicsInput = FPhysicalAnimationInput();
+	PendingPhysicsInput.InitialVelocity = GetVelocity();
+	PendingPhysicsInput.Impulse = Normal * ExtraImpulse;
+	PendingPhysicsInput.ImpulseLocation = Impact.ImpactPoint;
+	PendingPhysicsInput.ImpulseBone = Impact.MyBoneName;
+	StumbleDirection = Normal;
+	PendingPhysicsReaction = ECharacterPhysicsReaction::Impact;
+	bStumblePending = true;
+}
+
 void AStageShiftCharacter::ConsiderStumble(const FHitResult& Impact)
 {
 	UPrimitiveComponent* Obstacle = Impact.GetComponent();
@@ -219,7 +266,10 @@ void AStageShiftCharacter::ConsiderStumble(const FHitResult& Impact)
 	const float KneeZ = FMath::Min(GetMesh()->GetSocketLocation(TEXT("calf_l")).Z, GetMesh()->GetSocketLocation(TEXT("calf_r")).Z);
 	if (Obstacle->Bounds.GetBox().Max.Z > KneeZ - 5.0f || Impact.ImpactPoint.Z > KneeZ) return;
 
-	StumbleVelocity = FVector(Velocity.X, Velocity.Y, 0.0);
+	PendingPhysicsInput = FPhysicalAnimationInput();
+	PendingPhysicsInput.InitialVelocity = FVector(Velocity.X, Velocity.Y, 0.0);
+	StumbleDirection = Velocity;
+	PendingPhysicsReaction = ECharacterPhysicsReaction::Stumble;
 	bStumblePending = true;
 }
 

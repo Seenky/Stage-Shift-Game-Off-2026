@@ -39,6 +39,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Throw")
 	void SetThrowTarget(const FVector& WorldLocation, const FVector& SurfaceNormal = FVector::UpVector);
+	void SetThrowTargetFromView(const FVector& WorldLocation, const FVector& SurfaceNormal, const FVector& ViewDirection);
 
 	void ClearThrowTarget() { bHasThrowTarget = false; }
 
@@ -93,6 +94,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm/s"))
 	float MaxThrowSpeed = 1400.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw")
+	bool bAssistTargetRange = true;
+	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm"))
+	float ThrowReleaseClearance = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm"))
+	float ThrowMaxReleaseAdjustment = 35.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0"))
 	float ThrowUpwardBias = 0.2f;
@@ -132,6 +139,7 @@ private:
 	FVector ThrowDirection = FVector::ZeroVector;
 	FVector ThrowTarget = FVector::ZeroVector;
 	FVector ThrowTargetNormal = FVector::UpVector;
+	FVector ThrowViewDirection = FVector::ZeroVector;
 	bool bHasThrowTarget = false;
 	TWeakObjectPtr<class UAnimInstance> PickupInstance;
 	TWeakObjectPtr<class UAnimMontage> PickupMontage;
@@ -146,6 +154,7 @@ private:
 	FTransform GetDragFrame() const;
 	void ClearPickupPlayback();
 	FVector CalculateThrowVelocity(const UPrimitiveComponent& Component, const FVector& Target, float Speed) const;
+	void ResolveThrowRelease(UPrimitiveComponent& Component) const;
 
 	UFUNCTION()
 	void OnPickupNotify(FName Name, const struct FBranchingPointNotifyPayload& Payload);
