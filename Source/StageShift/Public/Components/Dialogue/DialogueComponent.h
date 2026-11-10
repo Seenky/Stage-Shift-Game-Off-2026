@@ -24,16 +24,16 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    void PlayLine(const FDialogueLine& Line, bool bForceStop = false);
+    bool PlayLine(const FDialogueLine& Line, bool bForceStop = false);
 
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    void ResumeLine();
+    bool ResumeLine();
 
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    void RevealAllWords();
+    bool RevealAllWords();
 
     UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    void StopPlayback();
+    bool StopPlayback();
 
     UFUNCTION(BlueprintPure, Category = "Dialogue")
     const FDialoguePlaybackState& GetPlaybackState() const

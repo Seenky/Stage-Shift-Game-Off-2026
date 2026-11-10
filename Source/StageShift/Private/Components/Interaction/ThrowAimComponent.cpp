@@ -27,6 +27,7 @@ void UThrowAimComponent::BeginPlay()
 	Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>();
 	Manipulation = GetOwner()->FindComponentByClass<UPhysicsManipulationComponent>();
 	if (Character.IsValid()) AddTickPrerequisiteComponent(Character->GetCharacterMovement());
+	if (Manipulation.IsValid()) Manipulation->AddTickPrerequisiteComponent(this);
 }
 
 void UThrowAimComponent::SetStickInput(FVector2D Value)
@@ -55,9 +56,12 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		StopAiming();
 		return;
 	}
+	const bool bDragging = Manipulation->IsDragging();
+	if (bAiming && bDraggingAim != bDragging) StopAiming();
 	const bool bPreparing = Manipulation->IsCarrying() && Interaction->IsPreparingRelease();
+	const bool bInteractive = bDragging || bPreparing;
 	const bool bFollowingThrough = bAiming && Interaction->IsPlayingReleaseAnimation();
-	if (!bPreparing && !bFollowingThrough)
+	if (!bInteractive && !bFollowingThrough)
 	{
 		StopAiming();
 		return;
@@ -70,6 +74,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (!bAiming)
 	{
 		bAiming = true;
+		bDraggingAim = bDragging;
 		bAimFrozen = false;
 		LastCursorUpdateFrame = MAX_uint64;
 		bGamepad = StickInput.SizeSquared() > FMath::Square(StickDeadZone);
@@ -86,9 +91,12 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			if (!bGamepad && (PC->bShowMouseCursor || !PC->GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture())) ScreenPosition = Mouse;
 		}
 		bHasScreenPosition = true;
-		bSavedOrientToMovement = Movement->bOrientRotationToMovement;
-		bSavedControllerYaw = Pawn->bUseControllerRotationYaw;
-		bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
+		if (!bDraggingAim)
+		{
+			bSavedOrientToMovement = Movement->bOrientRotationToMovement;
+			bSavedControllerYaw = Pawn->bUseControllerRotationYaw;
+			bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
+		}
 		Reticle = ReticleWidgetClass ? CreateWidget<UUserWidget>(PC, ReticleWidgetClass) : nullptr;
 		if (Reticle)
 		{
@@ -99,19 +107,25 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			Reticle->SetAlignmentInViewport(FVector2D(0.5, 0.5));
 		}
 	}
-	Movement->bOrientRotationToMovement = false;
-	Movement->bUseControllerDesiredRotation = false;
-	Pawn->bUseControllerRotationYaw = false;
+	if (!bDraggingAim)
+	{
+		Movement->bOrientRotationToMovement = false;
+		Movement->bUseControllerDesiredRotation = false;
+		Pawn->bUseControllerRotationYaw = false;
+	}
 
-	if (bPreparing && !bAimFrozen) UpdateAim(*PC, DeltaTime);
+	if (bInteractive && !bAimFrozen) UpdateAim(*PC, DeltaTime);
 	if (!bPreparing && bWasPreparing) bAimFrozen = true;
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
 	if (Reticle)
 	{
-		Reticle->SetVisibility(bPreparing ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		Reticle->SetVisibility(bInteractive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		Reticle->SetPositionInViewport(ScreenPosition - PlayerOrigin, true);
 	}
+	// Drag coordinates character facing with the simulated grip. The cursor only
+	// supplies the desired direction here, so a blocked prop cannot twist the arms.
+	if (bDraggingAim) return;
 	if (bHasAimTarget)
 	{
 		const FVector ToTarget = (AimTarget - Pawn->GetActorLocation()).GetSafeNormal2D();
@@ -202,12 +216,12 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		const double Distance = FMath::Abs(RayDirection.Z) > 0.001 ? (FloorZ - RayStart.Z) / RayDirection.Z : -1.0;
 		AimTarget = RayStart + RayDirection * (Distance > 0.0 ? FMath::Min(Distance, static_cast<double>(AimTraceDistance)) : AimTraceDistance);
 	}
-	Manipulation->SetThrowTarget(AimTarget, SurfaceNormal);
+	if (!Manipulation->IsDragging()) Manipulation->SetThrowTarget(AimTarget, SurfaceNormal);
 }
 
 void UThrowAimComponent::FreezeAim()
 {
-	if (!bAiming || bAimFrozen) return;
+	if (!bAiming || bAimFrozen || bDraggingAim) return;
 	APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
 	if (Controller && Controller->IsLocalController()) UpdateAim(*Controller, GetWorld()->GetDeltaSeconds());
 	bAimFrozen = true;
@@ -222,7 +236,7 @@ bool UThrowAimComponent::GetAimTarget(FVector& WorldLocation) const
 void UThrowAimComponent::StopAiming()
 {
 	if (!bAiming) return;
-	if (ACharacter* Pawn = Character.Get())
+	if (ACharacter* Pawn = Character.Get(); Pawn && !bDraggingAim)
 	{
 		Pawn->GetCharacterMovement()->bOrientRotationToMovement = bSavedOrientToMovement;
 		Pawn->GetCharacterMovement()->bUseControllerDesiredRotation = bSavedControllerDesiredRotation;
@@ -230,7 +244,7 @@ void UThrowAimComponent::StopAiming()
 	}
 	if (Reticle) Reticle->RemoveFromParent();
 	Reticle = nullptr;
-	bAiming = bWasPreparing = bStickMoved = false;
+	bAiming = bDraggingAim = bWasPreparing = bStickMoved = false;
 	bAimFrozen = bHasAimTarget = false;
 	if (Manipulation.IsValid()) Manipulation->ClearThrowTarget();
 }

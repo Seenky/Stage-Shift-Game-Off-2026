@@ -73,6 +73,7 @@ private:
 	FVector AimDirection = FVector::ForwardVector;
 	uint64 LastCursorUpdateFrame = MAX_uint64;
 	bool bAiming = false;
+	bool bDraggingAim = false;
 	bool bWasPreparing = false;
 	bool bGamepad = false;
 	bool bStickMoved = false;

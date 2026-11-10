@@ -68,6 +68,8 @@ protected:
 	float DragDampingRatio = 1.1f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.0"))
 	float DragAngularDamping = 3.0f;
+	UPROPERTY(EditAnywhere, Category = "Drag|Turning", meta = (ClampMin = "1.0", Units = "deg/s"))
+	float DragTurnSpeed = 90.0f; // Grip orbit speed around the character.
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "0.1", Units = "kg"))
 	// Raising the reference load increases pulling strength and spring stiffness as well as movement speed.
 	float DragReferenceMass = 25.0f;
@@ -114,6 +116,8 @@ private:
 	TWeakObjectPtr<class ACharacter> DragCharacter;
 	FName DragBoneName;
 	FVector DragLocalHands[2] = {FVector::ZeroVector, FVector::ZeroVector};
+	FVector DragLocalGripNormal = FVector::ZeroVector;
+	float DragTargetYaw = 0.0f;
 	float DragMass = 0.0f;
 	float DragRestDistance = 0.0f;
 	float DragReach = 0.0f;
@@ -136,6 +140,7 @@ private:
 
 	bool AttachCarriedObject(bool bKeepWorldTransform);
 	void BeginDrag(const FHitResult& Hit);
+	void SetDragGrip(const FVector& GripPoint);
 	void UpdateDrag(float DeltaTime);
 	void CancelManipulation();
 	FTransform GetDragFrame() const;

@@ -91,16 +91,16 @@ void UDialogueComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
+bool UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 {
     if (bEndingPlay || !HasBegunPlay() || !GetWorld())
     {
-        return;
+        return false;
     }
 
     if (IsPlaying() && !bForceStop)
     {
-        return;
+        return false;
     }
 
     const FDialogueLine LineToPlay = Line;
@@ -111,7 +111,7 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 
         if (!IsValid(this) || !HasBegunPlay() || IsPlaying())
         {
-            return;
+            return false;
         }
     }
 
@@ -119,7 +119,7 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 
     if (!World)
     {
-        return;
+        return false;
     }
 
     FTimerManager& TimerManager = World->GetTimerManager();
@@ -166,29 +166,31 @@ void UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
         {
             FinishPlayback(EDialogueEndReason::Completed);
         }
-        return;
+        return true;
     }
 
     RevealNextLetter();
+    
+    return true;
 }
 
-void UDialogueComponent::ResumeLine()
+bool UDialogueComponent::ResumeLine()
 {
     if (bEndingPlay || !HasBegunPlay() || !GetWorld())
     {
-        return;
+        return false;
     }
 
     if (IsPlaying() || !LastRevealedLineData.IsValid() || !LastPlaybackState.IsValid() || LastPlaybackState.Phase != EDialoguePlaybackPhase::Revealing)
     {
-        return;
+        return false;
     }
 
     UWorld* World = GetWorld();
 
     if (!World)
     {
-        return;
+        return false;
     }
 
     FTimerManager& TimerManager = World->GetTimerManager();
@@ -221,19 +223,21 @@ void UDialogueComponent::ResumeLine()
 
     const FDialoguePlaybackState StateSnapshot = PlaybackState;
     OnDialoguePlaybackStateChanged.Broadcast(StateSnapshot);
+    
+    return true;
 }
 
-void UDialogueComponent::RevealAllWords()
+bool UDialogueComponent::RevealAllWords()
 {
     if (PlaybackState.Phase != EDialoguePlaybackPhase::Revealing)
     {
-        return;
+        return false;
     }
 
     if (bDispatchingWord && DispatchingPlaybackId == PlaybackState.PlaybackId)
     {
         bRevealAllRequested = true;
-        return;
+        return false;
     }
 
     bRevealAllRequested = false;
@@ -241,6 +245,8 @@ void UDialogueComponent::RevealAllWords()
     {
         BeginHold();
     }
+    
+    return true;
 }
 
 bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
@@ -281,9 +287,16 @@ bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
     return IsValid(this) && PlaybackState.PlaybackId == Id && PlaybackState.Phase == EDialoguePlaybackPhase::Revealing;
 }
 
-void UDialogueComponent::StopPlayback()
+bool UDialogueComponent::StopPlayback()
 {
+    if (!IsPlaying())
+    {
+        return false;
+    }
+    
     FinishPlayback(EDialogueEndReason::Interrupted);
+    
+    return true;
 }
 
 void UDialogueComponent::RevealNextLetter()
