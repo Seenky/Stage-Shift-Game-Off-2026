@@ -1,6 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/Physics/DollPhysicsComponent.h"
 
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
@@ -174,6 +175,10 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	}
 
 	GetWorld()->GetTimerManager().ClearTimer(ActivationTimerHandle);
+	if (UDollPhysicsComponent* Doll = Character->FindComponentByClass<UDollPhysicsComponent>())
+	{
+		Doll->SuspendForRagdoll();
+	}
 	Mesh->HandleExistingParallelEvaluationTask(true, true);
 	Mesh->SetCollisionProfileName(RagdollProfile);
 	Mesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
@@ -272,6 +277,11 @@ void UPhysicalMontageComponent::RestorePhysics()
 	RestoreMeshCollision();
 
 	bIsSimActive = false;
+	if (const UDollPhysicsComponent* Doll = Character->FindComponentByClass<UDollPhysicsComponent>(); Doll && Doll->bEnabled)
+	{
+		// The get-up montage is kinematic. Restore physical collision when the doll drives resume.
+		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
 	const bool bHasPoseBlend = StageAnimInstance && StageAnimInstance->BlendFromRagdollPose(MoveTemp(RagdollPose), PreviousMeshTransform, RecoveryPoseBlendTime);
 	if (AnimInstance && RecoveryMontage)
 	{

@@ -2,10 +2,15 @@
 
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Engine/GameViewportClient.h"
+#include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerInput.h"
 #include "Physics/PhysicsManipulationComponent.h"
+#include "SceneView.h"
 #include "UI/ThrowAimWidget.h"
 
 UThrowAimComponent::UThrowAimComponent()
@@ -26,8 +31,16 @@ void UThrowAimComponent::BeginPlay()
 
 void UThrowAimComponent::SetStickInput(FVector2D Value)
 {
-	if (!Value.Equals(StickInput, 0.05f) && Value.SizeSquared() > FMath::Square(StickDeadZone)) bStickMoved = true;
-	StickInput = Value;
+	StickInput = Value.GetClampedToMaxSize(1.0);
+	if (StickInput.SizeSquared() <= FMath::Square(StickDeadZone))
+	{
+		StickDeviceSample = FVector2D::ZeroVector;
+	}
+	else if (!StickInput.Equals(StickDeviceSample, 0.05f))
+	{
+		bStickMoved = true;
+		StickDeviceSample = StickInput;
+	}
 }
 
 void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* Tick)
@@ -51,13 +64,28 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 	UCharacterMovementComponent* Movement = Pawn->GetCharacterMovement();
+	FIntRect Bounds;
+	FVector2D PlayerOrigin;
+	if (!GetViewportBounds(*PC, Bounds, PlayerOrigin)) return;
 	if (!bAiming)
 	{
 		bAiming = true;
+		bAimFrozen = false;
+		LastCursorUpdateFrame = MAX_uint64;
 		bGamepad = StickInput.SizeSquared() > FMath::Square(StickDeadZone);
 		AimDirection = Pawn->GetActorForwardVector().GetSafeNormal2D();
 		const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
-		PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition);
+		if (!bHasScreenPosition && !PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition))
+		{
+			ScreenPosition = FVector2D(Bounds.Min + Bounds.Size() / 2);
+		}
+		FVector2D Mouse;
+		if (PC->GetMousePosition(Mouse.X, Mouse.Y))
+		{
+			LastMousePosition = Mouse;
+			if (!bGamepad && (PC->bShowMouseCursor || !PC->GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture())) ScreenPosition = Mouse;
+		}
+		bHasScreenPosition = true;
 		bSavedOrientToMovement = Movement->bOrientRotationToMovement;
 		bSavedControllerYaw = Pawn->bUseControllerRotationYaw;
 		bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
@@ -75,58 +103,120 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	Movement->bUseControllerDesiredRotation = false;
 	Pawn->bUseControllerRotationYaw = false;
 
-	if (bPreparing)
-	{
-		float MouseX = 0.0f, MouseY = 0.0f;
-		PC->GetInputMouseDelta(MouseX, MouseY);
-		const bool bMouseMoved = FVector2D(MouseX, MouseY).SizeSquared() > 0.04f;
-		if (bMouseMoved) bGamepad = false;
-		else if (bStickMoved) bGamepad = true;
-
-		if (bGamepad)
-		{
-			if (StickInput.SizeSquared() > FMath::Square(StickDeadZone))
-			{
-				const float CameraYaw = PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraRotation().Yaw : PC->GetControlRotation().Yaw;
-				const FRotationMatrix Basis(FRotator(0, CameraYaw, 0));
-				AimDirection = (Basis.GetUnitAxis(EAxis::X) * StickInput.Y + Basis.GetUnitAxis(EAxis::Y) * StickInput.X).GetSafeNormal2D();
-			}
-			const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
-			PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition);
-		}
-		else
-		{
-			ScreenPosition += FVector2D(MouseX, -MouseY) * MouseSensitivity;
-			int32 Width = 0, Height = 0;
-			PC->GetViewportSize(Width, Height);
-			if (Width > 48 && Height > 48)
-			{
-				ScreenPosition.X = FMath::Clamp(ScreenPosition.X, 24.0, static_cast<double>(Width - 24));
-				ScreenPosition.Y = FMath::Clamp(ScreenPosition.Y, 24.0, static_cast<double>(Height - 24));
-			}
-			FVector RayStart, RayDirection;
-			// A plane gives stable horizontal aim even over props and uneven geometry.
-			if (PC->DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection) && FMath::Abs(RayDirection.Z) > 0.001f)
-			{
-				const float FloorZ = Pawn->GetActorLocation().Z - Pawn->GetSimpleCollisionHalfHeight();
-				const double Distance = (FloorZ - RayStart.Z) / RayDirection.Z;
-				const FVector Offset = RayStart + RayDirection * Distance - Pawn->GetActorLocation();
-				if (Distance > 0 && Offset.SizeSquared2D() > FMath::Square(25.0)) AimDirection = Offset.GetSafeNormal2D();
-			}
-		}
-		Manipulation->SetThrowDirection(AimDirection);
-	}
-	// Input release freezes the target direction through the release timer and follow-through.
-	if (!bPreparing && bWasPreparing) Manipulation->SetThrowDirection(AimDirection);
+	if (bPreparing && !bAimFrozen) UpdateAim(*PC, DeltaTime);
+	if (!bPreparing && bWasPreparing) bAimFrozen = true;
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
 	if (Reticle)
 	{
 		Reticle->SetVisibility(bPreparing ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		Reticle->SetPositionInViewport(ScreenPosition, true);
+		Reticle->SetPositionInViewport(ScreenPosition - PlayerOrigin, true);
+	}
+	if (bHasAimTarget)
+	{
+		const FVector ToTarget = (AimTarget - Pawn->GetActorLocation()).GetSafeNormal2D();
+		if (!ToTarget.IsNearlyZero()) AimDirection = ToTarget;
 	}
 	const FRotator Target(0, AimDirection.Rotation().Yaw, 0);
 	Pawn->SetActorRotation(FMath::RInterpTo(Pawn->GetActorRotation(), Target, DeltaTime, TurnSpeed));
+}
+
+bool UThrowAimComponent::GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const
+{
+	const ULocalPlayer* Player = Controller.GetLocalPlayer();
+	if (!Player || !Player->ViewportClient || !Player->ViewportClient->Viewport) return false;
+	FSceneViewProjectionData Projection;
+	if (!Player->GetProjectionData(Player->ViewportClient->Viewport, Projection)) return false;
+	Bounds = Projection.GetConstrainedViewRect();
+	PlayerOrigin = FVector2D(Projection.GetViewRect().Min);
+	return Bounds.Width() > 0 && Bounds.Height() > 0;
+}
+
+void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTime)
+{
+	FIntRect Bounds;
+	FVector2D PlayerOrigin;
+	if (!GetViewportBounds(Controller, Bounds, PlayerOrigin)) return;
+	FVector2D Mouse;
+	const bool bHasMouse = Controller.GetMousePosition(Mouse.X, Mouse.Y);
+	const bool bAbsoluteMouse = Controller.bShowMouseCursor || !Controller.GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture();
+	if (LastCursorUpdateFrame != GFrameCounter)
+	{
+		FVector2D MouseDelta = FVector2D::ZeroVector;
+		if (Controller.PlayerInput)
+		{
+			MouseDelta = FVector2D(Controller.PlayerInput->GetRawKeyValue(EKeys::MouseX), -Controller.PlayerInput->GetRawKeyValue(EKeys::MouseY));
+		}
+		const bool bMouseMoved = bAbsoluteMouse ? bHasMouse && FVector2D::DistSquared(Mouse, LastMousePosition) > 1.0 : MouseDelta.SizeSquared() > 0.04;
+		if (bMouseMoved) bGamepad = false;
+		else if (bStickMoved) bGamepad = true;
+		if (bGamepad)
+		{
+			const double Magnitude = StickInput.Size();
+			if (Magnitude > StickDeadZone)
+			{
+				const double Strength = FMath::Pow((Magnitude - StickDeadZone) / (1.0 - StickDeadZone), StickCursorExponent);
+				const FVector2D Direction(StickInput.X / Magnitude, -StickInput.Y / Magnitude);
+				ScreenPosition += Direction * (Strength * StickCursorSpeed * Bounds.Height() / 1080.0 * DeltaTime);
+			}
+		}
+		else if (bAbsoluteMouse && bHasMouse) ScreenPosition = Mouse;
+		else ScreenPosition += MouseDelta * MouseSensitivity;
+		LastCursorUpdateFrame = GFrameCounter;
+		bStickMoved = false;
+	}
+	else if (!bGamepad && bAbsoluteMouse && bHasMouse)
+	{
+		ScreenPosition = Mouse;
+	}
+	const double Margin = FMath::Min3(24.0, Bounds.Width() * 0.25, Bounds.Height() * 0.25);
+	ScreenPosition.X = FMath::Clamp(ScreenPosition.X, Bounds.Min.X + Margin, Bounds.Max.X - Margin);
+	ScreenPosition.Y = FMath::Clamp(ScreenPosition.Y, Bounds.Min.Y + Margin, Bounds.Max.Y - Margin);
+	if (bGamepad && bAbsoluteMouse)
+	{
+		const FIntPoint Pixel(FMath::RoundToInt(ScreenPosition.X), FMath::RoundToInt(ScreenPosition.Y));
+		Controller.SetMouseLocation(Pixel.X, Pixel.Y);
+		LastMousePosition = FVector2D(Pixel);
+	}
+	else if (bHasMouse) LastMousePosition = Mouse;
+
+	FVector RayStart, RayDirection;
+	bHasAimTarget = Controller.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection);
+	if (!bHasAimTarget)
+	{
+		Manipulation->ClearThrowTarget();
+		return;
+	}
+	FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowCursor), true, GetOwner());
+	Query.AddIgnoredComponent(Manipulation->GetManipulatedComponent());
+	FHitResult Hit;
+	FVector SurfaceNormal = FVector::UpVector;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, RayStart, RayStart + RayDirection * AimTraceDistance, AimTraceChannel, Query))
+	{
+		AimTarget = Hit.ImpactPoint;
+		SurfaceNormal = Hit.ImpactNormal;
+	}
+	else
+	{
+		const double FloorZ = Character->GetActorLocation().Z - Character->GetSimpleCollisionHalfHeight();
+		const double Distance = FMath::Abs(RayDirection.Z) > 0.001 ? (FloorZ - RayStart.Z) / RayDirection.Z : -1.0;
+		AimTarget = RayStart + RayDirection * (Distance > 0.0 ? FMath::Min(Distance, static_cast<double>(AimTraceDistance)) : AimTraceDistance);
+	}
+	Manipulation->SetThrowTarget(AimTarget, SurfaceNormal);
+}
+
+void UThrowAimComponent::FreezeAim()
+{
+	if (!bAiming || bAimFrozen) return;
+	APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
+	if (Controller && Controller->IsLocalController()) UpdateAim(*Controller, GetWorld()->GetDeltaSeconds());
+	bAimFrozen = true;
+}
+
+bool UThrowAimComponent::GetAimTarget(FVector& WorldLocation) const
+{
+	WorldLocation = AimTarget;
+	return bHasAimTarget;
 }
 
 void UThrowAimComponent::StopAiming()
@@ -141,6 +231,8 @@ void UThrowAimComponent::StopAiming()
 	if (Reticle) Reticle->RemoveFromParent();
 	Reticle = nullptr;
 	bAiming = bWasPreparing = bStickMoved = false;
+	bAimFrozen = bHasAimTarget = false;
+	if (Manipulation.IsValid()) Manipulation->ClearThrowTarget();
 }
 
 void UThrowAimComponent::EndPlay(const EEndPlayReason::Type Reason)

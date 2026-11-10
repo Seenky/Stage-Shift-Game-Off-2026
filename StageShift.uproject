@@ -13,11 +13,16 @@
 			"Name": "StageShiftEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "StageShiftAnimGraph",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
-			"Name": "StatusComponent",
+			"Name": "PhysicsControl",
 			"Enabled": true
 		},
 		{
@@ -32,11 +37,23 @@
 			"Enabled": true
 		},
 		{
+			"Name": "StatusComponent",
+			"Enabled": true
+		},
+		{
 			"Name": "ControlRig",
 			"Enabled": true
 		},
 		{
 			"Name": "FullBodyIK",
+			"Enabled": true
+		},
+		{
+			"Name": "DeformerGraph",
+			"Enabled": true
+		},
+		{
+			"Name": "ComputeFramework",
 			"Enabled": true
 		}
 	]

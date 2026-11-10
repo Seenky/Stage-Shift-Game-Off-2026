@@ -1,6 +1,7 @@
 #include "Animation/StageShiftAnimInstance.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Core/StageShiftCharacter.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -12,6 +13,8 @@ namespace
 	const FName SpeedDataCurve(TEXT("Speed_Data"));
 	const FName PlayRateCurve(TEXT("PlayRate"));
 	const FName GaitCurve(TEXT("Gait"));
+	const FName LeftFootPlantCurve(TEXT("FootPlant_L"));
+	const FName RightFootPlantCurve(TEXT("FootPlant_R"));
 
 	constexpr float WalkStride = 0.5f;
 	constexpr float MinimumMovingSpeed = 1.0f;
@@ -33,6 +36,7 @@ void UStageShiftAnimInstance::NativeInitializeAnimation()
 	RecoveryPoseAlpha = 0.0f;
 	RecoveryBlendTime = 0.0f;
 	RecoveryBlendElapsed = 0.0f;
+	DollMotion = {};
 }
 
 bool UStageShiftAnimInstance::BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime)
@@ -78,6 +82,8 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	const APawn* Pawn = TryGetPawnOwner();
+	const AStageShiftCharacter* StageCharacter = Cast<AStageShiftCharacter>(Pawn);
+	bDollPhysicsActive = StageCharacter && StageCharacter->IsDollPhysicsActive();
 	float TargetPickupAlpha = 0.0f;
 	const UPhysicsManipulationComponent* Manipulation = Pawn ? Pawn->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
 	if (Manipulation)
@@ -87,7 +93,8 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	// Reach follows the contact curve exactly; release eases out even after the montage ends.
 	PickupAlpha = TargetPickupAlpha >= PickupAlpha ? TargetPickupAlpha
 		: FMath::FInterpTo(PickupAlpha, TargetPickupAlpha, DeltaSeconds, 10.0f);
-	if (!Manipulation || !Manipulation->GetManipulatedComponent() || (GetOwningComponent() && GetOwningComponent()->IsAnySimulatingPhysics())) PickupAlpha = 0.0f;
+	if (!Manipulation || !Manipulation->GetManipulatedComponent() ||
+		(StageCharacter && StageCharacter->IsPhysicsMontageActive())) PickupAlpha = 0.0f;
 	if (PickupAlpha < KINDA_SMALL_NUMBER) PickupAlpha = 0.0f;
 	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
 	GroundSpeed = Velocity.Size2D();
@@ -130,4 +137,84 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const ACharacter* Character = Cast<ACharacter>(Pawn);
 	const bool bGrounded = Character && Character->GetCharacterMovement()->IsMovingOnGround();
 	FootIKAlpha = FMath::FInterpTo(FootIKAlpha, bEnableFootIK && bGrounded && RecoveryPoseAlpha <= 0.0f ? 1.0f : 0.0f, DeltaSeconds, FootIKResponse);
+	UpdateDollMotion(Cast<AStageShiftCharacter>(Pawn), PlanarVelocity, bGrounded, DeltaSeconds);
+}
+
+void UStageShiftAnimInstance::AddLandingSquash(float Strength)
+{
+	DollMotion.CompressionVelocity += Strength * 60.0f;
+}
+
+void UStageShiftAnimInstance::UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push,
+	bool bNewContact, FName HitBodyBone)
+{
+	const USkeletalMeshComponent* Mesh = GetOwningComponent();
+	const float Impact = bNewContact
+		? FMath::GetMappedRangeValueClamped(FVector2f(25.0f, 350.0f), FVector2f(0.0f, 1.0f), ImpactSpeed)
+		: 0.0f;
+	if (!Mesh || ContactSquashScale <= 0.0f || (Impact <= 0.0f && Push <= 0.0f)) return;
+
+	if (bNewContact || DollMotion.Pose.ContactBone.IsNone() || (!HitBodyBone.IsNone() && HitBodyBone != DollMotion.Pose.ContactBone) ||
+		FVector::DistSquared(DollMotion.LastProjectedImpact, ImpactPoint) > FMath::Square(5.0))
+	{
+		// The capsule reports the hit, but the physics asset gives a point on the posed character.
+		FClosestPointOnPhysicsAsset Surface;
+		const bool bHasSurface = HitBodyBone.IsNone() && Mesh->GetClosestPointOnPhysicsAsset(ImpactPoint, Surface, false)
+			&& !Surface.BoneName.IsNone() && Surface.Distance >= 0.0f;
+		const FName AnchorBone = !HitBodyBone.IsNone() ? HitBodyBone : (bHasSurface ? Surface.BoneName : FName(TEXT("spine_03")));
+		const FTransform Anchor = Mesh->GetSocketTransform(AnchorBone);
+		const FVector AnchorPoint = !HitBodyBone.IsNone() ? ImpactPoint
+			: (bHasSurface ? Surface.ClosestWorldPosition : Anchor.GetLocation() - Away * 14.0);
+		DollMotion.Pose.ContactAnchor = Anchor.InverseTransformPosition(AnchorPoint);
+		DollMotion.Pose.ContactBone = AnchorBone;
+		DollMotion.LastProjectedImpact = ImpactPoint;
+	}
+	DollMotion.Pose.ContactNormal = Away;
+	DollMotion.ContactVelocity = FMath::Max(DollMotion.ContactVelocity, 195.0f * Impact * ContactSquashScale);
+	DollMotion.ContactHold = 1.5f * Push * ContactSquashScale;
+	DollMotion.ContactHoldTime = 0.10f;
+}
+
+void UStageShiftAnimInstance::UpdateDollMotion(const AStageShiftCharacter* Character, const FVector& PlanarVelocity, bool bGrounded, float DeltaSeconds)
+{
+	if (!Character || RecoveryPoseAlpha > 0.0f || Character->IsPhysicsMontageActive())
+	{
+		DollMotion = {};
+		return;
+	}
+
+	FStageShiftDollPose& Pose = DollMotion.Pose;
+	const FVector2D Contact(GetCurveValue(LeftFootPlantCurve), GetCurveValue(RightFootPlantCurve));
+	const double Yaw = Character->GetActorRotation().Yaw;
+	FVector TargetLean = FVector::ZeroVector;
+	if (bGrounded && DollMotion.bWasGrounded)
+	{
+		const bool bNewFootPlant = (Contact.X >= 0.8 && DollMotion.PreviousFootContact.X < 0.8)
+			|| (Contact.Y >= 0.8 && DollMotion.PreviousFootContact.Y < 0.8);
+		if (bNewFootPlant && GroundSpeed > 20.0f)
+		{
+			DollMotion.CompressionVelocity += Character->GetStepSquash() * 60.0f * FMath::Clamp(GroundSpeed / 150.0f, 0.6f, 1.5f);
+		}
+		if (DeltaSeconds > SMALL_NUMBER)
+		{
+			const FVector Acceleration = (PlanarVelocity - DollMotion.PreviousVelocity) / DeltaSeconds;
+			const double YawRate = FMath::FindDeltaAngleDegrees(DollMotion.PreviousYaw, Yaw) / DeltaSeconds;
+			const FVector TurnLag = Character->GetActorRightVector() * (YawRate * 0.00014);
+			TargetLean = ((-Acceleration * 0.00007 - TurnLag) * MotionInertiaScale).GetClampedToMaxSize(0.12);
+		}
+	}
+	DollMotion.PreviousFootContact = Contact;
+	DollMotion.PreviousVelocity = PlanarVelocity;
+	DollMotion.PreviousYaw = Yaw;
+	DollMotion.bWasGrounded = bGrounded;
+
+	FMath::SpringDamper(Pose.Compression, DollMotion.CompressionVelocity, 0.0f, 0.0f, DeltaSeconds, 4.2f, 0.60f);
+	Pose.Compression = FMath::Clamp(Pose.Compression, -0.012f, 0.048f);
+	FMath::SpringDamper(Pose.HeadCompression, DollMotion.HeadCompressionVelocity, Pose.Compression, 0.0f, DeltaSeconds, 3.0f, 0.8f);
+	DollMotion.ContactHoldTime -= DeltaSeconds;
+	const float ContactTarget = bGrounded && DollMotion.ContactHoldTime > 0.0f ? DollMotion.ContactHold : 0.0f;
+	FMath::SpringDamper(Pose.ContactOffset, DollMotion.ContactVelocity, ContactTarget, 0.0f, DeltaSeconds, 4.1f, 0.62f);
+	Pose.ContactOffset = FMath::Clamp(Pose.ContactOffset, -0.6f, 5.0f);
+	FMath::SpringDamper(Pose.ChestLean, DollMotion.ChestLeanVelocity, TargetLean, FVector::ZeroVector, DeltaSeconds, 5.0f, 0.85f);
+	FMath::SpringDamper(Pose.HeadLean, DollMotion.HeadLeanVelocity, Pose.ChestLean * 0.6, FVector::ZeroVector, DeltaSeconds, 3.0f, 0.8f);
 }

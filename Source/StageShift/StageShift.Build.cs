@@ -8,9 +8,40 @@ public class StageShift : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GameplayTags" });
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core", 
+			"CoreUObject", 
+			"Engine",
+			"AnimGraphRuntime",
+			"PhysicsControl",
+			"PhysicsCore",
+			"InputCore", 
+			"EnhancedInput", 
+			"GameplayTags", 
+			"UMG",
+			"SlateCore",
+			
+		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "StatusComponent", "AIModule", "StateTreeModule", "GameplayStateTreeModule", "GameplayTags", "AnimGraphRuntime", "ControlRig", "RigVM", "PBIK", "UMG", "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"AIModule", 
+			"StateTreeModule", 
+			"GameplayStateTreeModule", 
+			"GameplayTags", 
+			"AnimationCore",
+			"AnimGraphRuntime",
+			"OptimusCore",
+			"ComputeFramework",
+			"ControlRig", 
+			"RigVM",
+			"PBIK",
+			"Slate",
+			"ModelViewViewModel",
+			"StatusComponent"
+			
+		});
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

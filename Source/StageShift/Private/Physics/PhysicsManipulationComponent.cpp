@@ -10,6 +10,8 @@
 #include "Animation/AnimMontage.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 UPhysicsManipulationComponent::UPhysicsManipulationComponent()
 {
@@ -183,6 +185,9 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 	const bool bCarry = bCarryAttached;
 	const bool bThrow = bCarry && !bCancelled && HoldDuration > TapDuration;
 	const FVector Forward = !ThrowDirection.IsNearlyZero() ? ThrowDirection : GetOwner() ? GetOwner()->GetActorForwardVector() : FVector::ForwardVector;
+	const bool bTargeted = bHasThrowTarget;
+	const FVector Target = ThrowTarget;
+	const FVector TargetNormal = ThrowTargetNormal;
 
 	ReleaseComponent();
 	
@@ -194,11 +199,47 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 		{
 			const float Charge = FMath::Clamp((HoldDuration - TapDuration) / FMath::Max(MaxChargeDuration, UE_SMALL_NUMBER), 0.0f, 1.0f);
 			const float Speed = FMath::Lerp(MinThrowSpeed, FMath::Max(MinThrowSpeed, MaxThrowSpeed), Charge);
-			const FVector Direction = (Forward + FVector::UpVector * ThrowUpwardBias).GetSafeNormal();
-			Component->SetPhysicsLinearVelocity(GetOwner()->GetVelocity());
-			Component->AddImpulse(Direction * Speed, NAME_None, true);
+			FVector Velocity;
+			if (bTargeted)
+			{
+				const FVector CenterOffset = Component->Bounds.Origin - Component->GetCenterOfMass();
+				const double SurfaceOffset = FVector::DotProduct(Component->Bounds.BoxExtent, TargetNormal.GetAbs())
+					- FVector::DotProduct(CenterOffset, TargetNormal);
+				Velocity = CalculateThrowVelocity(*Component, Target + TargetNormal * FMath::Max(SurfaceOffset, 0.0), Speed);
+			}
+			else
+			{
+				const FVector Direction = (Forward + FVector::UpVector * ThrowUpwardBias).GetSafeNormal();
+				Velocity = GetOwner()->GetVelocity() + Direction * Speed;
+			}
+			Component->SetPhysicsLinearVelocity(Velocity);
 		}
 	}
+}
+
+void UPhysicsManipulationComponent::SetThrowTarget(const FVector& WorldLocation, const FVector& SurfaceNormal)
+{
+	bHasThrowTarget = !WorldLocation.ContainsNaN();
+	ThrowTarget = WorldLocation;
+	ThrowTargetNormal = SurfaceNormal.ContainsNaN() ? FVector::UpVector : SurfaceNormal.GetSafeNormal();
+}
+
+FVector UPhysicsManipulationComponent::CalculateThrowVelocity(const UPrimitiveComponent& Component, const FVector& Target, float Speed) const
+{
+	if (Speed <= UE_SMALL_NUMBER) return FVector::ZeroVector;
+	const FVector Start = Component.GetCenterOfMass();
+	const FVector Offset = Target - Start;
+	const float GravityZ = Component.IsGravityEnabled() && GetWorld() ? GetWorld()->GetGravityZ() : 0.0f;
+	if (FMath::Abs(GravityZ) > UE_SMALL_NUMBER && Offset.SizeSquared2D() > 1.0)
+	{
+		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, Target, Speed);
+		Parameters.OverrideGravityZ = GravityZ;
+		Parameters.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
+		Parameters.bAcceptClosestOnNoSolutions = true;
+		FVector Velocity;
+		if (UGameplayStatics::SuggestProjectileVelocity(Parameters, Velocity) && !Velocity.ContainsNaN()) return Velocity;
+	}
+	return Offset.IsNearlyZero() ? GetOwner()->GetActorForwardVector() * Speed : Offset.GetSafeNormal() * Speed;
 }
 
 void UPhysicsManipulationComponent::ReleaseComponent()
@@ -224,6 +265,7 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 	bPickupPending = false;
 	bCarryAttached = false;
 	ThrowDirection = FVector::ZeroVector;
+	bHasThrowTarget = false;
 	SetComponentTickEnabled(false);
 	Super::ReleaseComponent();
 }
