@@ -15,11 +15,76 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
+#include "Misc/ScopeExit.h"
 
 
 UInteractionComponent::UInteractionComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.TickGroup = TG_PostPhysics;
+	bAutoActivate = true;
+}
+
+void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* Tick)
+{
+	Super::TickComponent(DeltaTime, TickType, Tick);
+	const APawn* Pawn = Cast<APawn>(GetOwner());
+	if (Pawn && Pawn->IsLocallyControlled()) RefreshInteractionCandidate();
+	else SetInteractionCandidate(FHitResult());
+}
+
+bool UInteractionComponent::CanResumeInteraction() const
+{
+	if (!HasActiveInteraction() || ActiveResult != EInteractionResult::Latched) return false;
+	const FInteractionAnimation* Animation = FindAnimation(ActiveInteraction);
+	const UAnimInstance* Instance = PlaybackInstance.Get();
+	return !(Animation && Instance && Instance->Montage_IsPlaying(PlayingMontage.Get()) &&
+		Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == Animation->StartSection);
+}
+
+void UInteractionComponent::RefreshInteractionCandidate(FGameplayTag ActionTag)
+{
+	if (bDispatchingInteraction) return;
+	FHitResult Hit;
+	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() &&
+		!HasActiveInteraction() && !IsPlayingReleaseAnimation())
+	{
+		Hit = ResolveInteractionCandidate(ActionTag);
+	}
+	SetInteractionCandidate(Hit);
+}
+
+void UInteractionComponent::SetInteractionCandidate(const FHitResult& Hit)
+{
+	// Compare weak identities as GetActor() is already null during destruction.
+	const bool bChanged = CandidateHit.HitObjectHandle != Hit.HitObjectHandle;
+	if (bChanged)
+	{
+		if (AActor* Previous = CandidateHit.GetActor()) Previous->OnEndPlay.RemoveDynamic(this, &ThisClass::OnCandidateEndPlay);
+	}
+	CandidateHit = Hit;
+	if (bChanged)
+	{
+		if (AActor* Target = Hit.GetActor()) Target->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnCandidateEndPlay);
+		OnInteractionCandidateChanged.Broadcast(Hit.GetActor());
+	}
+}
+
+void UInteractionComponent::OnCandidateEndPlay(AActor* Actor, EEndPlayReason::Type EndPlayReason)
+{
+	SetInteractionCandidate(FHitResult());
+}
+
+void UInteractionComponent::Deactivate()
+{
+	Super::Deactivate();
+	SetInteractionCandidate(FHitResult());
+}
+
+void UInteractionComponent::OnUnregister()
+{
+	Deactivate();
+	Super::OnUnregister();
 }
 
 void UInteractionComponent::BindInput(UEnhancedInputComponent& Input, const UInputAction* Action)
@@ -34,13 +99,7 @@ void UInteractionComponent::BindInput(UEnhancedInputComponent& Input, const UInp
 void UInteractionComponent::OnInputStarted()
 {
 	const bool bResuming = ActiveResult == EInteractionResult::Latched;
-	if (bResuming)
-	{
-		const FInteractionAnimation* Animation = FindAnimation(ActiveInteraction);
-		const UAnimInstance* Instance = PlaybackInstance.Get();
-		if (Animation && Instance && Instance->Montage_IsPlaying(PlayingMontage.Get()) &&
-			Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == Animation->StartSection) return;
-	}
+	if (bResuming && !CanResumeInteraction()) return;
 	FInteractionPayload Payload;
 	if (BeginInteraction(FInteractionContext(), Payload) == EInteractionResult::Rejected) return;
 
@@ -170,16 +229,18 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 {
 	OutPayload.Reset();
 	
-	if (!IsValid(GetOwner()) || !GetWorld() || bDispatchingInteraction || bEndingPlay)
+	if (!IsActive() || !IsValid(GetOwner()) || !GetWorld() || bDispatchingInteraction || bEndingPlay)
 	{
 		return EInteractionResult::Rejected;
 	}
 
+	RefreshInteractionCandidate(InteractionContext.ActionTag);
+	ON_SCOPE_EXIT { RefreshInteractionCandidate(); };
 	TGuardValue<bool> DispatchGuard(bDispatchingInteraction, true);
 	
 	if (HasActiveInteraction())
 	{
-		if (ActiveResult != EInteractionResult::Latched) return EInteractionResult::Rejected;
+		if (!CanResumeInteraction()) return EInteractionResult::Rejected;
 
 		AActor* Target = ActiveInteraction.InteractedActor.Get();
 		FInteractionContext Context = ActiveContext;
@@ -200,6 +261,35 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 
 	ClearActiveInteraction();
 	
+	const FHitResult Hit = CandidateHit;
+	AActor* Target = Hit.GetActor();
+	if (!IsValid(Target)) return EInteractionResult::Rejected;
+
+	FInteractionContext Context;
+	Context.ActionTag = InteractionContext.ActionTag;
+	Context.Interactor = GetOwner();
+	Context.Hit = Hit;
+	const double StartTime = GetWorld()->GetTimeSeconds();
+	// Never fall through to an unpreviewed target if execution rejects this candidate.
+	const EInteractionResult Result = IInteractionInterface::Execute_OnInteraction(Target, Context);
+	if (Result != EInteractionResult::Rejected && IsValid(Target) && !Target->IsActorBeingDestroyed() && !bEndingPlay)
+	{
+		OutPayload.InteractedActor = Target;
+		OutPayload.InteractedComponent = Hit.GetComponent();
+		if (Result == EInteractionResult::Active || Result == EInteractionResult::Latched)
+		{
+			ActiveInteraction = OutPayload;
+			ActiveContext = Context;
+			ActiveResult = Result;
+			PressStartTime = StartTime;
+			Target->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnTargetEndPlay);
+		}
+	}
+	return Result;
+}
+
+FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag ActionTag) const
+{
 	TArray<FOverlapResult> Overlaps;
 	FCollisionQueryParams CollisionParams(SCENE_QUERY_STAT(Interaction), false, GetOwner());
 	const FVector TraceStart = GetOwner()->GetActorLocation();
@@ -226,7 +316,7 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 	{
 		UPrimitiveComponent* Component = Overlap.GetComponent();
 		AActor* Target = Overlap.GetActor();
-		if (!IsValid(Component) || !IsValid(Target) || !Target->Implements<UInteractionInterface>() || Visited.Contains(Component)) continue;
+		if (!IsValid(Component) || !IsValid(Target) || Target->IsActorBeingDestroyed() || !Target->Implements<UInteractionInterface>() || Visited.Contains(Component)) continue;
 		Visited.Add(Component);
 
 		FVector Point;
@@ -242,8 +332,8 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 			Point + Direction, TraceChannel, CollisionParams) && Obstacle.GetActor() != Target;
 		if (bDebug)
 		{
-			DrawDebugLine(GetWorld(), ReachStart, Point, bBlocked ? FColor::Red : FColor::Green, false, 5.0f);
-			DrawDebugSphere(GetWorld(), Point, 2.0f, 8, bBlocked ? FColor::Red : FColor::Green, false, 5.0f);
+			DrawDebugLine(GetWorld(), ReachStart, Point, bBlocked ? FColor::Red : FColor::Green, false, 0.0f);
+			DrawDebugSphere(GetWorld(), Point, 2.0f, 8, bBlocked ? FColor::Red : FColor::Green, false, 0.0f);
 		}
 		if (bBlocked) continue;
 
@@ -262,43 +352,18 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 	Candidates.Sort([](const FCandidate& A, const FCandidate& B) { return A.Score < B.Score; });
 	if (bDebug)
 	{
-		DrawDebugCapsule(GetWorld(), TraceEnd, FMath::Max(CapsuleHalfHeight, CapsuleRadius), CapsuleRadius, FQuat::Identity, Candidates.IsEmpty() ? FColor::Red : FColor::Green, false, 5.0f);
-		UE_LOG(LogTemp, Display, TEXT("Interaction: %d overlaps, %d reachable candidates"), Overlaps.Num(), Candidates.Num());
+		DrawDebugCapsule(GetWorld(), TraceEnd, FMath::Max(CapsuleHalfHeight, CapsuleRadius), CapsuleRadius, FQuat::Identity, Candidates.IsEmpty() ? FColor::Red : FColor::Green, false, 0.0f);
 	}
 
 	for (const FCandidate& Candidate : Candidates)
 	{
-		const FHitResult& Hit = Candidate.Hit;
-		AActor* Target = Hit.GetActor();
-		if (IsValid(Target) && Target->Implements<UInteractionInterface>())
-		{
-			FInteractionContext Context;
-			Context.ActionTag = InteractionContext.ActionTag;
-			Context.Interactor = GetOwner();
-			Context.Hit = Hit;
-			if (IInteractionInterface::Execute_CanInteract(Target, Context))
-			{
-				const double StartTime = GetWorld()->GetTimeSeconds();
-				const EInteractionResult Result = IInteractionInterface::Execute_OnInteraction(Target, Context);
-				if (Result != EInteractionResult::Rejected && IsValid(Target) && !Target->IsActorBeingDestroyed() && !bEndingPlay)
-				{
-					OutPayload.InteractedActor = Target;
-					OutPayload.InteractedComponent = Hit.GetComponent();
-					if (Result == EInteractionResult::Active || Result == EInteractionResult::Latched)
-					{
-						ActiveInteraction = OutPayload;
-						ActiveContext = Context;
-						ActiveResult = Result;
-						PressStartTime = StartTime;
-						Target->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnTargetEndPlay);
-					}
-				}
-				if (Result != EInteractionResult::Rejected) return Result;
-			}
-		}
-	
+		FInteractionContext Context;
+		Context.ActionTag = ActionTag;
+		Context.Interactor = GetOwner();
+		Context.Hit = Candidate.Hit;
+		if (IInteractionInterface::Execute_CanInteract(Candidate.Hit.GetActor(), Context)) return Candidate.Hit;
 	}
-	return EInteractionResult::Rejected;
+	return FHitResult();
 }
 
 bool UInteractionComponent::EndInteraction()
@@ -316,6 +381,8 @@ void UInteractionComponent::CancelInteraction()
 
 bool UInteractionComponent::FinishInteraction(bool bCancelled)
 {
+	if (bDispatchingInteraction) return false;
+	ON_SCOPE_EXIT { RefreshInteractionCandidate(); };
 	AActor* Target = ActiveInteraction.InteractedActor.Get();
 	FInteractionContext Context = ActiveContext;
 	Context.InteractionPhase = EInteractionPhase::End;
@@ -354,11 +421,13 @@ void UInteractionComponent::OnTargetEndPlay(AActor* Actor, EEndPlayReason::Type 
 {
 	ClearActiveInteraction();
 	StopInteractionMontage();
+	RefreshInteractionCandidate();
 }
 
 void UInteractionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	bEndingPlay = true;
+	Deactivate();
 	CancelInteraction();
 	Super::EndPlay(EndPlayReason);
 }
