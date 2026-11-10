@@ -12,6 +12,8 @@ class UAnimInstance;
 class UEnhancedInputComponent;
 class UInputAction;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInteractionCandidateChanged, AActor*);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class STAGESHIFT_API UInteractionComponent : public UActorComponent
 {
@@ -41,18 +43,26 @@ public:
 	bool IsPlayingReleaseAnimation() const;
 
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
+
+	// Shared by the preview and BeginInteraction; never dispatches OnInteraction.
+	void RefreshInteractionCandidate(FGameplayTag ActionTag = FGameplayTag());
+	AActor* GetInteractionCandidate() const { return CandidateHit.GetActor(); }
+	FOnInteractionCandidateChanged OnInteractionCandidateChanged;
+	virtual void Deactivate() override;
 	
 protected:
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* Tick) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void OnUnregister() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin = 0.0f))
-	float CapsuleRadius = 44.0f;
+	float CapsuleRadius = 65.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin =0.0f))
 	float CapsuleHalfHeight = 88.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin = 0.0f))
-	float InteractionLength = 44.0f;
+	float InteractionLength = 60.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
@@ -79,6 +89,12 @@ private:
 	double PressStartTime = 0.0;
 	bool bDispatchingInteraction = false;
 	bool bEndingPlay = false;
+	FHitResult CandidateHit;
+	bool CanResumeInteraction() const;
+	FHitResult ResolveInteractionCandidate(FGameplayTag ActionTag) const;
+	void SetInteractionCandidate(const FHitResult& Hit);
+	UFUNCTION()
+	void OnCandidateEndPlay(AActor* Actor, EEndPlayReason::Type EndPlayReason);
 
 	TWeakObjectPtr<UAnimInstance> PlaybackInstance;
 	TWeakObjectPtr<UAnimMontage> PlayingMontage;

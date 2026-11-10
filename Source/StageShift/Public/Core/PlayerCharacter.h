@@ -13,6 +13,7 @@ class UInteractionComponent;
 class UPhysicsManipulationComponent;
 class USceneComponent;
 class UThrowAimComponent;
+class UInteractionOutlineComponent;
 
 UCLASS()
 class STAGESHIFT_API APlayerCharacter : public AStageShiftCharacter
@@ -49,6 +50,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UInteractionComponent> InteractionComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UInteractionOutlineComponent> InteractionOutlineComponent = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPhysicsManipulationComponent> PhysicsManipulationComponent = nullptr;

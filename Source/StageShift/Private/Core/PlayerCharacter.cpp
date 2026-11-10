@@ -12,11 +12,13 @@
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
+#include "Components/Interaction/InteractionOutlineComponent.h"
 
 
 APlayerCharacter::APlayerCharacter()
 {
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>("Interaction Component");
+	InteractionOutlineComponent = CreateDefaultSubobject<UInteractionOutlineComponent>("Interaction Outline Component");
 	PhysicsManipulationComponent = CreateDefaultSubobject<UPhysicsManipulationComponent>("Physics Manipulation Component");
 	ThrowAimComponent = CreateDefaultSubobject<UThrowAimComponent>("Throw Aim Component");
 	CarryPoint = CreateDefaultSubobject<USceneComponent>("Carry Point");
