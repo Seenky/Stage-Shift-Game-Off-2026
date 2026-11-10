@@ -7,6 +7,7 @@
 #include "Framework/Text/SlateTextLayout.h"
 #include "Layout/Clipping.h"
 #include "Rendering/DrawElements.h"
+#include "Containers/UnrealString.h"
 
 namespace
 {
@@ -45,11 +46,12 @@ void SDialogueText::Construct(const FArguments& Args)
 	DotBrush = FSlateRoundedBoxBrush(FLinearColor::White);
 }
 
-void SDialogueText::SetAppearance(const FSlateFontInfo& InFont, FLinearColor InTextColor, float InWrapWidth)
+void SDialogueText::SetAppearance(const FSlateFontInfo& InFont, FLinearColor InTextColor, float InWrapWidth, ETextJustify::Type InJustification)
 {
 	Font = InFont;
 	TextColor = InTextColor;
 	WrapWidth = FMath::Max(InWrapWidth, 100.0f);
+	Justification = InJustification;
 	Reset();
 }
 
@@ -57,23 +59,34 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 {
 	const FString Source = NormalizeLineEndings(Text);
 	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(Font));
-	TextLayout->SetWrappingWidth(WrapWidth - DotSpace);
+	
+	TextLayout->SetJustification(Justification);
+	const float RevealSpace = bShowRevealDots ? DotSpace : 0.0f;
+	TextLayout->SetWrappingWidth(WrapWidth - RevealSpace);
+	
 	FPlainTextLayoutMarshaller::Create()->SetText(Source, *TextLayout);
+	
 	TextLayout->UpdateIfNeeded();
-	FTextLayout::FTextOffsetLocations Offsets;
-	TextLayout->GetTextOffsetLocations(Offsets);
+	
+	Line.VisualJustification = TextLayout->GetVisualJustification();
+	
+	TArray<FTextRange> SourceLineRanges;
+	FTextRange::CalculateLineRangesFromString(Source, SourceLineRanges);
 
 	for (const FTextLayout::FLineView& View : TextLayout->GetLineViews())
 	{
 		const FString& ModelText = *TextLayout->GetLineModels()[View.ModelIndex].Text;
-		const int32 ModelStart = Offsets.TextLocationToOffset(FTextLocation(View.ModelIndex, 0));
+		const int32 ModelStart = SourceLineRanges[View.ModelIndex].BeginIndex;
 		for (const TSharedRef<ILayoutBlock>& Block : View.Blocks)
 		{
 			const FLayoutBlockTextContext Context = Block->GetTextContext();
+			
 			const FShapedGlyphSequenceRef Shaped = ShapedTextCacheUtil::GetShapedTextSubSequence(
 				Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, Font),
 				Block->GetTextRange(), *ModelText, Context.TextDirection);
+			
 			const TArray<FShapedGlyphEntry>& Entries = Shaped->GetGlyphsToRender();
+			// Slate blocks already include their line's offset and justification.
 			FVector2f Position(Block->GetLocationOffset());
 			for (int32 Index = 0; Index < Entries.Num();)
 			{
@@ -110,7 +123,7 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 		}
 	}
 	Line.Glyphs.StableSort([](const FGlyph& A, const FGlyph& B) { return A.TextEnd < B.TextEnd; });
-	Line.Size = FVector2f(TextLayout->GetSize()) + FVector2f(DotSpace, 0.0f);
+	Line.Size = FVector2f(TextLayout->GetSize()) + FVector2f(RevealSpace, 0.0f);
 }
 
 void SDialogueText::UpdateOpacity() const
@@ -181,6 +194,12 @@ void SDialogueText::End(EDialogueEndReason Reason)
 	Invalidate(EInvalidateWidgetReason::Layout);
 }
 
+void SDialogueText::SetShowRevealDots(bool bShowDots)
+{
+    bShowRevealDots = bShowDots;
+    Invalidate(EInvalidateWidgetReason::Paint);
+}
+
 void SDialogueText::Reset()
 {
 	Active = {};
@@ -233,13 +252,32 @@ int32 SDialogueText::OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, 
 	return Layer + 1;
 }
 
-void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry,
-	FSlateWindowElementList& Elements, int32 TextLayer, FLinearColor Tint, bool bExiting) const
+void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 TextLayer, FLinearColor Tint, bool bExiting) const
 {
 	const bool bFracture = bExiting && ExitReason == EDialogueEndReason::Interrupted;
 	const float Closing = bExiting && !bFracture ? Ease(ExitAge / CloseTime) : 0.0f;
 	const float Arrival = Ease(Line.Age / 0.145f);
-	const FVector2f Origin((Geometry.GetLocalSize().X - Line.Size.X) * 0.5f, Geometry.GetLocalSize().Y - Line.Size.Y);
+	
+	float AlignmentFactor = 0.0f;
+
+	switch (Line.VisualJustification)
+	{
+	case ETextJustify::Center:
+		AlignmentFactor = 0.5f;
+		break;
+
+	case ETextJustify::Right:
+	case ETextJustify::InvariantRight:
+		AlignmentFactor = 1.0f;
+		break;
+
+	default:
+		AlignmentFactor = 0.0f;
+		break;
+	}
+
+	const FVector2f Origin((Geometry.GetLocalSize().X - Line.Size.X) * AlignmentFactor, Geometry.GetLocalSize().Y - Line.Size.Y);
+	
 	const FGeometry TextGeometry = Geometry.MakeChild(Line.Size, FSlateLayoutTransform(Origin));
 	Tint.A *= Arrival * (1.0f - Closing);
 
@@ -262,7 +300,7 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry,
 		PaintGlyph(Glyph, TextGeometry, Elements, TextLayer, Glyph.Position + FVector2f(0.0f, (1.0f - Spring) * 8.0f),
 			Ink, 0.56f + 0.44f * Spring, Fracture, Index);
 	}
-	if (!Last || bExiting || Line.HoldAge >= 0.32f)
+	if (!bShowRevealDots || !Last || bExiting || Line.HoldAge >= 0.32f)
 	{
 		return;
 	}
@@ -279,8 +317,7 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry,
 	}
 }
 
-void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements,
-	int32 Layer, FVector2f Position, FLinearColor Tint, float Scale, float Fracture, int32 Index) const
+void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale, float Fracture, int32 Index) const
 {
 	const FVector2f Size(Glyph.Width, Glyph.Shape->GetMaxTextHeight());
 	const FShapedGlyphSequenceRef Shape = Glyph.Shape.ToSharedRef();

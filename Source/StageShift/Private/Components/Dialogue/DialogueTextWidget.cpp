@@ -12,8 +12,8 @@ UDialogueTextWidget::UDialogueTextWidget(const FObjectInitializer& ObjectInitial
 
 TSharedRef<SWidget> UDialogueTextWidget::RebuildWidget()
 {
-	SAssignNew(Text, SDialogueText)
-		.OnOpacityChanged(FOnDialogueTextOpacityChanged::CreateUObject(this, &ThisClass::ForwardOpacity));
+	SAssignNew(Text, SDialogueText).OnOpacityChanged(FOnDialogueTextOpacityChanged::CreateUObject(this, &ThisClass::ForwardOpacity));
+	Text->SetShowRevealDots(bShowRevealDots);
 	return Text.ToSharedRef();
 }
 
@@ -24,7 +24,8 @@ void UDialogueTextWidget::SynchronizeProperties()
 	{
 		return;
 	}
-	Text->SetAppearance(Font, TextColor, TextWrapWidth);
+	Text->SetShowRevealDots(bShowRevealDots);
+	Text->SetAppearance(Font, TextColor, TextWrapWidth, Justification.GetValue());
 	if (IsDesignTime())
 	{
 		Text->Preview(PreviewText);
@@ -75,4 +76,14 @@ void UDialogueTextWidget::ResetPlayback()
 	{
 		Text->Reset();
 	}
+}
+
+void UDialogueTextWidget::SetShowRevealDots(bool bShowDots)
+{
+    bShowRevealDots = bShowDots;
+
+    if (Text)
+    {
+        Text->SetShowRevealDots(bShowDots);
+    }
 }

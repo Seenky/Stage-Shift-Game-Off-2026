@@ -5,6 +5,9 @@
 
 class UMeshDeformer;
 class UPhysicalMontageComponent;
+class UDialogueComponent;
+class UFacialAnimationComponent;
+class UWidgetComponent;
 
 UCLASS()
 class STAGESHIFT_API AStageShiftCharacter : public ACharacter
@@ -28,6 +31,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPhysicalMontageComponent> PhysicalMontageComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
+	TObjectPtr<UDialogueComponent> DialogueComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
+	TObjectPtr<UWidgetComponent> DialogueWidgetComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Face")
+	TObjectPtr<UFacialAnimationComponent> FacialAnimationComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Meshes")
 	TObjectPtr<USkeletalMeshComponent> HairMesh;

@@ -20,6 +20,7 @@ public:
 	void UpdatePlayback(const FDialoguePlaybackState& State);
 	void EndPlayback(FGuid PlaybackId, EDialogueEndReason Reason);
 	void ResetPlayback();
+	void SetShowRevealDots(bool bShowDots);
 
 	TDelegate<void(float)> OnOpacityChanged;
 
@@ -28,6 +29,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	FSlateFontInfo Font;
+	
+	UPROPERTY(EditAnywhere, Category = "Appearance")
+	TEnumAsByte<ETextJustify::Type> Justification = ETextJustify::Left;
 
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	FLinearColor TextColor = FLinearColor(0.061f, 0.030f, 0.020f);
@@ -37,6 +41,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	FText PreviewText;
+
+	UPROPERTY(EditAnywhere, Category = "Appearance")
+	bool bShowRevealDots = true;
 
 private:
 	void ForwardOpacity(float Opacity);

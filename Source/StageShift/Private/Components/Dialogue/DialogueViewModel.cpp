@@ -49,11 +49,18 @@ void UDialogueViewModel::SetPlaybackId(const FGuid& InId)
     UE_MVVM_SET_PROPERTY_VALUE(PlaybackId, InId);
 }
 
+void UDialogueViewModel::SetSpeakersName(const FText& InName)
+{
+    UE_MVVM_SET_PROPERTY_VALUE(SpeakersName, InName);
+}
+
 void UDialogueViewModel::HandleDialoguePlaybackStateChanged(const FDialoguePlaybackState& PlaybackState)
 {
-    OnPlaybackStateChanged.Broadcast(PlaybackState);
     SetVisibleText(PlaybackState.VisibleText);
     SetPlaybackId(PlaybackState.PlaybackId);
+    SetSpeakersName(PlaybackState.Line.SpeakersName);
+    
+    OnPlaybackStateChanged.Broadcast(PlaybackState);
 }
 
 void UDialogueViewModel::HandleDialogueLineEnded(FGuid EndedPlaybackId, EDialogueEndReason Reason)

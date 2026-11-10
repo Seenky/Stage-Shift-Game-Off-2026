@@ -33,6 +33,7 @@ public:
 private:
 	void SetVisibleText(const FText& InText);
 	void SetPlaybackId(const FGuid& InId);
+	void SetSpeakersName(const FText& InName);
 
 	UFUNCTION()
 	void HandleDialoguePlaybackStateChanged(const FDialoguePlaybackState& PlaybackState);
@@ -48,4 +49,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify, Category = "Dialogue", meta = (AllowPrivateAccess = "true"))
 	FGuid PlaybackId;
+	
+	UPROPERTY(BlueprintReadOnly, FieldNotify, Category = "Dialogue", meta = (AllowPrivateAccess = "true"))
+	FText SpeakersName;
 };

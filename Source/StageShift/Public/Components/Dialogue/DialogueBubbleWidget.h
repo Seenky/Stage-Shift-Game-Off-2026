@@ -26,6 +26,9 @@ public:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UDialogueTextWidget> DialogueText;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UDialogueTextWidget> SpeakersName;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UBorder> DialogueBorder;

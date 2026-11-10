@@ -3,13 +3,19 @@
 #include "Animation/MeshDeformer.h"
 #include "Animation/StageShiftAnimInstance.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/Dialogue/DialogueBubbleWidget.h"
+#include "Components/Dialogue/DialogueComponent.h"
+#include "Components/FacialAnimation/FacialAnimationComponent.h"
+#include "Components/FacialAnimation/FacialAnimationProfile.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Core/StageShiftCharacterMovementComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "OptimusDeformerInstance.h"
+#include "UObject/ConstructorHelpers.h"
 
 AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UStageShiftCharacterMovementComponent>(CharacterMovementComponentName))
@@ -18,6 +24,32 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 	ConfigureMovementCollision();
 
 	PhysicalMontageComponent = CreateDefaultSubobject<UPhysicalMontageComponent>("Physical Montage Component");
+
+	DialogueComponent = CreateDefaultSubobject<UDialogueComponent>(TEXT("DialogueComponent"));
+	DialogueWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("DialogueWidgetComponent"));
+	FacialAnimationComponent = CreateDefaultSubobject<UFacialAnimationComponent>(TEXT("FacialAnimationComponent"));
+
+	DialogueWidgetComponent->SetupAttachment(GetCapsuleComponent());
+	DialogueWidgetComponent->SetRelativeLocation(FVector(0.0, 0.0, 142.0));
+	DialogueWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	DialogueWidgetComponent->SetDrawAtDesiredSize(true);
+	DialogueWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	DialogueComponent->SetWidgetComponentProperty(GET_MEMBER_NAME_CHECKED(AStageShiftCharacter, DialogueWidgetComponent));
+
+	static ConstructorHelpers::FClassFinder<UDialogueBubbleWidget> DialogueWidgetClass(TEXT("/Game/DEV/UI/Dialogue/W_DialogueBubble"));
+
+	if (DialogueWidgetClass.Succeeded())
+	{
+		DialogueWidgetComponent->SetWidgetClass(DialogueWidgetClass.Class);
+	}
+
+	static ConstructorHelpers::FObjectFinder<UFacialAnimationProfile> FacialProfile(TEXT("/Game/MODELS/Character/FacialAnimation/DA_Character_FacialAnimation"));
+
+	if (FacialProfile.Succeeded())
+	{
+		FacialAnimationComponent->SetProfile(FacialProfile.Object);
+	}
 
 	HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HairMesh"));
 	HatMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HatMesh"));
