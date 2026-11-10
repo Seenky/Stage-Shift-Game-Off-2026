@@ -216,7 +216,7 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		const double Distance = FMath::Abs(RayDirection.Z) > 0.001 ? (FloorZ - RayStart.Z) / RayDirection.Z : -1.0;
 		AimTarget = RayStart + RayDirection * (Distance > 0.0 ? FMath::Min(Distance, static_cast<double>(AimTraceDistance)) : AimTraceDistance);
 	}
-	if (!Manipulation->IsDragging()) Manipulation->SetThrowTarget(AimTarget, SurfaceNormal);
+	if (!Manipulation->IsDragging()) Manipulation->SetThrowTargetFromView(AimTarget, SurfaceNormal, RayDirection);
 }
 
 void UThrowAimComponent::FreezeAim()

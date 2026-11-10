@@ -50,8 +50,7 @@ public:
 
 	bool BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime);
 	void AddLandingSquash(float Strength);
-	void UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact,
-		FName HitBodyBone = NAME_None);
+	void UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact, FName HitBodyBone = NAME_None);
 	const FStageShiftDollPose& GetDollPose() const { return DollMotion.Pose; }
 	const FStageShiftDragPose& GetDragPose() const { return DragPose; }
 	bool IsDollPhysicsActive() const { return bDollPhysicsActive; }

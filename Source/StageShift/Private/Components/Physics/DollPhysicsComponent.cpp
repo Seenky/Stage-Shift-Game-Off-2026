@@ -93,6 +93,7 @@ bool UDollPhysicsComponent::StartDriving()
 	BodyMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	BodyMesh->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 	BodyMesh->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Block);
+	BodyMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	for (const USkeletalBodySetup* Setup : Asset->SkeletalBodySetups)
@@ -479,6 +480,7 @@ FVector UDollPhysicsComponent::ConstrainMovement(const FVector& Delta) const
 void UDollPhysicsComponent::OnBodyHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (!bDriving || !OtherComponent || OtherActor == GetOwner()) return;
+	Character->ConsiderPhysicsHit(Hit, NormalImpulse);
 	if (OtherComponent->IsSimulatingPhysics(Hit.BoneName))
 	{
 		const FVector Normal = Hit.ImpactNormal.GetSafeNormal2D();

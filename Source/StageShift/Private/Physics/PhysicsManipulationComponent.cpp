@@ -46,15 +46,15 @@ bool UPhysicsManipulationComponent::CanManipulate(const FHitResult& Hit, EPhysic
 		return false;
 	}
 
+	const AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(GetOwner());
+	if (Doll && Doll->IsPhysicsMontageActive()) return false;
 	if (Type == EPhysicsInteractionType::Carry)
 	{
 		return CarryPoint.IsValid() && CarryPoint->GetOwner() == GetOwner() && Component == Component->GetOwner()->GetRootComponent();
 	}
 	
 	const ACharacter* Character = Cast<ACharacter>(GetOwner());
-	const AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(GetOwner());
-	return Type == EPhysicsInteractionType::Drag && Character && Character->GetCharacterMovement()->IsMovingOnGround() &&
-		(!Doll || !Doll->IsPhysicsMontageActive());
+	return Type == EPhysicsInteractionType::Drag && Character && Character->GetCharacterMovement()->IsMovingOnGround();
 }
 
 bool UPhysicsManipulationComponent::BeginManipulation(const FHitResult& Hit, EPhysicsInteractionType Type)
@@ -272,8 +272,6 @@ void UPhysicsManipulationComponent::UpdateDrag(float DeltaTime)
 	const bool bGripTurnedAway = FVector::DotProduct(GripNormal, (ReachStart - Center).GetSafeNormal()) < 0.25;
 	if (Distance + ReachSlack < DragRestDistance || bGripTurnedAway)
 	{
-		// Recover a reachable surface after the prop falls or rolls over the old grip.
-		// Only the hands/reach change; the prop stays fully simulated and collidable.
 		FVector Surface;
 		if (Component->GetClosestPointOnCollision(ReachStart, Surface, DragBoneName) >= 0.0f)
 		{
@@ -440,6 +438,7 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 	const bool bTargeted = bHasThrowTarget;
 	const FVector Target = ThrowTarget;
 	const FVector TargetNormal = ThrowTargetNormal;
+	const FVector ViewDirection = ThrowViewDirection;
 
 	ReleaseComponent();
 	
@@ -449,6 +448,7 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 		Component->SetPhysicsLinearVelocity(FVector::ZeroVector);
 		if (bThrow)
 		{
+			ResolveThrowRelease(*Component);
 			const float Charge = FMath::Clamp((HoldDuration - TapDuration) / FMath::Max(MaxChargeDuration, UE_SMALL_NUMBER), 0.0f, 1.0f);
 			const float Speed = FMath::Lerp(MinThrowSpeed, FMath::Max(MinThrowSpeed, MaxThrowSpeed), Charge);
 			FVector Velocity;
@@ -457,7 +457,17 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 				const FVector CenterOffset = Component->Bounds.Origin - Component->GetCenterOfMass();
 				const double SurfaceOffset = FVector::DotProduct(Component->Bounds.BoxExtent, TargetNormal.GetAbs())
 					- FVector::DotProduct(CenterOffset, TargetNormal);
-				Velocity = CalculateThrowVelocity(*Component, Target + TargetNormal * FMath::Max(SurfaceOffset, 0.0), Speed);
+				FVector CenterTarget = Target + TargetNormal * FMath::Max(SurfaceOffset, 0.0);
+				const double ViewIncidence = -FVector::DotProduct(ViewDirection, TargetNormal);
+				if (!ViewDirection.IsNearlyZero() && ViewIncidence > UE_KINDA_SMALL_NUMBER)
+				{
+					// Account for the prop's size along the same view ray that draws the
+					// reticle. A normal-only offset can move its center sideways on screen.
+					const double Retreat = FMath::Min(FMath::Max(SurfaceOffset, 0.0) / ViewIncidence,
+						FMath::Max(Component->Bounds.SphereRadius, 1.0) * 2.0);
+					CenterTarget = Target - ViewDirection * Retreat;
+				}
+				Velocity = CalculateThrowVelocity(*Component, CenterTarget, Speed);
 			}
 			else
 			{
@@ -474,6 +484,13 @@ void UPhysicsManipulationComponent::SetThrowTarget(const FVector& WorldLocation,
 	bHasThrowTarget = !WorldLocation.ContainsNaN();
 	ThrowTarget = WorldLocation;
 	ThrowTargetNormal = SurfaceNormal.ContainsNaN() ? FVector::UpVector : SurfaceNormal.GetSafeNormal();
+	ThrowViewDirection = FVector::ZeroVector;
+}
+
+void UPhysicsManipulationComponent::SetThrowTargetFromView(const FVector& WorldLocation, const FVector& SurfaceNormal, const FVector& ViewDirection)
+{
+	SetThrowTarget(WorldLocation, SurfaceNormal);
+	ThrowViewDirection = ViewDirection.GetSafeNormal();
 }
 
 FVector UPhysicsManipulationComponent::CalculateThrowVelocity(const UPrimitiveComponent& Component, const FVector& Target, float Speed) const
@@ -484,7 +501,16 @@ FVector UPhysicsManipulationComponent::CalculateThrowVelocity(const UPrimitiveCo
 	const float GravityZ = Component.IsGravityEnabled() && GetWorld() ? GetWorld()->GetGravityZ() : 0.0f;
 	if (FMath::Abs(GravityZ) > UE_SMALL_NUMBER && Offset.SizeSquared2D() > 1.0)
 	{
-		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, Target, Speed);
+		float AimSpeed = Speed;
+		if (bAssistTargetRange)
+		{
+			// A low charge can be below the minimum ballistic speed for this point.
+			// Raise it only as far as needed, within the configured maximum strength.
+			const double RequiredSquared = FMath::Abs(GravityZ) * FMath::Max(Offset.Z + Offset.Size(), 0.0);
+			const double MinimumSpeed = FMath::Sqrt(RequiredSquared) * (1.0 + UE_KINDA_SMALL_NUMBER);
+			AimSpeed = FMath::Max(Speed, FMath::Min(static_cast<float>(MinimumSpeed), FMath::Max(MinThrowSpeed, MaxThrowSpeed)));
+		}
+		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, Target, AimSpeed);
 		Parameters.OverrideGravityZ = GravityZ;
 		Parameters.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
 		Parameters.bAcceptClosestOnNoSolutions = true;
@@ -492,6 +518,46 @@ FVector UPhysicsManipulationComponent::CalculateThrowVelocity(const UPrimitiveCo
 		if (UGameplayStatics::SuggestProjectileVelocity(Parameters, Velocity) && !Velocity.ContainsNaN()) return Velocity;
 	}
 	return Offset.IsNearlyZero() ? GetOwner()->GetActorForwardVector() * Speed : Offset.GetSafeNormal() * Speed;
+}
+
+void UPhysicsManipulationComponent::ResolveThrowRelease(UPrimitiveComponent& Component) const
+{
+	const ACharacter* Character = Cast<ACharacter>(GetOwner());
+	const USkeletalMeshComponent* Mesh = Character ? Character->GetMesh() : nullptr;
+	if (!Mesh || !Mesh->GetPhysicsAsset() || ThrowMaxReleaseAdjustment <= 0.0f) return;
+	FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowReleaseClearance), false, GetOwner());
+	Query.AddIgnoredActor(Component.GetOwner());
+	const float Radius = Component.Bounds.SphereRadius;
+	double Remaining = ThrowMaxReleaseAdjustment;
+	for (int32 Pass = 0; Pass < 3 && Remaining > UE_KINDA_SMALL_NUMBER; ++Pass)
+	{
+		const FVector Center = Component.GetCenterOfMass();
+		FClosestPointOnPhysicsAsset Surface;
+		if (!Mesh->GetClosestPointOnPhysicsAsset(Center, Surface, false) || Surface.Distance < 0.0f ||
+			Surface.Distance >= Radius + ThrowReleaseClearance) break;
+		const FBodyInstance* Body = Mesh->GetBodyInstance(Surface.BoneName);
+		if (!Body) break;
+		const FVector Fallback = (Center - Character->GetActorLocation()).GetSafeNormal2D(UE_SMALL_NUMBER, Character->GetActorForwardVector());
+		const FVector Outward = (Center - Body->GetCOMPosition()).GetSafeNormal(UE_SMALL_NUMBER, Fallback);
+		const FBox Bounds = Body->GetBodyBounds();
+		if (!Bounds.IsValid) break;
+		const double Distance = FMath::Clamp(FVector::DotProduct(Bounds.GetExtent(), Outward.GetAbs()) + Radius + ThrowReleaseClearance
+			- FVector::DotProduct(Center - Bounds.GetCenter(), Outward), 0.0, Remaining);
+		if (Distance <= UE_KINDA_SMALL_NUMBER) break;
+		FHitResult Hit;
+		double Fraction = 1.0;
+		if (GetWorld()->SweepSingleByChannel(Hit, Center, Center + Outward * Distance, FQuat::Identity,
+			ECC_PhysicsBody, FCollisionShape::MakeSphere(Radius), Query))
+		{
+			Fraction = Hit.bStartPenetrating ? 0.0 : FMath::Max(static_cast<double>(Hit.Time) - ThrowReleaseClearance / Distance, 0.0);
+		}
+		if (Fraction <= UE_KINDA_SMALL_NUMBER) break;
+		// Separate an already overlapping hand/prop before enabling its trajectory.
+		// World obstacles are swept; physics collision with the character stays on.
+		const FVector Delta = Outward * (Distance * Fraction);
+		Component.SetWorldLocation(Component.GetComponentLocation() + Delta, false, nullptr, ETeleportType::TeleportPhysics);
+		Remaining -= Delta.Size();
+	}
 }
 
 void UPhysicsManipulationComponent::ReleaseComponent()
@@ -539,6 +605,7 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 	bPickupPending = false;
 	bCarryAttached = false;
 	ThrowDirection = FVector::ZeroVector;
+	ThrowViewDirection = FVector::ZeroVector;
 	bHasThrowTarget = false;
 	SetComponentTickEnabled(false);
 	Super::ReleaseComponent();

@@ -155,8 +155,7 @@ void UStageShiftAnimInstance::AddLandingSquash(float Strength)
 	DollMotion.CompressionVelocity += Strength * 60.0f;
 }
 
-void UStageShiftAnimInstance::UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push,
-	bool bNewContact, FName HitBodyBone)
+void UStageShiftAnimInstance::UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact, FName HitBodyBone)
 {
 	const USkeletalMeshComponent* Mesh = GetOwningComponent();
 	const float Impact = bNewContact
