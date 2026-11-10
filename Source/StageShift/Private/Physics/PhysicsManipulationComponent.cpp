@@ -15,6 +15,7 @@
 #include "Core/StageShiftCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
+#include "Components/Physics/DollPhysicsComponent.h"
 
 UPhysicsManipulationComponent::UPhysicsManipulationComponent()
 {
@@ -134,7 +135,7 @@ void UPhysicsManipulationComponent::BeginDrag(const FHitResult& Hit)
 	const FVector Center = Frame.TransformPosition((DragLocalHands[0] + DragLocalHands[1]) * 0.5);
 	const float Distance = FVector::Dist2D(Center, GetOwner()->GetActorLocation());
 	DragRestDistance = FMath::Min(Distance, FMath::Max(DragDistance, 1.0f));
-	DragReach = FMath::Max(Distance + 12.0f, DragRestDistance + 18.0f);
+	DragReach = FMath::Max(Distance, DragRestDistance) + FMath::Max(DragReachSlack, 1.0f);
 	DragEffort = 0.0f;
 	if (ACharacter* Character = DragCharacter.Get())
 	{
@@ -145,15 +146,20 @@ void UPhysicsManipulationComponent::BeginDrag(const FHitResult& Hit)
 		Movement->bOrientRotationToMovement = false;
 		Movement->bUseControllerDesiredRotation = false;
 		Character->bUseControllerRotationYaw = false;
+		if (AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(Character))
+		{
+			Doll->GetDollPhysics()->SetDragCollisionExclusions(Component, DragBoneName);
+		}
 	}
 }
 
 float UPhysicsManipulationComponent::GetDragMovementScale() const
 {
 	if (!IsDragging()) return 1.0f;
-	const float MassRatio = FMath::Max(DragMass / FMath::Max(DragReferenceMass, 0.1f), 1.0f);
+	// No flat speed plateau below the reference mass: 1 kg stays light, 35 kg is a load.
+	const float Load = FMath::Max(DragMass - 1.0f, 0.0f) / FMath::Max(DragReferenceMass, 0.1f);
 	const float BaseScale = FMath::Clamp(DragSpeedMultiplier, 0.01f, 1.0f);
-	return FMath::Clamp(BaseScale / FMath::Sqrt(MassRatio),
+	return FMath::Clamp(BaseScale / (1.0f + Load),
 		FMath::Clamp(DragMinimumSpeedMultiplier, 0.01f, BaseScale), BaseScale);
 }
 
@@ -177,7 +183,7 @@ FVector UPhysicsManipulationComponent::ConstrainDragMovement(const FVector& Delt
 	// Never teleport the player inward when the object itself moves away.
 	const double Radius = FMath::Max(static_cast<double>(DragReach), From.Size());
 	FVector Position = Proposed.GetClampedToMaxSize(Radius);
-	const double MinimumRadius = FMath::Min(FMath::Max(DragRestDistance - 12.0f, 0.0f), static_cast<float>(From.Size()));
+	const double MinimumRadius = FMath::Min(FMath::Max(DragRestDistance - FMath::Max(DragReachSlack, 1.0f), 0.0f), static_cast<float>(From.Size()));
 	if (Position.SizeSquared() < FMath::Square(MinimumRadius)) Position = Position.GetSafeNormal(UE_SMALL_NUMBER, From.GetSafeNormal()) * MinimumRadius;
 	const FVector Limited = Position - From;
 	return FVector(Limited.X, Limited.Y, Delta.Z);
@@ -222,11 +228,18 @@ void UPhysicsManipulationComponent::UpdateDrag(float DeltaTime)
 		: (Input / FMath::Max(Movement->GetMaxAcceleration(), 1.0f)).GetClampedToMaxSize(1.0) * Movement->GetMaxSpeed();
 	// Input keeps exerting effort when the player's reach leash blocks further movement.
 	const FVector RelativeVelocity = (DriveVelocity - Component->GetPhysicsLinearVelocity(DragBoneName)) * FVector(1, 1, 0);
-	const float Stiffness = FMath::Max(DragSpringStiffness, 1.0f);
+	// Tune all force-related settings in units of the same reference load.
+	// 100 kg at a 100 kg reference has the response of 25 kg at the default 25 kg reference.
+	constexpr float TuningReferenceMass = 25.0f;
+	const float StrengthScale = FMath::Max(DragReferenceMass, 0.1f) / TuningReferenceMass;
+	const float Stiffness = FMath::Max(DragSpringStiffness, 1.0f) * StrengthScale;
 	const float Damping = 2.0f * FMath::Max(DragDampingRatio, 0.1f) * FMath::Sqrt(Stiffness * DragMass);
-	const double ForceLimit = FMath::Min(FMath::Max(DragMaxForce, 1.0f) * 100.0,
+	const double ForceLimit = FMath::Min(FMath::Max(DragMaxForce, 1.0f) * StrengthScale * 100.0,
 		static_cast<double>(DragMass * FMath::Max(DragMaxAcceleration, 1.0f)));
-	const FVector Force = (Error * Stiffness + RelativeVelocity * Damping).GetClampedToMaxSize(ForceLimit);
+	// Implicit damping prevents a light body from oscillating when the allowed acceleration rises.
+	const double Step = FMath::Max(DeltaTime, 0.0f);
+	const double Stabilization = 1.0 + (Damping * Step + Stiffness * Step * Step) / DragMass;
+	const FVector Force = ((Error * Stiffness + RelativeVelocity * Damping) / Stabilization).GetClampedToMaxSize(ForceLimit);
 	// Force mode, not acceleration mode. No vertical spring or kinematic handle to lift the prop.
 	if (!Force.IsNearlyZero(1.0)) Component->AddForce(Force, DragBoneName, false);
 	DragEffort = FMath::FInterpTo(DragEffort, static_cast<float>(Force.Size() / ForceLimit), DeltaTime, 6.0f);
@@ -393,6 +406,10 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 	}
 	if (ACharacter* Character = DragCharacter.Get())
 	{
+		if (AStageShiftCharacter* Doll = Cast<AStageShiftCharacter>(Character))
+		{
+			Doll->GetDollPhysics()->SetDragCollisionExclusions(nullptr);
+		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = bSavedOrientToMovement;
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = bSavedControllerDesiredRotation;
 		Character->bUseControllerRotationYaw = bSavedControllerYaw;

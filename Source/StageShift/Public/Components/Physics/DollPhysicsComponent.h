@@ -62,6 +62,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Doll Physics")
 	void ResetAfterTeleport();
 	FVector ConstrainMovement(const FVector& Delta) const;
+	void SetDragCollisionExclusions(UPrimitiveComponent* Target, FName TargetBone = NAME_None);
 	TConstArrayView<FStageShiftDollContact> GetContacts() const { return Contacts; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Doll Physics")
@@ -132,6 +133,9 @@ private:
 	TWeakObjectPtr<AStageShiftCharacter> Character;
 	TWeakObjectPtr<USkeletalMeshComponent> Mesh;
 	TArray<FDrivenBody> DrivenBodies;
+	TArray<FName> DragCollisionControls;
+	TWeakObjectPtr<UPrimitiveComponent> DragCollisionTarget;
+	FName DragCollisionBone;
 	TArray<FStageShiftDollContact> Contacts;
 	FTransform PreviousComponentTransform = FTransform::Identity;
 	FVector InteractionNormal = FVector::ZeroVector;
