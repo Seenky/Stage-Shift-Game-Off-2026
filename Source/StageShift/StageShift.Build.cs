@@ -14,6 +14,8 @@ public class StageShift : ModuleRules
 			"CoreUObject", 
 			"Engine",
 			"AnimGraphRuntime",
+			"PhysicsControl",
+			"PhysicsCore",
 			"InputCore", 
 			"EnhancedInput", 
 			"GameplayTags", 

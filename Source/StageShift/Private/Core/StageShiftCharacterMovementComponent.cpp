@@ -1,6 +1,7 @@
 #include "Core/StageShiftCharacterMovementComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/Physics/DollPhysicsComponent.h"
 #include "Core/StageShiftCharacter.h"
 #include "Engine/World.h"
 #include "PhysicsEngine/PhysicsAsset.h"
@@ -8,14 +9,20 @@
 
 bool UStageShiftCharacterMovementComponent::MoveUpdatedComponentImpl(const FVector& Delta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit, ETeleportType Teleport)
 {
+	if (const auto* Character = Cast<AStageShiftCharacter>(CharacterOwner); Character && Character->IsDollPhysicsActive())
+	{
+		if (Teleport != ETeleportType::None) Character->GetDollPhysics()->ResetAfterTeleport();
+		const FVector LimitedDelta = bSweep && Teleport == ETeleportType::None ? Character->GetDollPhysics()->ConstrainMovement(Delta) : Delta;
+		
+		return Super::MoveUpdatedComponentImpl(LimitedDelta, NewRotation, bSweep, OutHit, Teleport);
+	}
 	FHitResult BodyHit;
 	if (!bSweep || Teleport != ETeleportType::None || !IsMovingOnGround() || Delta.SizeSquared2D() < UE_KINDA_SMALL_NUMBER ||
 		!SweepCharacterBody(Delta, BodyHit))
 	{
 		return Super::MoveUpdatedComponentImpl(Delta, NewRotation, bSweep, OutHit, Teleport);
 	}
-
-	// Keep a small skin gap so the next move can slide instead of starting overlapped.
+	
 	const double Limit = FMath::Max(BodyHit.Time - 0.35 / Delta.Size(), 0.0);
 	const FVector Start = UpdatedComponent->GetComponentLocation();
 	FHitResult CapsuleHit;

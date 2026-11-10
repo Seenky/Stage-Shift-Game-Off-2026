@@ -4,6 +4,7 @@
 #include "StageShiftCharacter.generated.h"
 
 class UMeshDeformer;
+class UDollPhysicsComponent;
 class UPhysicalMontageComponent;
 class UDialogueComponent;
 class UFacialAnimationComponent;
@@ -19,6 +20,8 @@ public:
 
 	float GetStepSquash() const { return StepSquash; }
 	bool IsPhysicsMontageActive() const;
+	bool IsDollPhysicsActive() const;
+	UDollPhysicsComponent* GetDollPhysics() const { return DollPhysicsComponent; }
 
 protected:
 	virtual void PostInitializeComponents() override;
@@ -31,6 +34,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPhysicalMontageComponent> PhysicalMontageComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Physics")
+	TObjectPtr<UDollPhysicsComponent> DollPhysicsComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
 	TObjectPtr<UDialogueComponent> DialogueComponent;
@@ -54,17 +60,19 @@ protected:
 	TObjectPtr<UMeshDeformer> DollPressDeformer;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual|Squash", meta = (ClampMin = "0.0", ClampMax = "0.03"))
-	float StepSquash = 0.008f;
+	float StepSquash = 0.014f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual|Squash", meta = (ClampMin = "0.0", ClampMax = "0.05"))
 	float LandingSquash = 0.025f;
 
 private:
 	friend class UStageShiftCharacterMovementComponent;
+	friend class UDollPhysicsComponent;
 
 	void ConfigureMovementCollision();
 	void UpdateDollPress();
 	void ApplyDollContact(const FHitResult& Impact);
+	void ConsiderStumble(const FHitResult& Impact);
 
 	bool bStumblePending = false;
 	FVector StumbleVelocity = FVector::ZeroVector;

@@ -8,6 +8,7 @@
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
 #include "Components/FacialAnimation/FacialAnimationProfile.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/Physics/DollPhysicsComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Core/StageShiftCharacterMovementComponent.h"
@@ -24,6 +25,8 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 	ConfigureMovementCollision();
 
 	PhysicalMontageComponent = CreateDefaultSubobject<UPhysicalMontageComponent>("Physical Montage Component");
+	DollPhysicsComponent = CreateDefaultSubobject<UDollPhysicsComponent>(TEXT("DollPhysicsComponent"));
+	DollPhysicsComponent->SetupAttachment(GetCapsuleComponent());
 
 	DialogueComponent = CreateDefaultSubobject<UDialogueComponent>(TEXT("DialogueComponent"));
 	DialogueWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("DialogueWidgetComponent"));
@@ -96,8 +99,7 @@ void AStageShiftCharacter::BeginPlay()
 		{
 			Part->SetMeshDeformer(DollPressDeformer);
 		}
-		DollPressHandle = GetMesh()->RegisterOnBoneTransformsFinalizedDelegate(
-			FOnBoneTransformsFinalizedMultiCast::FDelegate::CreateUObject(this, &ThisClass::UpdateDollPress));
+		DollPressHandle = GetMesh()->RegisterOnBoneTransformsFinalizedDelegate(FOnBoneTransformsFinalizedMultiCast::FDelegate::CreateUObject(this, &ThisClass::UpdateDollPress));
 	}
 }
 
@@ -115,10 +117,13 @@ void AStageShiftCharacter::UpdateDollPress()
 	const auto* Animation = Cast<UStageShiftAnimInstance>(GetMesh()->GetAnimInstance());
 	const FStageShiftDollPose EmptyPose;
 	const FStageShiftDollPose& Motion = Animation ? Animation->GetDollPose() : EmptyPose;
-	const float Depth = FMath::Max(Motion.ContactOffset, 0.0f);
-	const FVector Center = Depth > 0.0f
-		? GetMesh()->GetSocketTransform(Motion.ContactBone).TransformPosition(Motion.ContactAnchor)
-		: FVector::ZeroVector;
+	const bool bPhysical = IsDollPhysicsActive();
+	const TConstArrayView<FStageShiftDollContact> Contacts = bPhysical ? DollPhysicsComponent->GetContacts() : TConstArrayView<FStageShiftDollContact>();
+	const FVector SquashOrigin = GetMesh()->GetBoneLocation(TEXT("pelvis"));
+	static const FName Centers[] = {TEXT("PressCenter"), TEXT("PressCenter1"), TEXT("PressCenter2"), TEXT("PressCenter3")};
+	static const FName Directions[] = {TEXT("PressDirection"), TEXT("PressDirection1"), TEXT("PressDirection2"), TEXT("PressDirection3")};
+	static const FName Depths[] = {TEXT("PressDepth"), TEXT("PressDepth1"), TEXT("PressDepth2"), TEXT("PressDepth3")};
+	static const FName Radii[] = {TEXT("PressRadius"), TEXT("PressRadius1"), TEXT("PressRadius2"), TEXT("PressRadius3")};
 
 	for (USkeletalMeshComponent* Part : {GetMesh(), HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()})
 	{
@@ -127,12 +132,34 @@ void AStageShiftCharacter::UpdateDollPress()
 
 		const FTransform& Transform = Part->GetComponentTransform();
 		const double Scale = FMath::Max(Transform.GetScale3D().GetAbsMax(), UE_SMALL_NUMBER);
-		Deformer->SetFloatVariable(TEXT("PressDepth"), Depth / Scale);
-		if (Depth > 0.0f)
+		Deformer->SetVectorVariable(TEXT("SquashOrigin"), Transform.InverseTransformPosition(SquashOrigin));
+		Deformer->SetVectorVariable(TEXT("SquashAxis"), Transform.InverseTransformVectorNoScale(FVector::UpVector).GetSafeNormal());
+		Deformer->SetFloatVariable(TEXT("SquashAmount"), bPhysical ? FMath::Clamp(Motion.Compression * 2.5f, -0.04f, 0.12f) : 0.0f);
+		for (int32 Index = 0; Index < UE_ARRAY_COUNT(Centers); ++Index)
 		{
-			Deformer->SetVectorVariable(TEXT("PressCenter"), Transform.InverseTransformPosition(Center));
-			Deformer->SetVectorVariable(TEXT("PressDirection"), Transform.InverseTransformVectorNoScale(Motion.ContactNormal));
-			Deformer->SetFloatVariable(TEXT("PressRadius"), 17.0 / Scale);
+			float Depth = 0.0f;
+			FVector Center = FVector::ZeroVector;
+			FVector Normal = FVector::ZeroVector;
+			if (Contacts.IsValidIndex(Index))
+			{
+				const FStageShiftDollContact& Contact = Contacts[Index];
+				Depth = Contact.Depth;
+				Center = GetMesh()->GetBoneTransform(GetMesh()->GetBoneIndex(Contact.Bone)).TransformPosition(Contact.LocalPoint);
+				Normal = Contact.Normal;
+			}
+			else if (!bPhysical && Index == 0)
+			{
+				Depth = FMath::Max(Motion.ContactOffset, 0.0f);
+				Center = GetMesh()->GetSocketTransform(Motion.ContactBone).TransformPosition(Motion.ContactAnchor);
+				Normal = Motion.ContactNormal;
+			}
+			Deformer->SetFloatVariable(Depths[Index], Depth / Scale);
+			if (Depth > 0.0f)
+			{
+				Deformer->SetVectorVariable(Centers[Index], Transform.InverseTransformPosition(Center));
+				Deformer->SetVectorVariable(Directions[Index], Transform.InverseTransformVectorNoScale(Normal));
+				Deformer->SetFloatVariable(Radii[Index], 17.0 / Scale);
+			}
 		}
 	}
 }
@@ -170,13 +197,20 @@ void AStageShiftCharacter::MoveBlockedBy(const FHitResult& Impact)
 	UPrimitiveComponent* Obstacle = Impact.GetComponent();
 	if (!Obstacle || Obstacle == GetHeldPhysicsComponent()) return;
 
-	const FVector Velocity = GetVelocity();
 	if (FMath::Abs(Impact.ImpactNormal.Z) < 0.65)
 	{
 		ApplyDollContact(Impact);
 	}
 
-	if (bStumblePending || !Obstacle->IsSimulatingPhysics(Impact.BoneName)) return;
+	ConsiderStumble(Impact);
+}
+
+void AStageShiftCharacter::ConsiderStumble(const FHitResult& Impact)
+{
+	UPrimitiveComponent* Obstacle = Impact.GetComponent();
+	if (bStumblePending || PhysicalMontageComponent->IsPhysicsMontageActive() || !GetCharacterMovement()->IsMovingOnGround() ||
+		!Obstacle || Obstacle == GetHeldPhysicsComponent() || !Obstacle->IsSimulatingPhysics(Impact.BoneName)) return;
+	const FVector Velocity = GetVelocity();
 	if (Velocity.SizeSquared2D() < FMath::Square(150.0)) return;
 
 	const FVector ToHit = (Impact.ImpactPoint - GetActorLocation()).GetSafeNormal2D();
@@ -191,6 +225,7 @@ void AStageShiftCharacter::MoveBlockedBy(const FHitResult& Impact)
 
 void AStageShiftCharacter::ApplyDollContact(const FHitResult& Impact)
 {
+	if (IsDollPhysicsActive()) return;
 	auto* Animation = Cast<UStageShiftAnimInstance>(GetMesh()->GetAnimInstance());
 	if (!Animation) return;
 
@@ -211,4 +246,9 @@ void AStageShiftCharacter::ApplyDollContact(const FHitResult& Impact)
 bool AStageShiftCharacter::IsPhysicsMontageActive() const
 {
 	return PhysicalMontageComponent->IsPhysicsMontageActive();
+}
+
+bool AStageShiftCharacter::IsDollPhysicsActive() const
+{
+	return DollPhysicsComponent && DollPhysicsComponent->IsDriving();
 }

@@ -82,6 +82,8 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	const APawn* Pawn = TryGetPawnOwner();
+	const AStageShiftCharacter* StageCharacter = Cast<AStageShiftCharacter>(Pawn);
+	bDollPhysicsActive = StageCharacter && StageCharacter->IsDollPhysicsActive();
 	float TargetPickupAlpha = 0.0f;
 	const UPhysicsManipulationComponent* Manipulation = Pawn ? Pawn->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
 	if (Manipulation)
@@ -91,7 +93,8 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	// Reach follows the contact curve exactly; release eases out even after the montage ends.
 	PickupAlpha = TargetPickupAlpha >= PickupAlpha ? TargetPickupAlpha
 		: FMath::FInterpTo(PickupAlpha, TargetPickupAlpha, DeltaSeconds, 10.0f);
-	if (!Manipulation || !Manipulation->GetManipulatedComponent() || (GetOwningComponent() && GetOwningComponent()->IsAnySimulatingPhysics())) PickupAlpha = 0.0f;
+	if (!Manipulation || !Manipulation->GetManipulatedComponent() ||
+		(StageCharacter && StageCharacter->IsPhysicsMontageActive())) PickupAlpha = 0.0f;
 	if (PickupAlpha < KINDA_SMALL_NUMBER) PickupAlpha = 0.0f;
 	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
 	GroundSpeed = Velocity.Size2D();
@@ -174,8 +177,7 @@ void UStageShiftAnimInstance::UpdateContactSquash(const FVector& Away, const FVe
 
 void UStageShiftAnimInstance::UpdateDollMotion(const AStageShiftCharacter* Character, const FVector& PlanarVelocity, bool bGrounded, float DeltaSeconds)
 {
-	if (!Character || RecoveryPoseAlpha > 0.0f || Character->IsPhysicsMontageActive() ||
-		GetOwningComponent()->IsAnySimulatingPhysics())
+	if (!Character || RecoveryPoseAlpha > 0.0f || Character->IsPhysicsMontageActive())
 	{
 		DollMotion = {};
 		return;

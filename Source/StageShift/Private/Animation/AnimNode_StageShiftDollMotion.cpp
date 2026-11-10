@@ -40,7 +40,13 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 	const auto* Animation = Cast<UStageShiftAnimInstance>(Output.AnimInstanceProxy->GetAnimInstanceObject());
 	if (!Animation) return;
 
-	const FStageShiftDollPose& Motion = Animation->GetDollPose();
+	FStageShiftDollPose Motion = Animation->GetDollPose();
+	if (Animation->IsDollPhysicsActive())
+	{
+		// Lean and compression shape the motor targets; contacts are resolved by the simulated bodies.
+		Motion.HeadLean *= 0.35;
+		Motion.ContactOffset = 0.0f;
+	}
 	if (FMath::IsNearlyZero(Motion.Compression) && FMath::IsNearlyZero(Motion.HeadCompression) &&
 		FMath::IsNearlyZero(Motion.ContactOffset) && Motion.ChestLean.IsNearlyZero() && Motion.HeadLean.IsNearlyZero()) return;
 

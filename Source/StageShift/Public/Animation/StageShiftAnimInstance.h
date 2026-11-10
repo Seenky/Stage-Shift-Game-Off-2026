@@ -44,6 +44,7 @@ public:
 	void UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact,
 		FName HitBodyBone = NAME_None);
 	const FStageShiftDollPose& GetDollPose() const { return DollMotion.Pose; }
+	bool IsDollPhysicsActive() const { return bDollPhysicsActive; }
 
 	UPROPERTY(BlueprintReadOnly, Transient, Category = "Recovery")
 	FPoseSnapshot RecoveryPose;
@@ -128,4 +129,5 @@ private:
 
 	float RecoveryBlendTime = 0.0f;
 	float RecoveryBlendElapsed = 0.0f;
+	bool bDollPhysicsActive = false;
 };

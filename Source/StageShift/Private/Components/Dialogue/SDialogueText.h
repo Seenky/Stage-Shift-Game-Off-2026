@@ -26,7 +26,6 @@ public:
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& CullingRect,FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle& Style, bool bParentEnabled) const override;
 
 private:
-	friend class FDialogueJustificationVerification;
 	struct FGlyph
 	{
 		FShapedGlyphSequencePtr Shape;
