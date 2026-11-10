@@ -93,6 +93,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
 	void Finish(EStageCommandResult InResult);
 
+	// Check before starting or resuming Main; switching remains explicit through UseShortVersion().
+	UFUNCTION(BlueprintPure, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
+	bool ShouldUseShortVersion(float ShortDuration) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
 	void UseShortVersion();
 	

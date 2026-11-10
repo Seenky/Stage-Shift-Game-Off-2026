@@ -17,7 +17,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FStageActionRule> Rules;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	// Maximum wait when no recovery Action is available; zero means unlimited.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = "0.0", UIMin = "0.0"))
 	float RecoveryWaitTimeout = 5.0f;
 	
 };

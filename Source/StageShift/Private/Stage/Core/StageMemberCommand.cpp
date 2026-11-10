@@ -3,6 +3,7 @@
 #include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"
 #include "Stage/Core/StageAction.h"
+#include "Stage/Core/StageManager.h"
 
 void UStageMemberCommand::Start(const FStageExecutionContext& InContext)
 {
@@ -100,6 +101,23 @@ void UStageMemberCommand::ApplyMainActionResult(UStageAction* Action, EStageActi
 
 void UStageMemberCommand::OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult)
 {
+}
+
+bool UStageMemberCommand::ShouldUseShortVersion(float ShortDuration) const
+{
+	if (CatchUpPolicy != EStageCatchUpPolicy::UseShortIfNeed || bUseShortVersion ||
+		CommandState != EStageExecutionState::Running || CurrentStartTime >= 0.0f ||
+		!FMath::IsFinite(ShortDuration) || ShortDuration < 0.0f) return false;
+
+	const AStageManager* Manager = Context.Manager.Get();
+	if (!Manager || Manager->GetState() != EStageState::Running) return false;
+
+	const FStageRootExecution* Root = Manager->FindRoot(this);
+	if (!Root || Root->CommandType != EStageCommandType::Scenario) return false;
+
+	const float RemainingTime = GetRemainingTime();
+	return FMath::IsFinite(RemainingTime) && ShortDuration < RemainingTime &&
+		Manager->GetCommandLateness(this) > 0.0f;
 }
 
 void UStageMemberCommand::UseShortVersion()

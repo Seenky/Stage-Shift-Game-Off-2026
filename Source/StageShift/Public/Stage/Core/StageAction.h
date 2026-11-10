@@ -48,6 +48,9 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Action")
 	void OnStop(EStageActionStopMode Mode);
 
+	/*
+	 * Called on finish()
+	 */
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Action")
 	void Cleanup();
 

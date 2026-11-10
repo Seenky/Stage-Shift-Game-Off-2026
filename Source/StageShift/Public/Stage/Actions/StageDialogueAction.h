@@ -17,9 +17,10 @@ class STAGESHIFT_API UStageDialogueAction : public UStageAction
 public:
 	
 	void SetupDialogueAction(
-		const FDialogueLine& InLine, 
+		const FDialogueLine& InLine,
+		const bool bInResumeLine,
 		const TObjectPtr<UDialogueComponent>& InDialogueComponent);
-	
+
 protected:
 	
 	virtual void OnStart_Implementation() override;
@@ -38,5 +39,6 @@ private:
 	UPROPERTY()
 	TWeakObjectPtr<UDialogueComponent> DialogueComponent;
 	FGuid CurrentPlaybackId;
+	bool bResumeLine = false;
 };
 

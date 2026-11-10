@@ -14,8 +14,37 @@ void UStageDialogueAction::OnStart_Implementation()
 	}
 	
 	DialogueComponent->OnDialogueLineEnded.AddDynamic(this, &ThisClass::HandleDialogueEnded);
-	DialogueComponent->PlayLine(CurrentLine);
-	CurrentPlaybackId = DialogueComponent->GetPlaybackState().PlaybackId;
+	if (bResumeLine)
+	{
+		if (!DialogueComponent->ResumeLine())
+		{
+			if (!DialogueComponent->PlayLine(CurrentLine))
+			{
+				Finish(EStageActionResult::Failed);
+				return;
+			}
+		}
+	}
+	else
+	{
+		if (!DialogueComponent->PlayLine(CurrentLine))
+		{
+			Finish(EStageActionResult::Failed);
+			return;
+		}
+	}
+	
+	if (
+		DialogueComponent.IsValid() && 
+		DialogueComponent->IsPlaying() &&
+		GetState() == EStageExecutionState::Running)
+	{
+		CurrentPlaybackId = DialogueComponent->GetPlaybackState().PlaybackId;
+	}
+	else
+	{
+		Finish(EStageActionResult::Succeeded);
+	}
 }
 
 void UStageDialogueAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -26,14 +55,21 @@ void UStageDialogueAction::OnStop_Implementation(EStageActionStopMode Mode)
 		return;
 	}
 	
-	DialogueComponent->StopPlayback();
+	if (Mode == EStageActionStopMode::StopAction) DialogueComponent->StopPlayback();
 }
 
 void UStageDialogueAction::Cleanup_Implementation()
 {
 	Super::Cleanup_Implementation();
 
-	if(DialogueComponent.IsValid()) DialogueComponent->StopPlayback();
+	if(DialogueComponent.IsValid())
+	{
+		DialogueComponent->OnDialogueLineEnded.RemoveAll(this);
+		if (DialogueComponent->GetPlaybackState().PlaybackId == CurrentPlaybackId)
+		{
+			DialogueComponent->StopPlayback();
+		}
+	}
 	DialogueComponent = nullptr;
 	CurrentLine = FDialogueLine();
 }
@@ -45,10 +81,12 @@ EStageActionStopMode UStageDialogueAction::GetStopMode_Implementation(EStageActi
 
 void UStageDialogueAction::SetupDialogueAction(
 	const FDialogueLine& InLine,
+	const bool bInResumeLine,
 	const TObjectPtr<UDialogueComponent>& InDialogueComponent)
 {
 	CurrentLine = InLine;
 	DialogueComponent = InDialogueComponent;
+	bResumeLine = bInResumeLine;
 }
 
 void UStageDialogueAction::HandleDialogueEnded(FGuid PlaybackId, EDialogueEndReason Reason)

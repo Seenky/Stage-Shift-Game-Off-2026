@@ -19,7 +19,7 @@ bool UStageMemberComponent::BindToStage(AStageManager* InManager)
 	if (!bMemberFinished || !IsValid(InManager) || !GetOwner()) return false;
 	UStatusesComponent* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>();
 	if (!Statuses || (RecoveryRulesAsset && (!FMath::IsFinite(RecoveryRulesAsset->RecoveryWaitTimeout) ||
-		RecoveryRulesAsset->RecoveryWaitTimeout <= 0.0f))) return false;
+		RecoveryRulesAsset->RecoveryWaitTimeout < 0.0f))) return false;
 
 	Manager = InManager;
 	StatusComponent = Statuses;
@@ -338,11 +338,8 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		Action->Start(Command->Context);
 		return;
 	}
-	if (!RecoveryRulesAsset)
-	{
-		FinishExecution(Command, EStageCommandResult::Failed);
-		return;
-	}
+	// Without a recovery profile, wait for external status changes or command cancellation.
+	if (!RecoveryRulesAsset) return;
 	if (UStageAction* Template = SelectRecoveryTemplate())
 	{
 		ActiveRecoveryAction = DuplicateObject<UStageAction>(Template, this);
@@ -356,6 +353,11 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 
 	Entry = FindExecution(Command);
 	if (!Entry || !GetWorld()) return;
+	if (RecoveryRulesAsset->RecoveryWaitTimeout == 0.0f)
+	{
+		Entry->RecoveryWaitDeadline = -1.0f;
+		return;
+	}
 	const float Now = static_cast<float>(GetWorld()->GetTimeSeconds());
 	if (Entry->RecoveryWaitDeadline < 0.0f) Entry->RecoveryWaitDeadline = Now + RecoveryRulesAsset->RecoveryWaitTimeout;
 	if (Now >= Entry->RecoveryWaitDeadline) FinishExecution(Command, EStageCommandResult::Failed);

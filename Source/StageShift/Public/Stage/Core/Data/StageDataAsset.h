@@ -49,5 +49,6 @@ private:
 	UFUNCTION(BlueprintCallable, CallInEditor)
 	void RecalculateEstimatedScore();
 
+	UFUNCTION()
 	bool CanSelectParticipant(const AActor* Actor) const;
 };

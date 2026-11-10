@@ -53,7 +53,7 @@ bool AStageManager::ValidateStage(UStageDataAsset* Data, const TMap<FGameplayTag
 		if (!Member || !Member->IsMemberFinished() || !Actor->FindComponentByClass<UStatusesComponent>())
 			return Reject(TEXT("Each actor requires an available StageMemberComponent and StatusesComponent."));
 		if (Member->RecoveryRulesAsset && (!FMath::IsFinite(Member->RecoveryRulesAsset->RecoveryWaitTimeout) ||
-			Member->RecoveryRulesAsset->RecoveryWaitTimeout <= 0.0f)) return Reject(TEXT("RecoveryWaitTimeout must be positive."));
+			Member->RecoveryRulesAsset->RecoveryWaitTimeout < 0.0f)) return Reject(TEXT("RecoveryWaitTimeout must be finite and nonnegative."));
 	}
 	TSet<const UStageMemberCommand*> SeenCommands;
 	TFunction<bool(const UStageMemberCommand*, const TSet<FGameplayTag>*, const UObject*)> CheckCommand;

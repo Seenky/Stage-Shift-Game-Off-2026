@@ -23,11 +23,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TArray<TObjectPtr<UStageDataAsset>> StageDefinitions;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage|Score")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TArray<int32> StarThresholds;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage|Score")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TMap<EStageLatenessLevel, float> ScoreMultipliers;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage|Score")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
 	int32 EstimatedTotalScore = 0;
 	UPROPERTY(BlueprintAssignable, Category = "Stage")
 	FStageCompleted OnStageCompleted;
@@ -62,6 +62,7 @@ public:
 
 private:
 	friend class UStageMemberComponent;
+	friend class UStageMemberCommand;
 	bool ValidateStage(UStageDataAsset* Data, const TMap<FGameplayTag, AActor*>& Actors, FText& Error) const;
 	TArray<TObjectPtr<UStageMemberCommand>> PrepareCommands(const TArray<FStageMemberAssignment>& Assignments,
 		EStageCommandType Type, int32 SourceIndex);
