@@ -32,8 +32,8 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 	DialogueWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("DialogueWidgetComponent"));
 	FacialAnimationComponent = CreateDefaultSubobject<UFacialAnimationComponent>(TEXT("FacialAnimationComponent"));
 
-	DialogueWidgetComponent->SetupAttachment(GetCapsuleComponent());
-	DialogueWidgetComponent->SetRelativeLocation(FVector(0.0, 0.0, 142.0));
+	DialogueWidgetComponent->SetupAttachment(GetMesh());
+	DialogueWidgetComponent->SetRelativeLocation(FVector(0.0, 0.0, 250.0));
 	DialogueWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	DialogueWidgetComponent->SetDrawAtDesiredSize(true);
 	DialogueWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);

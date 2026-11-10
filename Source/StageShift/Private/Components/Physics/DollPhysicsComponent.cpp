@@ -15,7 +15,7 @@
 namespace
 {
 	const FName DollSet(TEXT("Doll"));
-	const FName PelvisBone(TEXT("pelvis"));
+	const FName DollPelvisBone(TEXT("pelvis"));
 	constexpr int32 MaxContacts = 4;
 }
 
@@ -56,7 +56,7 @@ void UDollPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 const FStageShiftDollDrive& UDollPhysicsComponent::GetDrive(FName Bone) const
 {
-	if (Bone == PelvisBone) return PelvisDrive;
+	if (Bone == DollPelvisBone) return PelvisDrive;
 	if (Mesh->BoneIsChildOf(Bone, TEXT("head")) || Bone == TEXT("head")) return HeadDrive;
 	for (const FName Root : {FName(TEXT("upperarm_l")), FName(TEXT("upperarm_r"))})
 	{
@@ -73,8 +73,8 @@ bool UDollPhysicsComponent::StartDriving()
 {
 	USkeletalMeshComponent* BodyMesh = Mesh.Get();
 	const UPhysicsAsset* Asset = BodyMesh ? BodyMesh->GetPhysicsAsset() : nullptr;
-	if (!Asset || !BodyMesh->GetAnimInstance() || !BodyMesh->GetBodyInstance(PelvisBone)) return false;
-	if (!BodyMesh->GetBodyInstance(PelvisBone)->IsValidBodyInstance()) return false;
+	if (!Asset || !BodyMesh->GetAnimInstance() || !BodyMesh->GetBodyInstance(DollPelvisBone)) return false;
+	if (!BodyMesh->GetBodyInstance(DollPelvisBone)->IsValidBodyInstance()) return false;
 
 	BodyMesh->HandleExistingParallelEvaluationTask(true, true);
 	if (BodyMesh->GetEditableComponentSpaceTransforms().IsEmpty()) return false;
@@ -376,8 +376,8 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 FVector UDollPhysicsComponent::ConstrainMovement(const FVector& Delta) const
 {
 	if (!bDriving || bResetPending || !Mesh.IsValid()) return Delta;
-	const FDrivenBody* Root = DrivenBodies.FindByPredicate([](const FDrivenBody& Body) { return Body.Bone == PelvisBone; });
-	const FBodyInstance* Body = Mesh->GetBodyInstance(PelvisBone);
+	const FDrivenBody* Root = DrivenBodies.FindByPredicate([](const FDrivenBody& Body) { return Body.Bone == DollPelvisBone; });
+	const FBodyInstance* Body = Mesh->GetBodyInstance(DollPelvisBone);
 	if (!Root || !Body) return Delta;
 	const FVector Error = (Root->AnimationTarget.GetLocation() - Body->GetUnrealWorldTransform().GetLocation()) * FVector(1.0, 1.0, 0.0);
 	const FVector Proposed = Error + FVector(Delta.X, Delta.Y, 0.0);

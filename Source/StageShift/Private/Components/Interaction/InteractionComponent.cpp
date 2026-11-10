@@ -4,6 +4,7 @@
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 
 #include "StageShift/Public/Components/Interaction/InteractionInterface.h"
+#include "Components/Interaction/ThrowAimComponent.h"
 
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
@@ -52,6 +53,7 @@ void UInteractionComponent::OnInputStarted()
 void UInteractionComponent::OnInputReleased()
 {
 	if (ActiveResult != EInteractionResult::Active || ReleaseMontageId != INDEX_NONE) return;
+	if (UThrowAimComponent* Aim = GetOwner()->FindComponentByClass<UThrowAimComponent>()) Aim->FreezeAim();
 
 	const FInteractionAnimation* Animation = FindAnimation(ActiveInteraction);
 	if (Animation && PlaySection(*Animation, Animation->ReleaseSection))
@@ -302,6 +304,7 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 bool UInteractionComponent::EndInteraction()
 {
 	if (bDispatchingInteraction || ActiveResult != EInteractionResult::Active) return false;
+	if (UThrowAimComponent* Aim = GetOwner()->FindComponentByClass<UThrowAimComponent>()) Aim->FreezeAim();
 	return FinishInteraction(false);
 }
 

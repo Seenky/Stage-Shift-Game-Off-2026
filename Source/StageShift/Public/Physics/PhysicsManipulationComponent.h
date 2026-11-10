@@ -31,7 +31,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
 	bool IsCarrying() const { return bCarryAttached; }
-	void SetThrowDirection(const FVector& Direction) { ThrowDirection = Direction.GetSafeNormal2D(); }
+	void SetThrowDirection(const FVector& Direction) { ThrowDirection = Direction.GetSafeNormal2D(); bHasThrowTarget = false; }
+
+	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Throw")
+	void SetThrowTarget(const FVector& WorldLocation, const FVector& SurfaceNormal = FVector::UpVector);
+
+	void ClearThrowTarget() { bHasThrowTarget = false; }
 
 	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
 
@@ -80,6 +85,9 @@ private:
 	FVector LocalGripLocation = FVector::ZeroVector;
 	FVector GrabLocation = FVector::ZeroVector;
 	FVector ThrowDirection = FVector::ZeroVector;
+	FVector ThrowTarget = FVector::ZeroVector;
+	FVector ThrowTargetNormal = FVector::UpVector;
+	bool bHasThrowTarget = false;
 	TWeakObjectPtr<class UAnimInstance> PickupInstance;
 	TWeakObjectPtr<class UAnimMontage> PickupMontage;
 	bool bPickupPending = false;
@@ -87,6 +95,7 @@ private:
 
 	bool AttachCarriedObject(bool bKeepWorldTransform);
 	void ClearPickupPlayback();
+	FVector CalculateThrowVelocity(const UPrimitiveComponent& Component, const FVector& Target, float Speed) const;
 
 	UFUNCTION()
 	void OnPickupNotify(FName Name, const struct FBranchingPointNotifyPayload& Payload);
