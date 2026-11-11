@@ -21,6 +21,8 @@ public:
 		const bool bInResumeLine,
 		const TObjectPtr<UDialogueComponent>& InDialogueComponent);
 
+	bool GetIsDialogueCompleted() const { return bDialogueCompleted; }
+	
 protected:
 	
 	virtual void OnStart_Implementation() override;
@@ -33,6 +35,8 @@ private:
 	
 	UFUNCTION()
 	void HandleDialogueEnded(FGuid PlaybackId, EDialogueEndReason Reason);
+	UFUNCTION()
+	void HandleDialogueStateChanged(const FDialoguePlaybackState& PlaybackState);
 	
 	UPROPERTY()
 	FDialogueLine CurrentLine;
@@ -40,5 +44,6 @@ private:
 	TWeakObjectPtr<UDialogueComponent> DialogueComponent;
 	FGuid CurrentPlaybackId;
 	bool bResumeLine = false;
+	bool bDialogueCompleted = false;
 };
 

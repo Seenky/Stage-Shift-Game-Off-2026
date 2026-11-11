@@ -7,6 +7,12 @@
 
 void UStageDialogueAction::OnStart_Implementation()
 {
+	if (bDialogueCompleted)
+	{
+		Finish(EStageActionResult::Succeeded);
+		return;
+	}
+	
 	if (!DialogueComponent.IsValid() || CurrentLine.Text.IsEmpty())
 	{
 		Finish(EStageActionResult::Failed);
@@ -14,6 +20,7 @@ void UStageDialogueAction::OnStart_Implementation()
 	}
 	
 	DialogueComponent->OnDialogueLineEnded.AddDynamic(this, &ThisClass::HandleDialogueEnded);
+	DialogueComponent->OnDialoguePlaybackStateChanged.AddDynamic(this, &ThisClass::HandleDialogueStateChanged);
 	if (bResumeLine)
 	{
 		if (!DialogueComponent->ResumeLine())
@@ -65,6 +72,7 @@ void UStageDialogueAction::Cleanup_Implementation()
 	if(DialogueComponent.IsValid())
 	{
 		DialogueComponent->OnDialogueLineEnded.RemoveAll(this);
+		DialogueComponent->OnDialoguePlaybackStateChanged.RemoveAll(this);
 		if (DialogueComponent->GetPlaybackState().PlaybackId == CurrentPlaybackId)
 		{
 			DialogueComponent->StopPlayback();
@@ -93,10 +101,19 @@ void UStageDialogueAction::HandleDialogueEnded(FGuid PlaybackId, EDialogueEndRea
 {
 	if (Reason == EDialogueEndReason::Completed)
 	{
+		bDialogueCompleted = true;
 		Finish(EStageActionResult::Succeeded);
 	}
 	else
 	{
 		Finish(EStageActionResult::Interrupted);
+	}
+}
+
+void UStageDialogueAction::HandleDialogueStateChanged(const FDialoguePlaybackState& PlaybackState)
+{
+	if (PlaybackState.Phase == EDialoguePlaybackPhase::Holding)
+	{
+		bDialogueCompleted = true;
 	}
 }

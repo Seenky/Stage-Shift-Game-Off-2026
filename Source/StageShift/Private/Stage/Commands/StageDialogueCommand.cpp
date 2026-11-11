@@ -46,4 +46,13 @@ UStageAction* UStageDialogueCommand::CreateMainAction_Implementation(const FStag
 void UStageDialogueCommand::OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult)
 {
 	bIsNeedResumeLine = ActionResult == EStageActionResult::Interrupted;
+	if (const auto DialogueAction = Cast<UStageDialogueAction>(Action))
+	{
+		bDialogueCompleted = DialogueAction->GetIsDialogueCompleted();
+	}
+}
+
+bool UStageDialogueCommand::IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const
+{
+	return bDialogueCompleted;
 }

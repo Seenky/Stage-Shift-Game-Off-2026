@@ -17,11 +17,12 @@ public:
 	virtual float GetNeededTime_Implementation() const override;
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 	virtual void OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult) override;
-	
+	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 private:
 	
 	UPROPERTY(EditAnywhere)
 	FDialogueLine CurrentLine;
 	
 	bool bIsNeedResumeLine;
+	bool bDialogueCompleted;
 };
