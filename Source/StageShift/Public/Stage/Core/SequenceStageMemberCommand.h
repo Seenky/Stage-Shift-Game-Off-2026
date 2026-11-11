@@ -4,7 +4,7 @@
 #include "SequenceStageMemberCommand.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced, HideCategories = (Scoring))
-class STAGESHIFT_API USequenceStageMemberCommand : public UStageMemberCommand
+class STAGESHIFT_API USequenceStageMemberCommand final : public UStageMemberCommand
 {
 	GENERATED_BODY()
 

@@ -73,6 +73,7 @@ private:
 	void FinishStageIfReady();
 	void CleanupStage();
 	void UpdateTiming();
+	void UpdateDebugDisplay() const;
 	float GetCommandLateness(const UStageMemberCommand* Command) const;
 	EStageLatenessLevel ResolveLatenessLevel(float Seconds) const;
 	FStageRootExecution* FindRoot(const UStageMemberCommand* Command);

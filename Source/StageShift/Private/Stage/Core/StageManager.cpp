@@ -259,10 +259,13 @@ const FStageRootExecution* AStageManager::FindRoot(const UStageMemberCommand* Co
 void AStageManager::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if (State == EStageState::Idle) return;
-	UpdateTiming();
-	if (State == EStageState::Running && StageElapsedTime >= ActiveStage->MainDuration) BeginFinale();
-	if (bAdvanceRequested) AdvanceStage();
+	if (State != EStageState::Idle)
+	{
+		UpdateTiming();
+		if (State == EStageState::Running && StageElapsedTime >= ActiveStage->MainDuration) BeginFinale();
+		if (bAdvanceRequested) AdvanceStage();
+	}
+	UpdateDebugDisplay();
 }
 
 void AStageManager::AdvanceStage()

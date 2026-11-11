@@ -4,7 +4,7 @@
 #include "ParallelStageMemberCommand.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced, HideCategories = (Scoring))
-class STAGESHIFT_API UParallelStageMemberCommand : public UStageMemberCommand
+class STAGESHIFT_API UParallelStageMemberCommand final : public UStageMemberCommand
 {
 	GENERATED_BODY()
 
