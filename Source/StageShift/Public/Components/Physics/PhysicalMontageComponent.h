@@ -33,6 +33,8 @@ struct STAGESHIFT_API FPhysicalAnimationInput
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector InitialVelocity = FVector::ZeroVector;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector LaunchDirection = FVector::ZeroVector;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Impulse = FVector::ZeroVector;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector ImpulseLocation = FVector::ZeroVector;
@@ -93,11 +95,12 @@ public:
 
 	virtual void PostLoad() override;
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Montage")
 	void StartPhysicsMontage(FName MontageName);
-	void StartPhysicsMontage(FName MontageName, const FVector& InitialVelocity);
+	void StartPhysicsMontage(FName MontageName, const FVector& InitialVelocity, const FVector& LaunchDirection = FVector::ZeroVector);
 	UFUNCTION(BlueprintCallable, Category = "Physics Montage")
 	bool PlayPhysicsAnimation(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input);
 
@@ -121,12 +124,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = "0.0", Units = "s"))
 	float RecoveryPoseBlendTime = 0.28f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recovery", meta = (ClampMin = "0.0", Units = "cm"))
+	float RecoverySearchRadius = 150.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recovery", meta = (ClampMin = "0.0", Units = "cm"))
+	float RecoveryClearance = 12.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recovery", meta = (ClampMin = "0.0", Units = "cm/s"))
+	float RecoveryMoveSpeed = 35.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recovery", meta = (ClampMin = "0.0", Units = "cm/s"))
+	float RecoveryMaxBodySpeed = 60.0f;
+
 private:
 	bool BeginPhysicsAnimation(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input, FName ActionName);
 	bool PreparePhysics(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input, FName ActionName);
 	void LaunchMontage();
 	void RestoreMeshCollision();
 	void OnRecoveryMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void RetryRecovery();
 
 	UPROPERTY()
 	FPhysicalAnimationData PhysicalAnimationData;
@@ -147,6 +163,8 @@ private:
 	FTimerHandle RecoveryTimerHandle;
 	FTransform MeshRelativeTransform;
 	FVector MontageLaunchVelocity = FVector::ZeroVector;
+	FVector RecoveryTarget = FVector::ZeroVector;
+	bool bHasRecoveryTarget = false;
 	FName ActiveMontageName;
 	FCollisionResponseContainer CurrentCollisionResponses;
 	TEnumAsByte<ECollisionChannel> CurrentCollisionObjectType = ECC_Pawn;

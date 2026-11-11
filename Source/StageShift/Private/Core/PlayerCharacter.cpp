@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedPlayerInput.h"
 #include "Engine/LocalPlayer.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -108,10 +109,16 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::OnMovementInput(const FInputActionInstance& Instance)
 {
-	const APlayerController* PC = Cast<APlayerController>(GetController());
-	if (!PC || !PC->PlayerCameraManager) return;
+	const FVector MovementInput = MovementInputToWorld(Instance.GetValue());
+	AddMovementInput(MovementInput.GetSafeNormal(), MovementInput.Size());
+}
 
-	const FVector2D Axis = Instance.GetValue().Get<FVector2D>();
+FVector APlayerCharacter::MovementInputToWorld(const FInputActionValue& Value) const
+{
+	const APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC || !PC->PlayerCameraManager) return FVector::ZeroVector;
+
+	const FVector2D Axis = Value.Get<FVector2D>();
 
 	const float CameraYaw = PC->PlayerCameraManager->GetCameraRotation().Yaw;
 
@@ -120,8 +127,7 @@ void APlayerCharacter::OnMovementInput(const FInputActionInstance& Instance)
 	const FVector Forward = CameraBasis.GetUnitAxis(EAxis::X);
 	const FVector Right = CameraBasis.GetUnitAxis(EAxis::Y);
 
-	AddMovementInput(Forward, Axis.X);
-	AddMovementInput(Right, Axis.Y);
+	return Forward * Axis.X + Right * Axis.Y;
 }
 
 void APlayerCharacter::OnCameraInput(const FInputActionInstance& Instance)
@@ -133,7 +139,12 @@ void APlayerCharacter::OnCameraInput(const FInputActionInstance& Instance)
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)
 {
 	if (PhysicsManipulationComponent->IsDragging() || !GetCharacterMovement()->IsMovingOnGround() || PhysicalMontageComponent->IsPhysicsMontageActive()) return;
-	PhysicalMontageComponent->StartPhysicsMontage(TEXT("Jump"));
+	const APlayerController* PC = Cast<APlayerController>(GetController());
+	const UEnhancedPlayerInput* Input = PC ? Cast<UEnhancedPlayerInput>(PC->PlayerInput) : nullptr;
+	const FVector Direction = Input && MoveInputAction
+		? MovementInputToWorld(Input->GetActionValue(MoveInputAction)).GetSafeNormal2D()
+		: FVector::ZeroVector;
+	PhysicalMontageComponent->StartPhysicsMontage(TEXT("Jump"), GetVelocity(), Direction);
 }
 
 void APlayerCharacter::OnSprintInput(const FInputActionInstance& Instance)

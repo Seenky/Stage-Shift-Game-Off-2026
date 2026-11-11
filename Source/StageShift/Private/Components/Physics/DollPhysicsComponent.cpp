@@ -480,6 +480,8 @@ FVector UDollPhysicsComponent::ConstrainMovement(const FVector& Delta) const
 void UDollPhysicsComponent::OnBodyHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (!bDriving || !OtherComponent || OtherActor == GetOwner()) return;
+	// Resolve a low obstacle in the movement path before the generic impact reaction.
+	Character->ConsiderStumble(Hit);
 	Character->ConsiderPhysicsHit(Hit, NormalImpulse);
 	if (OtherComponent->IsSimulatingPhysics(Hit.BoneName))
 	{
@@ -493,7 +495,6 @@ void UDollPhysicsComponent::OnBodyHit(UPrimitiveComponent* HitComponent, AActor*
 			LastDynamicContactTime = GetWorld()->GetTimeSeconds();
 		}
 	}
-	Character->ConsiderStumble(Hit);
 	const FName Bone = Hit.MyBoneName;
 	if (Bone.IsNone()) return;
 	if ((Bone == TEXT("foot_l") || Bone == TEXT("foot_r")) && Hit.ImpactNormal.Z > 0.8) return;

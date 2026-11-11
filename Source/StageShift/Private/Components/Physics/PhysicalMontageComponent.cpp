@@ -18,31 +18,71 @@ namespace
 {
 	const FName PelvisBone(TEXT("pelvis"));
 	const FName RagdollProfile(TEXT("Ragdoll"));
+	constexpr float RecoveryRetryInterval = 0.2f;
 
-	bool FindRecoveryLocation(const UCapsuleComponent& Capsule, const UCharacterMovementComponent& Movement, ECollisionResponse PhysicsBodyResponse, const FVector& GroundProbe, FVector& Location)
+	bool FindRecoveryLocation(const UCapsuleComponent& Capsule, const UCharacterMovementComponent& Movement, float Clearance, const FVector& GroundProbe, FVector& Location)
 	{
-		const float HalfHeight = Capsule.GetScaledCapsuleHalfHeight();
-		const FCollisionShape Shape = FCollisionShape::MakeCapsule(Capsule.GetScaledCapsuleRadius(), HalfHeight);
+		const float Radius = Capsule.GetScaledCapsuleRadius() + FMath::Max(0.0f, Clearance);
+		const float HalfHeight = FMath::Max(Capsule.GetScaledCapsuleHalfHeight(), Radius);
+		const FCollisionShape Shape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
 		const FCollisionQueryParams Query(SCENE_QUERY_STAT(PhysicalMontageRecovery), false, Capsule.GetOwner());
 		FCollisionResponseParams Responses(Capsule.GetCollisionResponseToChannels());
-		Responses.CollisionResponse.SetResponse(ECC_PhysicsBody, PhysicsBodyResponse);
+		// Recovery needs room for the body, including props the walking capsule ignores.
+		Responses.CollisionResponse.SetResponse(ECC_PhysicsBody, ECR_Block);
 		const FVector Start = GroundProbe + FVector::UpVector * (HalfHeight + 20.0f);
-		const FVector End = GroundProbe + FVector::UpVector * (HalfHeight - 70.0f);
+		const FVector End = GroundProbe + FVector::UpVector * (HalfHeight - FMath::Max(200.0f, HalfHeight * 2.0f));
 
 		FHitResult Hit;
 		if (Capsule.GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity,
 			Capsule.GetCollisionObjectType(), Shape, Query, Responses) && !Hit.bStartPenetrating && Movement.IsWalkable(Hit))
 		{
+			if (!Hit.GetComponent() || Hit.GetComponent()->IsSimulatingPhysics(Hit.BoneName)
+				|| !Hit.GetComponent()->CanCharacterStepUp(Cast<APawn>(Capsule.GetOwner())))
+			{
+				return false;
+			}
+			const float Footprint = Radius * 0.75f;
+			const float SupportDepth = FMath::Max(8.0f, Footprint * FMath::Tan(FMath::DegreesToRadians(Movement.GetWalkableFloorAngle())));
+			const float GroundZ = Hit.Location.Z - HalfHeight;
+			for (const FVector& Offset : {FVector(Footprint, 0.0, 0.0), FVector(-Footprint, 0.0, 0.0),
+				FVector(0.0, Footprint, 0.0), FVector(0.0, -Footprint, 0.0)})
+			{
+				const FVector Support(GroundProbe.X + Offset.X, GroundProbe.Y + Offset.Y, GroundZ);
+				FHitResult SupportHit;
+				if (!Capsule.GetWorld()->LineTraceSingleByChannel(SupportHit, Support + FVector::UpVector * (SupportDepth + 2.0f),
+					Support - FVector::UpVector * (SupportDepth + 2.0f), Capsule.GetCollisionObjectType(), Query, Responses)
+					|| SupportHit.bStartPenetrating || !Movement.IsWalkable(SupportHit)
+					|| !SupportHit.GetComponent() || SupportHit.GetComponent()->IsSimulatingPhysics(SupportHit.BoneName))
+				{
+					return false;
+				}
+			}
 			const FVector Candidate = Hit.Location + FVector::UpVector * 2.0f;
 			if (!Capsule.GetWorld()->OverlapBlockingTestByChannel(Candidate, FQuat::Identity,
 				Capsule.GetCollisionObjectType(), Shape, Query, Responses))
 			{
-				Location = Candidate;
+				Location = Candidate - FVector::UpVector * (HalfHeight - Capsule.GetScaledCapsuleHalfHeight());
 				return true;
 			}
 		}
 		return false;
 	}
+}
+
+void UPhysicalMontageComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	USkeletalMeshComponent* Mesh = GetSkeletalMesh();
+	if (!bIsSimActive || !bHasRecoveryTarget || !Mesh) return;
+
+	const FBodyInstance* Body = Mesh->GetBodyInstance(PelvisBone);
+	if (!Body || !Body->IsValidBodyInstance()) return;
+	const FVector Offset = (RecoveryTarget - Body->GetUnrealWorldTransform().GetLocation()) * FVector(1.0, 1.0, 0.0);
+	const FVector Velocity = Mesh->GetPhysicsLinearVelocity(PelvisBone) * FVector(1.0, 1.0, 0.0);
+	if (Velocity.SizeSquared() > FMath::Square(FMath::Max(0.0f, RecoveryMaxBodySpeed))) return;
+	const FVector DesiredVelocity = Offset.GetSafeNormal() * FMath::Max(0.0f, RecoveryMoveSpeed);
+	const FVector Acceleration = ((DesiredVelocity - Velocity) * 20.0f).GetClampedToMaxSize(700.0f);
+	Mesh->AddForceToAllBodiesBelow(Acceleration, PelvisBone, true, true);
 }
 
 FPhysicalMontageSettings::FPhysicalMontageSettings()
@@ -94,12 +134,13 @@ void UPhysicalMontageComponent::StartPhysicsMontage(FName MontageName)
 	}
 }
 
-void UPhysicalMontageComponent::StartPhysicsMontage(FName MontageName, const FVector& InitialVelocity)
+void UPhysicalMontageComponent::StartPhysicsMontage(FName MontageName, const FVector& InitialVelocity, const FVector& LaunchDirection)
 {
 	if (const FPhysicalMontageSettings* Settings = MontageSettings.Find(MontageName))
 	{
 		FPhysicalAnimationInput Input;
 		Input.InitialVelocity = InitialVelocity;
+		Input.LaunchDirection = LaunchDirection;
 		BeginPhysicsAnimation(*Settings, Input, MontageName);
 	}
 }
@@ -148,10 +189,18 @@ bool UPhysicalMontageComponent::PreparePhysics(const FPhysicalMontageSettings& S
 	if (Settings.Montage && AnimInstance->Montage_Play(Settings.Montage) <= 0.0f) return false;
 
 	ActiveSettings = Settings;
+	bHasRecoveryTarget = false;
 	ActiveInput = Input;
 	if (!Settings.Montage) ActiveSettings.StrengthMultiplier = 0.0f;
 	ActiveMontageName = ActionName;
-	MontageLaunchVelocity = Input.InitialVelocity * ActiveSettings.InheritedVelocityScale + Character->GetActorRotation().RotateVector(ActiveSettings.LaunchVelocity);
+	const FVector Direction = Input.LaunchDirection.GetSafeNormal2D();
+	FVector InheritedVelocity = Input.InitialVelocity;
+	if (!Direction.IsNearlyZero())
+	{
+		Character->SetActorRotation(Direction.Rotation());
+		InheritedVelocity = Direction * Input.InitialVelocity.Size2D() + FVector::UpVector * Input.InitialVelocity.Z;
+	}
+	MontageLaunchVelocity = InheritedVelocity * ActiveSettings.InheritedVelocityScale + Character->GetActorRotation().RotateVector(ActiveSettings.LaunchVelocity);
 	SavedCapsulePhysicsBodyResponse = Character->GetCapsuleComponent()->GetCollisionResponseToChannel(ECC_PhysicsBody);
 	CurrentCollisionProfile = Mesh->GetCollisionProfileName();
 	CurrentCollisionEnabled = Mesh->GetCollisionEnabled();
@@ -259,21 +308,36 @@ void UPhysicalMontageComponent::RestorePhysics()
 	const FVector PelvisLocation = Pelvis ? Pelvis->GetUnrealWorldTransform().GetLocation() : Mesh->GetBoneLocation(PelvisBone);
 	FVector RecoveryLocation;
 
-	bool bFoundFloor = FindRecoveryLocation(*Capsule, *Movement, SavedCapsulePhysicsBodyResponse, PelvisLocation, RecoveryLocation);
-
-	for (int32 Ring = 1; Ring <= 2 && !bFoundFloor; ++Ring)
+	const bool bCurrentLocationClear = FindRecoveryLocation(*Capsule, *Movement, RecoveryClearance, PelvisLocation, RecoveryLocation);
+	const float FloorHeight = bCurrentLocationClear ? RecoveryLocation.Z - Capsule->GetScaledCapsuleHalfHeight() : 0.0f;
+	const bool bOnFloor = bCurrentLocationClear && PelvisLocation.Z - FloorHeight <= Capsule->GetScaledCapsuleHalfHeight();
+	bHasRecoveryTarget = false;
+	if (!bCurrentLocationClear)
 	{
-		const float Radius = Capsule->GetScaledCapsuleRadius() * Ring;
-		for (int32 Direction = 0; Direction < 8 && !bFoundFloor; ++Direction)
+		const float Step = FMath::Max(Capsule->GetScaledCapsuleRadius(), 25.0f);
+		FCollisionResponseParams Responses(Capsule->GetCollisionResponseToChannels());
+		Responses.CollisionResponse.SetResponse(ECC_PhysicsBody, ECR_Block);
+		const FCollisionQueryParams Query(SCENE_QUERY_STAT(PhysicalMontageRecoveryPath), false, Character);
+		for (float Radius = Step; Radius <= RecoverySearchRadius && !bHasRecoveryTarget; Radius += Step)
 		{
-			const float Angle = FMath::DegreesToRadians(Direction * 45.0f);
-			const FVector Offset(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, 0.0);
-			bFoundFloor = FindRecoveryLocation(*Capsule, *Movement, SavedCapsulePhysicsBodyResponse, PelvisLocation + Offset, RecoveryLocation);
+			for (int32 Direction = 0; Direction < 12 && !bHasRecoveryTarget; ++Direction)
+			{
+				const float Angle = FMath::DegreesToRadians(Direction * 30.0f);
+				const FVector Offset(FMath::Cos(Angle) * Radius, FMath::Sin(Angle) * Radius, 0.0);
+				FVector Candidate;
+				if (!FindRecoveryLocation(*Capsule, *Movement, RecoveryClearance, PelvisLocation + Offset, Candidate)) continue;
+				if (Candidate.Z - Capsule->GetScaledCapsuleHalfHeight() >= PelvisLocation.Z) continue;
+				const FVector PathStart = PelvisLocation + FVector::UpVector * 10.0f;
+				const FVector PathEnd(Candidate.X, Candidate.Y, PathStart.Z);
+				if (GetWorld()->LineTraceTestByChannel(PathStart, PathEnd, Capsule->GetCollisionObjectType(), Query, Responses)) continue;
+				RecoveryTarget = Candidate;
+				bHasRecoveryTarget = true;
+			}
 		}
 	}
-	if (!bFoundFloor)
+	if (!bOnFloor)
 	{
-		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, 0.15f, false);
+		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, RecoveryRetryInterval, false);
 		return;
 	}
 
@@ -330,6 +394,11 @@ void UPhysicalMontageComponent::RestorePhysics()
 	}
 	if (!bIsRecovering)
 	{
+		if (SelectedRecovery)
+		{
+			RetryRecovery();
+			return;
+		}
 		if (AnimInstance && ActiveSettings.Montage)
 		{
 			AnimInstance->Montage_Stop(0.0f, ActiveSettings.Montage);
@@ -352,7 +421,32 @@ void UPhysicalMontageComponent::OnRecoveryMontageEnded(UAnimMontage* Montage, bo
 	bIsRecovering = false;
 	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{
+		const UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+		UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+		FVector Location;
+		const FVector Feet = Capsule->GetComponentLocation() - FVector::UpVector * Capsule->GetScaledCapsuleHalfHeight();
+		const bool bSafe = FindRecoveryLocation(*Capsule, *Movement, RecoveryClearance, Feet, Location)
+			&& FMath::Abs(Location.Z - Capsule->GetComponentLocation().Z) <= 5.0f;
+		if (bInterrupted || !bSafe)
+		{
+			RetryRecovery();
+			return;
+		}
 		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
+}
+
+void UPhysicalMontageComponent::RetryRecovery()
+{
+	// Re-enter simulation from the evaluated get-up pose without replaying the fall.
+	bMeshCollisionSaved = true;
+	ActiveInput = {};
+	ActiveSettings.bApplyLaunchVelocity = false;
+	ActiveMontageName = NAME_None;
+	ActivatePhysics(NAME_None);
+	if (bIsSimActive)
+	{
+		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, RecoveryRetryInterval, false);
 	}
 }
 
