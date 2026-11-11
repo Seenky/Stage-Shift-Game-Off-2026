@@ -11,6 +11,7 @@ class UCharacterPhysicsReactionComponent;
 class UDialogueComponent;
 class UFacialAnimationComponent;
 class UWidgetComponent;
+class UCharacterHairComponent;
 
 UCLASS()
 class STAGESHIFT_API AStageShiftCharacter : public ACharacter
@@ -53,7 +54,7 @@ protected:
 	TObjectPtr<UFacialAnimationComponent> FacialAnimationComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Meshes")
-	TObjectPtr<USkeletalMeshComponent> HairMesh;
+	TObjectPtr<UCharacterHairComponent> HairMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Meshes")
 	TObjectPtr<USkeletalMeshComponent> HatMesh;

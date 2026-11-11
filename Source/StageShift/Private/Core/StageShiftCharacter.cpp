@@ -3,6 +3,7 @@
 #include "Animation/MeshDeformer.h"
 #include "Animation/StageShiftAnimInstance.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/Customization/CharacterHairComponent.h"
 #include "Components/Dialogue/DialogueBubbleWidget.h"
 #include "Components/Dialogue/DialogueComponent.h"
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
@@ -57,10 +58,11 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 		FacialAnimationComponent->SetProfile(FacialProfile.Object);
 	}
 
-	HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HairMesh"));
+	HairMesh = CreateDefaultSubobject<UCharacterHairComponent>(TEXT("HairMesh"));
 	HatMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HatMesh"));
 	OutfitMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("OutfitMesh"));
-	for (USkeletalMeshComponent* Part : {HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()})
+	USkeletalMeshComponent* Parts[] = {HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()};
+	for (USkeletalMeshComponent* Part : Parts)
 	{
 		Part->SetupAttachment(GetMesh());
 		Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -70,7 +72,8 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 void AStageShiftCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	for (USkeletalMeshComponent* Part : {HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()})
+	HairMesh->RefreshHairstyle();
+	for (USkeletalMeshComponent* Part : {HatMesh.Get(), OutfitMesh.Get()})
 	{
 		Part->SetLeaderPoseComponent(GetMesh());
 	}
@@ -99,7 +102,8 @@ void AStageShiftCharacter::BeginPlay()
 
 	if (DollPressDeformer)
 	{
-		for (USkeletalMeshComponent* Part : {GetMesh(), HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()})
+		USkeletalMeshComponent* Parts[] = {GetMesh(), HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()};
+		for (USkeletalMeshComponent* Part : Parts)
 		{
 			Part->SetMeshDeformer(DollPressDeformer);
 		}
@@ -129,7 +133,8 @@ void AStageShiftCharacter::UpdateDollPress()
 	static const FName Depths[] = {TEXT("PressDepth"), TEXT("PressDepth1"), TEXT("PressDepth2"), TEXT("PressDepth3")};
 	static const FName Radii[] = {TEXT("PressRadius"), TEXT("PressRadius1"), TEXT("PressRadius2"), TEXT("PressRadius3")};
 
-	for (USkeletalMeshComponent* Part : {GetMesh(), HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()})
+	USkeletalMeshComponent* Parts[] = {GetMesh(), HairMesh.Get(), HatMesh.Get(), OutfitMesh.Get()};
+	for (USkeletalMeshComponent* Part : Parts)
 	{
 		auto* Deformer = Cast<UOptimusDeformerInstance>(Part->GetMeshDeformerInstance());
 		if (!Deformer) continue;
