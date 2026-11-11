@@ -262,12 +262,15 @@ void AStageShiftCharacter::ConsiderStumble(const FHitResult& Impact)
 
 	const FVector ToHit = (Impact.ImpactPoint - GetActorLocation()).GetSafeNormal2D();
 	if (FVector::DotProduct(Velocity.GetSafeNormal2D(), ToHit) < 0.45) return;
+	const FVector ObstacleVelocity = Obstacle->GetPhysicsLinearVelocityAtPoint(Impact.ImpactPoint, Impact.BoneName);
+	if (-FVector::DotProduct(ObstacleVelocity, ToHit) >= FMath::Max(PhysicsHitMinSpeed, 1.0f)) return;
 
 	const float KneeZ = FMath::Min(GetMesh()->GetSocketLocation(TEXT("calf_l")).Z, GetMesh()->GetSocketLocation(TEXT("calf_r")).Z);
 	if (Obstacle->Bounds.GetBox().Max.Z > KneeZ - 5.0f || Impact.ImpactPoint.Z > KneeZ) return;
 
 	PendingPhysicsInput = FPhysicalAnimationInput();
 	PendingPhysicsInput.InitialVelocity = FVector(Velocity.X, Velocity.Y, 0.0);
+	PendingPhysicsInput.LaunchDirection = Velocity.GetSafeNormal2D();
 	StumbleDirection = Velocity;
 	PendingPhysicsReaction = ECharacterPhysicsReaction::Stumble;
 	bStumblePending = true;

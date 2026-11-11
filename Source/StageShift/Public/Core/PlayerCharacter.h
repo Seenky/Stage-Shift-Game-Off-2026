@@ -79,6 +79,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 private:
+	FVector MovementInputToWorld(const FInputActionValue& Value) const;
+
 	UFUNCTION()
 	void OnMovementInput(const FInputActionInstance& Instance);
 	
