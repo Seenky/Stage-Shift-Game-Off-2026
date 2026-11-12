@@ -15,6 +15,8 @@ class STAGESHIFT_API UStageMoveCommand : public UStageMemberCommand
 protected:
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 	virtual void OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult) override;
+	const float GetNeedMoveToTime() const;
+	virtual float GetNeededTime_Implementation() const override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 private:
 	

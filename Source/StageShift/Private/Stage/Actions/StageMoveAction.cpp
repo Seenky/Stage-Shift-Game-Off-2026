@@ -37,7 +37,7 @@ void UStageMoveAction::OnStart_Implementation()
 	
 	const FPathFollowingRequestResult Result = AIController->MoveTo(CurrentRequest);
 
-	AIController->ReceiveMoveCompleted.AddDynamic(this, &ThisClass::)
+	AIController->ReceiveMoveCompleted.AddDynamic(this, &ThisClass::HandleReceiveMoveCompleted);
 	switch (Result.Code)
 	{
 		case EPathFollowingRequestResult::Failed:

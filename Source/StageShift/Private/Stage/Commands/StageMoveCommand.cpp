@@ -4,6 +4,7 @@
 #include "Stage/Commands/StageMoveCommand.h"
 
 #include "Components/Stage/StageMemberComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Stage/Actions/StageMoveAction.h"
 
 
@@ -17,6 +18,8 @@ UStageAction* UStageMoveCommand::CreateMainAction_Implementation(const FStageExe
 	if (!MoveAction) return nullptr;
 	
 	MoveAction->MoveToRequest(MoveToActor->GetActorLocation(), AcceptableRadius, AIRequestID);
+	
+	return MoveAction;
 }
 
 void UStageMoveCommand::OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult)
@@ -27,16 +30,38 @@ void UStageMoveCommand::OnMainActionResult_Implementation(UStageAction* Action, 
 	}
 }
 
+const float UStageMoveCommand::GetNeedMoveToTime() const
+{
+	if (!Context.MemberComponent.Get() ||
+		!Context.MemberComponent.Get()->GetOwner() || 
+		!MoveToActor) return 0.f;
+	
+	float Speed = 150.f;
+	if (const auto MovementComp = 
+		Context.MemberComponent.Get()->GetOwner()->FindComponentByClass<UCharacterMovementComponent>())
+	{
+		Speed = MovementComp->GetMaxSpeedForNavMovement();
+	}
+	
+	const FVector StartLocation = Context.MemberComponent.Get()->GetOwner()->GetActorLocation();
+	const FVector EndLocation = MoveToActor->GetActorLocation();
+	const float Time = FVector::Distance(StartLocation, EndLocation) / Speed + 0.5f;
+	return Time;
+}
+
+float UStageMoveCommand::GetNeededTime_Implementation() const
+{
+	return GetNeedMoveToTime();
+}
+
 bool UStageMoveCommand::IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const
 {
 	if (!InContext.MemberComponent.Get() ||
 		!InContext.MemberComponent.Get()->GetOwner() || 
 		!MoveToActor) return false;
 		
-	
-	
-	const FVector StartLocation = InContext.MemberComponent.Get()->GetOwner()->GetActorLocation();
+	const FVector StartLocation = Context.MemberComponent.Get()->GetOwner()->GetActorLocation();
 	const FVector EndLocation = MoveToActor->GetActorLocation();
 	
-	return ;
+	return FVector::Distance(StartLocation, EndLocation) <= AcceptableRadius;
 }
