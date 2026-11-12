@@ -34,6 +34,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Command")
 	FStageCommandFinished OnFinished;
 
+	void PreStart(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot = nullptr);
+
 	UFUNCTION(BlueprintCallable, Category = "Stage|Command")
 	void Start(const FStageExecutionContext& InContext);
 	
@@ -104,6 +106,9 @@ protected:
 	void UseShortVersion();
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
+	void OnPreStart(const FStageExecutionContext& InContext);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
 	void OnStart();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
@@ -133,6 +138,7 @@ private:
 	float AccumulatedActiveTime = 0.0f;
 	// Start time of current main action
 	float CurrentStartTime = -1.0f;
+	bool bPreStarted = false;
 	bool bUseShortVersion = false;
 	bool bHasStartedMainAction = false;
 	bool bHasSuccessfulMainAction = false;

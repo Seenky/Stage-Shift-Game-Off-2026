@@ -64,6 +64,7 @@ private:
 	friend class UStageMemberComponent;
 	friend class UStageMemberCommand;
 	bool ValidateStage(UStageDataAsset* Data, const TMap<FGameplayTag, AActor*>& Actors, FText& Error) const;
+	UStageMemberCommand* CreatePreparedCommand(const FStageMemberAssignment& Assignment, FText& Error);
 	TArray<TObjectPtr<UStageMemberCommand>> PrepareCommands(const TArray<FStageMemberAssignment>& Assignments,
 		EStageCommandType Type, int32 SourceIndex);
 	void IssueCommands(const TArray<TObjectPtr<UStageMemberCommand>>& Commands);
@@ -103,6 +104,8 @@ private:
 	TArray<TWeakObjectPtr<UStageMemberComponent>> BoundMembers;
 	UPROPERTY(Transient)
 	TArray<FStageRootExecution> RootExecutions;
+	UPROPERTY(Transient)
+	TArray<FStageStep> PreparedSteps;
 	TArray<float> PlannedStepStarts;
 	TMap<FGameplayTag, EStageCommandResult> PreviousStepResults;
 	TMap<FGameplayTag, EStageCommandResult> CurrentStepResults;

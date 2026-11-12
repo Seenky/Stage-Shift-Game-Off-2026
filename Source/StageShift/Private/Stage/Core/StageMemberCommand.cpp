@@ -5,6 +5,18 @@
 #include "Stage/Core/StageAction.h"
 #include "Stage/Core/StageManager.h"
 
+void UStageMemberCommand::PreStart(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot)
+{
+	if (bPreStarted || CommandState != EStageExecutionState::NotStarted) return;
+
+	bPreStarted = true;
+	Context = InContext;
+	RootCommand = InRoot ? InRoot : this;
+	for (UStageMemberCommand* Child : GetChildCommands())
+		if (IsValid(Child) && Child->GetOuter() == this) Child->PreStart(InContext, GetRootCommand());
+	OnPreStart(InContext);
+}
+
 void UStageMemberCommand::Start(const FStageExecutionContext& InContext)
 {
 	if (CommandState != EStageExecutionState::NotStarted) return;
@@ -154,6 +166,10 @@ void UStageMemberCommand::ResetRuntime(
 	bHasStartedMainAction = false;
 	bHasSuccessfulMainAction = false;
 	OnFinished.Clear();
+}
+
+void UStageMemberCommand::OnPreStart_Implementation(const FStageExecutionContext& InContext)
+{
 }
 
 void UStageMemberCommand::OnStart_Implementation()

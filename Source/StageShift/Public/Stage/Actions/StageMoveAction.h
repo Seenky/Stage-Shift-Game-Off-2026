@@ -8,6 +8,8 @@
 #include "Stage/Core/StageAction.h"
 #include "StageMoveAction.generated.h"
 
+class AAIController;
+
 UCLASS()
 class STAGESHIFT_API UStageMoveAction : public UStageAction
 {
@@ -17,7 +19,7 @@ public:
 	
 	void MoveToRequest(
 		const FVector& InMoveToLoc, 
-		const float& InAcceptableRadius, 
+		const float& InAcceptanceRadius, 
 		const FAIRequestID& LastRequestID);
 	
 	FAIRequestID GetCurrentRequestID() const { return CurrentRequestID; }
@@ -35,5 +37,6 @@ private:
 	
 	FAIRequestID CurrentRequestID;
 	FVector MoveToLoc;
-	float AcceptableRadius;
+	float AcceptanceRadius;
+	TWeakObjectPtr<AAIController> AIController;
 };

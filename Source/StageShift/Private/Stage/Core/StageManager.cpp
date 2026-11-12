@@ -62,8 +62,7 @@ bool AStageManager::ValidateStage(UStageDataAsset* Data, const TMap<FGameplayTag
 		if (!IsValid(Command) || Command->GetClass()->HasAnyClassFlags(CLASS_Abstract) || SeenCommands.Contains(Command) ||
 			(Parent && Command->GetOuter() != Parent)) return false;
 		SeenCommands.Add(Command);
-		const float Duration = Command->GetNeededTime();
-		if (!FMath::IsFinite(Duration) || Duration < 0.0f || Command->ScoreValue < 0) return false;
+		if (Command->ScoreValue < 0) return false;
 		if (PreviousRoles && Command->RequiredSuccessStepMemberTag.IsValid() &&
 			!PreviousRoles->Contains(Command->RequiredSuccessStepMemberTag)) return false;
 		if (Command->IsComposite() && Command->GetChildCommands().IsEmpty()) return false;
@@ -71,22 +70,17 @@ bool AStageManager::ValidateStage(UStageDataAsset* Data, const TMap<FGameplayTag
 		return true;
 	};
 	TSet<FGameplayTag> PreviousRoles;
-	float TotalDuration = 0.0f;
 	for (const FStageStep& Step : Data->Steps)
 	{
 		if (Step.Commands.IsEmpty()) return Reject(TEXT("A Step cannot be empty."));
 		TSet<FGameplayTag> Roles;
-		float Duration = 0.0f;
 		for (const auto& Assignment : Step.Commands)
 		{
 			if (!Actors.Contains(Assignment.MemberTag) || Roles.Contains(Assignment.MemberTag) ||
 				!CheckCommand(Assignment.Command, &PreviousRoles, nullptr))
-				return Reject(TEXT("Invalid Step: check roles, trees, durations and previous-Step dependencies."));
+				return Reject(TEXT("Invalid Step: check roles, trees and previous-Step dependencies."));
 			Roles.Add(Assignment.MemberTag);
-			Duration = FMath::Max(Duration, Assignment.Command->GetNeededTime());
 		}
-		TotalDuration += Duration;
-		if (!FMath::IsFinite(TotalDuration)) return Reject(TEXT("Stage plan duration overflow."));
 		PreviousRoles = MoveTemp(Roles);
 	}
 	TSet<FGameplayTag> FinaleRoles;
@@ -152,14 +146,32 @@ bool AStageManager::StartStage(UStageDataAsset* Data, const TMap<FGameplayTag, A
 	CurrentLatenessLevel = EStageLatenessLevel::OnTime;
 	CurrentStepIndex = INDEX_NONE;
 	PlannedStepStarts.Reset();
+	PreparedSteps = Data->Steps;
+	const auto RejectPreparation = [&]()
+	{
+		for (const auto& Member : BoundMembers) if (Member.IsValid()) Member->EndStageMember();
+		CleanupStage();
+		return false;
+	};
 	float Start = 0.0f;
-	for (const auto& Step : Data->Steps)
+	for (auto& Step : PreparedSteps)
 	{
 		PlannedStepStarts.Add(Start);
 		float Duration = 0.0f;
-		for (const auto& Assignment : Step.Commands) Duration = FMath::Max(Duration, Assignment.Command->GetNeededTime());
+		for (auto& Assignment : Step.Commands)
+		{
+			Assignment.Command = CreatePreparedCommand(Assignment, Error);
+			if (!Assignment.Command) return RejectPreparation();
+			Duration = FMath::Max(Duration, Assignment.Command->GetNeededTime());
+		}
 		Start += Duration;
+		if (!FMath::IsFinite(Start))
+		{
+			Error = FText::FromString(TEXT("Stage plan duration overflow."));
+			return RejectPreparation();
+		}
 	}
+	StageStartedAt = GetWorld()->GetTimeSeconds();
 	State = EStageState::Running;
 	bAdvanceRequested = true;
 	AdvanceStage();
@@ -201,6 +213,36 @@ void AStageManager::RecalculateEstimatedScore()
 	EstimatedTotalScore = static_cast<int32>(FMath::Min<int64>(Total, MAX_int32));
 }
 
+UStageMemberCommand* AStageManager::CreatePreparedCommand(const FStageMemberAssignment& Assignment, FText& Error)
+{
+	AActor* Actor = GetMember(Assignment.MemberTag);
+	auto* Member = IsValid(Actor) ? Actor->FindComponentByClass<UStageMemberComponent>() : nullptr;
+	if (!IsValid(Member) || !IsValid(Assignment.Command))
+	{
+		Error = FText::FromString(TEXT("A required member or command disappeared."));
+		return nullptr;
+	}
+	auto* Working = DuplicateObject<UStageMemberCommand>(Assignment.Command, Member);
+	FStageExecutionContext Context;
+	Context.Manager = this;
+	Context.MemberComponent = Member;
+	Working->PreStart(Context);
+	TFunction<bool(const UStageMemberCommand*)> CheckDuration = [&](const UStageMemberCommand* Command)
+	{
+		if (!IsValid(Command)) return false;
+		for (const UStageMemberCommand* Child : Command->GetChildCommands())
+			if (!CheckDuration(Child)) return false;
+		const float Duration = Command->GetNeededTime();
+		return FMath::IsFinite(Duration) && Duration >= 0.0f;
+	};
+	if (!CheckDuration(Working))
+	{
+		Error = FText::FromString(TEXT("Prepared command durations must be finite and nonnegative."));
+		return nullptr;
+	}
+	return Working;
+}
+
 TArray<TObjectPtr<UStageMemberCommand>> AStageManager::PrepareCommands(const TArray<FStageMemberAssignment>& Assignments,
 	EStageCommandType Type, int32 SourceIndex)
 {
@@ -214,12 +256,24 @@ TArray<TObjectPtr<UStageMemberCommand>> AStageManager::PrepareCommands(const TAr
 			FailStage(FText::FromString(TEXT("A required member or command disappeared.")));
 			return {};
 		}
-		auto* Working = DuplicateObject<UStageMemberCommand>(Assignment.Command, Member);
+		FText Error;
+		auto* Working = Type == EStageCommandType::Scenario ? Assignment.Command.Get() : CreatePreparedCommand(Assignment, Error);
+		if (!Working)
+		{
+			FailStage(Error);
+			return {};
+		}
 		FStageExecutionContext Context;
 		Context.Manager = this;
 		Context.MemberComponent = Member;
 		const float Start = Type == EStageCommandType::Scenario ? PlannedStepStarts[SourceIndex] : GetStageElapsedTime();
-		Working->ResetRuntime(Context, Working, Start, Start + Working->GetNeededTime());
+		const float End = Start + Working->GetNeededTime();
+		if (!FMath::IsFinite(End))
+		{
+			FailStage(FText::FromString(TEXT("Command plan duration overflow.")));
+			return {};
+		}
+		Working->ResetRuntime(Context, Working, Start, End);
 		Working->OnFinished.AddDynamic(this, &AStageManager::HandleRootFinished);
 		FStageRootExecution& Entry = RootExecutions.AddDefaulted_GetRef();
 		Entry.Command = Working;
@@ -285,7 +339,7 @@ void AStageManager::AdvanceStage()
 				PreviousStepResults = MoveTemp(CurrentStepResults);
 				CurrentStepResults.Reset();
 				++CurrentStepIndex;
-				const auto& Assignments = ActiveStage->Steps[CurrentStepIndex].Commands;
+				const auto& Assignments = PreparedSteps[CurrentStepIndex].Commands;
 				for (const auto& Assignment : Assignments) CurrentStepResults.Add(Assignment.MemberTag, EStageCommandResult::None);
 				const auto Prepared = PrepareCommands(Assignments, EStageCommandType::Scenario, CurrentStepIndex);
 				IssueCommands(Prepared);
@@ -367,6 +421,7 @@ void AStageManager::CleanupStage()
 	BoundMembers.Reset();
 	CurrentStepResults.Reset();
 	PreviousStepResults.Reset();
+	PreparedSteps.Reset();
 	PlannedStepStarts.Reset();
 	ReactionActivationCounts.Reset();
 	ActiveStage = nullptr;

@@ -8,12 +8,12 @@
 
 void UStageMoveAction::MoveToRequest(
 	const FVector& InMoveToLoc, 
-	const float& InAcceptableRadius, 
+	const float& InAcceptanceRadius, 
 	const FAIRequestID& LastRequestID)
 {
 	CurrentRequestID = LastRequestID;
 	MoveToLoc = InMoveToLoc;
-	AcceptableRadius = InAcceptableRadius;
+	AcceptanceRadius = InAcceptanceRadius;
 }
 
 void UStageMoveAction::OnStart_Implementation()
@@ -25,15 +25,15 @@ void UStageMoveAction::OnStart_Implementation()
 		return;
 	}
 	
-	const auto AIController = PawnOwner->GetController<AAIController>();
-	if (!AIController)
+	AIController = PawnOwner->GetController<AAIController>();
+	if (!AIController.IsValid())
 	{
 		Finish(EStageActionResult::Failed);
 		return;
 	}
 	
 	FAIMoveRequest CurrentRequest(MoveToLoc);
-	CurrentRequest.SetAcceptanceRadius(AcceptableRadius);
+	CurrentRequest.SetAcceptanceRadius(AcceptanceRadius);
 	
 	const FPathFollowingRequestResult Result = AIController->MoveTo(CurrentRequest);
 
@@ -56,12 +56,28 @@ void UStageMoveAction::OnStart_Implementation()
 
 void UStageMoveAction::OnStop_Implementation(EStageActionStopMode Mode)
 {
-	
+	if (!AIController.IsValid())
+	{
+		Finish(EStageActionResult::Failed);
+		return;
+	}
+	if (Mode == EStageActionStopMode::StopAction) AIController->StopMovement();
 }
 
 void UStageMoveAction::Cleanup_Implementation()
 {
-	
+	if (AIController.IsValid())
+	{
+		AIController->ReceiveMoveCompleted.RemoveDynamic(this, &ThisClass::HandleReceiveMoveCompleted);
+		
+		if (AIController->GetCurrentMoveRequestID() == CurrentRequestID)
+		{
+			AIController->StopMovement();
+		}
+	}
+	MoveToLoc = FVector::ZeroVector;
+	AcceptanceRadius = 0.0f;
+	AIController = nullptr;
 }
 
 void UStageMoveAction::HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result)
@@ -69,6 +85,10 @@ void UStageMoveAction::HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathF
 	if (Result == EPathFollowingResult::Type::Success)
 	{
 		Finish(EStageActionResult::Succeeded);
+	}
+	else if (GetState() == EStageExecutionState::Stopping)
+	{
+		Finish(EStageActionResult::Interrupted);
 	}
 	else
 	{
