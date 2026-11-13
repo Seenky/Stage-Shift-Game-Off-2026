@@ -154,6 +154,7 @@ bool UPhysicalMontageComponent::BeginPhysicsAnimation(const FPhysicalMontageSett
 {
 	if (IsPhysicsMontageActive() || !PreparePhysics(Settings, Input, ActionName)) return false;
 	OnPhysicsAnimationStarted.Broadcast();
+	OnPhysAnimStarted.Broadcast();
 
 	if (ActiveSettings.bApplyLaunchVelocity && ActiveSettings.LaunchDelay > 0.0f)
 	{
@@ -432,7 +433,9 @@ void UPhysicalMontageComponent::OnRecoveryMontageEnded(UAnimMontage* Montage, bo
 			RetryRecovery();
 			return;
 		}
+		
 		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		OnRecoveryEnded.Broadcast();
 	}
 }
 
