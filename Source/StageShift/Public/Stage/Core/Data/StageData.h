@@ -173,8 +173,14 @@ struct FStageMemberReaction
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
 	FStageExecutionRequirements ExecRequirements;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (ClampMin = "1", UIMin = "1"))
-	int32 MaxActivationsPerStage = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (ToolTip = "Temporary status applied to the reacting actor at reaction start. Leave empty to disable cooldown."))
+	FGameplayTag CooldownTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (ClampMin = "0.01", UIMin = "0.01", Units = "s"))
+	float CooldownDuration = 5.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (ClampMin = "0", UIMin = "0", ToolTip = "Zero means no activation limit for this Stage."))
+	int32 MaxActivationsPerStage = 0;
 };
 
 USTRUCT(BlueprintType)

@@ -5,6 +5,7 @@
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
 #include "StatusesComponent.h"
+#include "StatusesInfo.h"
 #include "UObject/Package.h"
 
 AStageManager::AStageManager()
@@ -92,7 +93,8 @@ bool AStageManager::ValidateStage(UStageDataAsset* Data, const TMap<FGameplayTag
 	}
 	for (const auto& Reaction : Data->MemberReactions)
 		if (!Reaction.EventTag.IsValid() || !Actors.Contains(Reaction.MemberTag) ||
-			(Reaction.SubjectRoleTag.IsValid() && !Actors.Contains(Reaction.SubjectRoleTag)) || Reaction.MaxActivationsPerStage < 1 ||
+			(Reaction.SubjectRoleTag.IsValid() && !Actors.Contains(Reaction.SubjectRoleTag)) || Reaction.MaxActivationsPerStage < 0 ||
+			(Reaction.CooldownTag.IsValid() && (!FMath::IsFinite(Reaction.CooldownDuration) || Reaction.CooldownDuration <= 0.0f)) ||
 			!CheckCommand(Reaction.Command, nullptr, nullptr)) return Reject(TEXT("Invalid member reaction."));
 	return true;
 }
@@ -496,7 +498,9 @@ bool AStageManager::CheckReaction(const FStageRootExecution& Entry) const
 	if (!ActiveStage || !ActiveStage->MemberReactions.IsValidIndex(Entry.SourceIndex) || !Entry.MemberComponent.IsValid()) return false;
 	const auto& Reaction = ActiveStage->MemberReactions[Entry.SourceIndex];
 	const auto* Statuses = Entry.MemberComponent->GetOwner()->FindComponentByClass<UStatusesComponent>();
-	return Statuses && ReactionActivationCounts[Entry.SourceIndex] < Reaction.MaxActivationsPerStage &&
+	return Statuses &&
+		(Reaction.MaxActivationsPerStage == 0 || ReactionActivationCounts[Entry.SourceIndex] < Reaction.MaxActivationsPerStage) &&
+		(!Reaction.CooldownTag.IsValid() || !Statuses->GetStatuses().HasTag(Reaction.CooldownTag)) &&
 		Reaction.ExecRequirements.GetIsAccess(Statuses->GetStatuses());
 }
 
@@ -528,7 +532,21 @@ void AStageManager::HandleCommandStarted(UStageMemberCommand* Command)
 	if (auto* Entry = FindRoot(Command); Entry && !Entry->bStarted)
 	{
 		Entry->bStarted = true;
-		if (Entry->CommandType == EStageCommandType::Reaction) ++ReactionActivationCounts[Entry->SourceIndex];
+		if (Entry->CommandType != EStageCommandType::Reaction) return;
+		++ReactionActivationCounts[Entry->SourceIndex];
+
+		const auto& Reaction = ActiveStage->MemberReactions[Entry->SourceIndex];
+		if (!Reaction.CooldownTag.IsValid()) return;
+		const auto* Member = Entry->MemberComponent.Get();
+		AActor* Actor = Member ? Member->GetOwner() : nullptr;
+		auto* Statuses = IsValid(Actor) ? Actor->FindComponentByClass<UStatusesComponent>() : nullptr;
+		if (!Statuses) return;
+
+		FStatusesInfoArray CooldownStatuses;
+		CooldownStatuses.StatusesInfo.Emplace(Reaction.CooldownTag.GetSingleTagContainer(), EStatusState::Temporary, Reaction.CooldownDuration);
+		CooldownStatuses.StatusesInfo[0].bIsClearTimer = true;
+		// Mark bStarted before status callbacks, so this cooldown cannot reject its own reaction admission.
+		Statuses->AddStatusesWithInfo(CooldownStatuses);
 	}
 }
 
