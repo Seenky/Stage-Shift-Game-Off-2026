@@ -79,3 +79,5 @@ DerivedDataCache/*
 
 *.spp
 *.spp.painter_lock
+
+.codex

@@ -1,0 +1,43 @@
+{
+  "meshes": [
+    "FBX\\Modules\\SK_Character001_Body.fbx",
+    "FBX\\Modules\\SK_Character001_Hat.fbx",
+    "FBX\\Modules\\SK_Character001_Outfit.fbx",
+    "FBX\\SK_Character001_FullBody.fbx",
+    "FBX\\Modules\\SK_Character001_Hair.fbx"
+  ],
+  "animations": [
+    "FBX\\Animations\\AN_Character001_WalkFwd.fbx",
+    "FBX\\Animations\\AN_Character001_RunFwd.fbx",
+    "FBX\\Animations\\AN_Character001_WalkBwd.fbx",
+    "FBX\\Animations\\AN_Character001_Walk90R.fbx",
+    "FBX\\Animations\\AN_Character001_Walk90L.fbx",
+    "FBX\\Animations\\AN_Character001_RunBwd.fbx",
+    "FBX\\Animations\\AN_Character001_Run90R.fbx",
+    "FBX\\Animations\\AN_Character001_Run90L.fbx",
+    "FBX\\Animations\\AN_Character001_Idle_001.fbx",
+    "FBX\\Animations\\AN_Character001_Face_PoseBank.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Blink.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Happy.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Sad.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Angry.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Surprise.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Fear.fbx",
+    "FBX\\Animations\\AN_Character001_Face_Doubt.fbx",
+    "FBX\\Animations\\AN_Character001_StumbleFall.fbx",
+    "FBX\\Animations\\AN_Character001_PlankJump.fbx",
+    "FBX\\Animations\\AN_Character001_GetUpProne.fbx",
+    "FBX\\Animations\\AN_Character001_Pickup.fbx",
+    "FBX\\Animations\\AN_Character001_PrepareThrow.fbx",
+    "FBX\\Animations\\AN_Character001_Throw_001.fbx",
+    "FBX\\Animations\\AN_Character001_FallForward.fbx",
+    "FBX\\Animations\\AN_Character001_FallBackward.fbx",
+    "FBX\\Animations\\AN_Character001_FallLeft.fbx",
+    "FBX\\Animations\\AN_Character001_FallRight.fbx",
+    "FBX\\Animations\\AN_Character001_SlipBackward.fbx",
+    "FBX\\Animations\\AN_Character001_GetUpSupine.fbx"
+  ],
+  "ue_scale": 0.5,
+  "native_actions_preserved_in": "Character001.blend",
+  "painter_mesh": "FBX/Character001_Painter_TPose.fbx"
+}
