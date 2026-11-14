@@ -81,3 +81,5 @@ DerivedDataCache/*
 *.spp.painter_lock
 
 .codex
+
+.blend
