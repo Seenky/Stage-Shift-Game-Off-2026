@@ -15,7 +15,8 @@ public:
 	
 	void SetupLookTo(
 		const FVector& InLookToLoc, 
-		const float& InTurnSpeed);
+		const float& InTurnSpeed,
+		const float& InAcceptanceAngleDeg);
 
 protected:
 	
@@ -32,4 +33,5 @@ private:
 	FTimerHandle LookTimerHandle;
 	FVector LookToLoc;
 	float TurnSpeed; // Angle in second
+	float AcceptanceDotThreshold; // Angle in second
 };

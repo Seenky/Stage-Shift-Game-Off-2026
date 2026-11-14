@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -13,7 +13,11 @@ UCLASS()
 class STAGESHIFT_API UStageMoveCommand : public UStageMemberCommand
 {
 	GENERATED_BODY()
-	
+
+public:
+	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
+		float InPlannedStartTime, float InPlannedEndTime) override;
+
 protected:
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 	virtual void OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult) override;
@@ -22,6 +26,9 @@ protected:
 	virtual void OnPreStart_Implementation(const FStageExecutionContext& InContext) override;
 	virtual void OnStart_Implementation() override;
 private:
+	UFUNCTION()
+	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
 	TSoftObjectPtr<AActor> MoveToActor;

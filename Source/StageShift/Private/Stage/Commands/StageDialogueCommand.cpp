@@ -1,10 +1,16 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Stage/Commands/StageDialogueCommand.h"
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "Stage/Actions/StageDialogueAction.h"
+
+UStageDialogueCommand::UStageDialogueCommand()
+{
+	bRequireStageLocation = true;
+	bRequireStageYaw = true;
+}
 
 float UStageDialogueCommand::GetNeededTime_Implementation() const
 {

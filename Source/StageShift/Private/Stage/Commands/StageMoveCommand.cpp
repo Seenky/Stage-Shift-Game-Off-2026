@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Stage/Commands/StageMoveCommand.h"
@@ -86,4 +86,16 @@ void UStageMoveCommand::OnStart_Implementation()
 	}
 	
 	Super::OnStart_Implementation();
+}
+void UStageMoveCommand::ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
+	float InPlannedStartTime, float InPlannedEndTime)
+{
+	Super::ResetRuntime(InContext, InRoot, InPlannedStartTime, InPlannedEndTime);
+	OnFinished.AddUniqueDynamic(this, &ThisClass::HandleCommandFinished);
+}
+
+void UStageMoveCommand::HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result)
+{
+	if (Result == EStageCommandResult::Succeeded)
+		if (UStageMemberComponent* Member = Context.MemberComponent.Get()) Member->RememberStagePose(Command);
 }

@@ -27,6 +27,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TObjectPtr<UStageRecoveryRulesDataAsset> RecoveryRulesAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage|Stage Mark", meta = (ClampMin = "0.0", Units = "cm"))
+	float StageLocationTolerance = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage|Stage Mark", meta = (ClampMin = "0.0", ClampMax = "180.0", Units = "deg"))
+	float StageYawTolerance = 5.0f;
+
 	UPROPERTY(BlueprintAssignable, Category = "Stage")
 	FStageMemberCommandFinished OnCommandFinished;
 
@@ -38,6 +44,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stage")
 	bool BindToStage(AStageManager* InManager);
+
+	UFUNCTION(BlueprintPure, Category = "Stage|Stage Mark")
+	FVector GetStageLocation() const { return StageLocation; }
+
+	UFUNCTION(BlueprintPure, Category = "Stage|Stage Mark")
+	float GetStageYaw() const { return StageYaw; }
+
+	UFUNCTION(BlueprintPure, Category = "Stage|Stage Mark")
+	bool IsAtStageMark(bool CheckLocation = true, bool CheckYaw = true) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Stage|Stage Mark")
+	void RememberStagePose(UStageMemberCommand* SourceCommand);
+
+	UFUNCTION(BlueprintCallable, Category = "Stage|Stage Mark")
+	void RememberStageYaw(UStageMemberCommand* SourceCommand);
 
 	// Common entry for a prepared root or container child.
 	bool RunCommand(UStageMemberCommand* Command, EStageCommandType Type);
@@ -73,6 +94,9 @@ private:
 	void BeginDispatch();
 	void EndDispatch();
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
+	bool IsScenarioPaused(const UStageMemberCommand* Command) const;
+	bool CanRememberStageMark(const UStageMemberCommand* SourceCommand) const;
+	void UpdateStageMarkStatus();
 	void PumpCommands();
 	void UpdateExecutions();
 	void AdvanceExecution(UStageMemberCommand* Command);
@@ -116,6 +140,8 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UStageAction>> FinishingActions;
 
+	FVector StageLocation = FVector::ZeroVector;
+	float StageYaw = 0.0f;
 	FGameplayTagContainer CachedStatuses;
 	int32 DispatchDepth = 0;
 	bool bUpdatingExecutions = false;

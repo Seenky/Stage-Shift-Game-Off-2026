@@ -22,6 +22,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Command")
 	FStageExecutionRequirements ExecutionRequirements;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Stage Mark")
+	bool bRequireStageLocation = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Stage Mark")
+	bool bRequireStageYaw = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Command")
 	FGameplayTag RequiredSuccessStepMemberTag;
 

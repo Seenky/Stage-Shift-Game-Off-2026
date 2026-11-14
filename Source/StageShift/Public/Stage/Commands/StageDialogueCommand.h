@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -13,6 +13,8 @@ class STAGESHIFT_API UStageDialogueCommand : public UStageMemberCommand
 	GENERATED_BODY()
 	
 public:
+	UStageDialogueCommand();
+
 	
 	virtual float GetNeededTime_Implementation() const override;
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;

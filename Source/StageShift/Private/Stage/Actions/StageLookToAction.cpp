@@ -12,10 +12,12 @@ namespace
 
 void UStageLookToAction::SetupLookTo(
 	const FVector& InLookToLoc, 
-	const float& InTurnSpeed)
+	const float& InTurnSpeed,
+	const float& InAcceptanceAngleDeg)
 {
 	LookToLoc = InLookToLoc;
 	TurnSpeed = InTurnSpeed;
+	AcceptanceDotThreshold = FMath::Cos(FMath::DegreesToRadians(InAcceptanceAngleDeg));
 }
 
 void UStageLookToAction::OnStart_Implementation()
@@ -78,7 +80,7 @@ bool UStageLookToAction::GetIsSucceeded(const FVector& InLookToLoc) const
 	const FVector LookAtDir = (InLookToLoc - Owner->GetActorLocation()).GetSafeNormal2D();
 	const auto DotProduct = FVector::DotProduct(OwnerDir, LookAtDir);
 	
-	return DotProduct >= 0.95f;
+	return DotProduct >= AcceptanceDotThreshold;
 }
 
 void UStageLookToAction::TurnAtLoc()
