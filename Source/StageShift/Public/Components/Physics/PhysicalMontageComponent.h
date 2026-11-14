@@ -17,6 +17,8 @@ struct FPhysicsRecoverySelection
 };
 
 DECLARE_DELEGATE_RetVal_OneParam(FPhysicsRecoverySelection, FPhysicsRecoverySelector, const USkeletalMeshComponent*);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPhysAnimStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRecoveryEnded);
 
 UENUM(BlueprintType)
 enum class EPhysicsSimulationHandoff : uint8
@@ -113,6 +115,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RestorePhysics();
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnRecoveryEnded OnRecoveryEnded;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnRecoveryEnded OnPhysAnimStarted;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")

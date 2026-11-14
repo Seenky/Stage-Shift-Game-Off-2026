@@ -37,6 +37,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "StatusComponent",
+			"Enabled": true
+		},
+		{
 			"Name": "ControlRig",
 			"Enabled": true
 		},

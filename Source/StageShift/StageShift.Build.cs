@@ -31,13 +31,15 @@ public class StageShift : ModuleRules
 			"GameplayStateTreeModule", 
 			"GameplayTags", 
 			"AnimationCore",
+			"AnimGraphRuntime",
 			"OptimusCore",
 			"ComputeFramework",
 			"ControlRig", 
 			"RigVM",
 			"PBIK",
 			"Slate",
-			"ModelViewViewModel"
+			"ModelViewViewModel",
+			"StatusComponent"
 			
 		});
 
