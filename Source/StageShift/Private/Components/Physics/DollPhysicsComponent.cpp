@@ -367,6 +367,13 @@ void UDollPhysicsComponent::UpdateLegJointLimits()
 		FConstraintInstance* Joint = Mesh->GetConstraintInstanceByIndex(Driven.JointIndex);
 		if (!Joint) continue;
 		const FConstraintInstance& Authored = Asset->ConstraintSetup[Driven.JointIndex]->DefaultInstance;
+		if (Driven.Bone == TEXT("calf_l") || Driven.Bone == TEXT("calf_r"))
+		{
+			// Knee frames encode a one-sided flexion range. Symmetric widening also
+			// opens hyperextension and must not follow transient IK target errors.
+			Joint->RestoreAngularLimitsToDefault(Authored);
+			continue;
+		}
 		const FQuat Child = GetCachedBoneTransform(Mesh.Get(), Authored.ConstraintBone1).GetRotation();
 		const FQuat Parent = GetCachedBoneTransform(Mesh.Get(), Authored.ConstraintBone2).GetRotation();
 		// Keep an envelope of the evaluated gait poses. Shrinking it onto a moving leg injects

@@ -40,6 +40,7 @@ namespace
 		double RootHeightDelta;
 		float WalkableNormalZ;
 		float DeltaTime;
+		bool bMoving;
 	};
 
 	float SolveFoot(const FGroundQuery& Query, const FRigElementKey& Foot, const FRigElementKey& Ball,
@@ -64,7 +65,9 @@ namespace
 			Sample - FVector::UpVector * (62.0 * Query.Scale),
 			FQuat::Identity, Query.Channel, FCollisionShape::MakeSphere(2.5 * Query.Scale), Query.Params);
 		const bool bWalkable = bHit && !Hit.bStartPenetrating && Hit.ImpactNormal.Z >= Query.WalkableNormalZ;
-		const float PinCurve = bWalkable && bHasContact ? Contact : 0.0f;
+		// Idle curves keep both contacts at one. Release the last gait's world-space
+		// anchors on stopping so they cannot hold the idle pose in the previous stride.
+		const float PinCurve = bWalkable && bHasContact && Query.bMoving ? Contact : 0.0f;
 		const bool bStrongContact = PinCurve >= PlantThreshold;
 		if (bStrongContact && !State.bPlanted)
 		{
@@ -160,7 +163,8 @@ FRigUnit_StageShiftFootPlacement_Execute()
 	const float DeltaTime = FMath::Clamp(ExecuteContext.GetDeltaTime(), 0.0f, 0.1f);
 	const float WalkableNormalZ = FMath::Cos(FMath::DegreesToRadians(WalkableFloorAngle));
 	const FGroundQuery Query{*World, *Hierarchy, RigToWorld, Params, TraceChannel, Root.Z,
-		Hierarchy->GetGlobalTransform(RootBone, true).GetLocation().Z, Scale, RootDelta, WalkableNormalZ, DeltaTime};
+		Hierarchy->GetGlobalTransform(RootBone, true).GetLocation().Z, Scale, RootDelta, WalkableNormalZ, DeltaTime,
+		Owner && Owner->GetVelocity().SizeSquared2D() >= 1.0};
 
 	LeftWeight = SolveFoot(Query, LeftFoot, LeftBall, LeftContact, LeftState, LeftTarget);
 	RightWeight = SolveFoot(Query, RightFoot, RightBall, RightContact, RightState, RightTarget);
