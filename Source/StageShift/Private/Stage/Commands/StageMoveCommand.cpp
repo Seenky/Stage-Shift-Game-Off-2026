@@ -88,23 +88,16 @@ void UStageMoveCommand::HandleCommandFinished(UStageMemberCommand* Command, ESta
 
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/Data/StageDataAsset.h"
-#include "Engine/World.h"
-#include "UObject/Package.h"
 
 AActor* UStageMoveCommand::ResolveTarget(const FStageExecutionContext& InContext) const
 {
-	if (!TargetId.IsNone()) return InContext.Manager.IsValid() ? InContext.Manager->GetTarget(TargetId) : nullptr;
-	FSoftObjectPath Path = MoveToActor.ToSoftObjectPath();
-	UWorld* World = InContext.MemberComponent.IsValid() ? InContext.MemberComponent->GetWorld() : nullptr;
-	if (World && World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
-	AActor* Actor = Cast<AActor>(Path.ResolveObject());
-	return IsValid(Actor) && Actor->GetWorld() == World ? Actor : nullptr;
+	return !TargetId.IsNone() && InContext.Manager.IsValid() ? InContext.Manager->GetTarget(TargetId) : nullptr;
 }
 
 void UStageMoveCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
 	Super::ValidateDefinition(Data, Path, Errors);
 	if (!TargetId.IsNone() && !Data->TargetIds.Contains(TargetId)) Errors.Add(Path + TEXT(" / unknown TargetId: ") + TargetId.ToString());
-	if (TargetId.IsNone() && MoveToActor.IsNull()) Errors.Add(Path + TEXT(" / target is required"));
+	if (TargetId.IsNone()) Errors.Add(Path + TEXT(" / TargetId is required"));
 	if (!FMath::IsFinite(AcceptanceRadius) || AcceptanceRadius < 0) Errors.Add(Path + TEXT(" / AcceptanceRadius must be finite and nonnegative"));
 }

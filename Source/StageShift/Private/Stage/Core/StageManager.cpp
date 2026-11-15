@@ -206,11 +206,20 @@ int32 AStageManager::GetStarCount() const
 void AStageManager::RecalculateEstimatedScore()
 {
 	int64 Total = 0;
-	for (UStageDataAsset* Data : StageDefinitions)
+	const auto AddStageScore = [&Total](UStageDataAsset* Data)
 	{
-		if (!IsValid(Data)) continue;
+		if (!IsValid(Data)) return;
 		Data->RecalculateEstimatedScore();
 		Total += Data->EstimatedScore;
+	};
+	if (IsValid(ConfiguredProduction))
+	{
+		for (const FStageProductionScene& Scene : ConfiguredProduction->Scenes)
+			AddStageScore(Scene.Scenario);
+	}
+	else
+	{
+		AddStageScore(ConfiguredStage);
 	}
 	EstimatedTotalScore = static_cast<int32>(FMath::Min<int64>(Total, MAX_int32));
 }
@@ -581,9 +590,9 @@ EStageCommandResult AStageManager::CheckCommandStart(UStageMemberCommand* Comman
 	const auto* Entry = FindRoot(Command);
 	if (!Entry || State == EStageState::Stopping || State == EStageState::Idle || (State == EStageState::Finalizing && Entry->CommandType != EStageCommandType::Finale))
 		return EStageCommandResult::Cancelled;
-	if (Entry->CommandType == EStageCommandType::Scenario && !Command->GetEffectiveRequiredSuccessRoleId().IsNone())
+	if (Entry->CommandType == EStageCommandType::Scenario && !Command->RequiredSuccessRoleId.IsNone())
 	{
-		const auto* Result = PreviousStepResults.Find(Command->GetEffectiveRequiredSuccessRoleId());
+		const auto* Result = PreviousStepResults.Find(Command->RequiredSuccessRoleId);
 		if (!Result || *Result != EStageCommandResult::Succeeded) return EStageCommandResult::Blocked;
 	}
 	if (Entry->CommandType == EStageCommandType::Reaction && !Entry->bStarted && !CheckReaction(*Entry)) return EStageCommandResult::Cancelled;

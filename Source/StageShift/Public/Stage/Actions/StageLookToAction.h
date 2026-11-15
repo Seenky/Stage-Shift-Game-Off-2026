@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Stage/Core/StageAction.h"
 #include "StageLookToAction.generated.h"
 
@@ -23,9 +24,9 @@ protected:
 
 private:
 	bool GetIsSucceeded(const FVector& InLookToLoc) const;
-	void TurnAtLoc();
+	void TurnAtLoc(UWorld* World, ELevelTick TickType, float DeltaSeconds);
 
-	FTimerHandle LookTimerHandle;
+	FDelegateHandle LookTickHandle;
 	FVector LookToLoc;
 	float TurnSpeed; // Angle in second
 	float AcceptanceDotThreshold; // Angle in second

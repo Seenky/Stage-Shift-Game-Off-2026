@@ -151,6 +151,8 @@ FStageMemberAssignment* FStageScenarioGraphAdapter::Assignment(const UStageScena
 		    : nullptr;
 	if (Node->ReactionIndex != INDEX_NONE)
 	{
+		// Slate can still query the old node until the deferred graph refresh.
+		if (!Data->MemberReactions.IsValidIndex(Node->ReactionIndex)) return nullptr;
 		auto& R = Data->MemberReactions[Node->ReactionIndex];
 		return Node->AssignmentIndex > 0 && R.AdditionalPerformers.IsValidIndex(Node->AssignmentIndex - 1) ? &R.AdditionalPerformers[Node->AssignmentIndex - 1] : nullptr;
 	}

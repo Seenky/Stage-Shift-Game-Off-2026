@@ -33,8 +33,6 @@ private:
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
 
 	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-	TSoftObjectPtr<AActor> LookToActor;
-	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float TurnSpeed = 180.f;
 	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float AcceptanceAngleDeg = 5.f;

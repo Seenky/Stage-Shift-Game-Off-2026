@@ -82,8 +82,6 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
-	TArray<TObjectPtr<UStageDataAsset>> StageDefinitions;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TArray<int32> StarThresholds;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TMap<EStageLatenessLevel, float> ScoreMultipliers;
@@ -128,7 +126,12 @@ private:
 	bool IsProductionActive() const { return ProductionState == EStageProductionState::Preparing || ProductionState == EStageProductionState::Playing; }
 
 	bool StartStageWithBindings(UStageDataAsset* Data, const TMap<FName, AActor*>& Roles, const TMap<FName, TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery);
-	FStageSceneBindings ResolveProductionBindings(const FStageProductionScene& Scene) const;
+	struct FResolvedSceneBindings
+	{
+		TMap<FName, TObjectPtr<AActor>> Roles;
+		TMap<FName, TObjectPtr<AActor>> Targets;
+	};
+	FResolvedSceneBindings ResolveProductionBindings(const FStageProductionScene& Scene) const;
 	bool ValidateProduction(UStageProductionDataAsset* Production, TArray<FString>& Errors) const;
 	bool StartProductionScene(FText& Error);
 	void AdvanceProduction();

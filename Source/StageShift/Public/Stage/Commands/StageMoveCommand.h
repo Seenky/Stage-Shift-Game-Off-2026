@@ -38,8 +38,6 @@ private:
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
 
 	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-	TSoftObjectPtr<AActor> MoveToActor;
-	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float AcceptanceRadius = 10.f;
 
 	float NeedMoveTime;

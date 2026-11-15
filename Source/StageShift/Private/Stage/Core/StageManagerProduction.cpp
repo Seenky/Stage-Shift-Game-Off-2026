@@ -4,10 +4,20 @@
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "StatusesComponent.h"
+#include "UObject/Package.h"
 
-FStageSceneBindings AStageManager::ResolveProductionBindings(const FStageProductionScene& Scene) const
+AStageManager::FResolvedSceneBindings AStageManager::ResolveProductionBindings(const FStageProductionScene& Scene) const
 {
-	FStageSceneBindings Result;
+	const auto ResolveActor = [this](const TSoftObjectPtr<AActor>& Reference) -> AActor*
+	{
+		UWorld* World = GetWorld();
+		if (!World) return nullptr;
+		FSoftObjectPath Path = Reference.ToSoftObjectPath();
+		if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
+		AActor* Actor = Cast<AActor>(Path.ResolveObject());
+		return IsValid(Actor) && !Actor->IsActorBeingDestroyed() && Actor->GetWorld() == World ? Actor : nullptr;
+	};
+	FResolvedSceneBindings Result;
 	Result.Roles = RoleBindings;
 	Result.Targets = TargetBindings;
 	for (const auto& Pair : ResolveBindings(Scene.Scenario, {}))
@@ -15,9 +25,9 @@ FStageSceneBindings AStageManager::ResolveProductionBindings(const FStageProduct
 	if (const auto* Overrides = ProductionBindings.Find(Scene.SceneId))
 	{
 		for (const auto& Pair : Overrides->Roles)
-			Result.Roles.Add(Pair.Key, Pair.Value);
+			Result.Roles.Add(Pair.Key, ResolveActor(Pair.Value));
 		for (const auto& Pair : Overrides->Targets)
-			Result.Targets.Add(Pair.Key, Pair.Value);
+			Result.Targets.Add(Pair.Key, ResolveActor(Pair.Value));
 	}
 	return Result;
 }
@@ -291,13 +301,13 @@ void AStageManager::SynchronizeProductionBindings()
 		if (Scene.Scenario)
 		{
 			for (FName Id : Scene.Scenario->GetRoleOptions())
-				if (!Bindings.Roles.Contains(Id)) Bindings.Roles.Add(Id, RoleBindings.FindRef(Id));
+				if (!Bindings.Roles.Contains(Id)) Bindings.Roles.Add(Id, TSoftObjectPtr<AActor>(RoleBindings.FindRef(Id).Get()));
 			for (FName Id : Scene.Scenario->TargetIds)
-				if (!Bindings.Targets.Contains(Id)) Bindings.Targets.Add(Id, TargetBindings.FindRef(Id));
+				if (!Bindings.Targets.Contains(Id)) Bindings.Targets.Add(Id, TSoftObjectPtr<AActor>(TargetBindings.FindRef(Id).Get()));
 		}
 		for (const auto& Placement : Scene.Placements)
 			for (FName Id : {Placement.PropId, Placement.MarkId})
-				if (!Bindings.Targets.Contains(Id)) Bindings.Targets.Add(Id, TargetBindings.FindRef(Id));
+				if (!Bindings.Targets.Contains(Id)) Bindings.Targets.Add(Id, TSoftObjectPtr<AActor>(TargetBindings.FindRef(Id).Get()));
 	}
 }
 

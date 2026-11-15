@@ -3,14 +3,7 @@
 #include "Stage/Actions/StageLookToAction.h"
 
 #include "Components/Stage/StageMemberComponent.h"
-
-namespace
-{
-	constexpr float GetTurnDeltaTime()
-	{
-		return 1.f / 30.f;
-	}
-}
+#include "Engine/World.h"
 
 void UStageLookToAction::SetupLookTo(const FVector& InLookToLoc, const float& InTurnSpeed, const float& InAcceptanceAngleDeg)
 {
@@ -34,7 +27,7 @@ void UStageLookToAction::OnStart_Implementation()
 		return;
 	}
 
-	GetWorld()->GetTimerManager().SetTimer(LookTimerHandle, this, &ThisClass::TurnAtLoc, GetTurnDeltaTime(), true);
+	LookTickHandle = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ThisClass::TurnAtLoc);
 }
 
 void UStageLookToAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -47,7 +40,6 @@ void UStageLookToAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 	if (Mode == EStageActionStopMode::StopAction)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(LookTimerHandle);
 		Finish(EStageActionResult::Interrupted);
 		return;
 	}
@@ -55,9 +47,8 @@ void UStageLookToAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 void UStageLookToAction::Cleanup_Implementation()
 {
-	if (!GetWorld()) return;
-
-	GetWorld()->GetTimerManager().ClearTimer(LookTimerHandle);
+	FWorldDelegates::OnWorldPostActorTick.Remove(LookTickHandle);
+	LookTickHandle.Reset();
 }
 
 EStageActionStopMode UStageLookToAction::GetStopMode_Implementation(EStageActionStopReason Reason) const
@@ -77,8 +68,10 @@ bool UStageLookToAction::GetIsSucceeded(const FVector& InLookToLoc) const
 	return DotProduct >= AcceptanceDotThreshold;
 }
 
-void UStageLookToAction::TurnAtLoc()
+void UStageLookToAction::TurnAtLoc(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
+	if (World != GetWorld() || TickType != LEVELTICK_All || DeltaSeconds <= 0.f) return;
+
 	const auto Owner = Context.MemberComponent.Get()->GetOwner();
 	if (!Owner)
 	{
@@ -88,7 +81,7 @@ void UStageLookToAction::TurnAtLoc()
 
 	const FRotator ActorRotation = Owner->GetActorRotation();
 	const FRotator LookAtRotation = (LookToLoc - Owner->GetActorLocation()).GetSafeNormal2D().Rotation();
-	const FRotator NewRotation = FMath::RInterpConstantTo(ActorRotation, LookAtRotation, GetTurnDeltaTime(), TurnSpeed);
+	const FRotator NewRotation = FMath::RInterpConstantTo(ActorRotation, LookAtRotation, DeltaSeconds, TurnSpeed);
 
 	Owner->SetActorRotation(NewRotation);
 

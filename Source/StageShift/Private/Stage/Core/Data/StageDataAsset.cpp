@@ -79,7 +79,7 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 			if (FStageCommandParameters::ApplyOne(Effective.Get(), Parameters, Errors, Overrides)) Definition = Effective.Get();
 		}
 		Definition->ValidateDefinition(this, Path, Errors);
-		const FName Required = Definition->GetEffectiveRequiredSuccessRoleId();
+		const FName Required = Definition->RequiredSuccessRoleId;
 		if (!Required.IsNone() && (!Roles.Contains(Required) || (Previous && !Previous->Contains(Required))))
 			Error(Path, TEXT("RequiredSuccessRoleId must belong to the previous step"));
 		const auto& Children = Command->GetChildCommands();

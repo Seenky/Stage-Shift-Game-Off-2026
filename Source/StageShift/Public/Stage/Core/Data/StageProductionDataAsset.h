@@ -63,9 +63,9 @@ struct FStageSceneBindings
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, TObjectPtr<AActor>> Roles;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, TSoftObjectPtr<AActor>> Roles;
 	// Includes scenario targets and preparation prop/mark IDs.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, TObjectPtr<AActor>> Targets;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, TSoftObjectPtr<AActor>> Targets;
 };
 
 USTRUCT()

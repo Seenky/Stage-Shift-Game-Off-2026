@@ -54,11 +54,11 @@ public:
 	FGameplayTag StageId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName DisplayName;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0, UIMin = 0.0))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0, UIMin = 0.0, Units = "s"))
 	float MainDuration = 300.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timing")
 	EStageTimingPolicy TimingPolicy = EStageTimingPolicy::CompleteOrDeadline;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0, UIMin = 0.0))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0, UIMin = 0.0, Units = "s"))
 	float AdditiveDuration = 0.0f;
 	/*Lateness - missing seconds*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0, UIMin = 0.0))

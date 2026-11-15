@@ -35,7 +35,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "Advanced", meta = (GetOptions = "GetRoleOptions"))
 	FName RequiredSuccessRoleId;
 
-	FName GetEffectiveRequiredSuccessRoleId() const { return RequiredSuccessRoleId.IsNone() ? RequiredSuccessStepMemberTag.GetTagName() : RequiredSuccessRoleId; }
 	UFUNCTION()
 	TArray<FName> GetRoleOptions() const;
 	UFUNCTION()
@@ -57,9 +56,6 @@ public:
 
 	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced")
 	bool bRequireStageYaw = false;
-
-	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced")
-	FGameplayTag RequiredSuccessStepMemberTag;
 
 	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced", meta = (ClampMin = "0", UIMin = "0"))
 	int32 ScoreValue = 0;

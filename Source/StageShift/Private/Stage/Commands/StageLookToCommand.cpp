@@ -55,24 +55,17 @@ void UStageLookToCommand::HandleCommandFinished(UStageMemberCommand* Command, ES
 
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/Data/StageDataAsset.h"
-#include "Engine/World.h"
-#include "UObject/Package.h"
 
 AActor* UStageLookToCommand::ResolveTarget(const FStageExecutionContext& InContext) const
 {
-	if (!TargetId.IsNone()) return InContext.Manager.IsValid() ? InContext.Manager->GetTarget(TargetId) : nullptr;
-	FSoftObjectPath Path = LookToActor.ToSoftObjectPath();
-	UWorld* World = InContext.MemberComponent.IsValid() ? InContext.MemberComponent->GetWorld() : nullptr;
-	if (World && World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
-	AActor* Actor = Cast<AActor>(Path.ResolveObject());
-	return IsValid(Actor) && Actor->GetWorld() == World ? Actor : nullptr;
+	return !TargetId.IsNone() && InContext.Manager.IsValid() ? InContext.Manager->GetTarget(TargetId) : nullptr;
 }
 
 void UStageLookToCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
 	Super::ValidateDefinition(Data, Path, Errors);
 	if (!TargetId.IsNone() && !Data->TargetIds.Contains(TargetId)) Errors.Add(Path + TEXT(" / unknown TargetId: ") + TargetId.ToString());
-	if (TargetId.IsNone() && LookToActor.IsNull()) Errors.Add(Path + TEXT(" / target is required"));
+	if (TargetId.IsNone()) Errors.Add(Path + TEXT(" / TargetId is required"));
 	if (!FMath::IsFinite(TurnSpeed) || TurnSpeed <= 0 || !FMath::IsFinite(AcceptanceAngleDeg) || AcceptanceAngleDeg < 0 || AcceptanceAngleDeg > 180)
 		Errors.Add(Path + TEXT(" / invalid TurnSpeed or AcceptanceAngleDeg"));
 }
