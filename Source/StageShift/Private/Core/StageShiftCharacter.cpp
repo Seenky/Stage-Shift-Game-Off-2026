@@ -1,6 +1,7 @@
 #include "Core/StageShiftCharacter.h"
 
 #include "Animation/MeshDeformer.h"
+#include "Animation/CharacterPhysicsAnimationSet.h"
 #include "Animation/StageShiftAnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Customization/CharacterHairComponent.h"
@@ -13,22 +14,41 @@
 #include "Components/WidgetComponent.h"
 #include "Core/StageShiftCharacterMovementComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "Engine/SkeletalMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "OptimusDeformerInstance.h"
 #include "PhysicsEngine/BodyInstance.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 #include "UObject/ConstructorHelpers.h"
 
 AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<UStageShiftCharacterMovementComponent>(CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
+	GetCapsuleComponent()->InitCapsuleSize(22.0f, 88.0f);
+
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+	MeshComponent->SetRelativeLocation(FVector(0.0, 0.0, -88.0));
+	MeshComponent->SetRelativeRotation(FRotator(0.0, -90.0, 0.0));
+	MeshComponent->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMesh(TEXT("/Game/MODELS/Character/Body/SK_Character_Body"));
+	static ConstructorHelpers::FObjectFinder<UPhysicsAsset> BodyPhysics(TEXT("/Game/MODELS/Character/PA_Character_FullBody"));
+	static ConstructorHelpers::FClassFinder<UStageShiftAnimInstance> BodyAnimation(TEXT("/Game/ANIMATIONS/ABP_Character"));
+	if (BodyMesh.Succeeded()) MeshComponent->SetSkeletalMeshAsset(BodyMesh.Object);
+	if (BodyPhysics.Succeeded()) MeshComponent->SetPhysicsAsset(BodyPhysics.Object);
+	if (BodyAnimation.Succeeded()) MeshComponent->SetAnimInstanceClass(BodyAnimation.Class);
+
 	ConfigureMovementCollision();
 
 	PhysicalMontageComponent = CreateDefaultSubobject<UPhysicalMontageComponent>("Physical Montage Component");
 	PhysicsReactionComponent = CreateDefaultSubobject<UCharacterPhysicsReactionComponent>(TEXT("Physics Reaction Component"));
 	DollPhysicsComponent = CreateDefaultSubobject<UDollPhysicsComponent>(TEXT("DollPhysicsComponent"));
 	DollPhysicsComponent->SetupAttachment(GetCapsuleComponent());
+
+	static ConstructorHelpers::FObjectFinder<UCharacterPhysicsAnimationSet> PhysicsAnimations(TEXT("/Game/ANIMATIONS/DA_CharacterPhysicsAnimations"));
+	if (PhysicsAnimations.Succeeded()) PhysicsReactionComponent->AnimationSet = PhysicsAnimations.Object;
 
 	FacialAnimationComponent = CreateDefaultSubobject<UFacialAnimationComponent>(TEXT("FacialAnimationComponent"));
 
@@ -53,6 +73,16 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 void AStageShiftCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	const AStageShiftCharacter* Defaults = GetDefault<AStageShiftCharacter>();
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+	const UPhysicsAsset* PhysicsAsset = MeshComponent->GetPhysicsAsset();
+	if (MeshComponent->GetSkeletalMeshAsset() == Defaults->GetMesh()->GetSkeletalMeshAsset() && (!PhysicsAsset || PhysicsAsset->FindBodyIndex(TEXT("pelvis")) == INDEX_NONE)
+	    && Defaults->GetMesh()->GetPhysicsAsset())
+	{
+		MeshComponent->SetPhysicsAsset(Defaults->GetMesh()->GetPhysicsAsset(), true);
+	}
+	if (!PhysicsReactionComponent->AnimationSet) PhysicsReactionComponent->AnimationSet = Defaults->PhysicsReactionComponent->AnimationSet;
+
 	HairMesh->RefreshHairstyle();
 	for (USkeletalMeshComponent* Part : {HatMesh.Get(), OutfitMesh.Get()})
 	{
@@ -68,10 +98,13 @@ void AStageShiftCharacter::ConfigureMovementCollision()
 	Capsule->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
 
 	USkeletalMeshComponent* MeshComponent = GetMesh();
+	// The capsule owns movement; simulated bones must not move the drive target frame.
+	MeshComponent->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
 	MeshComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	MeshComponent->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Ignore);
 	MeshComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	MeshComponent->SetNotifyRigidBodyCollision(true);
 
 	GetCharacterMovement()->bEnablePhysicsInteraction = false;
 }
