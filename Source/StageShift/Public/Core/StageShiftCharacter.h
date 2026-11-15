@@ -14,6 +14,7 @@ class UWidgetComponent;
 class UCharacterHairComponent;
 
 UCLASS()
+
 class STAGESHIFT_API AStageShiftCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -22,8 +23,10 @@ public:
 	AStageShiftCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	float GetStepSquash() const { return StepSquash; }
+
 	bool IsPhysicsMontageActive() const;
 	bool IsDollPhysicsActive() const;
+
 	UDollPhysicsComponent* GetDollPhysics() const { return DollPhysicsComponent; }
 
 protected:
@@ -33,6 +36,7 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void MoveBlockedBy(const FHitResult& Impact) override;
 	virtual void Landed(const FHitResult& Hit) override;
+
 	virtual const UPrimitiveComponent* GetHeldPhysicsComponent() const { return nullptr; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -43,12 +47,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Physics")
 	TObjectPtr<UDollPhysicsComponent> DollPhysicsComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
-	TObjectPtr<UDialogueComponent> DialogueComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
-	TObjectPtr<UWidgetComponent> DialogueWidgetComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Face")
 	TObjectPtr<UFacialAnimationComponent> FacialAnimationComponent;
@@ -77,7 +75,9 @@ protected:
 	float PhysicsHitMinSpeed = 400.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Physics Hit", meta = (ClampMin = "0.0", Units = "kg", EditCondition = "bEnablePhysicsHitKnockdown"))
 	float PhysicsHitMinMass = 0.5f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Physics Hit", meta = (ClampMin = "0.0", EditCondition = "bEnablePhysicsHitKnockdown", ToolTip = "Minimum collision impulse in Newton seconds. Set to zero to use only the speed and mass thresholds."))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Physics Hit",
+	    meta = (ClampMin = "0.0", EditCondition = "bEnablePhysicsHitKnockdown",
+	        ToolTip = "Minimum collision impulse in Newton seconds. Set to zero to use only the speed and mass thresholds."))
 	float PhysicsHitMinImpulse = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Physics Hit", meta = (ClampMin = "0.0", EditCondition = "bEnablePhysicsHitKnockdown"))
 	float PhysicsHitKnockbackScale = 0.4f;

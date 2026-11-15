@@ -7,35 +7,35 @@
 #include "StageLookToCommand.generated.h"
 
 UCLASS()
+
 class STAGESHIFT_API UStageLookToCommand : public UStageMemberCommand
 {
 	GENERATED_BODY()
-	
+
 public:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Scenario", meta=(GetOptions="GetTargetOptions"))
-    FName TargetId;
-    AActor* ResolveTarget(const FStageExecutionContext& InContext) const;
-    virtual uint8 GetResourceMask() const override { return 2; }
-    virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (GetOptions = "GetTargetOptions"))
+	FName TargetId;
+	AActor* ResolveTarget(const FStageExecutionContext& InContext) const;
+
+	virtual uint8 GetResourceMask() const override { return 2; }
+
+	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	UStageLookToCommand();
 
-	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
-		float InPlannedStartTime, float InPlannedEndTime) override;
+	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot, float InPlannedStartTime, float InPlannedEndTime) override;
 
-	
 	virtual float GetNeededTime_Implementation() const override;
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
-	
+
 private:
 	UFUNCTION()
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
 
-	
-	UPROPERTY(Category="Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
+	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	TSoftObjectPtr<AActor> LookToActor;
-	UPROPERTY(Category="Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
+	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float TurnSpeed = 180.f;
-	UPROPERTY(Category="Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
+	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float AcceptanceAngleDeg = 5.f;
 };

@@ -44,18 +44,17 @@ bool UStageShiftAnimInstance::BlendFromRagdollPose(FPoseSnapshot&& Pose, const F
 {
 	const USkeletalMeshComponent* Mesh = GetOwningComponent();
 	const USkeletalMesh* SkeletalMesh = Mesh ? Mesh->GetSkeletalMeshAsset() : nullptr;
-	if (!SkeletalMesh || !Pose.bIsValid || Pose.LocalTransforms.IsEmpty() ||
-		Pose.LocalTransforms.Num() != Pose.BoneNames.Num() || BlendTime <= 0.0f)
+	if (!SkeletalMesh || !Pose.bIsValid || Pose.LocalTransforms.IsEmpty() || Pose.LocalTransforms.Num() != Pose.BoneNames.Num() || BlendTime <= 0.0f)
 	{
 		RecoveryPoseAlpha = 0.0f;
 		return false;
 	}
-	
+
 	const FTransform OldToNewMesh = PreviousMeshTransform.GetRelativeTransform(Mesh->GetComponentTransform());
 	const FReferenceSkeleton& Skeleton = SkeletalMesh->GetRefSkeleton();
 	const FTransform& ReferenceRoot = Skeleton.GetRefBonePose()[0];
 	const FTransform RootOffset = (Pose.LocalTransforms[0] * OldToNewMesh).GetRelativeTransform(ReferenceRoot);
-	
+
 	for (int32 PoseIndex = 1; PoseIndex < Pose.LocalTransforms.Num(); ++PoseIndex)
 	{
 		const int32 BoneIndex = Skeleton.FindBoneIndex(Pose.BoneNames[PoseIndex]);
@@ -87,8 +86,8 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bDollPhysicsActive = StageCharacter && StageCharacter->IsDollPhysicsActive();
 	float TargetPickupAlpha = 0.0f;
 	const UPhysicsManipulationComponent* Manipulation = Pawn ? Pawn->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
-	const bool bDragging = Manipulation && Manipulation->GetDragPose(DragPose.Hands[0], DragPose.Hands[1], DragPose.Facing, DragPose.Effort) &&
-		(!StageCharacter || !StageCharacter->IsPhysicsMontageActive());
+	const bool bDragging = Manipulation && Manipulation->GetDragPose(DragPose.Hands[0], DragPose.Hands[1], DragPose.Facing, DragPose.Effort)
+	    && (!StageCharacter || !StageCharacter->IsPhysicsMontageActive());
 	DragPose.Alpha = FMath::FInterpTo(DragPose.Alpha, bDragging ? 1.0f : 0.0f, DeltaSeconds, bDragging ? 10.0f : 12.0f);
 	if (StageCharacter && StageCharacter->IsPhysicsMontageActive()) DragPose.Alpha = 0.0f;
 	if (DragPose.Alpha < KINDA_SMALL_NUMBER) DragPose.Alpha = 0.0f;
@@ -101,19 +100,15 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Manipulation->GetPickupTarget(PickupTarget, TargetPickupAlpha, &PickupHandOffset);
 	}
 	// Reach follows the contact curve exactly; release eases out even after the montage ends.
-	PickupAlpha = TargetPickupAlpha >= PickupAlpha ? TargetPickupAlpha
-		: FMath::FInterpTo(PickupAlpha, TargetPickupAlpha, DeltaSeconds, 10.0f);
-	if (!Manipulation || !Manipulation->GetManipulatedComponent() ||
-		(StageCharacter && StageCharacter->IsPhysicsMontageActive())) PickupAlpha = 0.0f;
+	PickupAlpha = TargetPickupAlpha >= PickupAlpha ? TargetPickupAlpha : FMath::FInterpTo(PickupAlpha, TargetPickupAlpha, DeltaSeconds, 10.0f);
+	if (!Manipulation || !Manipulation->GetManipulatedComponent() || (StageCharacter && StageCharacter->IsPhysicsMontageActive())) PickupAlpha = 0.0f;
 	if (PickupAlpha < KINDA_SMALL_NUMBER) PickupAlpha = 0.0f;
 	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
 	GroundSpeed = Velocity.Size2D();
-	
+
 	const USkeletalMeshComponent* Mesh = GetOwningComponent();
 	const FVector PlanarVelocity(Velocity.X, Velocity.Y, 0.0);
-	const float MeshSpaceSpeed = Mesh
-		? Mesh->GetComponentTransform().InverseTransformVector(PlanarVelocity).Size()
-		: GroundSpeed;
+	const float MeshSpaceSpeed = Mesh ? Mesh->GetComponentTransform().InverseTransformVector(PlanarVelocity).Size() : GroundSpeed;
 
 	Direction = 0.0f;
 	Stride = 0.0f;
@@ -130,18 +125,17 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		const float WalkSpeed = FMath::Max(FMath::Lerp(From.Walk, To.Walk, DirectionAlpha), MinimumMovingSpeed);
 		const float RunSpeed = FMath::Max(FMath::Lerp(From.Run, To.Run, DirectionAlpha), WalkSpeed + 1.0f);
 
-		Stride = MeshSpaceSpeed <= WalkSpeed
-			? WalkStride * MeshSpaceSpeed / WalkSpeed
-			: FMath::GetMappedRangeValueClamped(FVector2f(WalkSpeed, RunSpeed), FVector2f(WalkStride, 1.0f), MeshSpaceSpeed);
+		Stride = MeshSpaceSpeed <= WalkSpeed ? WalkStride * MeshSpaceSpeed / WalkSpeed
+		                                     : FMath::GetMappedRangeValueClamped(FVector2f(WalkSpeed, RunSpeed), FVector2f(WalkStride, 1.0f), MeshSpaceSpeed);
 	}
-	
+
 	GetCurveValueWithDefault(GaitCurve, Stride * 2.0f, Gait);
 	float SourceRate = 1.0f;
 	GetCurveValueWithDefault(PlayRateCurve, 1.0f, SourceRate);
 	const float ReferenceSpeed = GetCurveValue(SpeedDataCurve) * FMath::Abs(SourceRate);
 	const float TargetPlayRate = GroundSpeed >= MinimumMovingSpeed && ReferenceSpeed >= MinimumMovingSpeed
-		? FMath::Clamp(MeshSpaceSpeed / ReferenceSpeed, MinPlayRate, FMath::Max(MinPlayRate, MaxPlayRate))
-		: 1.0f;
+	    ? FMath::Clamp(MeshSpaceSpeed / ReferenceSpeed, MinPlayRate, FMath::Max(MinPlayRate, MaxPlayRate))
+	    : 1.0f;
 	PlayRate = FMath::FInterpTo(PlayRate, TargetPlayRate, DeltaSeconds, PlayRateResponse);
 
 	const ACharacter* Character = Cast<ACharacter>(Pawn);
@@ -158,22 +152,18 @@ void UStageShiftAnimInstance::AddLandingSquash(float Strength)
 void UStageShiftAnimInstance::UpdateContactSquash(const FVector& Away, const FVector& ImpactPoint, float ImpactSpeed, float Push, bool bNewContact, FName HitBodyBone)
 {
 	const USkeletalMeshComponent* Mesh = GetOwningComponent();
-	const float Impact = bNewContact
-		? FMath::GetMappedRangeValueClamped(FVector2f(25.0f, 350.0f), FVector2f(0.0f, 1.0f), ImpactSpeed)
-		: 0.0f;
+	const float Impact = bNewContact ? FMath::GetMappedRangeValueClamped(FVector2f(25.0f, 350.0f), FVector2f(0.0f, 1.0f), ImpactSpeed) : 0.0f;
 	if (!Mesh || ContactSquashScale <= 0.0f || (Impact <= 0.0f && Push <= 0.0f)) return;
 
-	if (bNewContact || DollMotion.Pose.ContactBone.IsNone() || (!HitBodyBone.IsNone() && HitBodyBone != DollMotion.Pose.ContactBone) ||
-		FVector::DistSquared(DollMotion.LastProjectedImpact, ImpactPoint) > FMath::Square(5.0))
+	if (bNewContact || DollMotion.Pose.ContactBone.IsNone() || (!HitBodyBone.IsNone() && HitBodyBone != DollMotion.Pose.ContactBone)
+	    || FVector::DistSquared(DollMotion.LastProjectedImpact, ImpactPoint) > FMath::Square(5.0))
 	{
 		// The capsule reports the hit, but the physics asset gives a point on the posed character.
 		FClosestPointOnPhysicsAsset Surface;
-		const bool bHasSurface = HitBodyBone.IsNone() && Mesh->GetClosestPointOnPhysicsAsset(ImpactPoint, Surface, false)
-			&& !Surface.BoneName.IsNone() && Surface.Distance >= 0.0f;
+		const bool bHasSurface = HitBodyBone.IsNone() && Mesh->GetClosestPointOnPhysicsAsset(ImpactPoint, Surface, false) && !Surface.BoneName.IsNone() && Surface.Distance >= 0.0f;
 		const FName AnchorBone = !HitBodyBone.IsNone() ? HitBodyBone : (bHasSurface ? Surface.BoneName : FName(TEXT("spine_03")));
 		const FTransform Anchor = Mesh->GetSocketTransform(AnchorBone);
-		const FVector AnchorPoint = !HitBodyBone.IsNone() ? ImpactPoint
-			: (bHasSurface ? Surface.ClosestWorldPosition : Anchor.GetLocation() - Away * 14.0);
+		const FVector AnchorPoint = !HitBodyBone.IsNone() ? ImpactPoint : (bHasSurface ? Surface.ClosestWorldPosition : Anchor.GetLocation() - Away * 14.0);
 		DollMotion.Pose.ContactAnchor = Anchor.InverseTransformPosition(AnchorPoint);
 		DollMotion.Pose.ContactBone = AnchorBone;
 		DollMotion.LastProjectedImpact = ImpactPoint;
@@ -198,8 +188,7 @@ void UStageShiftAnimInstance::UpdateDollMotion(const AStageShiftCharacter* Chara
 	FVector TargetLean = FVector::ZeroVector;
 	if (bGrounded && DollMotion.bWasGrounded)
 	{
-		const bool bNewFootPlant = (Contact.X >= 0.8 && DollMotion.PreviousFootContact.X < 0.8)
-			|| (Contact.Y >= 0.8 && DollMotion.PreviousFootContact.Y < 0.8);
+		const bool bNewFootPlant = (Contact.X >= 0.8 && DollMotion.PreviousFootContact.X < 0.8) || (Contact.Y >= 0.8 && DollMotion.PreviousFootContact.Y < 0.8);
 		if (bNewFootPlant && GroundSpeed > 20.0f)
 		{
 			DollMotion.CompressionVelocity += Character->GetStepSquash() * 60.0f * FMath::Clamp(GroundSpeed / 150.0f, 0.6f, 1.5f);

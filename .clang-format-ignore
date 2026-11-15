@@ -1,0 +1,5 @@
+Source/StageShift/Private/Components/Dialogue/DialogueTextWidget.cpp
+Source/StageShift/Private/Components/Dialogue/SDialogueText.h
+Source/StageShiftEditor/Private/Scenario/StageGraphParameters.cpp
+Source/StageShiftEditor/Private/Scenario/StageScenarioEditorToolkit.cpp
+Source/StageShiftEditor/Private/Scenario/StageScenarioEdNode.cpp

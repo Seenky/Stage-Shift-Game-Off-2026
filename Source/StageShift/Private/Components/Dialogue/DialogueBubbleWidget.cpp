@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Components/Dialogue/DialogueBubbleWidget.h"
 
@@ -31,11 +30,11 @@ void UDialogueBubbleWidget::SetDialogueViewModel(UDialogueViewModel* ViewModel)
 		SetBorderOpacity(0.0f);
 	}
 
-    if (SpeakersName)
-    {
-        SpeakersName->SetShowRevealDots(false);
-        SpeakersName->ResetPlayback();
-    }
+	if (SpeakersName)
+	{
+		SpeakersName->SetShowRevealDots(false);
+		SpeakersName->ResetPlayback();
+	}
 
 	BoundViewModel = ViewModel;
 	if (ViewModel)
@@ -48,17 +47,17 @@ void UDialogueBubbleWidget::SetDialogueViewModel(UDialogueViewModel* ViewModel)
 
 void UDialogueBubbleWidget::UpdateBubble(const FDialoguePlaybackState& State)
 {
-    if (SpeakersName)
-    {
-        FDialoguePlaybackState NameState = State;
-        NameState.Line.Text = State.Line.SpeakersName;
-        NameState.VisibleText = State.Line.SpeakersName;
-        NameState.Phase = EDialoguePlaybackPhase::Holding;
+	if (SpeakersName)
+	{
+		FDialoguePlaybackState NameState = State;
+		NameState.Line.Text = State.Line.SpeakersName;
+		NameState.VisibleText = State.Line.SpeakersName;
+		NameState.Phase = EDialoguePlaybackPhase::Holding;
 
-        SpeakersName->SetVisibility(State.Line.SpeakersName.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
+		SpeakersName->SetVisibility(State.Line.SpeakersName.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
 
-        SpeakersName->UpdatePlayback(NameState);
-    }
+		SpeakersName->UpdatePlayback(NameState);
+	}
 
 	if (DialogueText)
 	{
@@ -68,10 +67,10 @@ void UDialogueBubbleWidget::UpdateBubble(const FDialoguePlaybackState& State)
 
 void UDialogueBubbleWidget::EndBubble(FGuid PlaybackId, EDialogueEndReason Reason)
 {
-    if (SpeakersName)
-    {
-        SpeakersName->EndPlayback(PlaybackId, Reason);
-    }
+	if (SpeakersName)
+	{
+		SpeakersName->EndPlayback(PlaybackId, Reason);
+	}
 
 	if (DialogueText)
 	{

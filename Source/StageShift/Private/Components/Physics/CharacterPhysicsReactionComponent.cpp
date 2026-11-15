@@ -55,9 +55,8 @@ bool UCharacterPhysicsReactionComponent::PlayReaction(ECharacterPhysicsReaction 
 		if (IsPlayable(Entry->DefaultAnimation)) Settings = &Entry->DefaultAnimation;
 		const FVector Direction = WorldDirection.GetSafeNormal2D(UE_SMALL_NUMBER, GetOwner()->GetActorForwardVector());
 		const FVector Local = GetOwner()->GetActorQuat().UnrotateVector(Direction);
-		const ECharacterFallDirection Side = FMath::Abs(Local.X) >= FMath::Abs(Local.Y)
-			? (Local.X >= 0.0 ? ECharacterFallDirection::Forward : ECharacterFallDirection::Backward)
-			: (Local.Y >= 0.0 ? ECharacterFallDirection::Right : ECharacterFallDirection::Left);
+		const ECharacterFallDirection Side = FMath::Abs(Local.X) >= FMath::Abs(Local.Y) ? (Local.X >= 0.0 ? ECharacterFallDirection::Forward : ECharacterFallDirection::Backward)
+		                                                                                : (Local.Y >= 0.0 ? ECharacterFallDirection::Right : ECharacterFallDirection::Left);
 		if (const FPhysicalMontageSettings* Directional = Entry->DirectionalAnimations.Find(Side); Directional && IsPlayable(*Directional))
 		{
 			Settings = Directional;
@@ -88,8 +87,7 @@ FPhysicsRecoverySelection UCharacterPhysicsReactionComponent::SelectRecovery(con
 	const FTransform Body = ReadBoneTransform(*Mesh, Data->OrientationBone);
 	if (bHasRecoveryFrame)
 	{
-		const ECharacterRecoveryPose Pose = Body.TransformVectorNoScale(LocalFacingDirection).Z > 0.0
-			? ECharacterRecoveryPose::Supine : ECharacterRecoveryPose::Prone;
+		const ECharacterRecoveryPose Pose = Body.TransformVectorNoScale(LocalFacingDirection).Z > 0.0 ? ECharacterRecoveryPose::Supine : ECharacterRecoveryPose::Prone;
 		if (const TObjectPtr<UAnimMontage>* Montage = Data->RecoveryAnimations.Find(Pose)) Selection.Montage = Montage->Get();
 	}
 	if (!Data->HeadingBone.IsNone() && Mesh->DoesSocketExist(Data->HeadingBone))

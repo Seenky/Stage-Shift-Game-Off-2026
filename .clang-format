@@ -1,0 +1,54 @@
+# Project style based on UPhysicalMontageComponent. Requires clang-format 20 or newer.
+# Slate files listed in .clang-format-ignore keep Unreal widget-tree layout.
+BasedOnStyle: Microsoft
+UseTab: ForIndentation
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+IndentCaseLabels: false
+IndentPPDirectives: None
+NamespaceIndentation: All
+BreakBeforeBraces: Allman
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: false
+ColumnLimit: 180
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+SortIncludes: Never
+IncludeBlocks: Preserve
+ReflowComments: Never
+LineEnding: CRLF
+StatementMacros:
+  - GENERATED_BODY
+  - GENERATED_UCLASS_BODY
+  - GENERATED_USTRUCT_BODY
+  - GENERATED_IINTERFACE_BODY
+  - GENERATED_UINTERFACE_BODY
+  - IMPLEMENT_MODULE
+  - IMPLEMENT_PRIMARY_GAME_MODULE
+StatementAttributeLikeMacros:
+  - UPROPERTY
+  - UFUNCTION
+  - UCLASS
+  - USTRUCT
+  - UENUM
+  - UINTERFACE
+  - UMETA
+  - UPARAM
+FixNamespaceComments: false
+AlignAfterOpenBracket: DontAlign
+AlignOperands: DontAlign
+AlignEscapedNewlines: DontAlign
+BreakBeforeTernaryOperators: true
+SeparateDefinitionBlocks: Leave
+AlignTrailingComments:
+  Kind: Never
+LambdaBodyIndentation: OuterScope
+BreakStringLiterals: false
+BreakBeforeBinaryOperators: NonAssignment

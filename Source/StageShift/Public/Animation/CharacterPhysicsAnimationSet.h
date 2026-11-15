@@ -29,6 +29,7 @@ enum class ECharacterRecoveryPose : uint8
 };
 
 USTRUCT(BlueprintType)
+
 struct STAGESHIFT_API FCharacterPhysicsReactionAnimation
 {
 	GENERATED_BODY()
@@ -41,6 +42,7 @@ struct STAGESHIFT_API FCharacterPhysicsReactionAnimation
 
 /** Character-specific reaction choices; playback and physics remain executor responsibilities. */
 UCLASS(BlueprintType)
+
 class STAGESHIFT_API UCharacterPhysicsAnimationSet : public UDataAsset
 {
 	GENERATED_BODY()

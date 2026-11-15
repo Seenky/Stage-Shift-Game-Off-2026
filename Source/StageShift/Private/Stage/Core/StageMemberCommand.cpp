@@ -3,27 +3,28 @@
 
 uint8 UStageMemberCommand::GetResourceMask() const
 {
-    uint8 Result = static_cast<uint8>(DeclaredResources & 7);
-    for (const UStageMemberCommand* Child : GetChildCommands()) if (Child) Result |= Child->GetResourceMask();
-    return Result;
+	uint8 Result = static_cast<uint8>(DeclaredResources & 7);
+	for (const UStageMemberCommand* Child : GetChildCommands())
+		if (Child) Result |= Child->GetResourceMask();
+	return Result;
 }
 
 void UStageMemberCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
-    if (ScoreValue < 0) Errors.Add(Path + TEXT(" / ScoreValue must be nonnegative"));
-    if (DeclaredResources & ~7) Errors.Add(Path + TEXT(" / DeclaredResources contains unknown resource bits"));
+	if (ScoreValue < 0) Errors.Add(Path + TEXT(" / ScoreValue must be nonnegative"));
+	if (DeclaredResources & ~7) Errors.Add(Path + TEXT(" / DeclaredResources contains unknown resource bits"));
 }
 
 TArray<FName> UStageMemberCommand::GetRoleOptions() const
 {
-    const auto* Data = GetTypedOuter<UStageDataAsset>();
-    return Data ? Data->GetRoleOptions() : TArray<FName>{};
+	const auto* Data = GetTypedOuter<UStageDataAsset>();
+	return Data ? Data->GetRoleOptions() : TArray<FName>{};
 }
 
 TArray<FName> UStageMemberCommand::GetTargetOptions() const
 {
-    const auto* Data = GetTypedOuter<UStageDataAsset>();
-    return Data ? Data->GetTargetOptions() : TArray<FName>{};
+	const auto* Data = GetTypedOuter<UStageDataAsset>();
+	return Data ? Data->GetTargetOptions() : TArray<FName>{};
 }
 
 #include "Components/Stage/StageMemberComponent.h"
@@ -66,7 +67,7 @@ void UStageMemberCommand::Start(const FStageExecutionContext& InContext)
 void UStageMemberCommand::RequestStop(EStageActionStopReason Reason)
 {
 	if (CommandState == EStageExecutionState::Finished || CommandState == EStageExecutionState::Stopping) return;
-	
+
 	CommandState = EStageExecutionState::Stopping;
 	const TWeakObjectPtr<UStageMemberComponent> Member = Context.MemberComponent;
 	if (Member.IsValid()) Member->BeginDispatch();
@@ -95,7 +96,6 @@ bool UStageMemberCommand::IsResultAchieved_Implementation(const FStageExecutionC
 {
 	return bHasSuccessfulMainAction;
 }
-
 
 UStageAction* UStageMemberCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
@@ -144,9 +144,9 @@ void UStageMemberCommand::OnMainActionResult_Implementation(UStageAction* Action
 
 bool UStageMemberCommand::ShouldUseShortVersion(float ShortDuration) const
 {
-	if (CatchUpPolicy != EStageCatchUpPolicy::UseShortIfNeed || bUseShortVersion ||
-		CommandState != EStageExecutionState::Running || CurrentStartTime >= 0.0f ||
-		!FMath::IsFinite(ShortDuration) || ShortDuration < 0.0f) return false;
+	if (CatchUpPolicy != EStageCatchUpPolicy::UseShortIfNeed || bUseShortVersion || CommandState != EStageExecutionState::Running || CurrentStartTime >= 0.0f
+	    || !FMath::IsFinite(ShortDuration) || ShortDuration < 0.0f)
+		return false;
 
 	const AStageManager* Manager = Context.Manager.Get();
 	if (!Manager || Manager->GetState() != EStageState::Running) return false;
@@ -155,8 +155,7 @@ bool UStageMemberCommand::ShouldUseShortVersion(float ShortDuration) const
 	if (!Root || Root->CommandType != EStageCommandType::Scenario) return false;
 
 	const float RemainingTime = GetRemainingTime();
-	return FMath::IsFinite(RemainingTime) && ShortDuration < RemainingTime &&
-		Manager->GetCommandLateness(this) > 0.0f;
+	return FMath::IsFinite(RemainingTime) && ShortDuration < RemainingTime && Manager->GetCommandLateness(this) > 0.0f;
 }
 
 void UStageMemberCommand::UseShortVersion()
@@ -174,11 +173,7 @@ FStageEvent UStageMemberCommand::BuildSuccessEvent_Implementation() const
 	return Event;
 }
 
-void UStageMemberCommand::ResetRuntime(
-	const FStageExecutionContext& InContext, 
-	UStageMemberCommand* InRoot,
-	float InPlannedStartTime, 
-	float InPlannedEndTime)
+void UStageMemberCommand::ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot, float InPlannedStartTime, float InPlannedEndTime)
 {
 	Context = InContext;
 	RootCommand = InRoot ? InRoot : this;
@@ -200,14 +195,18 @@ void UStageMemberCommand::OnPreStart_Implementation(const FStageExecutionContext
 
 void UStageMemberCommand::OnStart_Implementation()
 {
-	if (UStageMemberComponent* Member = Context.MemberComponent.Get()) Member->BeginExecution(this);
-	else Finish(EStageCommandResult::Failed);
+	if (UStageMemberComponent* Member = Context.MemberComponent.Get())
+		Member->BeginExecution(this);
+	else
+		Finish(EStageCommandResult::Failed);
 }
 
 void UStageMemberCommand::OnStop_Implementation(EStageActionStopReason Reason)
 {
-	if (UStageMemberComponent* Member = Context.MemberComponent.Get()) Member->StopExecution(this, Reason);
-	else Finish(EStageCommandResult::Cancelled);
+	if (UStageMemberComponent* Member = Context.MemberComponent.Get())
+		Member->StopExecution(this, Reason);
+	else
+		Finish(EStageCommandResult::Cancelled);
 }
 
 void UStageMemberCommand::Finish(EStageCommandResult InResult)
@@ -219,7 +218,7 @@ void UStageMemberCommand::Finish(EStageCommandResult InResult)
 	SaveAccumulatedActiveTime();
 	CommandResult = InResult;
 	CommandState = EStageExecutionState::Finished;
-	
+
 	const TWeakObjectPtr<UStageMemberComponent> Member = Context.MemberComponent;
 	if (Member.IsValid())
 	{

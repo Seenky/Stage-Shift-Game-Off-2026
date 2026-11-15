@@ -21,29 +21,27 @@ float UStageShiftCharacterMovementComponent::GetMaxSpeed() const
 
 float UStageShiftCharacterMovementComponent::GetMaxAcceleration() const
 {
-	const float Scale = Manipulation.IsValid() && Manipulation->IsDragging()
-		? FMath::Clamp(Manipulation->GetDragMovementScale(), 0.15f, 1.0f) : 1.0f;
+	const float Scale = Manipulation.IsValid() && Manipulation->IsDragging() ? FMath::Clamp(Manipulation->GetDragMovementScale(), 0.15f, 1.0f) : 1.0f;
 	return Super::GetMaxAcceleration() * Scale;
 }
 
-bool UStageShiftCharacterMovementComponent::MoveUpdatedComponentImpl(const FVector& RequestedDelta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit, ETeleportType Teleport)
+bool UStageShiftCharacterMovementComponent::MoveUpdatedComponentImpl(
+    const FVector& RequestedDelta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit, ETeleportType Teleport)
 {
-	const FVector Delta = bSweep && Teleport == ETeleportType::None && Manipulation.IsValid()
-		? Manipulation->ConstrainDragMovement(RequestedDelta) : RequestedDelta;
+	const FVector Delta = bSweep && Teleport == ETeleportType::None && Manipulation.IsValid() ? Manipulation->ConstrainDragMovement(RequestedDelta) : RequestedDelta;
 	if (const auto* Character = Cast<AStageShiftCharacter>(CharacterOwner); Character && Character->IsDollPhysicsActive())
 	{
 		if (Teleport != ETeleportType::None) Character->GetDollPhysics()->ResetAfterTeleport();
 		const FVector LimitedDelta = bSweep && Teleport == ETeleportType::None ? Character->GetDollPhysics()->ConstrainMovement(Delta) : Delta;
-		
+
 		return Super::MoveUpdatedComponentImpl(LimitedDelta, NewRotation, bSweep, OutHit, Teleport);
 	}
 	FHitResult BodyHit;
-	if (!bSweep || Teleport != ETeleportType::None || !IsMovingOnGround() || Delta.SizeSquared2D() < UE_KINDA_SMALL_NUMBER ||
-		!SweepCharacterBody(Delta, BodyHit))
+	if (!bSweep || Teleport != ETeleportType::None || !IsMovingOnGround() || Delta.SizeSquared2D() < UE_KINDA_SMALL_NUMBER || !SweepCharacterBody(Delta, BodyHit))
 	{
 		return Super::MoveUpdatedComponentImpl(Delta, NewRotation, bSweep, OutHit, Teleport);
 	}
-	
+
 	const double Limit = FMath::Max(BodyHit.Time - 0.35 / Delta.Size(), 0.0);
 	const FVector Start = UpdatedComponent->GetComponentLocation();
 	FHitResult CapsuleHit;
@@ -93,8 +91,7 @@ bool UStageShiftCharacterMovementComponent::SweepCharacterBody(const FVector& De
 		for (const FHitResult& Hit : Hits)
 		{
 			const UPrimitiveComponent* Obstacle = Hit.GetComponent();
-			if (!Obstacle || (Obstacle->GetCollisionResponseToChannel(ECC_Pawn) != ECR_Block &&
-				!Obstacle->IsSimulatingPhysics(Hit.BoneName))) continue;
+			if (!Obstacle || (Obstacle->GetCollisionResponseToChannel(ECC_Pawn) != ECR_Block && !Obstacle->IsSimulatingPhysics(Hit.BoneName))) continue;
 
 			const FVector Normal = Hit.ImpactNormal;
 			if (FMath::Abs(Normal.Z) >= 0.65 || FVector::DotProduct(MoveDirection, Normal) >= -0.1) continue;
@@ -118,20 +115,18 @@ bool UStageShiftCharacterMovementComponent::SweepCharacterBody(const FVector& De
 		const FVector Scale = Bone.GetScale3D().GetAbs();
 		for (const FKSphereElem& Sphere : Setup->AggGeom.SphereElems)
 		{
-			SweepShape(Bone.TransformPosition(Sphere.Center), FQuat::Identity,
-				FCollisionShape::MakeSphere(Sphere.Radius * Scale.GetMin()), Setup->BoneName);
+			SweepShape(Bone.TransformPosition(Sphere.Center), FQuat::Identity, FCollisionShape::MakeSphere(Sphere.Radius * Scale.GetMin()), Setup->BoneName);
 		}
 		for (const FKSphylElem& Capsule : Setup->AggGeom.SphylElems)
 		{
 			const double Radius = Capsule.Radius * FMath::Min(Scale.X, Scale.Y);
 			SweepShape(Bone.TransformPosition(Capsule.Center), Bone.TransformRotation(Capsule.Rotation.Quaternion()),
-				FCollisionShape::MakeCapsule(Radius, Capsule.Length * Scale.Z * 0.5 + Radius), Setup->BoneName);
+			    FCollisionShape::MakeCapsule(Radius, Capsule.Length * Scale.Z * 0.5 + Radius), Setup->BoneName);
 		}
 		for (const FKBoxElem& Box : Setup->AggGeom.BoxElems)
 		{
 			const FVector Extent = FVector(Box.X, Box.Y, Box.Z) * Scale * 0.5;
-			SweepShape(Bone.TransformPosition(Box.Center), Bone.TransformRotation(Box.Rotation.Quaternion()),
-				FCollisionShape::MakeBox(Extent), Setup->BoneName);
+			SweepShape(Bone.TransformPosition(Box.Center), Bone.TransformRotation(Box.Rotation.Quaternion()), FCollisionShape::MakeBox(Extent), Setup->BoneName);
 		}
 	}
 	return OutHit.bBlockingHit;

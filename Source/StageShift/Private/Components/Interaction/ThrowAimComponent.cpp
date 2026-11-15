@@ -50,8 +50,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	ACharacter* Pawn = Character.Get();
 	APlayerController* PC = Pawn ? Cast<APlayerController>(Pawn->GetController()) : nullptr;
 	const UPhysicalMontageComponent* Physics = Pawn ? Pawn->FindComponentByClass<UPhysicalMontageComponent>() : nullptr;
-	if (!Pawn || !PC || !PC->IsLocalController() || !Interaction.IsValid() || !Manipulation.IsValid() ||
-		(Physics && Physics->IsPhysicsMontageActive()))
+	if (!Pawn || !PC || !PC->IsLocalController() || !Interaction.IsValid() || !Manipulation.IsValid() || (Physics && Physics->IsPhysicsMontageActive()))
 	{
 		StopAiming();
 		return;
@@ -162,8 +161,10 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 			MouseDelta = FVector2D(Controller.PlayerInput->GetRawKeyValue(EKeys::MouseX), -Controller.PlayerInput->GetRawKeyValue(EKeys::MouseY));
 		}
 		const bool bMouseMoved = bAbsoluteMouse ? bHasMouse && FVector2D::DistSquared(Mouse, LastMousePosition) > 1.0 : MouseDelta.SizeSquared() > 0.04;
-		if (bMouseMoved) bGamepad = false;
-		else if (bStickMoved) bGamepad = true;
+		if (bMouseMoved)
+			bGamepad = false;
+		else if (bStickMoved)
+			bGamepad = true;
 		if (bGamepad)
 		{
 			const double Magnitude = StickInput.Size();
@@ -174,8 +175,10 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 				ScreenPosition += Direction * (Strength * StickCursorSpeed * Bounds.Height() / 1080.0 * DeltaTime);
 			}
 		}
-		else if (bAbsoluteMouse && bHasMouse) ScreenPosition = Mouse;
-		else ScreenPosition += MouseDelta * MouseSensitivity;
+		else if (bAbsoluteMouse && bHasMouse)
+			ScreenPosition = Mouse;
+		else
+			ScreenPosition += MouseDelta * MouseSensitivity;
 		LastCursorUpdateFrame = GFrameCounter;
 		bStickMoved = false;
 	}
@@ -192,7 +195,8 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		Controller.SetMouseLocation(Pixel.X, Pixel.Y);
 		LastMousePosition = FVector2D(Pixel);
 	}
-	else if (bHasMouse) LastMousePosition = Mouse;
+	else if (bHasMouse)
+		LastMousePosition = Mouse;
 
 	FVector RayStart, RayDirection;
 	bHasAimTarget = Controller.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection);

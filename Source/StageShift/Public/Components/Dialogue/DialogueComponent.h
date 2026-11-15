@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -10,119 +10,113 @@
 class UDialogueBubbleWidget;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UDialogueComponent : public UActorComponent
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    UDialogueComponent();
-    bool PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop = false);
-    bool CaptureResumeData(FGuid PlaybackId, FDialogueResumeData& OutData) const;
-    bool ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId);
+	UDialogueComponent();
+	bool PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop = false);
+	bool CaptureResumeData(FGuid PlaybackId, FDialogueResumeData& OutData) const;
+	bool ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId);
 
-    void SetWidgetComponentProperty(FName ComponentProperty);
+	void SetWidgetComponentProperty(FName ComponentProperty);
 
-    virtual void BeginPlay() override;
+	virtual void BeginPlay() override;
 
-    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    bool PlayLine(const FDialogueLine& Line, bool bForceStop = false);
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool PlayLine(const FDialogueLine& Line, bool bForceStop = false);
 
-    UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    bool ResumeLine();
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool ResumeLine();
 
-    UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    bool RevealAllWords();
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool RevealAllWords();
 
-    UFUNCTION(BlueprintCallable, Category = "Dialogue")
-    bool StopPlayback();
+	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	bool StopPlayback();
 
-    UFUNCTION(BlueprintPure, Category = "Dialogue")
-    const FDialoguePlaybackState& GetPlaybackState() const
-    {
-        return PlaybackState;
-    }
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
 
-    UFUNCTION(BlueprintPure, Category = "Dialogue")
-    bool IsPlaying() const
-    {
-        return PlaybackState.Phase != EDialoguePlaybackPhase::Idle;
-    }
+	const FDialoguePlaybackState& GetPlaybackState() const { return PlaybackState; }
 
-    UPROPERTY(BlueprintAssignable)
-    FOnDialoguePlaybackStateChanged OnDialoguePlaybackStateChanged;
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
 
-    UPROPERTY(BlueprintAssignable)
-    FOnDialogueLineEnded OnDialogueLineEnded;
+	bool IsPlaying() const { return PlaybackState.Phase != EDialoguePlaybackPhase::Idle; }
 
-    UPROPERTY(BlueprintAssignable, Category = "Dialogue")
-    FOnDialogueWordRevealed OnWordRevealed;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialoguePlaybackStateChanged OnDialoguePlaybackStateChanged;
 
-    UPROPERTY(BlueprintAssignable, Category = "Dialogue")
-    FOnDialogueRevealCompleted OnRevealCompleted;
+	UPROPERTY(BlueprintAssignable)
+	FOnDialogueLineEnded OnDialogueLineEnded;
 
-    UPROPERTY(BlueprintAssignable, Category = "Dialogue")
-    FOnDialogueCueTriggered OnDialogueCueTriggered;
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+	FOnDialogueWordRevealed OnWordRevealed;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+	FOnDialogueRevealCompleted OnRevealCompleted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
+	FOnDialogueCueTriggered OnDialogueCueTriggered;
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (UseComponentPicker, AllowedClasses = "/Script/UMG.WidgetComponent"))
-    FComponentReference DialogueWidgetReference;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (UseComponentPicker, AllowedClasses = "/Script/UMG.WidgetComponent"))
+	FComponentReference DialogueWidgetReference;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Settings")
-    TObjectPtr<UDialogueBubbleWidget> DialogueWidgetTemplate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Settings")
+	TObjectPtr<UDialogueBubbleWidget> DialogueWidgetTemplate;
 
 private:
-    struct FRevealedLineData
-    {
-        int32 RevealedLetterCount = 0;
-        TArray<int32> LetterEndOffsets = {};
-        TArray<int32> WordStartOffsets = {};
-        int32 RevealedWordCount = 0;
+	struct FRevealedLineData
+	{
+		int32 RevealedLetterCount = 0;
+		TArray<int32> LetterEndOffsets = {};
+		TArray<int32> WordStartOffsets = {};
+		int32 RevealedWordCount = 0;
 
-        void Reset()
-        {
-            RevealedLetterCount = 0;
-            LetterEndOffsets.Reset();
-            WordStartOffsets.Reset();
-            RevealedWordCount = 0;
-        }
+		void Reset()
+		{
+			RevealedLetterCount = 0;
+			LetterEndOffsets.Reset();
+			WordStartOffsets.Reset();
+			RevealedWordCount = 0;
+		}
 
-        bool IsValid() const
-        {
-            return LetterEndOffsets.Num() > 0 && WordStartOffsets.Num() > 0;
-        }
-    };
+		bool IsValid() const { return LetterEndOffsets.Num() > 0 && WordStartOffsets.Num() > 0; }
+	};
 
-    void RevealNextLetter();
+	void RevealNextLetter();
 
-    bool NotifyWordsUpTo(int32 EndOffset);
+	bool NotifyWordsUpTo(int32 EndOffset);
 
-    void BeginHold();
+	void BeginHold();
 
-    void FinishPlayback(EDialogueEndReason EndReason);
+	void FinishPlayback(EDialogueEndReason EndReason);
 
-    UPROPERTY(Transient)
-    FDialoguePlaybackState PlaybackState = {};
+	UPROPERTY(Transient)
+	FDialoguePlaybackState PlaybackState = {};
 
-    UPROPERTY(Transient)
-    FDialoguePlaybackState LastPlaybackState = {};
+	UPROPERTY(Transient)
+	FDialoguePlaybackState LastPlaybackState = {};
 
-    UPROPERTY(Transient)
-    class UDialogueViewModel* DialogueViewModel = nullptr;
+	UPROPERTY(Transient)
+	class UDialogueViewModel* DialogueViewModel = nullptr;
 
-    FString ResolvedText = {};
+	FString ResolvedText = {};
 
-    FRevealedLineData RevealedLineData;
-    FRevealedLineData LastRevealedLineData;
-    float LastRevealDelay = 0.0f;
+	FRevealedLineData RevealedLineData;
+	FRevealedLineData LastRevealedLineData;
+	float LastRevealDelay = 0.0f;
 
-    bool bDispatchingWord = false;
-    FGuid DispatchingPlaybackId;
-    bool bRevealAllRequested = false;
-    bool bEndingPlay = false;
-    TArray<int32> TriggeredCueIndices;
+	bool bDispatchingWord = false;
+	FGuid DispatchingPlaybackId;
+	bool bRevealAllRequested = false;
+	bool bEndingPlay = false;
+	TArray<int32> TriggeredCueIndices;
 
-    FTimerHandle RevealTimerHandle;
-    FTimerHandle HoldTimerHandle;
+	FTimerHandle RevealTimerHandle;
+	FTimerHandle HoldTimerHandle;
 };

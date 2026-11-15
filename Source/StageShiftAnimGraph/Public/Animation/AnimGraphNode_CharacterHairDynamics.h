@@ -5,6 +5,7 @@
 #include "AnimGraphNode_CharacterHairDynamics.generated.h"
 
 UCLASS()
+
 class STAGESHIFTANIMGRAPH_API UAnimGraphNode_CharacterHairDynamics : public UAnimGraphNode_Base
 {
 	GENERATED_BODY()

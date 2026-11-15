@@ -5,6 +5,7 @@
 #include "StageShiftFootPlacement.generated.h"
 
 USTRUCT()
+
 struct FStageShiftFootPlacementState
 {
 	GENERATED_BODY()
@@ -35,6 +36,7 @@ struct FStageShiftFootPlacementState
 };
 
 USTRUCT(meta = (DisplayName = "Stage Shift Foot Placement", Category = "Stage Shift"))
+
 struct FRigUnit_StageShiftFootPlacement : public FRigUnitMutable
 {
 	GENERATED_BODY()

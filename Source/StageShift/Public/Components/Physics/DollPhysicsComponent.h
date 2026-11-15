@@ -6,6 +6,7 @@
 class AStageShiftCharacter;
 
 USTRUCT(BlueprintType)
+
 struct FStageShiftDollDrive
 {
 	GENERATED_BODY()
@@ -45,6 +46,7 @@ struct FStageShiftDollContact
 
 /** Finite-force animation tracking. Every contact body, including the pelvis, remains dynamic. */
 UCLASS(ClassGroup = Physics, meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UDollPhysicsComponent : public UPhysicsControlComponent
 {
 	GENERATED_BODY()
@@ -57,12 +59,14 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	bool IsDriving() const { return bDriving; }
+
 	void SuspendForRagdoll();
 
 	UFUNCTION(BlueprintCallable, Category = "Doll Physics")
 	void ResetAfterTeleport();
 	FVector ConstrainMovement(const FVector& Delta) const;
 	void SetDragging(bool bIsDragging);
+
 	TConstArrayView<FStageShiftDollContact> GetContacts() const { return Contacts; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Doll Physics")

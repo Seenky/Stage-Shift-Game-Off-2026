@@ -27,11 +27,14 @@ void FAnimNode_CharacterHairDynamics::Initialize_AnyThread(const FAnimationIniti
 				Bones.Insert(Bone, 0);
 				if (Bone == Start) break;
 			}
-			if (Start <= 0 || Bones.IsEmpty() || Bones[0] != Start ||
-				Bones.ContainsByPredicate([&](int32 Bone) { return SimulatedBones.Contains(Bone); }))
+			if (Start <= 0 || Bones.IsEmpty() || Bones[0] != Start
+			    || Bones.ContainsByPredicate([&](int32 Bone)
 			{
-				UE_LOG(LogCharacterHairDynamics, Warning, TEXT("Skipping invalid or overlapping hair strand %s -> %s on %s."),
-					*Strand.BoundBone.ToString(), *Strand.ChainEnd.ToString(), *Skeleton.GetBoneName(0).ToString());
+				return SimulatedBones.Contains(Bone);
+			}))
+			{
+				UE_LOG(LogCharacterHairDynamics, Warning, TEXT("Skipping invalid or overlapping hair strand %s -> %s on %s."), *Strand.BoundBone.ToString(),
+				    *Strand.ChainEnd.ToString(), *Skeleton.GetBoneName(0).ToString());
 				continue;
 			}
 
@@ -122,10 +125,12 @@ void FAnimNode_CharacterHairDynamics::GatherDebugData(FNodeDebugData& DebugData)
 
 void FAnimNode_CharacterHairDynamics::PreUpdate(const UAnimInstance* Instance)
 {
-	for (FAnimNode_AnimDynamics& Node : Dynamics) Node.PreUpdate(Instance);
+	for (FAnimNode_AnimDynamics& Node : Dynamics)
+		Node.PreUpdate(Instance);
 }
 
 void FAnimNode_CharacterHairDynamics::ResetDynamics(ETeleportType Type)
 {
-	for (FAnimNode_AnimDynamics& Node : Dynamics) Node.ResetDynamics(Type);
+	for (FAnimNode_AnimDynamics& Node : Dynamics)
+		Node.ResetDynamics(Type);
 }

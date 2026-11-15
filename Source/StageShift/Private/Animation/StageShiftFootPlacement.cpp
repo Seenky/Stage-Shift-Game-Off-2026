@@ -43,27 +43,22 @@ namespace
 		bool bMoving;
 	};
 
-	float SolveFoot(const FGroundQuery& Query, const FRigElementKey& Foot, const FRigElementKey& Ball,
-		const FRigElementKey& ContactCurve, FStageShiftFootPlacementState& State, FTransform& Target)
+	float SolveFoot(const FGroundQuery& Query, const FRigElementKey& Foot, const FRigElementKey& Ball, const FRigElementKey& ContactCurve, FStageShiftFootPlacementState& State,
+	    FTransform& Target)
 	{
 		Target = Query.Hierarchy.GetGlobalTransform(Foot);
 		const FVector Ankle = Query.RigToWorld.TransformPosition(Target.GetLocation());
 		const double ReferenceHeight = Query.Hierarchy.GetGlobalTransform(Foot, true).GetLocation().Z - Query.ReferenceRootHeight;
 		const double Lift = (Ankle.Z - Query.RootHeight) / Query.Scale - ReferenceHeight;
 		const bool bHasContact = Query.Hierarchy.IsCurveValueSet(ContactCurve);
-		const float Contact = bHasContact
-			? FMath::Clamp(Query.Hierarchy.GetCurveValue(ContactCurve), 0.0f, 1.0f)
-			: static_cast<float>(FMath::Clamp((12.0 - Lift) / 10.0, 0.0, 1.0));
+		const float Contact =
+		    bHasContact ? FMath::Clamp(Query.Hierarchy.GetCurveValue(ContactCurve), 0.0f, 1.0f) : static_cast<float>(FMath::Clamp((12.0 - Lift) / 10.0, 0.0, 1.0));
 
-		const FVector BallLocation = Query.Hierarchy.Contains(Ball)
-			? Query.RigToWorld.TransformPosition(Query.Hierarchy.GetGlobalTransform(Ball).GetLocation())
-			: Ankle;
+		const FVector BallLocation = Query.Hierarchy.Contains(Ball) ? Query.RigToWorld.TransformPosition(Query.Hierarchy.GetGlobalTransform(Ball).GetLocation()) : Ankle;
 		const FVector Sample = Ankle + State.PlantOffset;
 		FHitResult Hit;
-		const bool bHit = Query.World.SweepSingleByChannel(Hit,
-			Sample + FVector::UpVector * (28.0 * Query.Scale),
-			Sample - FVector::UpVector * (62.0 * Query.Scale),
-			FQuat::Identity, Query.Channel, FCollisionShape::MakeSphere(2.5 * Query.Scale), Query.Params);
+		const bool bHit = Query.World.SweepSingleByChannel(Hit, Sample + FVector::UpVector * (28.0 * Query.Scale), Sample - FVector::UpVector * (62.0 * Query.Scale),
+		    FQuat::Identity, Query.Channel, FCollisionShape::MakeSphere(2.5 * Query.Scale), Query.Params);
 		const bool bWalkable = bHit && !Hit.bStartPenetrating && Hit.ImpactNormal.Z >= Query.WalkableNormalZ;
 		// Idle curves keep both contacts at one. Release the last gait's world-space
 		// anchors on stopping so they cannot hold the idle pose in the previous stride.
@@ -84,16 +79,12 @@ namespace
 		FVector PinDelta = State.PlantLocation - BallLocation;
 		PinDelta.Z = 0.0;
 		const FVector DesiredPlantOffset = PinDelta.GetClampedToMaxSize(MaxPinDistance * Query.Scale) * State.PinAlpha;
-		State.PlantOffset = bStrongContact ? DesiredPlantOffset
-			: FMath::VInterpConstantTo(State.PlantOffset, DesiredPlantOffset, Query.DeltaTime, PinReleaseSpeed * Query.Scale);
+		State.PlantOffset = bStrongContact ? DesiredPlantOffset : FMath::VInterpConstantTo(State.PlantOffset, DesiredPlantOffset, Query.DeltaTime, PinReleaseSpeed * Query.Scale);
 
-		const double Height = bWalkable
-			? FMath::Clamp(Hit.ImpactPoint.Z - Query.RootHeight, -22.0 * Query.Scale, 28.0 * Query.Scale)
-			: 0.0;
+		const double Height = bWalkable ? FMath::Clamp(Hit.ImpactPoint.Z - Query.RootHeight, -22.0 * Query.Scale, 28.0 * Query.Scale) : 0.0;
 		State.Height -= Query.RootHeightDelta * State.Weight;
 		FMath::CriticallyDampedSmoothing(State.Height, State.HeightVelocity, Height, 0.0, Query.DeltaTime, OffsetSmoothingTime);
-		State.Normal = FMath::VInterpTo(State.Normal, bWalkable ? Hit.ImpactNormal : FVector::UpVector,
-			Query.DeltaTime, ContactResponse).GetSafeNormal();
+		State.Normal = FMath::VInterpTo(State.Normal, bWalkable ? Hit.ImpactNormal : FVector::UpVector, Query.DeltaTime, ContactResponse).GetSafeNormal();
 		State.Weight = FMath::FInterpTo(State.Weight, bWalkable ? Contact : 0.0f, Query.DeltaTime, ContactResponse);
 
 		const FVector WorldTarget = Ankle + State.PlantOffset + FVector::UpVector * State.Height;
@@ -108,8 +99,7 @@ namespace
 		return FMath::Max(State.Weight, PinWeight);
 	}
 
-	void ClampLegTarget(const URigHierarchy& Hierarchy, const FRigElementKey& Thigh, const FRigElementKey& Calf,
-		const FRigElementKey& Foot, float PelvisOffset, FTransform& Target)
+	void ClampLegTarget(const URigHierarchy& Hierarchy, const FRigElementKey& Thigh, const FRigElementKey& Calf, const FRigElementKey& Foot, float PelvisOffset, FTransform& Target)
 	{
 		if (!Hierarchy.Contains(Thigh) || !Hierarchy.Contains(Calf))
 		{
@@ -134,9 +124,8 @@ FRigUnit_StageShiftFootPlacement_Execute()
 	const ACharacter* Character = Cast<ACharacter>(Owner);
 	const FTransform& RigToWorld = ExecuteContext.GetToWorldSpaceTransform();
 	const double Scale = RigToWorld.TransformVector(FVector::UpVector).Size();
-	if (!World || !Hierarchy || !Hierarchy->Contains(RootBone) ||
-		!Hierarchy->Contains(LeftFoot) || !Hierarchy->Contains(RightFoot) || Scale <= UE_SMALL_NUMBER ||
-		(Character && !Character->GetCharacterMovement()->IsMovingOnGround()))
+	if (!World || !Hierarchy || !Hierarchy->Contains(RootBone) || !Hierarchy->Contains(LeftFoot) || !Hierarchy->Contains(RightFoot) || Scale <= UE_SMALL_NUMBER
+	    || (Character && !Character->GetCharacterMovement()->IsMovingOnGround()))
 	{
 		LeftState = {};
 		RightState = {};
@@ -162,9 +151,8 @@ FRigUnit_StageShiftFootPlacement_Execute()
 	const FCollisionQueryParams Params(SCENE_QUERY_STAT(StageShiftFootPlacement), false, Owner);
 	const float DeltaTime = FMath::Clamp(ExecuteContext.GetDeltaTime(), 0.0f, 0.1f);
 	const float WalkableNormalZ = FMath::Cos(FMath::DegreesToRadians(WalkableFloorAngle));
-	const FGroundQuery Query{*World, *Hierarchy, RigToWorld, Params, TraceChannel, Root.Z,
-		Hierarchy->GetGlobalTransform(RootBone, true).GetLocation().Z, Scale, RootDelta, WalkableNormalZ, DeltaTime,
-		Owner && Owner->GetVelocity().SizeSquared2D() >= 1.0};
+	const FGroundQuery Query{*World, *Hierarchy, RigToWorld, Params, TraceChannel, Root.Z, Hierarchy->GetGlobalTransform(RootBone, true).GetLocation().Z, Scale, RootDelta,
+	    WalkableNormalZ, DeltaTime, Owner && Owner->GetVelocity().SizeSquared2D() >= 1.0};
 
 	LeftWeight = SolveFoot(Query, LeftFoot, LeftBall, LeftContact, LeftState, LeftTarget);
 	RightWeight = SolveFoot(Query, RightFoot, RightBall, RightContact, RightState, RightTarget);

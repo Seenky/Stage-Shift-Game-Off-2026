@@ -33,8 +33,8 @@ namespace
 	FPaintGeometry GlyphPaintGeometry(const FGeometry& Geometry)
 	{
 		// The glyphs are shaped at unit scale. The render transform applies the widget's DPI scale.
-		return FPaintGeometry(FSlateLayoutTransform(Geometry.GetAccumulatedLayoutTransform().GetTranslation()),
-			Geometry.GetAccumulatedRenderTransform(), Geometry.GetLocalSize(), true);
+		return FPaintGeometry(
+		    FSlateLayoutTransform(Geometry.GetAccumulatedLayoutTransform().GetTranslation()), Geometry.GetAccumulatedRenderTransform(), Geometry.GetLocalSize(), true);
 	}
 }
 
@@ -59,17 +59,17 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 {
 	const FString Source = NormalizeLineEndings(Text);
 	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(Font));
-	
+
 	TextLayout->SetJustification(Justification);
 	const float RevealSpace = bShowRevealDots ? DotSpace : 0.0f;
 	TextLayout->SetWrappingWidth(WrapWidth - RevealSpace);
-	
+
 	FPlainTextLayoutMarshaller::Create()->SetText(Source, *TextLayout);
-	
+
 	TextLayout->UpdateIfNeeded();
-	
+
 	Line.VisualJustification = TextLayout->GetVisualJustification();
-	
+
 	TArray<FTextRange> SourceLineRanges;
 	FTextRange::CalculateLineRangesFromString(Source, SourceLineRanges);
 
@@ -80,11 +80,10 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 		for (const TSharedRef<ILayoutBlock>& Block : View.Blocks)
 		{
 			const FLayoutBlockTextContext Context = Block->GetTextContext();
-			
+
 			const FShapedGlyphSequenceRef Shaped = ShapedTextCacheUtil::GetShapedTextSubSequence(
-				Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, Font),
-				Block->GetTextRange(), *ModelText, Context.TextDirection);
-			
+			    Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, Font), Block->GetTextRange(), *ModelText, Context.TextDirection);
+
 			const TArray<FShapedGlyphEntry>& Entries = Shaped->GetGlyphsToRender();
 			// Slate blocks already include their line's offset and justification.
 			FVector2f Position(Block->GetLocationOffset());
@@ -103,8 +102,7 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 					Advance += FVector2f(Entry.XAdvance, Entry.YAdvance);
 					bVisible |= Entry.bIsVisible;
 					Cluster.Add(Entry);
-				}
-				while (Entries.IsValidIndex(Index) && Entries[Index].SourceIndex == Start);
+				} while (Entries.IsValidIndex(Index) && Entries[Index].SourceIndex == Start);
 
 				if (bVisible)
 				{
@@ -114,15 +112,17 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 					Glyph.Width = FMath::Max(1.0f, Advance.X);
 					Glyph.TextEnd = ModelStart + Start + Count;
 					Glyph.bRightToLeft = First.TextDirection == TextBiDi::ETextDirection::RightToLeft;
-					Glyph.Shape = MakeShared<FShapedGlyphSequence>(MoveTemp(Cluster), Shaped->GetTextBaseline(),
-						Shaped->GetMaxTextHeight(), Shaped->GetFontMaterial(), Shaped->IsMaterialStencil(),
-						Shaped->GetFontOutlineSettings(), FShapedGlyphSequence::FSourceTextRange(Start, Count));
+					Glyph.Shape = MakeShared<FShapedGlyphSequence>(MoveTemp(Cluster), Shaped->GetTextBaseline(), Shaped->GetMaxTextHeight(), Shaped->GetFontMaterial(),
+					    Shaped->IsMaterialStencil(), Shaped->GetFontOutlineSettings(), FShapedGlyphSequence::FSourceTextRange(Start, Count));
 				}
 				Position += Advance;
 			}
 		}
 	}
-	Line.Glyphs.StableSort([](const FGlyph& A, const FGlyph& B) { return A.TextEnd < B.TextEnd; });
+	Line.Glyphs.StableSort([](const FGlyph& A, const FGlyph& B)
+	{
+		return A.TextEnd < B.TextEnd;
+	});
 	Line.Size = FVector2f(TextLayout->GetSize()) + FVector2f(RevealSpace, 0.0f);
 }
 
@@ -132,9 +132,7 @@ void SDialogueText::UpdateOpacity() const
 	float Outgoing = 0.0f;
 	if (Exiting.Id.IsValid())
 	{
-		const float Fade = ExitReason == EDialogueEndReason::Completed
-			? Ease(ExitAge / CloseTime)
-			: Ease((ExitAge - 0.022f) / 0.23f);
+		const float Fade = ExitReason == EDialogueEndReason::Completed ? Ease(ExitAge / CloseTime) : Ease((ExitAge - 0.022f) / 0.23f);
 		Outgoing = Ease(Exiting.Age / 0.145f) * (1.0f - Fade);
 	}
 	OnOpacityChanged.ExecuteIfBound(FMath::Max(Incoming, Outgoing));
@@ -196,8 +194,8 @@ void SDialogueText::End(EDialogueEndReason Reason)
 
 void SDialogueText::SetShowRevealDots(bool bShowDots)
 {
-    bShowRevealDots = bShowDots;
-    Invalidate(EInvalidateWidgetReason::Paint);
+	bShowRevealDots = bShowDots;
+	Invalidate(EInvalidateWidgetReason::Paint);
 }
 
 void SDialogueText::Reset()
@@ -237,8 +235,8 @@ FVector2D SDialogueText::ComputeDesiredSize(float LayoutScale) const
 	return FVector2D(FMath::Max3(1.0f, Active.Size.X, Exiting.Size.X), FMath::Max3(1.0f, Active.Size.Y, Exiting.Size.Y));
 }
 
-int32 SDialogueText::OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& CullingRect,
-	FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle& Style, bool bParentEnabled) const
+int32 SDialogueText::OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& CullingRect, FSlateWindowElementList& Elements, int32 Layer,
+    const FWidgetStyle& Style, bool bParentEnabled) const
 {
 	const FLinearColor Tint = Style.GetColorAndOpacityTint();
 	if (Exiting.Id.IsValid())
@@ -257,7 +255,7 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry, FSla
 	const bool bFracture = bExiting && ExitReason == EDialogueEndReason::Interrupted;
 	const float Closing = bExiting && !bFracture ? Ease(ExitAge / CloseTime) : 0.0f;
 	const float Arrival = Ease(Line.Age / 0.145f);
-	
+
 	float AlignmentFactor = 0.0f;
 
 	switch (Line.VisualJustification)
@@ -277,7 +275,7 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry, FSla
 	}
 
 	const FVector2f Origin((Geometry.GetLocalSize().X - Line.Size.X) * AlignmentFactor, Geometry.GetLocalSize().Y - Line.Size.Y);
-	
+
 	const FGeometry TextGeometry = Geometry.MakeChild(Line.Size, FSlateLayoutTransform(Origin));
 	Tint.A *= Arrival * (1.0f - Closing);
 
@@ -297,8 +295,7 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry, FSla
 		Ink.A *= Ease(Age / 0.068f);
 		const float Delay = 0.014f + (Index % 5) * 0.012f;
 		const float Fracture = bFracture ? FMath::Clamp((ExitAge - Delay) / 0.32f, 0.0f, 1.0f) : 0.0f;
-		PaintGlyph(Glyph, TextGeometry, Elements, TextLayer, Glyph.Position + FVector2f(0.0f, (1.0f - Spring) * 8.0f),
-			Ink, 0.56f + 0.44f * Spring, Fracture, Index);
+		PaintGlyph(Glyph, TextGeometry, Elements, TextLayer, Glyph.Position + FVector2f(0.0f, (1.0f - Spring) * 8.0f), Ink, 0.56f + 0.44f * Spring, Fracture, Index);
 	}
 	if (!bShowRevealDots || !Last || bExiting || Line.HoldAge >= 0.32f)
 	{
@@ -312,12 +309,12 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry, FSla
 		FLinearColor DotTint = TextColor * Tint;
 		DotTint.A *= (0.36f + 0.61f * Beat) * (1.0f - Ease(Line.HoldAge / 0.32f));
 		const FVector2f Offset = DotStart + FVector2f(Index * 5.0f * Direction, -4.0f * Beat * Beat);
-		FSlateDrawElement::MakeBox(Elements, TextLayer, TextGeometry.ToPaintGeometry(FVector2f(3.1f), FSlateLayoutTransform(Offset)),
-			&DotBrush, ESlateDrawEffect::None, DotTint);
+		FSlateDrawElement::MakeBox(Elements, TextLayer, TextGeometry.ToPaintGeometry(FVector2f(3.1f), FSlateLayoutTransform(Offset)), &DotBrush, ESlateDrawEffect::None, DotTint);
 	}
 }
 
-void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale, float Fracture, int32 Index) const
+void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale,
+    float Fracture, int32 Index) const
 {
 	const FVector2f Size(Glyph.Width, Glyph.Shape->GetMaxTextHeight());
 	const FShapedGlyphSequenceRef Shape = Glyph.Shape.ToSharedRef();
@@ -325,10 +322,8 @@ void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, F
 	Outline.A *= Tint.A;
 	if (Fracture <= 0.0f)
 	{
-		const FGeometry GlyphGeometry = Geometry.MakeChild(Size, FSlateLayoutTransform(Position),
-			FSlateRenderTransform(FScale2D(1.0f, Scale)), FVector2f(0.5f, 0.8f));
-		FSlateDrawElement::MakeShapedText(Elements, Layer, GlyphPaintGeometry(GlyphGeometry),
-			Shape, ESlateDrawEffect::None, Tint, Outline);
+		const FGeometry GlyphGeometry = Geometry.MakeChild(Size, FSlateLayoutTransform(Position), FSlateRenderTransform(FScale2D(1.0f, Scale)), FVector2f(0.5f, 0.8f));
+		FSlateDrawElement::MakeShapedText(Elements, Layer, GlyphPaintGeometry(GlyphGeometry), Shape, ESlateDrawEffect::None, Tint, Outline);
 		return;
 	}
 	if (Fracture >= 1.0f)
@@ -346,8 +341,7 @@ void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, F
 		const float Drift = (Index % 7 - 3) * 1.8f;
 		const FVector2f Offset((Drift + Side * 11.0f) * Release, (34.0f + Side * 4.0f) * Fall + Side * 4.0f * Release);
 		const float Rotation = FMath::DegreesToRadians((Side * 23.0f + (Index % 3 - 1) * 6.0f) * Release);
-		const FGeometry Shard = Geometry.MakeChild(Size, FSlateLayoutTransform(Position + Offset),
-			FSlateRenderTransform(FQuat2D(Rotation)), FVector2f(0.5f));
+		const FGeometry Shard = Geometry.MakeChild(Size, FSlateLayoutTransform(Position + Offset), FSlateRenderTransform(FQuat2D(Rotation)), FVector2f(0.5f));
 		const float Top = -3.0f;
 		const float Bottom = Size.Y + 4.0f;
 		const FVector2f TopCut(Size.X * 0.73f, Top);
@@ -356,7 +350,7 @@ void SDialogueText::PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, F
 		const FVector2f OuterTop(bLeft ? -4.0f : Size.X + 4.0f, Top);
 		const FVector2f OuterBottom(OuterTop.X, Bottom);
 		Elements.PushClip(FSlateClippingZone(Shard.LocalToAbsolute(bLeft ? OuterTop : TopCut), Shard.LocalToAbsolute(bLeft ? TopCut : OuterTop),
-			Shard.LocalToAbsolute(bLeft ? OuterBottom : BottomCut), Shard.LocalToAbsolute(bLeft ? BottomCut : OuterBottom)));
+		    Shard.LocalToAbsolute(bLeft ? OuterBottom : BottomCut), Shard.LocalToAbsolute(bLeft ? BottomCut : OuterBottom)));
 		FSlateDrawElement::MakeShapedText(Elements, Layer, GlyphPaintGeometry(Shard), Shape, ESlateDrawEffect::None, Tint, Outline);
 		Elements.PopClip();
 	}

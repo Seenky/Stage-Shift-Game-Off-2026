@@ -17,15 +17,16 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageMemberFinished, UStageMemberCo
 
 // Executes one actor's command roots and their leaf Actions.
 UCLASS(BlueprintType, Blueprintable, ClassGroup = (Stage), meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UStageMemberComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
 	UStageMemberComponent();
-    virtual void BeginPlay() override;
-    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
-    bool IsPhysicallyBlocked() const;
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+	bool IsPhysicallyBlocked() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TObjectPtr<UStageRecoveryRulesDataAsset> RecoveryRulesAsset;
@@ -49,9 +50,11 @@ public:
 	bool BindToStage(AStageManager* InManager);
 
 	UFUNCTION(BlueprintPure, Category = "Stage|Stage Mark")
+
 	FVector GetStageLocation() const { return StageLocation; }
 
 	UFUNCTION(BlueprintPure, Category = "Stage|Stage Mark")
+
 	float GetStageYaw() const { return StageYaw; }
 
 	UFUNCTION(BlueprintPure, Category = "Stage|Stage Mark")
@@ -77,6 +80,7 @@ public:
 	UStageAction* GetMainAction(UStageMemberCommand* Command) const;
 
 	UFUNCTION(BlueprintPure, Category = "Stage")
+
 	UStageAction* GetRecoveryAction() const { return ActiveRecoveryAction; }
 
 	UFUNCTION(BlueprintCallable, Category = "Stage")
@@ -84,20 +88,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void EndStageMember();
-    void ForceAbortMember(const FText& Reason);
+	void ForceAbortMember(const FText& Reason);
 
 	UFUNCTION(BlueprintPure, Category = "Stage")
+
 	bool IsMemberFinished() const { return bMemberFinished; }
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
-    UFUNCTION()
-    void HandlePhysicsStarted();
-    UFUNCTION()
-    void HandlePhysicsRecovered();
-    UPROPERTY(Transient)
-    TWeakObjectPtr<class UPhysicalMontageComponent> PhysicalMontage;
+	UFUNCTION()
+	void HandlePhysicsStarted();
+	UFUNCTION()
+	void HandlePhysicsRecovered();
+	UPROPERTY(Transient)
+	TWeakObjectPtr<class UPhysicalMontageComponent> PhysicalMontage;
 	friend class UStageAction;
 	friend class UStageMemberCommand;
 

@@ -19,8 +19,7 @@ namespace
 	constexpr int32 MaxContacts = 4;
 }
 
-UDollPhysicsComponent::UDollPhysicsComponent(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+UDollPhysicsComponent::UDollPhysicsComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bTickEvenWhenPaused = false;
 	PelvisDrive = {9.0f, 6.0f, 0.8f, 9000.0f, 900.0f, 1.0f, 1.0f};
@@ -134,7 +133,7 @@ bool UDollPhysicsComponent::StartDriving()
 		StopDriving(true);
 		return false;
 	}
-	
+
 	FPhysicsControlModifierData Modifier;
 	Modifier.MovementType = EPhysicsMovementType::Simulated;
 	Modifier.CollisionType = ECollisionEnabled::QueryAndPhysics;
@@ -205,7 +204,8 @@ void UDollPhysicsComponent::SuspendForRagdoll()
 
 void UDollPhysicsComponent::SetDragging(bool bIsDragging)
 {
-	for (FName Control : DragSelfCollisionControls) DestroyControl(Control, true, false);
+	for (FName Control : DragSelfCollisionControls)
+		DestroyControl(Control, true, false);
 	DragSelfCollisionControls.Reset();
 	bDragging = bIsDragging;
 	USkeletalMeshComponent* BodyMesh = Mesh.Get();
@@ -266,13 +266,13 @@ void UDollPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	if (!bDriving && (Character->IsPhysicsMontageActive() || !StartDriving())) return;
 
 	const FTransform ComponentTransform = Mesh->GetComponentTransform();
-	if (FVector::DistSquared(ComponentTransform.GetLocation(), PreviousComponentTransform.GetLocation()) > FMath::Square(100.0) ||
-		ComponentTransform.GetRotation().AngularDistance(PreviousComponentTransform.GetRotation()) > PI * 0.6)
+	if (FVector::DistSquared(ComponentTransform.GetLocation(), PreviousComponentTransform.GetLocation()) > FMath::Square(100.0)
+	    || ComponentTransform.GetRotation().AngularDistance(PreviousComponentTransform.GetRotation()) > PI * 0.6)
 	{
 		bResetPending = true;
 	}
 	PreviousComponentTransform = ComponentTransform;
-	
+
 	if (bResetPending) SetCachedBoneVelocitiesToZero();
 	UpdateTargetCaches(DeltaTime);
 	UpdateLegTargets();
@@ -318,30 +318,28 @@ void UDollPhysicsComponent::UpdateLegTargets()
 		{
 			const double SearchHeight = Movement->MaxStepHeight + Shape.GetExtent().Size() * 2.0;
 			Hits.Reset();
-			GetWorld()->SweepMultiByObjectType(Hits, Center + FVector::UpVector * SearchHeight, Center,
-				Rotation, Objects, Shape, Query);
+			GetWorld()->SweepMultiByObjectType(Hits, Center + FVector::UpVector * SearchHeight, Center, Rotation, Objects, Shape, Query);
 			for (const FHitResult& Hit : Hits)
 			{
 				const UPrimitiveComponent* Support = Hit.GetComponent();
-				if (!Support || Hit.bStartPenetrating || Support->IsSimulatingPhysics(Hit.BoneName) ||
-					Support->GetCollisionResponseToChannel(ECC_PhysicsBody) != ECR_Block ||
-					Hit.ImpactNormal.Z < Movement->GetWalkableFloorZ() || Hit.ImpactPoint.Z > MaxSupportHeight + 0.5) continue;
+				if (!Support || Hit.bStartPenetrating || Support->IsSimulatingPhysics(Hit.BoneName) || Support->GetCollisionResponseToChannel(ECC_PhysicsBody) != ECR_Block
+				    || Hit.ImpactNormal.Z < Movement->GetWalkableFloorZ() || Hit.ImpactPoint.Z > MaxSupportHeight + 0.5)
+					continue;
 				Lift = FMath::Max(Lift, Hit.Location.Z - Center.Z + 0.1);
 			}
 		};
 		for (const FKBoxElem& Box : Setup->AggGeom.BoxElems)
 		{
-			CheckShape(Foot.TransformPosition(Box.Center), Foot.TransformRotation(Box.Rotation.Quaternion()),
-				FCollisionShape::MakeBox(FVector(Box.X, Box.Y, Box.Z) * Scale * 0.5));
+			CheckShape(Foot.TransformPosition(Box.Center), Foot.TransformRotation(Box.Rotation.Quaternion()), FCollisionShape::MakeBox(FVector(Box.X, Box.Y, Box.Z) * Scale * 0.5));
 		}
 		for (const FKSphylElem& Capsule : Setup->AggGeom.SphylElems)
 		{
 			const double Radius = Capsule.Radius * FMath::Min(Scale.X, Scale.Y);
 			CheckShape(Foot.TransformPosition(Capsule.Center), Foot.TransformRotation(Capsule.Rotation.Quaternion()),
-				FCollisionShape::MakeCapsule(Radius, Capsule.Length * Scale.Z * 0.5 + Radius));
+			    FCollisionShape::MakeCapsule(Radius, Capsule.Length * Scale.Z * 0.5 + Radius));
 		}
 		if (Lift < 0.1) continue;
-		
+
 		FTransform Thigh = GetCachedBoneTransform(Mesh.Get(), Thighs[Side]);
 		FTransform Calf = GetCachedBoneTransform(Mesh.Get(), Calves[Side]);
 		const FVector Goal = Foot.GetLocation() + FVector::UpVector * Lift;
@@ -386,13 +384,12 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 {
 	const float InteractionWeight = 1.0f - FMath::Clamp(static_cast<float>((GetWorld()->GetTimeSeconds() - LastDynamicContactTime - 0.08) / 0.15), 0.0f, 1.0f);
 	const UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
-	const bool bPassivePushing = HasPassivePushContact() &&
-		(FVector::DotProduct(Movement->GetCurrentAcceleration(), InteractionNormal) < -UE_KINDA_SMALL_NUMBER ||
-		 FVector::DotProduct(Character->GetVelocity(), InteractionNormal) < -1.0);
+	const bool bPassivePushing = HasPassivePushContact()
+	    && (FVector::DotProduct(Movement->GetCurrentAcceleration(), InteractionNormal) < -UE_KINDA_SMALL_NUMBER
+	        || FVector::DotProduct(Character->GetVelocity(), InteractionNormal) < -1.0);
 	// All drives use acceleration mode. Divide one shared force budget across their
 	// total mass, including the diagonal worst case for the two horizontal axes.
-	const float PassiveAcceleration = FMath::Max(MaxPassivePushForce, 1.0f) * 100.0f /
-		(FMath::Max(TotalDrivenMass, 0.1f) * FMath::Sqrt(2.0f));
+	const float PassiveAcceleration = FMath::Max(MaxPassivePushForce, 1.0f) * 100.0f / (FMath::Max(TotalDrivenMass, 0.1f) * FMath::Sqrt(2.0f));
 	const float PassiveTorqueScale = FMath::Min(1.0f, PassiveAcceleration / FMath::Max(MaxInteractionAcceleration, 100.0f));
 	for (FDrivenBody& Driven : DrivenBodies)
 	{
@@ -440,7 +437,7 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 			const float SpeedLimit = bLimb ? MaxLimbTargetSpeed : MaxTargetSpeed;
 			Target.TargetVelocity = ((Desired.GetLocation() - Driven.PreviousTarget.GetLocation()) / DeltaTime).GetClampedToMaxSize(SpeedLimit) * FeedForward;
 			const FQuat RotationDelta = (Desired.GetRotation() * Driven.PreviousTarget.GetRotation().Inverse()).GetShortestArcWith(FQuat::Identity);
-			
+
 			const float AngularFeedForward = FMath::Lerp(Settings.AngularVelocityFeedForward, 1.0f, Reach);
 			Target.TargetAngularVelocity = (RotationDelta.ToRotationVector() / (2.0 * PI * DeltaTime)).GetClampedToMaxSize(bLimb ? 4.0 : 2.0) * AngularFeedForward;
 		}
@@ -451,9 +448,8 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 
 bool UDollPhysicsComponent::HasPassivePushContact() const
 {
-	return !bDragging && DynamicContactComponent.IsValid() && DynamicContactComponent->IsRegistered() &&
-		DynamicContactComponent.Get() != Character->GetHeldPhysicsComponent() &&
-		GetWorld()->GetTimeSeconds() - LastDynamicContactTime < 0.12 && !InteractionNormal.IsNearlyZero();
+	return !bDragging && DynamicContactComponent.IsValid() && DynamicContactComponent->IsRegistered() && DynamicContactComponent.Get() != Character->GetHeldPhysicsComponent()
+	    && GetWorld()->GetTimeSeconds() - LastDynamicContactTime < 0.12 && !InteractionNormal.IsNearlyZero();
 }
 
 FVector UDollPhysicsComponent::ConstrainMovement(const FVector& Delta) const
@@ -473,7 +469,10 @@ FVector UDollPhysicsComponent::ConstrainMovement(const FVector& Delta) const
 			LimitedDelta -= Into * (MoveInto * (1.0 - PushSpeed / SpeedInto));
 		}
 	}
-	const FDrivenBody* Root = DrivenBodies.FindByPredicate([](const FDrivenBody& Body) { return Body.Bone == DollPelvisBone; });
+	const FDrivenBody* Root = DrivenBodies.FindByPredicate([](const FDrivenBody& Body)
+	{
+		return Body.Bone == DollPelvisBone;
+	});
 	const FBodyInstance* Body = Mesh->GetBodyInstance(DollPelvisBone);
 	if (!Root || !Body) return LimitedDelta;
 	const FVector Error = (Root->AnimationTarget.GetLocation() - Body->GetUnrealWorldTransform().GetLocation()) * FVector(1.0, 1.0, 0.0);
@@ -523,13 +522,14 @@ void UDollPhysicsComponent::OnBodyHit(UPrimitiveComponent* HitComponent, AActor*
 			}
 			*Contact = {};
 		}
-		else Contact = &Contacts.AddDefaulted_GetRef();
+		else
+			Contact = &Contacts.AddDefaulted_GetRef();
 	}
 	const double DeltaSpeed = NormalImpulse.Size() / FMath::Max(Body->GetBodyMass(), 0.01f);
 	Contact->Bone = Bone;
 	Contact->LocalPoint = LocalPoint;
 	Contact->Normal = Hit.ImpactNormal.GetSafeNormal();
-	
+
 	Contact->ImpactDepth = FMath::Max(Contact->ImpactDepth, FMath::Clamp(DeltaSpeed * 0.015, 0.0, static_cast<double>(MaxContactDepth)));
 	Contact->LastContactTime = GetWorld()->GetTimeSeconds();
 }
@@ -542,11 +542,15 @@ void UDollPhysicsComponent::UpdateContacts(float DeltaTime)
 		float Pressure = 0.0f;
 		if (Now - Contact.LastContactTime < 0.12)
 		{
-			const FDrivenBody* Driven = DrivenBodies.FindByPredicate([&Contact](const FDrivenBody& Body) { return Body.Bone == Contact.Bone; });
+			const FDrivenBody* Driven = DrivenBodies.FindByPredicate([&Contact](const FDrivenBody& Body)
+			{
+				return Body.Bone == Contact.Bone;
+			});
 			const FBodyInstance* Body = Mesh->GetBodyInstance(Contact.Bone);
 			if (Driven && Body)
 			{
-				Pressure = FMath::Clamp(-FVector::DotProduct(Driven->AnimationTarget.GetLocation() - Body->GetUnrealWorldTransform().GetLocation(), Contact.Normal) * 0.25, 0.0, static_cast<double>(MaxContactDepth));
+				Pressure = FMath::Clamp(-FVector::DotProduct(Driven->AnimationTarget.GetLocation() - Body->GetUnrealWorldTransform().GetLocation(), Contact.Normal) * 0.25, 0.0,
+				    static_cast<double>(MaxContactDepth));
 			}
 		}
 		const float Target = FMath::Max(Pressure, Contact.ImpactDepth);

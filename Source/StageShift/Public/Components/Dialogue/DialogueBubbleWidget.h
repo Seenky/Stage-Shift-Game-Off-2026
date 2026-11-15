@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,16 +7,16 @@
 #include "Blueprint/UserWidget.h"
 #include "DialogueBubbleWidget.generated.h"
 
-
 class UDialogueViewModel;
 class UDialogueTextWidget;
 class UBorder;
 
 UCLASS()
+
 class STAGESHIFT_API UDialogueBubbleWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	void SetDialogueViewModel(UDialogueViewModel* ViewModel);
 
@@ -26,7 +26,7 @@ public:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UDialogueTextWidget> DialogueText;
-	
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UDialogueTextWidget> SpeakersName;
 

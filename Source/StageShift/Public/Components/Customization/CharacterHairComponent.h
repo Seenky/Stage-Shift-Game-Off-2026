@@ -6,6 +6,7 @@
 class UCharacterHairStyle;
 
 UCLASS(ClassGroup = (Customization), meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UCharacterHairComponent : public USkeletalMeshComponent
 {
 	GENERATED_BODY()
@@ -24,6 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Hair")
 	void SetHairPhysicsEnabled(bool bEnabled);
 	UFUNCTION(BlueprintPure, Category = "Hair")
+
 	bool IsHairPhysicsEnabled() const { return bHairPhysicsEnabled; }
 	UFUNCTION(BlueprintCallable, Category = "Hair")
 	void ResetHairSimulation();

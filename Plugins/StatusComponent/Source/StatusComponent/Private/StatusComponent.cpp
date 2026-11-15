@@ -16,5 +16,5 @@ void FStatusComponentModule::ShutdownModule()
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FStatusComponentModule, StatusComponent)

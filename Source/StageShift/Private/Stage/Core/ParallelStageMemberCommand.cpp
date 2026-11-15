@@ -7,7 +7,8 @@ float UParallelStageMemberCommand::GetNeededTime_Implementation() const
 {
 	if (!StageCommandContainer::HasValidChildren(this)) return 0.0f;
 	float Duration = 0.0f;
-	for (const UStageMemberCommand* Child : Children) Duration = FMath::Max(Duration, StageCommandContainer::NeededTime(Child));
+	for (const UStageMemberCommand* Child : Children)
+		Duration = FMath::Max(Duration, StageCommandContainer::NeededTime(Child));
 	return Duration;
 }
 
@@ -25,8 +26,7 @@ float UParallelStageMemberCommand::GetRemainingTime_Implementation() const
 	return Remaining;
 }
 
-void UParallelStageMemberCommand::ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
-	float InPlannedStartTime, float InPlannedEndTime)
+void UParallelStageMemberCommand::ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot, float InPlannedStartTime, float InPlannedEndTime)
 {
 	for (UStageMemberCommand* Child : Children)
 		if (IsValid(Child)) Child->OnFinished.RemoveDynamic(this, &UParallelStageMemberCommand::HandleChildFinished);
@@ -46,8 +46,7 @@ void UParallelStageMemberCommand::CheckChildrenResults()
 		UStageMemberCommand* Child = Children[Index];
 		const bool bOwnedChild = IsValid(Child) && Child->GetOuter() == this;
 		ChildResults[Index] = !bOwnedChild ? EStageCommandResult::Failed : Child->GetResult();
-		if (bOwnedChild && Child->GetState() != EStageExecutionState::Finished)
-			Child->OnFinished.AddUniqueDynamic(this, &UParallelStageMemberCommand::HandleChildFinished);
+		if (bOwnedChild && Child->GetState() != EStageExecutionState::Finished) Child->OnFinished.AddUniqueDynamic(this, &UParallelStageMemberCommand::HandleChildFinished);
 	}
 }
 
@@ -88,7 +87,8 @@ void UParallelStageMemberCommand::OnStop_Implementation(EStageActionStopReason R
 		if (!IsValid(Child) || Child->GetOuter() != this || Child->GetState() == EStageExecutionState::Finished) continue;
 		if (Child->GetState() == EStageExecutionState::NotStarted && Context.MemberComponent.IsValid())
 			Context.MemberComponent->CompleteBeforeStart(Child, EStageCommandResult::Cancelled);
-		else Child->RequestStop(Reason);
+		else
+			Child->RequestStop(Reason);
 	}
 	bIssuingChildren = bWasIssuingChildren;
 	TryFinish();

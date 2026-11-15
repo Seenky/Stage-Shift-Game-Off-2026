@@ -4,6 +4,7 @@
 #include "SequenceStageMemberCommand.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced, HideCategories = (Scoring))
+
 class STAGESHIFT_API USequenceStageMemberCommand final : public UStageMemberCommand
 {
 	GENERATED_BODY()
@@ -13,9 +14,10 @@ public:
 	TArray<TObjectPtr<UStageMemberCommand>> Children;
 
 	virtual bool IsComposite() const override { return true; }
+
 	virtual const TArray<TObjectPtr<UStageMemberCommand>>& GetChildCommands() const override { return Children; }
-	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
-		float InPlannedStartTime, float InPlannedEndTime) override;
+
+	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot, float InPlannedStartTime, float InPlannedEndTime) override;
 
 protected:
 	virtual float GetNeededTime_Implementation() const override;

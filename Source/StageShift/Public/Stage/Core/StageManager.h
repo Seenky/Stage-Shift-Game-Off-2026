@@ -6,8 +6,6 @@
 #include "Stage/Core/Data/StageProductionDataAsset.h"
 #include "StageManager.generated.h"
 
-
-
 class UStageDataAsset;
 DECLARE_LOG_CATEGORY_EXTERN(LogStageShiftStage, Log, All);
 
@@ -19,62 +17,69 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStageFailed, FGameplayTag, StageId
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageManagerEvent, FStageEvent, Event);
 
 UCLASS(BlueprintType, Blueprintable)
+
 class STAGESHIFT_API AStageManager : public AActor
 {
 	GENERATED_BODY()
 
 public:
 	AStageManager();
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
-    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Production|Bindings") TMap<FName,FStageSceneBindings> ProductionBindings;
-    UPROPERTY(BlueprintAssignable, Category="Production") FStageProductionPhaseChanged OnProductionPhaseChanged;
-    UPROPERTY(BlueprintAssignable, Category="Production") FStageFinishedById OnProductionFinished;
-    UFUNCTION(BlueprintCallable, Category="Production") bool StartConfiguredProduction(FText& OutError);
-    UFUNCTION(BlueprintCallable, Category="Production") bool StartProduction(UStageProductionDataAsset* Production, FText& OutError);
-    UFUNCTION(BlueprintCallable, Category="Production") bool ConfirmProductionPreparation(FText& OutError);
-    UFUNCTION(BlueprintCallable, Category="Production") void AbortProduction(const FText& Reason);
-    UFUNCTION(BlueprintPure, Category="Production") EStageProductionState GetProductionState() const { return ProductionState; }
-    UFUNCTION(BlueprintPure, Category="Production") int32 GetProductionSceneIndex() const { return ProductionSceneIndex; }
-    UFUNCTION(BlueprintPure, Category="Production") int32 GetProductionSceneCount() const { return ProductionSceneCount; }
-    UFUNCTION(BlueprintPure, Category="Production") FText GetPreparationPrompt() const;
-    UFUNCTION(BlueprintPure, Category="Production") TArray<FString> GetPreparationErrors() const;
-    UFUNCTION(CallInEditor, Category="Production") void SynchronizeProductionBindings();
-    UFUNCTION(CallInEditor, Category="Production") void ValidateConfiguredProduction();
-    void AddDiagnostic(const FString& Message);
-    FString DescribeCommand(const UStageMemberCommand* Command) const;
-    const TArray<FStageRootExecution>& GetRootExecutions() const { return RootExecutions; }
-    UFUNCTION(BlueprintPure, Category="Stage|Debug")
-    TArray<FStageRootExecution> GetExecutionSnapshot() const { return RootExecutions; }
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category="Stage|Debug")
-    TArray<FString> RecentEvents;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Scenario")
-    TObjectPtr<UStageDataAsset> ConfiguredStage;
-    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Bindings")
-    TMap<FName, TObjectPtr<AActor>> RoleBindings;
-    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Bindings")
-    TMap<FName, TObjectPtr<AActor>> TargetBindings;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Scenario")
-    bool bAutoStart = false;
-    UPROPERTY(BlueprintAssignable, Category="Scenario")
-    FStageFinishedById OnStageFinishedById;
-    UFUNCTION(CallInEditor, Category="Bindings")
-    void SynchronizeBindings();
-    UFUNCTION(CallInEditor, Category="Bindings")
-    void ValidateConfiguredStage();
-    UFUNCTION(BlueprintCallable, Category="Scenario")
-    bool StartConfiguredStage(FText& OutError);
-    UFUNCTION(BlueprintCallable, Category="Scenario", meta=(AutoCreateRefTerm="MemberOverrides"))
-    bool StartStageByIds(UStageDataAsset* StageData, const TMap<FName, AActor*>& MemberOverrides, FText& OutError);
-    UFUNCTION(BlueprintPure, Category="Bindings")
-    AActor* GetParticipant(FName RoleId) const;
-    UFUNCTION(BlueprintPure, Category="Bindings")
-    AActor* GetTarget(FName TargetId) const;
-    bool CollectValidationErrors(UStageDataAsset* Data, const TMap<FName, AActor*>& Actors, TArray<FString>& Errors, bool bStrictRecovery = true) const;
-    TMap<FName, AActor*> ResolveBindings(UStageDataAsset* Data, const TMap<FName, AActor*>& Overrides) const;
-    UFUNCTION(BlueprintCallable, Category="Scenario")
-    void AbortStage(const FText& Reason);
-    virtual void BeginPlay() override;
-    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Production|Bindings") TMap<FName, FStageSceneBindings> ProductionBindings;
+	UPROPERTY(BlueprintAssignable, Category = "Production") FStageProductionPhaseChanged OnProductionPhaseChanged;
+	UPROPERTY(BlueprintAssignable, Category = "Production") FStageFinishedById OnProductionFinished;
+	UFUNCTION(BlueprintCallable, Category = "Production") bool StartConfiguredProduction(FText& OutError);
+	UFUNCTION(BlueprintCallable, Category = "Production") bool StartProduction(UStageProductionDataAsset* Production, FText& OutError);
+	UFUNCTION(BlueprintCallable, Category = "Production") bool ConfirmProductionPreparation(FText& OutError);
+	UFUNCTION(BlueprintCallable, Category = "Production") void AbortProduction(const FText& Reason);
+
+	UFUNCTION(BlueprintPure, Category = "Production") EStageProductionState GetProductionState() const { return ProductionState; }
+
+	UFUNCTION(BlueprintPure, Category = "Production") int32 GetProductionSceneIndex() const { return ProductionSceneIndex; }
+
+	UFUNCTION(BlueprintPure, Category = "Production") int32 GetProductionSceneCount() const { return ProductionSceneCount; }
+
+	UFUNCTION(BlueprintPure, Category = "Production") FText GetPreparationPrompt() const;
+	UFUNCTION(BlueprintPure, Category = "Production") TArray<FString> GetPreparationErrors() const;
+	UFUNCTION(CallInEditor, Category = "Production") void SynchronizeProductionBindings();
+	UFUNCTION(CallInEditor, Category = "Production") void ValidateConfiguredProduction();
+	void AddDiagnostic(const FString& Message);
+	FString DescribeCommand(const UStageMemberCommand* Command) const;
+
+	const TArray<FStageRootExecution>& GetRootExecutions() const { return RootExecutions; }
+	UFUNCTION(BlueprintPure, Category = "Stage|Debug")
+
+	TArray<FStageRootExecution> GetExecutionSnapshot() const { return RootExecutions; }
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "Stage|Debug")
+	TArray<FString> RecentEvents;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scenario")
+	TObjectPtr<UStageDataAsset> ConfiguredStage;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Bindings")
+	TMap<FName, TObjectPtr<AActor>> RoleBindings;
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Bindings")
+	TMap<FName, TObjectPtr<AActor>> TargetBindings;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scenario")
+	bool bAutoStart = false;
+	UPROPERTY(BlueprintAssignable, Category = "Scenario")
+	FStageFinishedById OnStageFinishedById;
+	UFUNCTION(CallInEditor, Category = "Bindings")
+	void SynchronizeBindings();
+	UFUNCTION(CallInEditor, Category = "Bindings")
+	void ValidateConfiguredStage();
+	UFUNCTION(BlueprintCallable, Category = "Scenario")
+	bool StartConfiguredStage(FText& OutError);
+	UFUNCTION(BlueprintCallable, Category = "Scenario", meta = (AutoCreateRefTerm = "MemberOverrides"))
+	bool StartStageByIds(UStageDataAsset* StageData, const TMap<FName, AActor*>& MemberOverrides, FText& OutError);
+	UFUNCTION(BlueprintPure, Category = "Bindings")
+	AActor* GetParticipant(FName RoleId) const;
+	UFUNCTION(BlueprintPure, Category = "Bindings")
+	AActor* GetTarget(FName TargetId) const;
+	bool CollectValidationErrors(UStageDataAsset* Data, const TMap<FName, AActor*>& Actors, TArray<FString>& Errors, bool bStrictRecovery = true) const;
+	TMap<FName, AActor*> ResolveBindings(UStageDataAsset* Data, const TMap<FName, AActor*>& Overrides) const;
+	UFUNCTION(BlueprintCallable, Category = "Scenario")
+	void AbortStage(const FText& Reason);
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TArray<TObjectPtr<UStageDataAsset>> StageDefinitions;
@@ -96,16 +101,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Stage")
 	AActor* GetMember(FGameplayTag MemberTag) const;
 	UFUNCTION(BlueprintPure, Category = "Stage")
+
 	EStageState GetState() const { return State; }
 	UFUNCTION(BlueprintPure, Category = "Stage")
 	float GetStageElapsedTime() const;
 	UFUNCTION(BlueprintPure, Category = "Stage")
+
 	UStageDataAsset* GetActiveStage() const { return ActiveStage; }
 	UFUNCTION(BlueprintPure, Category = "Stage")
+
 	EStageLatenessLevel GetCurrentLatenessLevel() const { return CurrentLatenessLevel; }
 	UFUNCTION(BlueprintCallable, Category = "Stage|Score")
 	void AddScore(int32 Amount);
 	UFUNCTION(BlueprintPure, Category = "Stage|Score")
+
 	int32 GetScore() const { return Score; }
 	UFUNCTION(BlueprintPure, Category = "Stage|Score")
 	int32 GetStarCount() const;
@@ -116,34 +125,35 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
-    bool IsProductionActive() const { return ProductionState == EStageProductionState::Preparing || ProductionState == EStageProductionState::Playing; }
-    bool StartStageWithBindings(UStageDataAsset* Data, const TMap<FName,AActor*>& Roles, const TMap<FName,TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery);
-    FStageSceneBindings ResolveProductionBindings(const FStageProductionScene& Scene) const;
-    bool ValidateProduction(UStageProductionDataAsset* Production, TArray<FString>& Errors) const;
-    bool StartProductionScene(FText& Error);
-    void AdvanceProduction();
-    void HandleProductionSceneFinished(FName StageKey, bool bSucceeded, const FText& Reason);
-    void FinishProduction(bool bSucceeded, const FText& Reason);
-    void TickProduction();
-    UPROPERTY(Transient) TObjectPtr<UStageProductionDataAsset> ActiveProduction;
-    EStageProductionState ProductionState = EStageProductionState::Idle;
-    int32 ProductionSceneIndex = INDEX_NONE;
-    int32 ProductionSceneCount = 0;
-    double PreparationStartedAt = 0;
-    bool bStartingProductionScene = false;
-    bool bAbortingProduction = false;
-    bool bManagerEndingPlay = false;
-    bool bProductionAdvancePending = false;
-    FGuid ProductionRunId;
-    UPROPERTY(Transient) TMap<FName,TObjectPtr<AActor>> ActiveTargetBindings;
-    mutable bool bUseValidationTargets = false;
-    mutable TMap<FName,TObjectPtr<AActor>> ValidationTargets;
+	bool IsProductionActive() const { return ProductionState == EStageProductionState::Preparing || ProductionState == EStageProductionState::Playing; }
+
+	bool StartStageWithBindings(UStageDataAsset* Data, const TMap<FName, AActor*>& Roles, const TMap<FName, TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery);
+	FStageSceneBindings ResolveProductionBindings(const FStageProductionScene& Scene) const;
+	bool ValidateProduction(UStageProductionDataAsset* Production, TArray<FString>& Errors) const;
+	bool StartProductionScene(FText& Error);
+	void AdvanceProduction();
+	void HandleProductionSceneFinished(FName StageKey, bool bSucceeded, const FText& Reason);
+	void FinishProduction(bool bSucceeded, const FText& Reason);
+	void TickProduction();
+	UPROPERTY(Transient) TObjectPtr<UStageProductionDataAsset> ActiveProduction;
+	EStageProductionState ProductionState = EStageProductionState::Idle;
+	int32 ProductionSceneIndex = INDEX_NONE;
+	int32 ProductionSceneCount = 0;
+	double PreparationStartedAt = 0;
+	bool bStartingProductionScene = false;
+	bool bAbortingProduction = false;
+	bool bManagerEndingPlay = false;
+	bool bProductionAdvancePending = false;
+	FGuid ProductionRunId;
+	UPROPERTY(Transient) TMap<FName, TObjectPtr<AActor>> ActiveTargetBindings;
+	mutable bool bUseValidationTargets = false;
+	mutable TMap<FName, TObjectPtr<AActor>> ValidationTargets;
 	friend class UStageMemberComponent;
 	friend class UStageMemberCommand;
 	bool ValidateStage(UStageDataAsset* Data, const TMap<FName, AActor*>& Actors, FText& Error) const;
 	UStageMemberCommand* CreatePreparedCommand(const FStageMemberAssignment& Assignment, FText& Error);
-	TArray<TObjectPtr<UStageMemberCommand>> PrepareCommands(const TArray<FStageMemberAssignment>& Assignments,
-		EStageCommandType Type, int32 SourceIndex,FGuid ReactionActivation=FGuid());
+	TArray<TObjectPtr<UStageMemberCommand>> PrepareCommands(
+	    const TArray<FStageMemberAssignment>& Assignments, EStageCommandType Type, int32 SourceIndex, FGuid ReactionActivation = FGuid());
 	void IssueCommands(const TArray<TObjectPtr<UStageMemberCommand>>& Commands);
 	void AdvanceStage();
 	void BeginFinale();
@@ -188,9 +198,9 @@ private:
 	TMap<FName, EStageCommandResult> CurrentStepResults;
 	TArray<int32> ReactionActivationCounts;
 	TArray<double> LastReactionStartedTimes;
-    TSet<FGuid> StartedReactionActivations;
+	TSet<FGuid> StartedReactionActivations;
 	double FinalizingStartedAt = 0.0;
-    double StoppingDeadline = 0.0;
+	double StoppingDeadline = 0.0;
 	FGuid RunId;
 	TSet<TWeakObjectPtr<UStageMemberCommand>> AccountedCommands;
 	FText FailureReason;

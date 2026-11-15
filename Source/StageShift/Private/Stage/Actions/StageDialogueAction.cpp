@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Stage/Actions/StageDialogueAction.h"
 
@@ -12,21 +11,19 @@ void UStageDialogueAction::OnStart_Implementation()
 		Finish(EStageActionResult::Succeeded);
 		return;
 	}
-	
+
 	if (!DialogueComponent.IsValid() || CurrentLine.Text.IsEmpty())
 	{
 		Finish(EStageActionResult::Failed);
 		return;
 	}
-	
+
 	DialogueComponent->OnDialogueLineEnded.AddDynamic(this, &ThisClass::HandleDialogueEnded);
 	DialogueComponent->OnDialoguePlaybackStateChanged.AddDynamic(this, &ThisClass::HandleDialogueStateChanged);
-    CurrentPlaybackId = FGuid::NewGuid(); // Identity precedes synchronous reveal/end callbacks.
-    const bool bStarted = ResumeData.IsValid()
-        ? (ResumeData.Line.Text.EqualTo(CurrentLine.Text) && DialogueComponent->ResumeSnapshotWithId(ResumeData, CurrentPlaybackId))
-        : DialogueComponent->PlayLineWithId(CurrentLine, CurrentPlaybackId);
-    if (!bStarted && GetState() != EStageExecutionState::Finished) Finish(EStageActionResult::Failed);
-
+	CurrentPlaybackId = FGuid::NewGuid(); // Identity precedes synchronous reveal/end callbacks.
+	const bool bStarted = ResumeData.IsValid() ? (ResumeData.Line.Text.EqualTo(CurrentLine.Text) && DialogueComponent->ResumeSnapshotWithId(ResumeData, CurrentPlaybackId))
+	                                           : DialogueComponent->PlayLineWithId(CurrentLine, CurrentPlaybackId);
+	if (!bStarted && GetState() != EStageExecutionState::Finished) Finish(EStageActionResult::Failed);
 }
 
 void UStageDialogueAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -36,23 +33,23 @@ void UStageDialogueAction::OnStop_Implementation(EStageActionStopMode Mode)
 		Finish(EStageActionResult::Failed);
 		return;
 	}
-	
+
 	if (Mode == EStageActionStopMode::StopAction)
-    {
-        if (DialogueComponent->GetPlaybackState().PlaybackId == CurrentPlaybackId)
-        {
-            DialogueComponent->CaptureResumeData(CurrentPlaybackId, ResumeData);
-            DialogueComponent->StopPlayback();
-        }
-        if (GetState() != EStageExecutionState::Finished) Finish(EStageActionResult::Interrupted);
-    }
+	{
+		if (DialogueComponent->GetPlaybackState().PlaybackId == CurrentPlaybackId)
+		{
+			DialogueComponent->CaptureResumeData(CurrentPlaybackId, ResumeData);
+			DialogueComponent->StopPlayback();
+		}
+		if (GetState() != EStageExecutionState::Finished) Finish(EStageActionResult::Interrupted);
+	}
 }
 
 void UStageDialogueAction::Cleanup_Implementation()
 {
 	Super::Cleanup_Implementation();
 
-	if(DialogueComponent.IsValid())
+	if (DialogueComponent.IsValid())
 	{
 		DialogueComponent->OnDialogueLineEnded.RemoveAll(this);
 		DialogueComponent->OnDialoguePlaybackStateChanged.RemoveAll(this);
@@ -70,10 +67,7 @@ EStageActionStopMode UStageDialogueAction::GetStopMode_Implementation(EStageActi
 	return Reason == EStageActionStopReason::Cancel ? EStageActionStopMode::FinishAction : EStageActionStopMode::StopAction;
 }
 
-void UStageDialogueAction::SetupDialogueAction(
-	const FDialogueLine& InLine,
-	const bool bInResumeLine,
-	const TObjectPtr<UDialogueComponent>& InDialogueComponent)
+void UStageDialogueAction::SetupDialogueAction(const FDialogueLine& InLine, const bool bInResumeLine, const TObjectPtr<UDialogueComponent>& InDialogueComponent)
 {
 	CurrentLine = InLine;
 	DialogueComponent = InDialogueComponent;
@@ -82,7 +76,7 @@ void UStageDialogueAction::SetupDialogueAction(
 
 void UStageDialogueAction::HandleDialogueEnded(FGuid PlaybackId, EDialogueEndReason Reason)
 {
-    if (PlaybackId != CurrentPlaybackId || GetState() == EStageExecutionState::Finished) return;
+	if (PlaybackId != CurrentPlaybackId || GetState() == EStageExecutionState::Finished) return;
 	if (Reason == EDialogueEndReason::Completed)
 	{
 		bDialogueCompleted = true;
@@ -96,6 +90,6 @@ void UStageDialogueAction::HandleDialogueEnded(FGuid PlaybackId, EDialogueEndRea
 
 void UStageDialogueAction::HandleDialogueStateChanged(const FDialoguePlaybackState& PlaybackState)
 {
-    if (PlaybackState.PlaybackId != CurrentPlaybackId) return;
-    // Holding is still active playback, not completion of this command.
+	if (PlaybackState.PlaybackId != CurrentPlaybackId) return;
+	// Holding is still active playback, not completion of this command.
 }

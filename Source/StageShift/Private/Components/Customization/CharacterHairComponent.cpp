@@ -45,8 +45,8 @@ void UCharacterHairComponent::RefreshHairstyle()
 	USkeletalMesh* Mesh = Hairstyle ? Hairstyle->Mesh.Get() : nullptr;
 	if (Mesh && !Body->DoesSocketExist(Hairstyle->AttachmentSocket))
 	{
-		UE_LOG(LogCharacterHair, Warning, TEXT("%s: missing attachment %s on %s; hiding hair."),
-			*GetNameSafe(GetOwner()), *Hairstyle->AttachmentSocket.ToString(), *GetNameSafe(Body->GetSkeletalMeshAsset()));
+		UE_LOG(LogCharacterHair, Warning, TEXT("%s: missing attachment %s on %s; hiding hair."), *GetNameSafe(GetOwner()), *Hairstyle->AttachmentSocket.ToString(),
+		    *GetNameSafe(Body->GetSkeletalMeshAsset()));
 		Mesh = nullptr;
 	}
 	SetSkeletalMesh(Mesh, true);
@@ -65,8 +65,8 @@ void UCharacterHairComponent::RefreshHairstyle()
 	const USkeleton* TargetSkeleton = Interface ? Interface->GetTargetSkeleton() : nullptr;
 	if (TargetSkeleton && !TargetSkeleton->IsCompatibleMesh(Mesh, false))
 	{
-		UE_LOG(LogCharacterHair, Warning, TEXT("%s: animation class %s is incompatible with %s; using the hair rest pose."),
-			*GetNameSafe(GetOwner()), *GetNameSafe(Class), *GetNameSafe(Mesh));
+		UE_LOG(LogCharacterHair, Warning, TEXT("%s: animation class %s is incompatible with %s; using the hair rest pose."), *GetNameSafe(GetOwner()), *GetNameSafe(Class),
+		    *GetNameSafe(Mesh));
 		Class = nullptr;
 	}
 	SetAnimInstanceClass(Class);

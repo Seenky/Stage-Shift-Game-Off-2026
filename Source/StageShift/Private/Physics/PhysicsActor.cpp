@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "StageShift/Public/Physics/PhysicsActor.h"
 
@@ -9,7 +8,7 @@
 AStagePhysicsActor::AStagePhysicsActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	
+
 	GetStaticMeshComponent()->SetCollisionProfileName(TEXT("PhysicsActor"));
 	ConfigureCharacterContact();
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
@@ -31,8 +30,8 @@ void AStagePhysicsActor::ConfigureCharacterContact()
 
 bool AStagePhysicsActor::CanInteract_Implementation(const FInteractionContext& InteractionContext) const
 {
-	if (!InteractionContext.Interactor || InteractionContext.Hit.GetComponent() != GetStaticMeshComponent() 
-		|| (ActiveManipulator.IsValid() && ActiveManipulator->GetManipulatedComponent() == GetStaticMeshComponent()))
+	if (!InteractionContext.Interactor || InteractionContext.Hit.GetComponent() != GetStaticMeshComponent()
+	    || (ActiveManipulator.IsValid() && ActiveManipulator->GetManipulatedComponent() == GetStaticMeshComponent()))
 	{
 		return false;
 	}
@@ -45,7 +44,7 @@ EInteractionResult AStagePhysicsActor::OnInteraction_Implementation(const FInter
 	if (UPhysicsManipulationComponent* Manipulator = ActiveManipulator.Get())
 	{
 		if (Manipulator->GetOwner() != InteractionContext.Interactor) return EInteractionResult::Rejected;
-		
+
 		if (InteractionContext.InteractionPhase == EInteractionPhase::End)
 		{
 			ActiveManipulator.Reset();
@@ -55,7 +54,7 @@ EInteractionResult AStagePhysicsActor::OnInteraction_Implementation(const FInter
 			}
 			return EInteractionResult::Completed;
 		}
-		
+
 		return Manipulator->GetManipulatedComponent() == GetStaticMeshComponent() ? EInteractionResult::Active : EInteractionResult::Rejected;
 	}
 
@@ -63,11 +62,11 @@ EInteractionResult AStagePhysicsActor::OnInteraction_Implementation(const FInter
 	{
 		return EInteractionResult::Rejected;
 	}
-	
+
 	UPhysicsManipulationComponent* Manipulator = InteractionContext.Interactor->FindComponentByClass<UPhysicsManipulationComponent>();
-	
+
 	if (!Manipulator->BeginManipulation(InteractionContext.Hit, InteractionType)) return EInteractionResult::Rejected;
-	
+
 	ActiveManipulator = Manipulator;
 	return InteractionType == EPhysicsInteractionType::Carry ? EInteractionResult::Latched : EInteractionResult::Active;
 }

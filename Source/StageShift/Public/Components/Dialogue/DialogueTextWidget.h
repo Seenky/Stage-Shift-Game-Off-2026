@@ -8,6 +8,7 @@
 class SDialogueText;
 
 UCLASS(meta = (DisplayName = "Dialogue Text"))
+
 class STAGESHIFT_API UDialogueTextWidget : public UWidget
 {
 	GENERATED_BODY()
@@ -29,7 +30,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	FSlateFontInfo Font;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	TEnumAsByte<ETextJustify::Type> Justification = ETextJustify::Left;
 

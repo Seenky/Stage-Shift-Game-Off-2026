@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "StageDialogueTypes.h"
@@ -11,15 +11,16 @@ class UDialogueComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FDialogueViewPlaybackStateChanged, const FDialoguePlaybackState&);
 
 UCLASS(BlueprintType)
+
 class STAGESHIFT_API UDialogueViewModel : public UMVVMViewModelBase
 {
 	GENERATED_BODY()
 
 public:
 	void Init(UDialogueComponent* InDialogueComponent);
-	
+
 	void Deinitialize();
-	
+
 	virtual void BeginDestroy() override;
 
 	UPROPERTY(BlueprintAssignable, Category = "Dialogue")
@@ -28,6 +29,7 @@ public:
 	FDialogueViewPlaybackStateChanged OnPlaybackStateChanged;
 
 	FText GetVisibleText() const { return VisibleText; }
+
 	FGuid GetPlaybackId() const { return PlaybackId; }
 
 private:
@@ -39,7 +41,7 @@ private:
 	void HandleDialoguePlaybackStateChanged(const FDialoguePlaybackState& PlaybackState);
 
 	UFUNCTION()
-	void HandleDialogueLineEnded(FGuid EndedPlaybackId,EDialogueEndReason Reason);
+	void HandleDialogueLineEnded(FGuid EndedPlaybackId, EDialogueEndReason Reason);
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UDialogueComponent> SourceDialogueComponent;
@@ -49,7 +51,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify, Category = "Dialogue", meta = (AllowPrivateAccess = "true"))
 	FGuid PlaybackId;
-	
+
 	UPROPERTY(BlueprintReadOnly, FieldNotify, Category = "Dialogue", meta = (AllowPrivateAccess = "true"))
 	FText SpeakersName;
 };

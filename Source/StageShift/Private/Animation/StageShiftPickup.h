@@ -3,7 +3,8 @@
 #include "RigUnit_PBIK.h"
 #include "StageShiftPickup.generated.h"
 
-USTRUCT(meta=(DisplayName="Pickup Reach", Category="Stage Shift"))
+USTRUCT(meta = (DisplayName = "Pickup Reach", Category = "Stage Shift"))
+
 struct FRigUnit_StageShiftPickup : public FRigUnitMutable
 {
 	GENERATED_BODY()
@@ -11,7 +12,7 @@ struct FRigUnit_StageShiftPickup : public FRigUnitMutable
 	RIGVM_METHOD()
 	virtual void Execute() override;
 
-	UPROPERTY(meta=(Input))
+	UPROPERTY(meta = (Input))
 	TArray<FPBIKBoneSetting> BoneSettings;
 
 private:

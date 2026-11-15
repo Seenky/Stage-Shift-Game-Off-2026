@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 
@@ -18,7 +17,6 @@
 #include "Misc/ScopeExit.h"
 #include "DrawDebugHelpers.h"
 
-
 UInteractionComponent::UInteractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -30,8 +28,10 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, Tick);
 	const APawn* Pawn = Cast<APawn>(GetOwner());
-	if (Pawn && Pawn->IsLocallyControlled()) RefreshInteractionCandidate();
-	else SetInteractionCandidate(FHitResult());
+	if (Pawn && Pawn->IsLocallyControlled())
+		RefreshInteractionCandidate();
+	else
+		SetInteractionCandidate(FHitResult());
 }
 
 bool UInteractionComponent::CanResumeInteraction() const
@@ -39,16 +39,14 @@ bool UInteractionComponent::CanResumeInteraction() const
 	if (!HasActiveInteraction() || ActiveResult != EInteractionResult::Latched) return false;
 	const FInteractionAnimation* Animation = FindAnimation(ActiveInteraction);
 	const UAnimInstance* Instance = PlaybackInstance.Get();
-	return !(Animation && Instance && Instance->Montage_IsPlaying(PlayingMontage.Get()) &&
-		Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == Animation->StartSection);
+	return !(Animation && Instance && Instance->Montage_IsPlaying(PlayingMontage.Get()) && Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == Animation->StartSection);
 }
 
 void UInteractionComponent::RefreshInteractionCandidate(FGameplayTag ActionTag)
 {
 	if (bDispatchingInteraction) return;
 	FHitResult Hit;
-	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() &&
-		!HasActiveInteraction() && !IsPlayingReleaseAnimation())
+	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() && !HasActiveInteraction() && !IsPlayingReleaseAnimation())
 	{
 		Hit = ResolveInteractionCandidate(ActionTag);
 	}
@@ -186,8 +184,8 @@ bool UInteractionComponent::PlaySection(const FInteractionAnimation& Animation, 
 bool UInteractionComponent::IsPlayingReleaseAnimation() const
 {
 	const UAnimInstance* Instance = PlaybackInstance.Get();
-	return Instance && !ReleaseSectionName.IsNone() && Instance->Montage_IsPlaying(PlayingMontage.Get()) &&
-		Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == ReleaseSectionName;
+	return Instance && !ReleaseSectionName.IsNone() && Instance->Montage_IsPlaying(PlayingMontage.Get())
+	    && Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == ReleaseSectionName;
 }
 
 void UInteractionComponent::CommitRelease()
@@ -229,16 +227,19 @@ void UInteractionComponent::StopInteractionMontage()
 EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionContext& InteractionContext, FInteractionPayload& OutPayload)
 {
 	OutPayload.Reset();
-	
+
 	if (!IsActive() || !IsValid(GetOwner()) || !GetWorld() || bDispatchingInteraction || bEndingPlay)
 	{
 		return EInteractionResult::Rejected;
 	}
 
 	RefreshInteractionCandidate(InteractionContext.ActionTag);
-	ON_SCOPE_EXIT { RefreshInteractionCandidate(); };
+	ON_SCOPE_EXIT
+	{
+		RefreshInteractionCandidate();
+	};
 	TGuardValue<bool> DispatchGuard(bDispatchingInteraction, true);
-	
+
 	if (HasActiveInteraction())
 	{
 		if (!CanResumeInteraction()) return EInteractionResult::Rejected;
@@ -261,7 +262,7 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 	}
 
 	ClearActiveInteraction();
-	
+
 	const FHitResult Hit = CandidateHit;
 	AActor* Target = Hit.GetActor();
 	if (!IsValid(Target)) return EInteractionResult::Rejected;
@@ -296,7 +297,8 @@ FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag Actio
 	const FVector TraceStart = GetOwner()->GetActorLocation();
 	const FVector Forward = GetOwner()->GetActorForwardVector();
 	const FVector TraceEnd = TraceStart + Forward * InteractionLength;
-	GetWorld()->OverlapMultiByChannel(Overlaps, TraceEnd, FQuat::Identity, TraceChannel, FCollisionShape::MakeCapsule(CapsuleRadius, FMath::Max(CapsuleHalfHeight, CapsuleRadius)), CollisionParams);
+	GetWorld()->OverlapMultiByChannel(
+	    Overlaps, TraceEnd, FQuat::Identity, TraceChannel, FCollisionShape::MakeCapsule(CapsuleRadius, FMath::Max(CapsuleHalfHeight, CapsuleRadius)), CollisionParams);
 
 	FVector ReachStart = TraceStart;
 	if (const ACharacter* Character = Cast<ACharacter>(GetOwner()))
@@ -311,6 +313,7 @@ FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag Actio
 		FHitResult Hit;
 		double Score;
 	};
+
 	TArray<FCandidate> Candidates;
 	TSet<UPrimitiveComponent*> Visited;
 	for (const FOverlapResult& Overlap : Overlaps)
@@ -322,15 +325,15 @@ FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag Actio
 
 		FVector Point;
 		const bool bHasGrip = Component->DoesSocketExist(TEXT("Grip"));
-		if (bHasGrip) Point = Component->GetSocketLocation(TEXT("Grip"));
+		if (bHasGrip)
+			Point = Component->GetSocketLocation(TEXT("Grip"));
 		else if (Component->GetClosestPointOnCollision(ReachStart, Point) < 0.0f)
 			Point = Component->Bounds.GetBox().GetClosestPointTo(ReachStart);
 
 		const FVector Offset = Point - ReachStart;
 		const FVector Direction = Offset.GetSafeNormal();
 		FHitResult Obstacle;
-		const bool bBlocked = GetWorld()->LineTraceSingleByChannel(Obstacle, ReachStart,
-			Point + Direction, TraceChannel, CollisionParams) && Obstacle.GetActor() != Target;
+		const bool bBlocked = GetWorld()->LineTraceSingleByChannel(Obstacle, ReachStart, Point + Direction, TraceChannel, CollisionParams) && Obstacle.GetActor() != Target;
 		if (bDebug)
 		{
 			DrawDebugLine(GetWorld(), ReachStart, Point, bBlocked ? FColor::Red : FColor::Green, false, 0.0f);
@@ -350,10 +353,14 @@ FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag Actio
 		const double Score = 1.0 - FVector::DotProduct(Forward, Direction) + 0.1 * Hit.Distance / FMath::Max(InteractionLength + CapsuleRadius, 1.0f);
 		Candidates.Add({Hit, Score});
 	}
-	Candidates.Sort([](const FCandidate& A, const FCandidate& B) { return A.Score < B.Score; });
+	Candidates.Sort([](const FCandidate& A, const FCandidate& B)
+	{
+		return A.Score < B.Score;
+	});
 	if (bDebug)
 	{
-		DrawDebugCapsule(GetWorld(), TraceEnd, FMath::Max(CapsuleHalfHeight, CapsuleRadius), CapsuleRadius, FQuat::Identity, Candidates.IsEmpty() ? FColor::Red : FColor::Green, false, 0.0f);
+		DrawDebugCapsule(
+		    GetWorld(), TraceEnd, FMath::Max(CapsuleHalfHeight, CapsuleRadius), CapsuleRadius, FQuat::Identity, Candidates.IsEmpty() ? FColor::Red : FColor::Green, false, 0.0f);
 	}
 
 	for (const FCandidate& Candidate : Candidates)
@@ -383,18 +390,19 @@ void UInteractionComponent::CancelInteraction()
 bool UInteractionComponent::FinishInteraction(bool bCancelled)
 {
 	if (bDispatchingInteraction) return false;
-	ON_SCOPE_EXIT { RefreshInteractionCandidate(); };
+	ON_SCOPE_EXIT
+	{
+		RefreshInteractionCandidate();
+	};
 	AActor* Target = ActiveInteraction.InteractedActor.Get();
 	FInteractionContext Context = ActiveContext;
 	Context.InteractionPhase = EInteractionPhase::End;
-	Context.HoldDuration = ReleaseMontageId != INDEX_NONE
-		? ReleasedHoldDuration
-		: (GetWorld() ? FMath::Max(0.0, GetWorld()->GetTimeSeconds() - PressStartTime) : 0.0);
+	Context.HoldDuration = ReleaseMontageId != INDEX_NONE ? ReleasedHoldDuration : (GetWorld() ? FMath::Max(0.0, GetWorld()->GetTimeSeconds() - PressStartTime) : 0.0);
 	Context.bCancelled = bCancelled;
 	ClearActiveInteraction();
 
 	if (!IsValid(Target) || Target->IsActorBeingDestroyed()) return false;
-	
+
 	TGuardValue<bool> DispatchGuard(bDispatchingInteraction, true);
 	IInteractionInterface::Execute_OnInteraction(Target, Context);
 	return true;
@@ -437,7 +445,7 @@ void UInteractionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void UInteractionComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	const FName PropertyName = PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-	
+
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(UInteractionComponent, CapsuleHalfHeight))
 	{
 		CapsuleHalfHeight = FMath::Max3(0.f, CapsuleHalfHeight, CapsuleRadius);
@@ -450,4 +458,3 @@ void UInteractionComponent::PostEditChangeProperty(FPropertyChangedEvent& Proper
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
 #endif
-

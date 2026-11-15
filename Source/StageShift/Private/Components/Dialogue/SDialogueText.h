@@ -23,7 +23,8 @@ public:
 
 	virtual void Tick(const FGeometry& Geometry, double CurrentTime, float DeltaTime) override;
 	virtual FVector2D ComputeDesiredSize(float LayoutScale) const override;
-	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& CullingRect,FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle& Style, bool bParentEnabled) const override;
+	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& CullingRect, FSlateWindowElementList& Elements, int32 Layer,
+	    const FWidgetStyle& Style, bool bParentEnabled) const override;
 
 private:
 	struct FGlyph
@@ -50,7 +51,8 @@ private:
 
 	void Layout(FLine& Line, const FText& Text);
 	void PaintLine(const FLine& Line, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 TextLayer, FLinearColor Tint, bool bExiting) const;
-	void PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale, float Fracture, int32 Index) const;
+	void PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale,
+	    float Fracture, int32 Index) const;
 	void UpdateOpacity() const;
 
 	FSlateFontInfo Font;

@@ -8,46 +8,53 @@
 #include "StatusesComponent.h"
 #include "StatusesInfo.h"
 #include "UObject/Package.h"
+
 DEFINE_LOG_CATEGORY(LogStageShiftStage);
 
 void AStageManager::AddDiagnostic(const FString& Message)
 {
-    const FString Step = State == EStageState::Finalizing ? TEXT("Finale") :
-        ActiveStage && ActiveStage->Steps.IsValidIndex(CurrentStepIndex) && !ActiveStage->Steps[CurrentStepIndex].StepId.IsNone()
-        ? ActiveStage->Steps[CurrentStepIndex].StepId.ToString() : FString::FromInt(CurrentStepIndex);
-    const FString Line = FString::Printf(TEXT("%s / Run[%s] / Step[%s] / %s"),
-        ActiveStage ? *ActiveStage->GetEffectiveStageKey().ToString() : TEXT("None"), *RunId.ToString(EGuidFormats::Digits), *Step, *Message);
-    if (RecentEvents.Num() >= 32) RecentEvents.RemoveAt(0);
-    RecentEvents.Add(Line);
-    UE_LOG(LogStageShiftStage, Display, TEXT("%s"), *Line);
+	const FString Step = State == EStageState::Finalizing ? TEXT("Finale")
+	    : ActiveStage && ActiveStage->Steps.IsValidIndex(CurrentStepIndex) && !ActiveStage->Steps[CurrentStepIndex].StepId.IsNone()
+	    ? ActiveStage->Steps[CurrentStepIndex].StepId.ToString()
+	    : FString::FromInt(CurrentStepIndex);
+	const FString Line = FString::Printf(
+	    TEXT("%s / Run[%s] / Step[%s] / %s"), ActiveStage ? *ActiveStage->GetEffectiveStageKey().ToString() : TEXT("None"), *RunId.ToString(EGuidFormats::Digits), *Step, *Message);
+	if (RecentEvents.Num() >= 32) RecentEvents.RemoveAt(0);
+	RecentEvents.Add(Line);
+	UE_LOG(LogStageShiftStage, Display, TEXT("%s"), *Line);
 }
 
 FString AStageManager::DescribeCommand(const UStageMemberCommand* Command) const
 {
-    const auto* Entry = FindRoot(Command);
-    if (!Entry) return GetNameSafe(Command);
-    FString Path;
-    if (Entry->CommandType == EStageCommandType::Finale) Path = TEXT("Finale");
-    else if (Entry->CommandType == EStageCommandType::Reaction && ActiveStage && ActiveStage->MemberReactions.IsValidIndex(Entry->SourceIndex))
-        Path = TEXT("Reaction[") + ActiveStage->MemberReactions[Entry->SourceIndex].ReactionId.ToString() + TEXT("]");
-    else if (ActiveStage && ActiveStage->Steps.IsValidIndex(Entry->SourceIndex))
-        Path = TEXT("Step[") + ActiveStage->Steps[Entry->SourceIndex].StepId.ToString() + TEXT("]");
-    Path += TEXT(" / Role[") + Entry->RoleId.ToString() + TEXT("]");
-    TFunction<bool(const UStageMemberCommand*, FString&)> FindChild = [&](const UStageMemberCommand* Parent, FString& Suffix)
-    {
-        if (Parent == Command) return true;
-        int32 Index = 0;
-        for (const UStageMemberCommand* Child : Parent->GetChildCommands())
-        {
-            FString ChildSuffix;
-            if (Child && FindChild(Child, ChildSuffix)) { Suffix = FString::Printf(TEXT(" / Child[%d]"), Index) + ChildSuffix; return true; }
-            ++Index;
-        }
-        return false;
-    };
-    FString Suffix;
-    FindChild(Entry->Command, Suffix);
-    return Path + Suffix + TEXT(" / ") + Command->GetClass()->GetName();
+	const auto* Entry = FindRoot(Command);
+	if (!Entry) return GetNameSafe(Command);
+	FString Path;
+	if (Entry->CommandType == EStageCommandType::Finale)
+		Path = TEXT("Finale");
+	else if (Entry->CommandType == EStageCommandType::Reaction && ActiveStage && ActiveStage->MemberReactions.IsValidIndex(Entry->SourceIndex))
+		Path = TEXT("Reaction[") + ActiveStage->MemberReactions[Entry->SourceIndex].ReactionId.ToString() + TEXT("]");
+	else if (ActiveStage && ActiveStage->Steps.IsValidIndex(Entry->SourceIndex))
+		Path = TEXT("Step[") + ActiveStage->Steps[Entry->SourceIndex].StepId.ToString() + TEXT("]");
+	Path += TEXT(" / Role[") + Entry->RoleId.ToString() + TEXT("]");
+	TFunction<bool(const UStageMemberCommand*, FString&)> FindChild = [&](const UStageMemberCommand* Parent, FString& Suffix)
+	{
+		if (Parent == Command) return true;
+		int32 Index = 0;
+		for (const UStageMemberCommand* Child : Parent->GetChildCommands())
+		{
+			FString ChildSuffix;
+			if (Child && FindChild(Child, ChildSuffix))
+			{
+				Suffix = FString::Printf(TEXT(" / Child[%d]"), Index) + ChildSuffix;
+				return true;
+			}
+			++Index;
+		}
+		return false;
+	};
+	FString Suffix;
+	FindChild(Entry->Command, Suffix);
+	return Path + Suffix + TEXT(" / ") + Command->GetClass()->GetName();
 }
 
 AStageManager::AStageManager()
@@ -58,26 +65,27 @@ AStageManager::AStageManager()
 
 bool AStageManager::ValidateStage(UStageDataAsset* Data, const TMap<FName, AActor*>& Actors, FText& Error) const
 {
-    TArray<FString> Errors;
-    CollectValidationErrors(Data, Actors, Errors, false);
-    Error = FText::FromString(FString::Join(Errors, TEXT("\n")));
-    return Errors.IsEmpty();
+	TArray<FString> Errors;
+	CollectValidationErrors(Data, Actors, Errors, false);
+	Error = FText::FromString(FString::Join(Errors, TEXT("\n")));
+	return Errors.IsEmpty();
 }
 
 bool AStageManager::StartStage(UStageDataAsset* Data, const TMap<FGameplayTag, AActor*>& Overrides, FText& Error)
 {
-    TMap<FName, AActor*> ByIds;
-    for (const auto& Pair : Overrides) ByIds.Add(Pair.Key.GetTagName(), Pair.Value);
-    return StartStageByIds(Data, ByIds, Error);
+	TMap<FName, AActor*> ByIds;
+	for (const auto& Pair : Overrides)
+		ByIds.Add(Pair.Key.GetTagName(), Pair.Value);
+	return StartStageByIds(Data, ByIds, Error);
 }
 
 bool AStageManager::StartStageByIds(UStageDataAsset* Data, const TMap<FName, AActor*>& Overrides, FText& Error)
 {
-    return StartStageWithBindings(Data, Overrides, TargetBindings, Error, false);
+	return StartStageWithBindings(Data, Overrides, TargetBindings, Error, false);
 }
 
-bool AStageManager::StartStageWithBindings(UStageDataAsset* Data, const TMap<FName,AActor*>& Overrides,
-    const TMap<FName,TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery)
+bool AStageManager::StartStageWithBindings(
+    UStageDataAsset* Data, const TMap<FName, AActor*>& Overrides, const TMap<FName, TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery)
 {
 	Error = FText::GetEmpty();
 	if (bManagerEndingPlay || IsActorBeingDestroyed() || State != EStageState::Idle || !IsValid(Data) || !GetWorld() || (IsProductionActive() && !bStartingProductionScene))
@@ -87,29 +95,39 @@ bool AStageManager::StartStageWithBindings(UStageDataAsset* Data, const TMap<FNa
 	}
 	const TArray<FName> Roles = Data->GetRoleOptions();
 	for (const auto& Pair : Overrides)
-		if (!Roles.Contains(Pair.Key)) { Error = FText::FromString(TEXT("Unknown override RoleId: ") + Pair.Key.ToString()); return false; }
+		if (!Roles.Contains(Pair.Key))
+		{
+			Error = FText::FromString(TEXT("Unknown override RoleId: ") + Pair.Key.ToString());
+			return false;
+		}
 	const TMap<FName, AActor*> Resolved = ResolveBindings(Data, Overrides);
-    TGuardValue<bool> ValidationFlag(bUseValidationTargets, true);
-    TGuardValue<TMap<FName,TObjectPtr<AActor>>> ValidationBindings(ValidationTargets, Targets);
-    TArray<FString> Errors;
-    if (!CollectValidationErrors(Data, Resolved, Errors, bStrictRecovery)) { Error = FText::FromString(FString::Join(Errors,TEXT("\n"))); return false; }
+	TGuardValue<bool> ValidationFlag(bUseValidationTargets, true);
+	TGuardValue<TMap<FName, TObjectPtr<AActor>>> ValidationBindings(ValidationTargets, Targets);
+	TArray<FString> Errors;
+	if (!CollectValidationErrors(Data, Resolved, Errors, bStrictRecovery))
+	{
+		Error = FText::FromString(FString::Join(Errors, TEXT("\n")));
+		return false;
+	}
 	TArray<UStageMemberComponent*> PreparedMembers;
 	for (const auto& Pair : Resolved)
 	{
 		auto* Member = Pair.Value->FindComponentByClass<UStageMemberComponent>();
 		if (!Member->BindToStage(this))
 		{
-			for (auto* Prepared : PreparedMembers) Prepared->EndStageMember();
+			for (auto* Prepared : PreparedMembers)
+				Prepared->EndStageMember();
 			Error = FText::FromString(TEXT("Could not bind Stage members."));
 			return false;
 		}
 		PreparedMembers.Add(Member);
 	}
 	ActiveStage = Data;
-    ActiveTargetBindings = Targets;
+	ActiveTargetBindings = Targets;
 	Members.Reset();
 	BoundMembers.Reset();
-	for (const auto& Pair : Resolved) Members.Add(Pair.Key, Pair.Value);
+	for (const auto& Pair : Resolved)
+		Members.Add(Pair.Key, Pair.Value);
 	for (auto* Member : PreparedMembers)
 	{
 		BoundMembers.Add(Member);
@@ -131,7 +149,8 @@ bool AStageManager::StartStageWithBindings(UStageDataAsset* Data, const TMap<FNa
 	PreparedSteps = Data->Steps;
 	const auto RejectPreparation = [&]()
 	{
-		for (const auto& Member : BoundMembers) if (Member.IsValid()) Member->EndStageMember();
+		for (const auto& Member : BoundMembers)
+			if (Member.IsValid()) Member->EndStageMember();
 		CleanupStage();
 		return false;
 	};
@@ -179,7 +198,8 @@ void AStageManager::AddScore(int32 Amount)
 int32 AStageManager::GetStarCount() const
 {
 	int32 Count = 0;
-	for (int32 Threshold : StarThresholds) if (Score >= Threshold) ++Count;
+	for (int32 Threshold : StarThresholds)
+		if (Score >= Threshold) ++Count;
 	return Count;
 }
 
@@ -205,9 +225,12 @@ UStageMemberCommand* AStageManager::CreatePreparedCommand(const FStageMemberAssi
 		return nullptr;
 	}
 	auto* Working = DuplicateObject<UStageMemberCommand>(Assignment.Command, Member);
-    TArray<FString> ParameterErrors;
-    if(ActiveStage&&!FStageCommandParameters::ApplyTree(Working,ActiveStage->Parameters,ParameterErrors,ActiveProduction?&ActiveProduction->Parameters:nullptr))
-    {Error=FText::FromString(FString::Join(ParameterErrors,TEXT("\n")));return nullptr;}
+	TArray<FString> ParameterErrors;
+	if (ActiveStage && !FStageCommandParameters::ApplyTree(Working, ActiveStage->Parameters, ParameterErrors, ActiveProduction ? &ActiveProduction->Parameters : nullptr))
+	{
+		Error = FText::FromString(FString::Join(ParameterErrors, TEXT("\n")));
+		return nullptr;
+	}
 	FStageExecutionContext Context;
 	Context.Manager = this;
 	Context.MemberComponent = Member;
@@ -228,8 +251,8 @@ UStageMemberCommand* AStageManager::CreatePreparedCommand(const FStageMemberAssi
 	return Working;
 }
 
-TArray<TObjectPtr<UStageMemberCommand>> AStageManager::PrepareCommands(const TArray<FStageMemberAssignment>& Assignments,
-	EStageCommandType Type, int32 SourceIndex,FGuid ReactionActivation)
+TArray<TObjectPtr<UStageMemberCommand>> AStageManager::PrepareCommands(
+    const TArray<FStageMemberAssignment>& Assignments, EStageCommandType Type, int32 SourceIndex, FGuid ReactionActivation)
 {
 	TArray<TObjectPtr<UStageMemberCommand>> Prepared;
 	for (const auto& Assignment : Assignments)
@@ -267,7 +290,7 @@ TArray<TObjectPtr<UStageMemberCommand>> AStageManager::PrepareCommands(const TAr
 		Entry.MemberComponent = Member;
 		Entry.CommandType = Type;
 		Entry.SourceIndex = SourceIndex;
-        Entry.ReactionActivationId=ReactionActivation;
+		Entry.ReactionActivationId = ReactionActivation;
 		Prepared.Add(Working);
 	}
 	return Prepared;
@@ -288,34 +311,43 @@ void AStageManager::IssueCommands(const TArray<TObjectPtr<UStageMemberCommand>>&
 FStageRootExecution* AStageManager::FindRoot(const UStageMemberCommand* Command)
 {
 	const auto* Root = Command ? Command->GetRootCommand() : nullptr;
-	return RootExecutions.FindByPredicate([Root](const auto& Entry) { return Entry.Command == Root; });
+	return RootExecutions.FindByPredicate([Root](const auto& Entry)
+	{
+		return Entry.Command == Root;
+	});
 }
 
 const FStageRootExecution* AStageManager::FindRoot(const UStageMemberCommand* Command) const
 {
 	const auto* Root = Command ? Command->GetRootCommand() : nullptr;
-	return RootExecutions.FindByPredicate([Root](const auto& Entry) { return Entry.Command == Root; });
+	return RootExecutions.FindByPredicate([Root](const auto& Entry)
+	{
+		return Entry.Command == Root;
+	});
 }
 
 void AStageManager::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-    TickProduction();
+	TickProduction();
 	if (State != EStageState::Idle)
 	{
-        for (const auto& Bound : BoundMembers)
-            if (!Bound.IsValid() || !IsValid(Bound->GetOwner()) || Bound->GetOwner()->IsActorBeingDestroyed())
-            {
-                AbortStage(FText::FromString(TEXT("Bound participant disappeared")));
-                break;
-            }
-        if (State == EStageState::Idle) { UpdateDebugDisplay(); return; }
+		for (const auto& Bound : BoundMembers)
+			if (!Bound.IsValid() || !IsValid(Bound->GetOwner()) || Bound->GetOwner()->IsActorBeingDestroyed())
+			{
+				AbortStage(FText::FromString(TEXT("Bound participant disappeared")));
+				break;
+			}
+		if (State == EStageState::Idle)
+		{
+			UpdateDebugDisplay();
+			return;
+		}
 		UpdateTiming();
 		if (State == EStageState::Running && StageElapsedTime >= ActiveStage->MainDuration) BeginFinale();
-        if (State == EStageState::Finalizing && GetWorld()->GetTimeSeconds() - FinalizingStartedAt >= ActiveStage->FinaleBudget)
-            AbortStage(FText::FromString(TEXT("FinaleBudget expired")));
-        if (State == EStageState::Stopping && GetWorld()->GetTimeSeconds() >= StoppingDeadline)
-            AbortStage(FText::FromString(TEXT("Stopping deadline expired")));
+		if (State == EStageState::Finalizing && GetWorld()->GetTimeSeconds() - FinalizingStartedAt >= ActiveStage->FinaleBudget)
+			AbortStage(FText::FromString(TEXT("FinaleBudget expired")));
+		if (State == EStageState::Stopping && GetWorld()->GetTimeSeconds() >= StoppingDeadline) AbortStage(FText::FromString(TEXT("Stopping deadline expired")));
 		if (bAdvanceRequested) AdvanceStage();
 	}
 	UpdateDebugDisplay();
@@ -323,18 +355,23 @@ void AStageManager::Tick(float DeltaSeconds)
 
 void AStageManager::AdvanceStage()
 {
-	if (bIssuingCommands || bAdvancing || EventDispatchDepth != 0) { bAdvanceRequested = true; return; }
+	if (bIssuingCommands || bAdvancing || EventDispatchDepth != 0)
+	{
+		bAdvanceRequested = true;
+		return;
+	}
 	bAdvanceRequested = false;
 	if (State == EStageState::Running)
 	{
 		UpdateTiming();
-		if (StageElapsedTime >= ActiveStage->MainDuration) BeginFinale();
+		if (StageElapsedTime >= ActiveStage->MainDuration)
+			BeginFinale();
 		else if (!CurrentStepResults.FindKey(EStageCommandResult::None))
 		{
 			if (CurrentStepIndex + 1 >= ActiveStage->Steps.Num())
-            {
-                if (ActiveStage->TimingPolicy != EStageTimingPolicy::FixedMainDuration) BeginFinale();
-            }
+			{
+				if (ActiveStage->TimingPolicy != EStageTimingPolicy::FixedMainDuration) BeginFinale();
+			}
 			else
 			{
 				bAdvancing = bIssuingCommands = true;
@@ -342,7 +379,8 @@ void AStageManager::AdvanceStage()
 				CurrentStepResults.Reset();
 				++CurrentStepIndex;
 				const auto& Assignments = PreparedSteps[CurrentStepIndex].Commands;
-				for (const auto& Assignment : Assignments) CurrentStepResults.Add(Assignment.GetEffectiveRoleId(), EStageCommandResult::None);
+				for (const auto& Assignment : Assignments)
+					CurrentStepResults.Add(Assignment.GetEffectiveRoleId(), EStageCommandResult::None);
 				const auto Prepared = PrepareCommands(Assignments, EStageCommandType::Scenario, CurrentStepIndex);
 				IssueCommands(Prepared);
 				bAdvancing = bIssuingCommands = false;
@@ -357,12 +395,13 @@ void AStageManager::BeginFinale()
 	if (State != EStageState::Running) return;
 	UpdateTiming();
 	State = EStageState::Finalizing;
-    FinalizingStartedAt = GetWorld()->GetTimeSeconds();
-    AddDiagnostic(TEXT("Finale started"));
+	FinalizingStartedAt = GetWorld()->GetTimeSeconds();
+	AddDiagnostic(TEXT("Finale started"));
 	bIssuingCommands = true;
 	const auto Prepared = PrepareCommands(ActiveStage->Finale, EStageCommandType::Finale, INDEX_NONE);
 	const auto Snapshot = BoundMembers;
-	for (const auto& Member : Snapshot) if (Member.IsValid()) Member->RequestStopCommands();
+	for (const auto& Member : Snapshot)
+		if (Member.IsValid()) Member->RequestStopCommands();
 	IssueCommands(Prepared);
 	bIssuingCommands = false;
 	bAdvanceRequested = true;
@@ -374,23 +413,22 @@ void AStageManager::FailStage(const FText& Reason)
 	UpdateTiming();
 	State = EStageState::Stopping;
 	FailureReason = Reason;
-    float Budget = 30.0f;
-    for (const auto& Entry : RootExecutions)
-        if (Entry.Command && Entry.Result == EStageCommandResult::None)
-            Budget = FMath::Max(Budget, Entry.Command->GetRemainingTime() * 2.0f + 10.0f);
-    StoppingDeadline = GetWorld()->GetTimeSeconds() + Budget;
+	float Budget = 30.0f;
+	for (const auto& Entry : RootExecutions)
+		if (Entry.Command && Entry.Result == EStageCommandResult::None) Budget = FMath::Max(Budget, Entry.Command->GetRemainingTime() * 2.0f + 10.0f);
+	StoppingDeadline = GetWorld()->GetTimeSeconds() + Budget;
 	const bool bWasIssuing = bIssuingCommands;
 	bIssuingCommands = true;
 	const auto Snapshot = BoundMembers;
-	for (const auto& Member : Snapshot) if (Member.IsValid()) Member->EndStageMember();
+	for (const auto& Member : Snapshot)
+		if (Member.IsValid()) Member->EndStageMember();
 	bIssuingCommands = bWasIssuing;
 	bAdvanceRequested = true;
 }
 
 void AStageManager::FinishStageIfReady()
 {
-	if ((State != EStageState::Finalizing && State != EStageState::Stopping) ||
-		bIssuingCommands || bAdvancing || EventDispatchDepth != 0) return;
+	if ((State != EStageState::Finalizing && State != EStageState::Stopping) || bIssuingCommands || bAdvancing || EventDispatchDepth != 0) return;
 	if (State == EStageState::Finalizing)
 	{
 		for (const auto& Entry : RootExecutions)
@@ -404,7 +442,8 @@ void AStageManager::FinishStageIfReady()
 		}
 		bIssuingCommands = true;
 		const auto Snapshot = BoundMembers;
-		for (const auto& Member : Snapshot) if (Member.IsValid()) Member->EndStageMember();
+		for (const auto& Member : Snapshot)
+			if (Member.IsValid()) Member->EndStageMember();
 		bIssuingCommands = false;
 	}
 	for (const auto& Member : BoundMembers)
@@ -418,11 +457,13 @@ void AStageManager::FinishStageIfReady()
 	CleanupStage();
 	if (StageId.IsValid())
 	{
-		if (bFailed) OnStageFailed.Broadcast(StageId, Reason);
-		else OnStageCompleted.Broadcast(StageId);
+		if (bFailed)
+			OnStageFailed.Broadcast(StageId, Reason);
+		else
+			OnStageCompleted.Broadcast(StageId);
 	}
 	OnStageFinishedById.Broadcast(Key, !bFailed, Reason);
-    if (IsValid(this) && ProductionRunId == ProductionAtFinish && IsProductionActive() && !bAbortingProduction) HandleProductionSceneFinished(Key, !bFailed, Reason);
+	if (IsValid(this) && ProductionRunId == ProductionAtFinish && IsProductionActive() && !bAbortingProduction) HandleProductionSceneFinished(Key, !bFailed, Reason);
 }
 
 void AStageManager::CleanupStage()
@@ -440,9 +481,9 @@ void AStageManager::CleanupStage()
 	PreparedSteps.Reset();
 	PlannedStepStarts.Reset();
 	ReactionActivationCounts.Reset();
-    StartedReactionActivations.Reset();
+	StartedReactionActivations.Reset();
 	ActiveStage = nullptr;
-    ActiveTargetBindings.Reset();
+	ActiveTargetBindings.Reset();
 	CurrentStepIndex = INDEX_NONE;
 	bAdvanceRequested = false;
 	State = EStageState::Idle;
@@ -453,16 +494,22 @@ void AStageManager::HandleRootFinished(UStageMemberCommand* Command, EStageComma
 	auto* Entry = FindRoot(Command);
 	if (!Entry || Entry->Command != Command || Entry->Result != EStageCommandResult::None) return;
 	Entry->Result = Result;
-    AddDiagnostic(DescribeCommand(Command) + TEXT(" / result=") + StaticEnum<EStageCommandResult>()->GetNameStringByValue(static_cast<int64>(Result)));
-	if (Entry->CommandType == EStageCommandType::Scenario && Entry->SourceIndex == CurrentStepIndex)
-		CurrentStepResults.FindOrAdd(Entry->RoleId) = Result;
-	if (Entry->CommandType == EStageCommandType::Finale && Result != EStageCommandResult::Succeeded)
-		FailStage(FText::FromString(TEXT("A mandatory Finale command failed.")));
+	AddDiagnostic(DescribeCommand(Command) + TEXT(" / result=") + StaticEnum<EStageCommandResult>()->GetNameStringByValue(static_cast<int64>(Result)));
+	if (Entry->CommandType == EStageCommandType::Scenario && Entry->SourceIndex == CurrentStepIndex) CurrentStepResults.FindOrAdd(Entry->RoleId) = Result;
+	if (Entry->CommandType == EStageCommandType::Finale && Result != EStageCommandResult::Succeeded) FailStage(FText::FromString(TEXT("A mandatory Finale command failed.")));
 	bAdvanceRequested = true;
 }
 
-void AStageManager::HandleMemberFinished(UStageMemberComponent* Member) { bAdvanceRequested = true; }
-void AStageManager::BeginNotification() { ++EventDispatchDepth; }
+void AStageManager::HandleMemberFinished(UStageMemberComponent* Member)
+{
+	bAdvanceRequested = true;
+}
+
+void AStageManager::BeginNotification()
+{
+	++EventDispatchDepth;
+}
+
 void AStageManager::EndNotification()
 {
 	check(EventDispatchDepth > 0);
@@ -482,7 +529,11 @@ EStageLatenessLevel AStageManager::ResolveLatenessLevel(float Seconds) const
 	float HighestThreshold = 0.0f;
 	if (ActiveStage)
 		for (const auto& Pair : ActiveStage->LatenessThreshold)
-			if (Pair.Value <= Seconds && Pair.Value > HighestThreshold) { HighestThreshold = Pair.Value; Level = Pair.Key; }
+			if (Pair.Value <= Seconds && Pair.Value > HighestThreshold)
+			{
+				HighestThreshold = Pair.Value;
+				Level = Pair.Key;
+			}
 	return Level;
 }
 
@@ -500,7 +551,9 @@ void AStageManager::UpdateTiming()
 			bHasUnfinishedLeaf = true;
 			MeasuredLateness = FMath::Max(MeasuredLateness, GetCommandLateness(Command));
 		}
-		else for (const UStageMemberCommand* Child : Command->GetChildCommands()) Measure(Child);
+		else
+			for (const UStageMemberCommand* Child : Command->GetChildCommands())
+				Measure(Child);
 	};
 	for (const auto& Entry : RootExecutions)
 		if (Entry.CommandType == EStageCommandType::Scenario && Entry.Result == EStageCommandResult::None) Measure(Entry.Command);
@@ -515,12 +568,10 @@ bool AStageManager::CheckReaction(const FStageRootExecution& Entry) const
 	if (!ActiveStage || !ActiveStage->MemberReactions.IsValidIndex(Entry.SourceIndex) || !Entry.MemberComponent.IsValid()) return false;
 	const auto& Reaction = ActiveStage->MemberReactions[Entry.SourceIndex];
 	const auto* Statuses = Entry.MemberComponent->GetOwner()->FindComponentByClass<UStatusesComponent>();
-    const bool OwnActivation=Entry.ReactionActivationId.IsValid()&&StartedReactionActivations.Contains(Entry.ReactionActivationId);
-	return Statuses &&
-		(OwnActivation || !Reaction.bUseCooldown || GetStageElapsedTime() - LastReactionStartedTimes[Entry.SourceIndex] >= Reaction.CooldownDuration) &&
-		(OwnActivation || Reaction.MaxActivationsPerStage == 0 || ReactionActivationCounts[Entry.SourceIndex] < Reaction.MaxActivationsPerStage) &&
-		(!Reaction.CooldownTag.IsValid() || !Statuses->GetStatuses().HasTag(Reaction.CooldownTag)) &&
-		Reaction.ExecRequirements.GetIsAccess(Statuses->GetStatuses());
+	const bool OwnActivation = Entry.ReactionActivationId.IsValid() && StartedReactionActivations.Contains(Entry.ReactionActivationId);
+	return Statuses && (OwnActivation || !Reaction.bUseCooldown || GetStageElapsedTime() - LastReactionStartedTimes[Entry.SourceIndex] >= Reaction.CooldownDuration)
+	    && (OwnActivation || Reaction.MaxActivationsPerStage == 0 || ReactionActivationCounts[Entry.SourceIndex] < Reaction.MaxActivationsPerStage)
+	    && (!Reaction.CooldownTag.IsValid() || !Statuses->GetStatuses().HasTag(Reaction.CooldownTag)) && Reaction.ExecRequirements.GetIsAccess(Statuses->GetStatuses());
 }
 
 EStageCommandResult AStageManager::CheckCommandStart(UStageMemberCommand* Command)
@@ -528,8 +579,8 @@ EStageCommandResult AStageManager::CheckCommandStart(UStageMemberCommand* Comman
 	if (!ActiveStage) return EStageCommandResult::None;
 	if (State == EStageState::Running && GetStageElapsedTime() >= ActiveStage->MainDuration) BeginFinale();
 	const auto* Entry = FindRoot(Command);
-	if (!Entry || State == EStageState::Stopping || State == EStageState::Idle ||
-		(State == EStageState::Finalizing && Entry->CommandType != EStageCommandType::Finale)) return EStageCommandResult::Cancelled;
+	if (!Entry || State == EStageState::Stopping || State == EStageState::Idle || (State == EStageState::Finalizing && Entry->CommandType != EStageCommandType::Finale))
+		return EStageCommandResult::Cancelled;
 	if (Entry->CommandType == EStageCommandType::Scenario && !Command->GetEffectiveRequiredSuccessRoleId().IsNone())
 	{
 		const auto* Result = PreviousStepResults.Find(Command->GetEffectiveRequiredSuccessRoleId());
@@ -542,8 +593,7 @@ EStageCommandResult AStageManager::CheckCommandStart(UStageMemberCommand* Comman
 bool AStageManager::ShouldSkipCommand(const UStageMemberCommand* Command) const
 {
 	const auto* Entry = FindRoot(Command);
-	return Entry && Entry->CommandType == EStageCommandType::Scenario &&
-		Command->CatchUpPolicy == EStageCatchUpPolicy::SkipBeforeStart && GetCommandLateness(Command) > 0.0f;
+	return Entry && Entry->CommandType == EStageCommandType::Scenario && Command->CatchUpPolicy == EStageCatchUpPolicy::SkipBeforeStart && GetCommandLateness(Command) > 0.0f;
 }
 
 void AStageManager::HandleCommandStarted(UStageMemberCommand* Command)
@@ -552,8 +602,12 @@ void AStageManager::HandleCommandStarted(UStageMemberCommand* Command)
 	{
 		Entry->bStarted = true;
 		if (Entry->CommandType != EStageCommandType::Reaction) return;
-        if(!Entry->ReactionActivationId.IsValid()||!StartedReactionActivations.Contains(Entry->ReactionActivationId))
-        {if(Entry->ReactionActivationId.IsValid())StartedReactionActivations.Add(Entry->ReactionActivationId);++ReactionActivationCounts[Entry->SourceIndex];LastReactionStartedTimes[Entry->SourceIndex]=GetStageElapsedTime();}
+		if (!Entry->ReactionActivationId.IsValid() || !StartedReactionActivations.Contains(Entry->ReactionActivationId))
+		{
+			if (Entry->ReactionActivationId.IsValid()) StartedReactionActivations.Add(Entry->ReactionActivationId);
+			++ReactionActivationCounts[Entry->SourceIndex];
+			LastReactionStartedTimes[Entry->SourceIndex] = GetStageElapsedTime();
+		}
 
 		const auto& Reaction = ActiveStage->MemberReactions[Entry->SourceIndex];
 		if (!Reaction.CooldownTag.IsValid()) return;
@@ -575,7 +629,8 @@ void AStageManager::AccountCommandResult(UStageMemberCommand* Command, EStageCom
 	const auto* Entry = FindRoot(Command);
 	if (!Entry || AccountedCommands.Contains(Command)) return;
 	AccountedCommands.Add(Command);
-	if (Entry->Command != Command) AddDiagnostic(DescribeCommand(Command) + TEXT(" / result=") + StaticEnum<EStageCommandResult>()->GetNameStringByValue(static_cast<int64>(Result)));
+	if (Entry->Command != Command)
+		AddDiagnostic(DescribeCommand(Command) + TEXT(" / result=") + StaticEnum<EStageCommandResult>()->GetNameStringByValue(static_cast<int64>(Result)));
 	if (State == EStageState::Running && Entry->CommandType == EStageCommandType::Scenario && !Command->IsComposite())
 	{
 		CurrentLatenessSeconds = FMath::Max(CurrentLatenessSeconds, GetCommandLateness(Command));
@@ -593,7 +648,8 @@ void AStageManager::ReceiveStageEvent(const FStageEvent& Event)
 {
 	if (!Event.EventTag.IsValid() || (State != EStageState::Running && State != EStageState::Finalizing)) return;
 	BeginNotification();
-    AddDiagnostic(FString::Printf(TEXT("Event[%s] / subject=%s / instigator=%s"), *Event.EventTag.ToString(), *GetNameSafe(Event.SubjectActor), *GetNameSafe(Event.InstigatorActor)));
+	AddDiagnostic(
+	    FString::Printf(TEXT("Event[%s] / subject=%s / instigator=%s"), *Event.EventTag.ToString(), *GetNameSafe(Event.SubjectActor), *GetNameSafe(Event.InstigatorActor)));
 	OnStageEvent.Broadcast(Event);
 	if (State == EStageState::Running)
 	{
@@ -601,18 +657,31 @@ void AStageManager::ReceiveStageEvent(const FStageEvent& Event)
 		for (int32 Index = 0; Index < Reactions.Num() && State == EStageState::Running; ++Index)
 		{
 			const auto& Reaction = Reactions[Index];
-			if (!Event.EventTag.MatchesTag(Reaction.EventTag) ||
-				(!Reaction.GetEffectiveSubjectRoleId().IsNone() && GetParticipant(Reaction.GetEffectiveSubjectRoleId()) != Event.SubjectActor)) continue;
-            const auto Assignments=Reaction.GetAssignments();bool Ready=true;
-            for(const auto& Assignment:Assignments)
-            {
-                AActor* Actor=GetParticipant(Assignment.GetEffectiveRoleId());auto* Member=IsValid(Actor)?Actor->FindComponentByClass<UStageMemberComponent>():nullptr;
-                FStageRootExecution Candidate;Candidate.MemberComponent=Member;Candidate.SourceIndex=Index;
-                if(!Member||Member->HasReaction()||!CheckReaction(Candidate)){Ready=false;break;}
-            }
-            if(!Ready){AddDiagnostic(TEXT("Reaction[")+Reaction.ReactionId.ToString()+TEXT("] rejected: performer busy, requirements, cooldown or activation limit"));continue;}
-            AddDiagnostic(TEXT("Reaction[")+Reaction.ReactionId.ToString()+FString::Printf(TEXT("] admitted for %d performers"),Assignments.Num()));
-            const auto Prepared = PrepareCommands(Assignments, EStageCommandType::Reaction, Index,FGuid::NewGuid());
+			if (!Event.EventTag.MatchesTag(Reaction.EventTag)
+			    || (!Reaction.GetEffectiveSubjectRoleId().IsNone() && GetParticipant(Reaction.GetEffectiveSubjectRoleId()) != Event.SubjectActor))
+				continue;
+			const auto Assignments = Reaction.GetAssignments();
+			bool Ready = true;
+			for (const auto& Assignment : Assignments)
+			{
+				AActor* Actor = GetParticipant(Assignment.GetEffectiveRoleId());
+				auto* Member = IsValid(Actor) ? Actor->FindComponentByClass<UStageMemberComponent>() : nullptr;
+				FStageRootExecution Candidate;
+				Candidate.MemberComponent = Member;
+				Candidate.SourceIndex = Index;
+				if (!Member || Member->HasReaction() || !CheckReaction(Candidate))
+				{
+					Ready = false;
+					break;
+				}
+			}
+			if (!Ready)
+			{
+				AddDiagnostic(TEXT("Reaction[") + Reaction.ReactionId.ToString() + TEXT("] rejected: performer busy, requirements, cooldown or activation limit"));
+				continue;
+			}
+			AddDiagnostic(TEXT("Reaction[") + Reaction.ReactionId.ToString() + FString::Printf(TEXT("] admitted for %d performers"), Assignments.Num()));
+			const auto Prepared = PrepareCommands(Assignments, EStageCommandType::Reaction, Index, FGuid::NewGuid());
 			IssueCommands(Prepared);
 		}
 	}

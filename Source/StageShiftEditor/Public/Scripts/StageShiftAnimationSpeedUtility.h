@@ -6,6 +6,7 @@
 class UAnimSequence;
 
 UCLASS()
+
 class STAGESHIFTEDITOR_API UStageShiftAnimationSpeedUtility : public UAssetActionUtility
 {
 	GENERATED_BODY()

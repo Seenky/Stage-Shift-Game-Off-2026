@@ -10,8 +10,7 @@
 FRigUnit_StageShiftPickup_Execute()
 {
 	const ACharacter* Character = Cast<ACharacter>(ExecuteContext.GetOwningActor());
-	const UStageShiftAnimInstance* Animation = Character && Character->GetMesh()
-		? Cast<UStageShiftAnimInstance>(Character->GetMesh()->GetAnimInstance()) : nullptr;
+	const UStageShiftAnimInstance* Animation = Character && Character->GetMesh() ? Cast<UStageShiftAnimInstance>(Character->GetMesh()->GetAnimInstance()) : nullptr;
 	URigHierarchy* Hierarchy = ExecuteContext.Hierarchy;
 	if (!Hierarchy || !Animation || Animation->PickupAlpha <= KINDA_SMALL_NUMBER) return;
 

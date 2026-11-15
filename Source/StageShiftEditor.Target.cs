@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class StageShiftEditorTarget : TargetRules
 {
-	public StageShiftEditorTarget( TargetInfo Target) : base(Target)
+	public StageShiftEditorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V7;

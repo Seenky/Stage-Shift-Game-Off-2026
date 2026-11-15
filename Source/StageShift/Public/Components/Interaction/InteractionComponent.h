@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,7 +14,8 @@ class UInputAction;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInteractionCandidateChanged, AActor*);
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UInteractionComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -23,33 +24,38 @@ public:
 	UInteractionComponent();
 
 	void BindInput(UEnhancedInputComponent& Input, const UInputAction* Action);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Interaction Component")
 	EInteractionResult BeginInteraction(const FInteractionContext& InteractionContext, FInteractionPayload& OutPayload);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Interaction Component")
 	bool EndInteraction();
 
 	UFUNCTION(BlueprintCallable, Category = "Interaction Component")
 	void CancelInteraction();
-	
+
 	UFUNCTION(BlueprintPure, Category = "Interaction Component")
+
 	const FInteractionPayload& GetActiveInteraction() const { return ActiveInteraction; }
 
 	UFUNCTION(BlueprintPure, Category = "Interaction Component")
+
 	bool HasActiveInteraction() const { return ActiveInteraction.IsValid(); }
 
 	bool IsPreparingRelease() const { return HasActiveInteraction() && ActiveResult == EInteractionResult::Active && ReleaseMontageId == INDEX_NONE; }
+
 	bool IsPlayingReleaseAnimation() const;
 
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
 
 	// Shared by the preview and BeginInteraction; never dispatches OnInteraction.
 	void RefreshInteractionCandidate(FGameplayTag ActionTag = FGameplayTag());
+
 	AActor* GetInteractionCandidate() const { return CandidateHit.GetActor(); }
+
 	FOnInteractionCandidateChanged OnInteractionCandidateChanged;
 	virtual void Deactivate() override;
-	
+
 protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* Tick) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -57,27 +63,27 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin = 0.0f))
 	float CapsuleRadius = 65.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin =0.0f))
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin = 0.0f))
 	float CapsuleHalfHeight = 88.0f;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings", meta = (ClampMin = 0.0f, UIMin = 0.0f))
 	float InteractionLength = 60.0f;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	bool bDebug = false;
 
 	// Keys come from the target's GetInteractionAnimationId implementation.
 	UPROPERTY(EditAnywhere, Category = "Interaction|Animation")
 	TMap<FName, FInteractionAnimation> Animations;
-	
+
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
-	
+
 private:
 	UPROPERTY(Transient)
 	FInteractionPayload ActiveInteraction;

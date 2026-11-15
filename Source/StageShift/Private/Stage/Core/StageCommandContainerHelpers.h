@@ -32,8 +32,10 @@ namespace StageCommandContainer
 		bool bAnySucceeded = false;
 		for (const EStageCommandResult Result : Results)
 		{
-			if (Result == EStageCommandResult::Succeeded) bAnySucceeded = true;
-			else if (Result != EStageCommandResult::Skipped) return EStageCommandResult::Failed;
+			if (Result == EStageCommandResult::Succeeded)
+				bAnySucceeded = true;
+			else if (Result != EStageCommandResult::Skipped)
+				return EStageCommandResult::Failed;
 		}
 		return bAnySucceeded ? EStageCommandResult::Succeeded : EStageCommandResult::Skipped;
 	}

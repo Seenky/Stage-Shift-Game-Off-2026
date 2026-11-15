@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -8,11 +8,11 @@
 #include "InteractionInterface.generated.h"
 
 UINTERFACE(Blueprintable)
+
 class STAGESHIFT_API UInteractionInterface : public UInterface
 {
 	GENERATED_BODY()
 };
-
 
 class STAGESHIFT_API IInteractionInterface
 {
@@ -22,7 +22,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	bool CanInteract(const FInteractionContext& InteractionContext) const;
 	virtual bool CanInteract_Implementation(const FInteractionContext& InteractionContext) const;
-	
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	EInteractionResult OnInteraction(const FInteractionContext& InteractionContext);
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& InteractionContext);

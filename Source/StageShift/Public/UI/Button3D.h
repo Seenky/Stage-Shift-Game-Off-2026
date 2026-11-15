@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -12,75 +12,76 @@ class UMaterialInterface;
 class UMaterialInstanceDynamic;
 
 UCLASS()
+
 class STAGESHIFT_API AButton3D : public AActor
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    AButton3D();
+	AButton3D();
 #if WITH_EDITOR
-    virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
-    virtual void OnConstruction(const FTransform& Transform) override;
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaTime) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 protected:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    TObjectPtr<UStaticMeshComponent> ButtonMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> ButtonMesh;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    TObjectPtr<UWidgetComponent> ButtonRepresentationWidget;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UWidgetComponent> ButtonRepresentationWidget;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
-    TObjectPtr<UMaterialInterface> InactiveButtonMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
+	TObjectPtr<UMaterialInterface> InactiveButtonMaterial;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
-    TObjectPtr<UMaterialInterface> HoveredButtonMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
+	TObjectPtr<UMaterialInterface> HoveredButtonMaterial;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
-    TObjectPtr<UMaterialInterface> ActiveButtonMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
+	TObjectPtr<UMaterialInterface> ActiveButtonMaterial;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.001"))
-    float MaterialBlendTime = 0.2f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.001"))
+	float MaterialBlendTime = 0.2f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.01"))
-    float ActiveHoldTime = 0.25f;
-    
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Settings|Event")
-    TObjectPtr<UUIClickEventBase> ClickEvent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.01"))
+	float ActiveHoldTime = 0.25f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Settings|Event")
+	TObjectPtr<UUIClickEventBase> ClickEvent;
 
 private:
-    UFUNCTION()
-    void OnButtonClicked(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed);
+	UFUNCTION()
+	void OnButtonClicked(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed);
 
-    UFUNCTION()
-    void OnButtonStartHover(UPrimitiveComponent* TouchedComponent);
+	UFUNCTION()
+	void OnButtonStartHover(UPrimitiveComponent* TouchedComponent);
 
-    UFUNCTION()
-    void OnButtonEndHover(UPrimitiveComponent* TouchedComponent);
+	UFUNCTION()
+	void OnButtonEndHover(UPrimitiveComponent* TouchedComponent);
 
-    void DeactivateButton();
-    void UpdateMaterialBlend(float DeltaTime);
-    void RequestMaterialUpdate();
+	void DeactivateButton();
+	void UpdateMaterialBlend(float DeltaTime);
+	void RequestMaterialUpdate();
 
-    UPROPERTY(Transient)
-    TObjectPtr<UMaterialInstanceDynamic> CurrentButtonMaterialDYN;
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> CurrentButtonMaterialDYN;
 
-    UPROPERTY(Transient)
-    TObjectPtr<UMaterialInstanceDynamic> InactiveButtonMaterialDYN;
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> InactiveButtonMaterialDYN;
 
-    UPROPERTY(Transient)
-    TObjectPtr<UMaterialInstanceDynamic> HoveredButtonMaterialDYN;
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> HoveredButtonMaterialDYN;
 
-    UPROPERTY(Transient)
-    TObjectPtr<UMaterialInstanceDynamic> ActiveButtonMaterialDYN;
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> ActiveButtonMaterialDYN;
 
-    float CurrentBlendState = 0.0f;
+	float CurrentBlendState = 0.0f;
 
-    bool bIsHovered = false;
-    bool bIsActive = false;
+	bool bIsHovered = false;
+	bool bIsActive = false;
 
-    FTimerHandle DeactivateTimerHandle;
+	FTimerHandle DeactivateTimerHandle;
 };

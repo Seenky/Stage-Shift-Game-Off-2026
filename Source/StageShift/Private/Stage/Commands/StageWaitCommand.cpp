@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Stage/Commands/StageWaitCommand.h"
 
@@ -8,8 +7,8 @@
 
 void UStageWaitCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
-    Super::ValidateDefinition(Data, Path, Errors);
-    if (!FMath::IsFinite(WaitTime) || WaitTime < 0) Errors.Add(Path + TEXT(" / WaitTime must be finite and nonnegative"));
+	Super::ValidateDefinition(Data, Path, Errors);
+	if (!FMath::IsFinite(WaitTime) || WaitTime < 0) Errors.Add(Path + TEXT(" / WaitTime must be finite and nonnegative"));
 }
 
 float UStageWaitCommand::GetNeededTime_Implementation() const
@@ -20,12 +19,12 @@ float UStageWaitCommand::GetNeededTime_Implementation() const
 UStageAction* UStageWaitCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
 	if (!InContext.MemberComponent.Get()) return nullptr;
-	
+
 	UStageWaitAction* WaitAction = NewObject<UStageWaitAction>(InContext.MemberComponent.Get());
 	if (!WaitAction) return nullptr;
-	
+
 	WaitAction->SetupWait(CurrentTime);
-	
+
 	return WaitAction;
 }
 

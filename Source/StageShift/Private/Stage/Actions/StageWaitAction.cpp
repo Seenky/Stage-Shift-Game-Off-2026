@@ -1,5 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Stage/Actions/StageWaitAction.h"
 
@@ -15,18 +14,14 @@ void UStageWaitAction::OnStart_Implementation()
 		Finish(EStageActionResult::Failed);
 		return;
 	}
-	
+
 	if (WaitTime <= 0.f)
 	{
 		Finish(EStageActionResult::Succeeded);
 		return;
 	}
-	
-	GetWorld()->GetTimerManager().SetTimer(
-		WaitTimerHandle, 
-		this, 
-		&ThisClass::FinishTimer, 
-		WaitTime);
+
+	GetWorld()->GetTimerManager().SetTimer(WaitTimerHandle, this, &ThisClass::FinishTimer, WaitTime);
 }
 
 void UStageWaitAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -36,7 +31,7 @@ void UStageWaitAction::OnStop_Implementation(EStageActionStopMode Mode)
 		Finish(EStageActionResult::Failed);
 		return;
 	}
-	
+
 	WaitTime = GetWorld()->GetTimerManager().GetTimerRemaining(WaitTimerHandle);
 	if (Mode == EStageActionStopMode::StopAction)
 	{
@@ -48,7 +43,7 @@ void UStageWaitAction::OnStop_Implementation(EStageActionStopMode Mode)
 void UStageWaitAction::Cleanup_Implementation()
 {
 	if (!GetWorld()) return;
-	
+
 	GetWorld()->GetTimerManager().ClearTimer(WaitTimerHandle);
 }
 

@@ -7,6 +7,7 @@
 
 // Builds a graph of stock AnimDynamics nodes. There is no custom physics solver.
 USTRUCT(BlueprintInternalUseOnly)
+
 struct STAGESHIFT_API FAnimNode_CharacterHairDynamics : public FAnimNode_Base
 {
 	GENERATED_BODY()
@@ -19,10 +20,15 @@ struct STAGESHIFT_API FAnimNode_CharacterHairDynamics : public FAnimNode_Base
 	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override;
 	virtual void Evaluate_AnyThread(FPoseContext& Output) override;
 	virtual void GatherDebugData(FNodeDebugData& DebugData) override;
+
 	virtual bool HasPreUpdate() const override { return true; }
+
 	virtual void PreUpdate(const UAnimInstance* Instance) override;
+
 	virtual bool NeedsDynamicReset() const override { return true; }
+
 	virtual void ResetDynamics(ETeleportType Type) override;
+
 	int32 GetSimulatedStrandCount() const { return Dynamics.Num(); }
 
 private:

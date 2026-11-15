@@ -8,7 +8,8 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "PhysicsManipulationComponent.generated.h"
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UPhysicsManipulationComponent : public UPhysicsHandleComponent
 {
 	GENERATED_BODY()
@@ -29,13 +30,22 @@ public:
 	void EndManipulation(float HoldDuration, bool bCancelled);
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
+
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
+
 	bool IsCarrying() const { return bCarryAttached; }
+
 	bool IsDragging() const { return ActiveType == EPhysicsInteractionType::Drag && ManipulatedComponent.IsValid(); }
+
 	float GetDragMovementScale() const;
 	FVector ConstrainDragMovement(const FVector& Delta) const;
 	bool GetDragPose(FVector& LeftHand, FVector& RightHand, FVector& Facing, float& Effort) const;
-	void SetThrowDirection(const FVector& Direction) { ThrowDirection = Direction.GetSafeNormal2D(); bHasThrowTarget = false; }
+
+	void SetThrowDirection(const FVector& Direction)
+	{
+		ThrowDirection = Direction.GetSafeNormal2D();
+		bHasThrowTarget = false;
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Throw")
 	void SetThrowTarget(const FVector& WorldLocation, const FVector& SurfaceNormal = FVector::UpVector);
@@ -82,7 +92,7 @@ protected:
 	float DragHandSpacing = 32.0f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
 	float DragBreakDistance = 180.0f;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0", Units = "s"))
 	float TapDuration = 0.2f;
 

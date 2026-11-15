@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -26,13 +26,14 @@ enum class EInteractionResult : uint8
 };
 
 USTRUCT(BlueprintType)
+
 struct STAGESHIFT_API FInteractionContext
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	FGameplayTag ActionTag;
-	
+
 	UPROPERTY(BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<AActor> Interactor = nullptr;
 
@@ -41,7 +42,7 @@ struct STAGESHIFT_API FInteractionContext
 
 	UPROPERTY(BlueprintReadOnly, Category = "Interaction")
 	EInteractionPhase InteractionPhase = EInteractionPhase::Start;
-	
+
 	UPROPERTY(BlueprintReadOnly, Category = "Interaction")
 	float HoldDuration = 0.0f;
 
@@ -50,21 +51,19 @@ struct STAGESHIFT_API FInteractionContext
 };
 
 USTRUCT(BlueprintType)
+
 struct STAGESHIFT_API FInteractionPayload
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY(BlueprintReadOnly, Category = "Interaction")
 	TWeakObjectPtr<AActor> InteractedActor;
-	
+
 	UPROPERTY(BlueprintReadOnly, Category = "Interaction")
 	TWeakObjectPtr<UPrimitiveComponent> InteractedComponent;
-	
-	bool IsValid() const
-	{
-		return InteractedActor.IsValid();
-	}
-	
+
+	bool IsValid() const { return InteractedActor.IsValid(); }
+
 	void Reset()
 	{
 		InteractedActor.Reset();
@@ -73,6 +72,7 @@ struct STAGESHIFT_API FInteractionPayload
 };
 
 USTRUCT(BlueprintType)
+
 struct STAGESHIFT_API FInteractionAnimation
 {
 	GENERATED_BODY()

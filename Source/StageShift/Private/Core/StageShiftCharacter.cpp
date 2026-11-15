@@ -4,8 +4,6 @@
 #include "Animation/StageShiftAnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Customization/CharacterHairComponent.h"
-#include "Components/Dialogue/DialogueBubbleWidget.h"
-#include "Components/Dialogue/DialogueComponent.h"
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
 #include "Components/FacialAnimation/FacialAnimationProfile.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
@@ -22,7 +20,7 @@
 #include "UObject/ConstructorHelpers.h"
 
 AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer.SetDefaultSubobjectClass<UStageShiftCharacterMovementComponent>(CharacterMovementComponentName))
+    : Super(ObjectInitializer.SetDefaultSubobjectClass<UStageShiftCharacterMovementComponent>(CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
 	ConfigureMovementCollision();
@@ -32,24 +30,7 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 	DollPhysicsComponent = CreateDefaultSubobject<UDollPhysicsComponent>(TEXT("DollPhysicsComponent"));
 	DollPhysicsComponent->SetupAttachment(GetCapsuleComponent());
 
-	DialogueComponent = CreateDefaultSubobject<UDialogueComponent>(TEXT("DialogueComponent"));
-	DialogueWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("DialogueWidgetComponent"));
 	FacialAnimationComponent = CreateDefaultSubobject<UFacialAnimationComponent>(TEXT("FacialAnimationComponent"));
-
-	DialogueWidgetComponent->SetupAttachment(GetMesh());
-	DialogueWidgetComponent->SetRelativeLocation(FVector(0.0, 0.0, 250.0));
-	DialogueWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	DialogueWidgetComponent->SetDrawAtDesiredSize(true);
-	DialogueWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	DialogueComponent->SetWidgetComponentProperty(GET_MEMBER_NAME_CHECKED(AStageShiftCharacter, DialogueWidgetComponent));
-
-	static ConstructorHelpers::FClassFinder<UDialogueBubbleWidget> DialogueWidgetClass(TEXT("/Game/DEV/UI/Dialogue/W_DialogueBubble"));
-
-	if (DialogueWidgetClass.Succeeded())
-	{
-		DialogueWidgetComponent->SetWidgetClass(DialogueWidgetClass.Class);
-	}
 
 	static ConstructorHelpers::FObjectFinder<UFacialAnimationProfile> FacialProfile(TEXT("/Game/MODELS/Character/FacialAnimation/DA_Character_FacialAnimation"));
 
@@ -218,8 +199,9 @@ void AStageShiftCharacter::ConsiderPhysicsHit(const FHitResult& Impact, const FV
 {
 	UPrimitiveComponent* Other = Impact.GetComponent();
 
-	if (!bEnablePhysicsHitKnockdown || bStumblePending || IsPhysicsMontageActive() || !Other ||
-		Other->GetOwner() == this || Other == GetHeldPhysicsComponent() || !Other->IsSimulatingPhysics(Impact.BoneName)) return;
+	if (!bEnablePhysicsHitKnockdown || bStumblePending || IsPhysicsMontageActive() || !Other || Other->GetOwner() == this || Other == GetHeldPhysicsComponent()
+	    || !Other->IsSimulatingPhysics(Impact.BoneName))
+		return;
 
 	const FBodyInstance* OtherBody = Other->GetBodyInstance(Impact.BoneName);
 	const FBodyInstance* HitBody = GetMesh()->GetBodyInstance(Impact.MyBoneName);
@@ -238,15 +220,15 @@ void AStageShiftCharacter::ConsiderPhysicsHit(const FHitResult& Impact, const FV
 	if (Impulse < FMath::Max(PhysicsHitMinImpulse, 0.0f) * 100.0) return;
 
 	const double IncomingSpeed = FVector::DotProduct(Other->GetPhysicsLinearVelocityAtPoint(Impact.ImpactPoint, Impact.BoneName), Normal) + Impulse / OtherMass;
-	const double OwnSpeedBefore = FVector::DotProduct(GetMesh()->GetPhysicsLinearVelocityAtPoint(Impact.ImpactPoint, Impact.MyBoneName), Normal) - Impulse / FMath::Max(HitBody->GetBodyMass(), 0.1f);
+	const double OwnSpeedBefore =
+	    FVector::DotProduct(GetMesh()->GetPhysicsLinearVelocityAtPoint(Impact.ImpactPoint, Impact.MyBoneName), Normal) - Impulse / FMath::Max(HitBody->GetBodyMass(), 0.1f);
 	const double ClosingSpeed = IncomingSpeed - OwnSpeedBefore;
 	const float Threshold = FMath::Max(PhysicsHitMinSpeed, 1.0f);
 
 	if (IncomingSpeed < Threshold || ClosingSpeed < Threshold) return;
 
 	const double CharacterMass = FMath::Max(GetMesh()->GetMass(), 1.0f);
-	const double ExtraImpulse = FMath::Clamp(Impulse * FMath::Max(PhysicsHitKnockbackScale, 0.0f), 0.0,
-		CharacterMass * FMath::Max(PhysicsHitMaxKnockbackSpeed, 0.0f));
+	const double ExtraImpulse = FMath::Clamp(Impulse * FMath::Max(PhysicsHitKnockbackScale, 0.0f), 0.0, CharacterMass * FMath::Max(PhysicsHitMaxKnockbackSpeed, 0.0f));
 	PendingPhysicsInput = FPhysicalAnimationInput();
 	PendingPhysicsInput.InitialVelocity = GetVelocity();
 	PendingPhysicsInput.Impulse = Normal * ExtraImpulse;
@@ -260,8 +242,9 @@ void AStageShiftCharacter::ConsiderPhysicsHit(const FHitResult& Impact, const FV
 void AStageShiftCharacter::ConsiderStumble(const FHitResult& Impact)
 {
 	UPrimitiveComponent* Obstacle = Impact.GetComponent();
-	if (bStumblePending || PhysicalMontageComponent->IsPhysicsMontageActive() || !GetCharacterMovement()->IsMovingOnGround() ||
-		!Obstacle || Obstacle == GetHeldPhysicsComponent() || !Obstacle->IsSimulatingPhysics(Impact.BoneName)) return;
+	if (bStumblePending || PhysicalMontageComponent->IsPhysicsMontageActive() || !GetCharacterMovement()->IsMovingOnGround() || !Obstacle || Obstacle == GetHeldPhysicsComponent()
+	    || !Obstacle->IsSimulatingPhysics(Impact.BoneName))
+		return;
 	const FVector Velocity = GetVelocity();
 	if (Velocity.SizeSquared2D() < FMath::Square(150.0)) return;
 
@@ -296,8 +279,7 @@ void AStageShiftCharacter::ApplyDollContact(const FHitResult& Impact)
 
 	const UCharacterMovementComponent* Movement = GetCharacterMovement();
 	const float ImpactSpeed = -FVector::DotProduct(GetVelocity(), Away);
-	const float Push = FMath::Clamp(-FVector::DotProduct(Movement->GetCurrentAcceleration(), Away)
-		/ FMath::Max(Movement->GetMaxAcceleration(), 1.0f), 0.0, 1.0);
+	const float Push = FMath::Clamp(-FVector::DotProduct(Movement->GetCurrentAcceleration(), Away) / FMath::Max(Movement->GetMaxAcceleration(), 1.0f), 0.0, 1.0);
 	Animation->UpdateContactSquash(Away, Impact.ImpactPoint, ImpactSpeed, Push, bNewContact, Impact.MyBoneName);
 }
 

@@ -6,6 +6,7 @@
 
 /** Selects character reactions from data and delegates their execution to the montage component. */
 UCLASS(ClassGroup = Physics, meta = (BlueprintSpawnableComponent))
+
 class STAGESHIFT_API UCharacterPhysicsReactionComponent : public UActorComponent
 {
 	GENERATED_BODY()

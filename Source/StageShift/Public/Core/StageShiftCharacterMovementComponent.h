@@ -4,6 +4,7 @@
 #include "StageShiftCharacterMovementComponent.generated.h"
 
 UCLASS()
+
 class STAGESHIFT_API UStageShiftCharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()

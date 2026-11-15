@@ -8,25 +8,26 @@
 #include "StageDialogueCommand.generated.h"
 
 UCLASS()
+
 class STAGESHIFT_API UStageDialogueCommand : public UStageMemberCommand
 {
 	GENERATED_BODY()
-	
+
 public:
-    virtual uint8 GetResourceMask() const override { return 4; }
-    virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
+	virtual uint8 GetResourceMask() const override { return 4; }
+
+	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	UStageDialogueCommand();
 
-	
 	virtual float GetNeededTime_Implementation() const override;
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 	virtual void OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult) override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
+
 private:
-	
-	UPROPERTY(EditAnywhere, Category="Scenario", meta=(ShowOnlyInnerProperties))
+	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (ShowOnlyInnerProperties))
 	FDialogueLine CurrentLine;
-	
+
 	UPROPERTY(Transient)
 	FDialogueResumeData ResumeData;
 	bool bDialogueCompleted;

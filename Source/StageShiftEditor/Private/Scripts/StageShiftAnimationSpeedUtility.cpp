@@ -67,9 +67,8 @@ namespace
 		{
 			const FVector& Previous = AnklePositions[Index - 1];
 			const FVector& Current = AnklePositions[Index];
-			const bool bContact = Contacts.Num() == AnklePositions.Num()
-				? FMath::Min(Contacts[Index - 1], Contacts[Index]) >= 0.95f
-				: (Previous.Z + Current.Z) * 0.5 <= ContactHeight;
+			const bool bContact =
+			    Contacts.Num() == AnklePositions.Num() ? FMath::Min(Contacts[Index - 1], Contacts[Index]) >= 0.95f : (Previous.Z + Current.Z) * 0.5 <= ContactHeight;
 			if (bContact)
 			{
 				const double Speed = FVector::DotProduct(Previous - Current, Forward) / SecondsPerFrame;
@@ -98,9 +97,8 @@ namespace
 		const bool bHasBall[] = {Skeleton.FindBoneIndex(Balls[0]) != INDEX_NONE, Skeleton.FindBoneIndex(Balls[1]) != INDEX_NONE};
 		const int32 NumFrames = Animation.GetNumberOfSampledKeys();
 		const IAnimationDataModel* Model = Animation.GetDataModel();
-		const FFloatCurve* ContactCurves[] = {
-			Model->FindFloatCurve(FAnimationCurveIdentifier(TEXT("FootPlant_L"), ERawCurveTrackTypes::RCT_Float)),
-			Model->FindFloatCurve(FAnimationCurveIdentifier(TEXT("FootPlant_R"), ERawCurveTrackTypes::RCT_Float))};
+		const FFloatCurve* ContactCurves[] = {Model->FindFloatCurve(FAnimationCurveIdentifier(TEXT("FootPlant_L"), ERawCurveTrackTypes::RCT_Float)),
+		    Model->FindFloatCurve(FAnimationCurveIdentifier(TEXT("FootPlant_R"), ERawCurveTrackTypes::RCT_Float))};
 		FAnimPoseEvaluationOptions Options;
 		Options.bShouldRetarget = false;
 		Options.bEvaluateCurves = false;
@@ -124,9 +122,7 @@ namespace
 				if (bHasFoot[Side])
 				{
 					const FVector Ankle = UAnimPoseExtensions::GetBonePose(Pose, Feet[Side], EAnimPoseSpaces::World).GetTranslation();
-					const double ToeHeight = bHasBall[Side]
-						? UAnimPoseExtensions::GetBonePose(Pose, Balls[Side], EAnimPoseSpaces::World).GetLocation().Z
-						: Ankle.Z;
+					const double ToeHeight = bHasBall[Side] ? UAnimPoseExtensions::GetBonePose(Pose, Balls[Side], EAnimPoseSpaces::World).GetLocation().Z : Ankle.Z;
 					Samples[Side].Ankles.Add(Ankle);
 					Samples[Side].Heights.Add(ToeHeight - CurrentRoot.Z);
 					if (ContactCurves[Side]) Samples[Side].Contacts.Add(ContactCurves[Side]->FloatCurve.Eval(Animation.GetPlayLength() * Frame / (NumFrames - 1)));
@@ -159,8 +155,7 @@ namespace
 		return (Speeds[(Speeds.Num() - 1) / 2] + Speeds[Speeds.Num() / 2]) * 0.5;
 	}
 
-	TArray<FRichCurveKey> MakeContactKeys(const FFootSamples& Foot, const FVector& Forward, float Duration,
-		double Speed, bool bHasRootMotion, bool bIdle)
+	TArray<FRichCurveKey> MakeContactKeys(const FFootSamples& Foot, const FVector& Forward, float Duration, double Speed, bool bHasRootMotion, bool bIdle)
 	{
 		if (bIdle)
 		{
@@ -190,8 +185,7 @@ namespace
 				const double BackwardSpeed = FVector::DotProduct(Foot.Ankles[Previous] - Foot.Ankles[Next], Forward) / SampleTime;
 				Contact *= FMath::SmoothStep(-0.35 * Speed, 0.15 * Speed, BackwardSpeed);
 			}
-			FRichCurveKey& Key = Keys.Emplace_GetRef(Frame == Last ? Duration : static_cast<float>(FrameTime * Frame),
-				static_cast<float>(Contact));
+			FRichCurveKey& Key = Keys.Emplace_GetRef(Frame == Last ? Duration : static_cast<float>(FrameTime * Frame), static_cast<float>(Contact));
 			Key.InterpMode = RCIM_Linear;
 		}
 		if (bLoop)
@@ -211,9 +205,8 @@ namespace
 	{
 		const USkeleton* Skeleton = Animation ? Animation->GetSkeleton() : nullptr;
 		const IAnimationDataModel* Model = Animation ? Animation->GetDataModel() : nullptr;
-		if (!Skeleton || !Model || Skeleton->GetReferenceSkeleton().GetNum() == 0 ||
-			Animation->GetNumberOfSampledKeys() < 2 || Animation->GetPlayLength() <= UE_SMALL_NUMBER ||
-			Animation->IsValidAdditive())
+		if (!Skeleton || !Model || Skeleton->GetReferenceSkeleton().GetNum() == 0 || Animation->GetNumberOfSampledKeys() < 2 || Animation->GetPlayLength() <= UE_SMALL_NUMBER
+		    || Animation->IsValidAdditive())
 		{
 			UE_LOG(LogStageShiftAnimationSpeed, Warning, TEXT("Skipping %s. Expected a sampled, non-additive animation with a skeleton."), *GetNameSafe(Animation));
 			return false;
@@ -238,11 +231,11 @@ namespace
 		if (!bContactsOnly)
 		{
 			const TPair<FName, float> Values[] = {
-				{TEXT("Speed_Data"), Speed},
-				{TEXT("PlayRate"), Animation->RateScale},
-				{TEXT("Gait"), Sample.Gait},
-				{TEXT("Stride"), Sample.Gait * 0.5f},
-				{TEXT("Direction"), Sample.Direction},
+			    {TEXT("Speed_Data"), Speed},
+			    {TEXT("PlayRate"), Animation->RateScale},
+			    {TEXT("Gait"), Sample.Gait},
+			    {TEXT("Stride"), Sample.Gait * 0.5f},
+			    {TEXT("Direction"), Sample.Direction},
 			};
 			for (const TPair<FName, float>& Value : Values)
 			{
@@ -274,7 +267,6 @@ namespace
 	}
 }
 
-
 UStageShiftAnimationSpeedUtility::UStageShiftAnimationSpeedUtility()
 {
 	SupportedClasses.Add(UAnimSequence::StaticClass());
@@ -304,6 +296,5 @@ bool UStageShiftAnimationSpeedUtility::BakeFootPlant(UAnimSequence* Animation)
 {
 	return BakeCurves(Animation, true);
 }
-
 
 #undef LOCTEXT_NAMESPACE

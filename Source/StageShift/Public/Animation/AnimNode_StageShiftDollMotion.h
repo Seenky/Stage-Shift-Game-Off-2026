@@ -4,6 +4,7 @@
 #include "AnimNode_StageShiftDollMotion.generated.h"
 
 USTRUCT(BlueprintInternalUseOnly)
+
 struct STAGESHIFT_API FAnimNode_StageShiftDollMotion : public FAnimNode_SkeletalControlBase
 {
 	GENERATED_BODY()

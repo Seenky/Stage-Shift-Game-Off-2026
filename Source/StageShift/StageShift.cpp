@@ -3,4 +3,4 @@
 #include "StageShift.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, StageShift, "StageShift" );
+IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, StageShift, "StageShift");

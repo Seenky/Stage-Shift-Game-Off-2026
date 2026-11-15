@@ -53,20 +53,27 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 		Motion.HeadLean *= 0.35;
 		Motion.ContactOffset = 0.0f;
 	}
-	if (FMath::IsNearlyZero(Motion.Compression) && FMath::IsNearlyZero(Motion.HeadCompression) &&
-		FMath::IsNearlyZero(Motion.ContactOffset) && Motion.ChestLean.IsNearlyZero() && Motion.HeadLean.IsNearlyZero() && Drag.Alpha <= 0.0f) return;
+	if (FMath::IsNearlyZero(Motion.Compression) && FMath::IsNearlyZero(Motion.HeadCompression) && FMath::IsNearlyZero(Motion.ContactOffset) && Motion.ChestLean.IsNearlyZero()
+	    && Motion.HeadLean.IsNearlyZero() && Drag.Alpha <= 0.0f)
+		return;
 
 	const FBoneContainer& Bones = Output.Pose.GetPose().GetBoneContainer();
-	const auto IndexOf = [&Bones](const FBoneReference& Bone) { return Bone.GetCompactPoseIndex(Bones); };
-	const auto ReadBone = [&Output, &IndexOf](const FBoneReference& Bone) { return Output.Pose.GetComponentSpaceTransform(IndexOf(Bone)); };
+	const auto IndexOf = [&Bones](const FBoneReference& Bone)
+	{
+		return Bone.GetCompactPoseIndex(Bones);
+	};
+	const auto ReadBone = [&Output, &IndexOf](const FBoneReference& Bone)
+	{
+		return Output.Pose.GetComponentSpaceTransform(IndexOf(Bone));
+	};
 	const auto WriteBone = [&OutBoneTransforms, &IndexOf](const FBoneReference& Bone, const FTransform& Transform)
 	{
 		OutBoneTransforms.Emplace(IndexOf(Bone), Transform);
 	};
 	const FTransform& Component = Output.AnimInstanceProxy->GetComponentTransform();
 	FVector PelvisShift = FVector::ZeroVector;
-	const bool bHasLegs = Thighs[0].IsValidToEvaluate(Bones) && Calves[0].IsValidToEvaluate(Bones) && Feet[0].IsValidToEvaluate(Bones) &&
-		Thighs[1].IsValidToEvaluate(Bones) && Calves[1].IsValidToEvaluate(Bones) && Feet[1].IsValidToEvaluate(Bones);
+	const bool bHasLegs = Thighs[0].IsValidToEvaluate(Bones) && Calves[0].IsValidToEvaluate(Bones) && Feet[0].IsValidToEvaluate(Bones) && Thighs[1].IsValidToEvaluate(Bones)
+	    && Calves[1].IsValidToEvaluate(Bones) && Feet[1].IsValidToEvaluate(Bones);
 	float DragLowering = 0.0f;
 	if (bHasLegs && Drag.Alpha > 0.0f)
 	{

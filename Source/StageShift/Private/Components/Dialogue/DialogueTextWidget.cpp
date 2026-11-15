@@ -4,15 +4,14 @@
 #include "Styling/CoreStyle.h"
 
 UDialogueTextWidget::UDialogueTextWidget(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-	, Font(FCoreStyle::GetDefaultFontStyle("Regular", 22))
-	, PreviewText(NSLOCTEXT("StageShiftDialogue", "BubblePreview", "I've got a plan."))
+    : Super(ObjectInitializer), Font(FCoreStyle::GetDefaultFontStyle("Regular", 22)), PreviewText(NSLOCTEXT("StageShiftDialogue", "BubblePreview", "I've got a plan."))
 {
 }
 
 TSharedRef<SWidget> UDialogueTextWidget::RebuildWidget()
 {
-	SAssignNew(Text, SDialogueText).OnOpacityChanged(FOnDialogueTextOpacityChanged::CreateUObject(this, &ThisClass::ForwardOpacity));
+	SAssignNew(Text, SDialogueText)
+		.OnOpacityChanged(FOnDialogueTextOpacityChanged::CreateUObject(this, &ThisClass::ForwardOpacity));
 	Text->SetShowRevealDots(bShowRevealDots);
 	return Text.ToSharedRef();
 }
@@ -80,10 +79,10 @@ void UDialogueTextWidget::ResetPlayback()
 
 void UDialogueTextWidget::SetShowRevealDots(bool bShowDots)
 {
-    bShowRevealDots = bShowDots;
+	bShowRevealDots = bShowDots;
 
-    if (Text)
-    {
-        Text->SetShowRevealDots(bShowDots);
-    }
+	if (Text)
+	{
+		Text->SetShowRevealDots(bShowDots);
+	}
 }

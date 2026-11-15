@@ -11,8 +11,8 @@ TSharedRef<SWidget> UThrowAimWidget::RebuildWidget()
 	return Super::RebuildWidget();
 }
 
-int32 UThrowAimWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& Clip,
-	FSlateWindowElementList& DrawElements, int32 Layer, const FWidgetStyle& Style, bool bEnabled) const
+int32 UThrowAimWidget::NativePaint(
+    const FPaintArgs& Args, const FGeometry& Geometry, const FSlateRect& Clip, FSlateWindowElementList& DrawElements, int32 Layer, const FWidgetStyle& Style, bool bEnabled) const
 {
 	Layer = Super::NativePaint(Args, Geometry, Clip, DrawElements, Layer, Style, bEnabled);
 	const FVector2f Center(Geometry.GetLocalSize() * 0.5f);
@@ -26,7 +26,8 @@ int32 UThrowAimWidget::NativePaint(const FPaintArgs& Args, const FGeometry& Geom
 	FSlateDrawElement::MakeLines(DrawElements, Layer + 2, Geometry.ToPaintGeometry(), Ring, ESlateDrawEffect::None, FLinearColor(1.0f, 0.88f, 0.58f), true, 1.5f);
 	for (const FVector2f Axis : {FVector2f(1, 0), FVector2f(0, 1)})
 	{
-		FSlateDrawElement::MakeLines(DrawElements, Layer + 2, Geometry.ToPaintGeometry(), TArray<FVector2f>{Center - Axis * 3.0f, Center + Axis * 3.0f}, ESlateDrawEffect::None, FLinearColor(1.0f, 0.95f, 0.8f), true, 1.5f);
+		FSlateDrawElement::MakeLines(DrawElements, Layer + 2, Geometry.ToPaintGeometry(), TArray<FVector2f>{Center - Axis * 3.0f, Center + Axis * 3.0f}, ESlateDrawEffect::None,
+		    FLinearColor(1.0f, 0.95f, 0.8f), true, 1.5f);
 	}
 	return Layer + 2;
 }

@@ -5,6 +5,7 @@
 #include "AnimGraphNode_StageShiftDollMotion.generated.h"
 
 UCLASS()
+
 class STAGESHIFTANIMGRAPH_API UAnimGraphNode_StageShiftDollMotion : public UAnimGraphNode_SkeletalControlBase
 {
 	GENERATED_BODY()
@@ -17,5 +18,6 @@ public:
 
 protected:
 	virtual FText GetControllerDescription() const override;
+
 	virtual const FAnimNode_SkeletalControlBase* GetNode() const override { return &Node; }
 };

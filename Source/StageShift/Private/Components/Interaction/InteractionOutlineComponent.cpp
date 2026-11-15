@@ -47,8 +47,8 @@ void UInteractionOutlineComponent::Deactivate()
 void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
 {
 	const APawn* Pawn = Cast<APawn>(GetOwner());
-	if (!IsActive() || !Interaction.IsValid() || !Interaction->IsActive() ||
-		Interaction->HasActiveInteraction() || Interaction->IsPlayingReleaseAnimation() || !Pawn || !Pawn->IsLocallyControlled())
+	if (!IsActive() || !Interaction.IsValid() || !Interaction->IsActive() || Interaction->HasActiveInteraction() || Interaction->IsPlayingReleaseAnimation() || !Pawn
+	    || !Pawn->IsLocallyControlled())
 	{
 		ClearVisual();
 		return;
@@ -64,13 +64,19 @@ void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
 	}
 	if (!Target)
 	{
-		if (!VisualTarget.IsValid()) { ClearVisual(); return; }
+		if (!VisualTarget.IsValid())
+		{
+			ClearVisual();
+			return;
+		}
 		if (bFadingOut) return;
 		bFadingOut = true;
 		TransitionStartAlpha = Alpha;
 		TransitionTime = 0.0f;
-		if (FadeOutDuration <= 0.0f || Alpha <= 0.0f) ClearVisual();
-		else SetComponentTickEnabled(true);
+		if (FadeOutDuration <= 0.0f || Alpha <= 0.0f)
+			ClearVisual();
+		else
+			SetComponentTickEnabled(true);
 		return;
 	}
 
@@ -119,8 +125,8 @@ void UInteractionOutlineComponent::RestorePrimitives()
 	{
 		if (UPrimitiveComponent* Primitive = State.Component.Get())
 		{
-			const bool bStillOwned = Primitive->CustomDepthStencilValue == (State.Stencil | StencilBit) &&
-				Primitive->CustomDepthStencilWriteMask == ERendererStencilMask::ERSM_Default && Primitive->bRenderCustomDepth;
+			const bool bStillOwned = Primitive->CustomDepthStencilValue == (State.Stencil | StencilBit)
+			    && Primitive->CustomDepthStencilWriteMask == ERendererStencilMask::ERSM_Default && Primitive->bRenderCustomDepth;
 			if (bStillOwned)
 			{
 				Primitive->SetCustomDepthStencilValue(State.Stencil);
@@ -158,14 +164,22 @@ void UInteractionOutlineComponent::UpdateMaterial(float Thickness)
 void UInteractionOutlineComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* Tick)
 {
 	Super::TickComponent(DeltaTime, TickType, Tick);
-	if (!VisualTarget.IsValid() || !Interaction.IsValid() || !Interaction->IsActive()) { ClearVisual(); return; }
+	if (!VisualTarget.IsValid() || !Interaction.IsValid() || !Interaction->IsActive())
+	{
+		ClearVisual();
+		return;
+	}
 	TransitionTime += DeltaTime;
 	SelectionTime += DeltaTime;
 	const float Duration = bFadingOut ? FadeOutDuration : FadeInDuration;
 	const float T = Duration <= 0.0f ? 1.0f : FMath::Clamp(TransitionTime / Duration, 0.0f, 1.0f);
 	const float SmoothT = T * T * (3.0f - 2.0f * T);
 	Alpha = FMath::Lerp(TransitionStartAlpha, bFadingOut ? 0.0f : 1.0f, SmoothT);
-	if (bFadingOut && T >= 1.0f) { ClearVisual(); return; }
+	if (bFadingOut && T >= 1.0f)
+	{
+		ClearVisual();
+		return;
+	}
 	const bool bPulse = !bFadingOut && bEnableAppearPulse && AppearPulseDuration > 0.0f && SelectionTime < AppearPulseDuration;
 	const float Pulse = bPulse ? FMath::Sin(PI * SelectionTime / AppearPulseDuration) * AppearPulseAmplitude : 0.0f;
 	UpdateMaterial(OutlineThickness + Pulse);

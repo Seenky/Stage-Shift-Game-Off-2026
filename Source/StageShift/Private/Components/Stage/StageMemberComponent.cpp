@@ -15,47 +15,44 @@ UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_StageMemberFallen, "State.Member.Fallen");
 
 void UStageMemberComponent::BeginPlay()
 {
-    Super::BeginPlay();
-    PhysicalMontage = GetOwner()->FindComponentByClass<UPhysicalMontageComponent>();
-    if (PhysicalMontage.IsValid())
-    {
-        PhysicalMontage->OnPhysAnimStarted.AddUniqueDynamic(this, &ThisClass::HandlePhysicsStarted);
-        PhysicalMontage->OnRecoveryEnded.AddUniqueDynamic(this, &ThisClass::HandlePhysicsRecovered);
-        if (PhysicalMontage->IsPhysicsMontageActive()) HandlePhysicsStarted();
-    }
+	Super::BeginPlay();
+	PhysicalMontage = GetOwner()->FindComponentByClass<UPhysicalMontageComponent>();
+	if (PhysicalMontage.IsValid())
+	{
+		PhysicalMontage->OnPhysAnimStarted.AddUniqueDynamic(this, &ThisClass::HandlePhysicsStarted);
+		PhysicalMontage->OnRecoveryEnded.AddUniqueDynamic(this, &ThisClass::HandlePhysicsRecovered);
+		if (PhysicalMontage->IsPhysicsMontageActive()) HandlePhysicsStarted();
+	}
 }
 
 void UStageMemberComponent::EndPlay(const EEndPlayReason::Type Reason)
 {
-    if (PhysicalMontage.IsValid())
-    {
-        PhysicalMontage->OnPhysAnimStarted.RemoveDynamic(this, &ThisClass::HandlePhysicsStarted);
-        PhysicalMontage->OnRecoveryEnded.RemoveDynamic(this, &ThisClass::HandlePhysicsRecovered);
-    }
-    ForceAbortMember(FText::FromString(TEXT("Participant EndPlay")));
-    Super::EndPlay(Reason);
+	if (PhysicalMontage.IsValid())
+	{
+		PhysicalMontage->OnPhysAnimStarted.RemoveDynamic(this, &ThisClass::HandlePhysicsStarted);
+		PhysicalMontage->OnRecoveryEnded.RemoveDynamic(this, &ThisClass::HandlePhysicsRecovered);
+	}
+	ForceAbortMember(FText::FromString(TEXT("Participant EndPlay")));
+	Super::EndPlay(Reason);
 }
 
 void UStageMemberComponent::HandlePhysicsStarted()
 {
-    if (auto* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>())
-        Statuses->AddConstantStatuses(TAG_StageMemberFallen.GetTag().GetSingleTagContainer());
-    FStageEvent Event;
-    Event.EventTag = TAG_StageMemberFallen;
-    Event.SubjectActor = GetOwner();
-    ReportStageEvent(Event);
+	if (auto* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>()) Statuses->AddConstantStatuses(TAG_StageMemberFallen.GetTag().GetSingleTagContainer());
+	FStageEvent Event;
+	Event.EventTag = TAG_StageMemberFallen;
+	Event.SubjectActor = GetOwner();
+	ReportStageEvent(Event);
 }
 
 void UStageMemberComponent::HandlePhysicsRecovered()
 {
-    if (auto* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>())
-        Statuses->RemoveStatuses(TAG_StageMemberFallen.GetTag().GetSingleTagContainer());
+	if (auto* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>()) Statuses->RemoveStatuses(TAG_StageMemberFallen.GetTag().GetSingleTagContainer());
 }
 
 bool UStageMemberComponent::IsPhysicallyBlocked() const
 {
-    return (PhysicalMontage.IsValid() && PhysicalMontage->IsPhysicsMontageActive()) ||
-        (StatusComponent.IsValid() && StatusComponent->GetStatuses().HasTag(TAG_StageMemberFallen));
+	return (PhysicalMontage.IsValid() && PhysicalMontage->IsPhysicsMontageActive()) || (StatusComponent.IsValid() && StatusComponent->GetStatuses().HasTag(TAG_StageMemberFallen));
 }
 
 UStageMemberComponent::UStageMemberComponent()
@@ -68,8 +65,7 @@ bool UStageMemberComponent::BindToStage(AStageManager* InManager)
 {
 	if (!bMemberFinished || !IsValid(InManager) || !GetOwner()) return false;
 	UStatusesComponent* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>();
-	if (!Statuses || (RecoveryRulesAsset && (!FMath::IsFinite(RecoveryRulesAsset->RecoveryWaitTimeout) ||
-		RecoveryRulesAsset->RecoveryWaitTimeout < 0.0f))) return false;
+	if (!Statuses || (RecoveryRulesAsset && (!FMath::IsFinite(RecoveryRulesAsset->RecoveryWaitTimeout) || RecoveryRulesAsset->RecoveryWaitTimeout < 0.0f))) return false;
 
 	Manager = InManager;
 	StatusComponent = Statuses;
@@ -89,16 +85,15 @@ bool UStageMemberComponent::IsAtStageMark(bool CheckLocation, bool CheckYaw) con
 {
 	const AActor* Owner = GetOwner();
 	if (!Owner) return false;
-	if (CheckLocation && FVector::DistSquared(Owner->GetActorLocation(), StageLocation) >
-		FMath::Square(FMath::Max(StageLocationTolerance, 0.0f))) return false;
-	return !CheckYaw || FMath::Abs(FMath::FindDeltaAngleDegrees(Owner->GetActorRotation().Yaw, StageYaw)) <=
-		FMath::Clamp(StageYawTolerance, 0.0f, 180.0f);
+	if (CheckLocation && FVector::DistSquared(Owner->GetActorLocation(), StageLocation) > FMath::Square(FMath::Max(StageLocationTolerance, 0.0f))) return false;
+	return !CheckYaw || FMath::Abs(FMath::FindDeltaAngleDegrees(Owner->GetActorRotation().Yaw, StageYaw)) <= FMath::Clamp(StageYawTolerance, 0.0f, 180.0f);
 }
 
 bool UStageMemberComponent::CanRememberStageMark(const UStageMemberCommand* SourceCommand) const
 {
-	if (bMemberFinished || bClosingMember || !GetOwner() || !Manager.IsValid() || !IsValid(SourceCommand) ||
-		SourceCommand->GetResult() != EStageCommandResult::Succeeded || SourceCommand->Context.MemberComponent.Get() != this) return false;
+	if (bMemberFinished || bClosingMember || !GetOwner() || !Manager.IsValid() || !IsValid(SourceCommand) || SourceCommand->GetResult() != EStageCommandResult::Succeeded
+	    || SourceCommand->Context.MemberComponent.Get() != this)
+		return false;
 	const auto* Entry = Manager->FindRoot(SourceCommand);
 	return Entry && Entry->CommandType == EStageCommandType::Scenario;
 }
@@ -121,16 +116,18 @@ void UStageMemberComponent::RememberStageYaw(UStageMemberCommand* SourceCommand)
 void UStageMemberComponent::UpdateStageMarkStatus()
 {
 	if (!StatusComponent.IsValid()) return;
-	const bool bOffStageMark = !bClosingMember && Executions.ContainsByPredicate([this](const FStageCommandExecution& Entry)
-		{
-			const UStageMemberCommand* Command = Entry.Command;
-			return IsValid(Command) && Command->GetState() == EStageExecutionState::Running &&
-				!IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw);
-		});
+	const bool bOffStageMark = !bClosingMember
+	    && Executions.ContainsByPredicate([this](const FStageCommandExecution& Entry)
+	{
+		const UStageMemberCommand* Command = Entry.Command;
+		return IsValid(Command) && Command->GetState() == EStageExecutionState::Running && !IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw);
+	});
 	const bool bHasStatus = StatusComponent->GetStatuses().HasTagExact(TAG_OffStageMark);
 	if (bOffStageMark == bHasStatus) return;
-	if (bOffStageMark) StatusComponent->AddConstantStatuses(TAG_OffStageMark.GetTag().GetSingleTagContainer());
-	else StatusComponent->RemoveStatuses(TAG_OffStageMark.GetTag().GetSingleTagContainer());
+	if (bOffStageMark)
+		StatusComponent->AddConstantStatuses(TAG_OffStageMark.GetTag().GetSingleTagContainer());
+	else
+		StatusComponent->RemoveStatuses(TAG_OffStageMark.GetTag().GetSingleTagContainer());
 }
 
 bool UStageMemberComponent::HasReaction() const
@@ -147,10 +144,10 @@ bool UStageMemberComponent::HasReaction() const
 
 bool UStageMemberComponent::RunCommand(UStageMemberCommand* Command, EStageCommandType Type)
 {
-	if (!IsValid(Command) || bClosingMember || bMemberFinished || !Manager.IsValid() ||
-		Command->GetState() != EStageExecutionState::NotStarted || Command->GetOuter() != this ||
-		Command->Context.MemberComponent.Get() != this || Command->Context.Manager != Manager ||
-		RootCommands.Contains(Command) || (Type == EStageCommandType::Reaction && HasReaction())) return false;
+	if (!IsValid(Command) || bClosingMember || bMemberFinished || !Manager.IsValid() || Command->GetState() != EStageExecutionState::NotStarted || Command->GetOuter() != this
+	    || Command->Context.MemberComponent.Get() != this || Command->Context.Manager != Manager || RootCommands.Contains(Command)
+	    || (Type == EStageCommandType::Reaction && HasReaction()))
+		return false;
 	BeginDispatch();
 	RootCommands.Add(Command);
 	if (Type == EStageCommandType::Reaction)
@@ -158,7 +155,8 @@ bool UStageMemberComponent::RunCommand(UStageMemberCommand* Command, EStageComma
 		PendingReaction = Command;
 		bUpdateRequested = true;
 	}
-	else PendingCommands.Add(Command);
+	else
+		PendingCommands.Add(Command);
 	EndDispatch();
 	return true;
 }
@@ -171,21 +169,31 @@ bool UStageMemberComponent::IsScenarioPaused(const UStageMemberCommand* Command)
 
 void UStageMemberComponent::PumpCommands()
 {
-	if (bPumpingCommands || bClosingMember || bMemberFinished || DispatchDepth != 0 || bUpdatingExecutions ||
-		!Manager.IsValid() || Manager->EventDispatchDepth > 1 || ActiveRecoveryAction) return;
+	if (bPumpingCommands || bClosingMember || bMemberFinished || DispatchDepth != 0 || bUpdatingExecutions || !Manager.IsValid() || Manager->EventDispatchDepth > 1
+	    || ActiveRecoveryAction)
+		return;
 	if (RootCommands.ContainsByPredicate([this](const UStageMemberCommand* Root)
-		{
-			if (Root->GetState() != EStageExecutionState::Running && Root->GetState() != EStageExecutionState::Stopping) return false;
-			const auto* Entry = Manager->FindRoot(Root);
-			return !PendingReaction || Root->GetState() == EStageExecutionState::Stopping ||
-				!Entry || Entry->CommandType != EStageCommandType::Scenario;
-		})) return;
+	{
+		if (Root->GetState() != EStageExecutionState::Running && Root->GetState() != EStageExecutionState::Stopping) return false;
+		const auto* Entry = Manager->FindRoot(Root);
+		return !PendingReaction || Root->GetState() == EStageExecutionState::Stopping || !Entry || Entry->CommandType != EStageCommandType::Scenario;
+	}))
+		return;
 	// A reaction waits for every old Main to confirm its interruption, including Parallel branches.
-	if (PendingReaction && Executions.ContainsByPredicate([](const FStageCommandExecution& Entry)
-		{ return Entry.CurrentMainAction != nullptr; })) return;
+	if (PendingReaction
+	    && Executions.ContainsByPredicate([](const FStageCommandExecution& Entry)
+	{
+		return Entry.CurrentMainAction != nullptr;
+	}))
+		return;
 	UStageMemberCommand* Next = PendingReaction;
-	if (Next) PendingReaction = nullptr;
-	else if (!PendingCommands.IsEmpty()) { Next = PendingCommands[0]; PendingCommands.RemoveAt(0); }
+	if (Next)
+		PendingReaction = nullptr;
+	else if (!PendingCommands.IsEmpty())
+	{
+		Next = PendingCommands[0];
+		PendingCommands.RemoveAt(0);
+	}
 	if (!Next) return;
 	bPumpingCommands = true;
 	StartPreparedCommand(Next);
@@ -202,8 +210,10 @@ void UStageMemberComponent::RequestStopCommands()
 		if (Entry && Entry->CommandType == EStageCommandType::Finale) continue;
 		PendingCommands.Remove(Root);
 		if (PendingReaction == Root) PendingReaction = nullptr;
-		if (Root->GetState() == EStageExecutionState::NotStarted) CompleteBeforeStart(Root, EStageCommandResult::Cancelled);
-		else Root->RequestStop(EStageActionStopReason::Cancel);
+		if (Root->GetState() == EStageExecutionState::NotStarted)
+			CompleteBeforeStart(Root, EStageCommandResult::Cancelled);
+		else
+			Root->RequestStop(EStageActionStopReason::Cancel);
 	}
 	EndDispatch();
 }
@@ -212,10 +222,13 @@ void UStageMemberComponent::StartPreparedCommand(UStageMemberCommand* Command)
 {
 	if (!IsValid(Command) || Command->GetState() != EStageExecutionState::NotStarted) return;
 	BeginDispatch();
-	ON_SCOPE_EXIT { EndDispatch(); };
+	ON_SCOPE_EXIT
+	{
+		EndDispatch();
+	};
 	UStageMemberCommand* Root = Command->GetRootCommand();
-	if (bMemberFinished || !Manager.IsValid() || !StatusComponent.IsValid() || !Root || Root->GetOuter() != this ||
-		Command->Context.MemberComponent.Get() != this || Command->Context.Manager != Manager)
+	if (bMemberFinished || !Manager.IsValid() || !StatusComponent.IsValid() || !Root || Root->GetOuter() != this || Command->Context.MemberComponent.Get() != this
+	    || Command->Context.Manager != Manager)
 	{
 		Command->Finish(EStageCommandResult::Failed);
 		return;
@@ -250,8 +263,16 @@ void UStageMemberComponent::StartPreparedCommand(UStageMemberCommand* Command)
 	}
 	const EStageCommandResult FinalAdmission = Manager->CheckCommandStart(Command);
 	if (Command->GetState() != EStageExecutionState::NotStarted) return;
-	if (FinalAdmission != EStageCommandResult::None) { CompleteBeforeStart(Command, FinalAdmission); return; }
-	if (Manager->ShouldSkipCommand(Command)) { CompleteBeforeStart(Command, EStageCommandResult::Skipped); return; }
+	if (FinalAdmission != EStageCommandResult::None)
+	{
+		CompleteBeforeStart(Command, FinalAdmission);
+		return;
+	}
+	if (Manager->ShouldSkipCommand(Command))
+	{
+		CompleteBeforeStart(Command, EStageCommandResult::Skipped);
+		return;
+	}
 	Manager->HandleCommandStarted(Command);
 	Command->Start(Command->Context);
 }
@@ -260,7 +281,10 @@ void UStageMemberComponent::CompleteBeforeStart(UStageMemberCommand* Command, ES
 {
 	if (!IsValid(Command) || Command->GetState() != EStageExecutionState::NotStarted || Result == EStageCommandResult::None) return;
 	BeginDispatch();
-	ON_SCOPE_EXIT { EndDispatch(); };
+	ON_SCOPE_EXIT
+	{
+		EndDispatch();
+	};
 	if (!bMemberFinished && Manager.IsValid() && Command->Context.MemberComponent.Get() == this && Command->Context.Manager == Manager)
 		RootCommands.AddUnique(Command->GetRootCommand() ? Command->GetRootCommand() : Command);
 
@@ -291,14 +315,17 @@ void UStageMemberComponent::CompleteBeforeStart(UStageMemberCommand* Command, ES
 
 FStageCommandExecution* UStageMemberComponent::FindExecution(UStageMemberCommand* Command)
 {
-	return Executions.FindByPredicate([Command](const FStageCommandExecution& Entry) { return Entry.Command == Command; });
+	return Executions.FindByPredicate([Command](const FStageCommandExecution& Entry)
+	{
+		return Entry.Command == Command;
+	});
 }
 
 void UStageMemberComponent::BeginExecution(UStageMemberCommand* Command)
 {
 	if (!IsValid(Command) || FindExecution(Command)) return;
-	if (bClosingMember || bMemberFinished || !Manager.IsValid() || !StatusComponent.IsValid() ||
-		Command->Context.MemberComponent.Get() != this || Command->Context.Manager != Manager)
+	if (bClosingMember || bMemberFinished || !Manager.IsValid() || !StatusComponent.IsValid() || Command->Context.MemberComponent.Get() != this
+	    || Command->Context.Manager != Manager)
 	{
 		Command->Finish(EStageCommandResult::Failed);
 		return;
@@ -320,8 +347,10 @@ void UStageMemberComponent::BeginExecution(UStageMemberCommand* Command)
 
 UStageAction* UStageMemberComponent::GetMainAction(UStageMemberCommand* Command) const
 {
-	const FStageCommandExecution* Entry = Executions.FindByPredicate(
-		[Command](const FStageCommandExecution& Item) { return Item.Command == Command; });
+	const FStageCommandExecution* Entry = Executions.FindByPredicate([Command](const FStageCommandExecution& Item)
+	{
+		return Item.Command == Command;
+	});
 	return Entry ? Entry->CurrentMainAction.Get() : nullptr;
 }
 
@@ -341,15 +370,18 @@ void UStageMemberComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		CachedStatuses = StatusComponent->GetStatuses();
 		bUpdateRequested = true;
 	}
-	if (Executions.ContainsByPredicate([](const FStageCommandExecution& Entry) { return Entry.RecoveryWaitDeadline >= 0.0f; }))
+	if (Executions.ContainsByPredicate([](const FStageCommandExecution& Entry)
+	{
+		return Entry.RecoveryWaitDeadline >= 0.0f;
+	}))
 		bUpdateRequested = true;
 	// Position and heading can change without a status event.
 	if (Executions.ContainsByPredicate([](const FStageCommandExecution& Entry)
-		{
-			const UStageMemberCommand* Command = Entry.Command;
-			return IsValid(Command) && Command->GetState() == EStageExecutionState::Running &&
-				(Command->bRequireStageLocation || Command->bRequireStageYaw);
-		})) bUpdateRequested = true;
+	{
+		const UStageMemberCommand* Command = Entry.Command;
+		return IsValid(Command) && Command->GetState() == EStageExecutionState::Running && (Command->bRequireStageLocation || Command->bRequireStageYaw);
+	}))
+		bUpdateRequested = true;
 	if (bUpdateRequested) UpdateExecutions();
 	PumpCommands();
 	TryFinishMember();
@@ -370,8 +402,10 @@ void UStageMemberComponent::UpdateExecutions()
 	bUpdateRequested = false;
 	UpdateStageMarkStatus();
 	TArray<UStageMemberCommand*> Snapshot;
-	for (const FStageCommandExecution& Entry : Executions) Snapshot.Add(Entry.Command);
-	for (UStageMemberCommand* Command : Snapshot) AdvanceExecution(Command);
+	for (const FStageCommandExecution& Entry : Executions)
+		Snapshot.Add(Entry.Command);
+	for (UStageMemberCommand* Command : Snapshot)
+		AdvanceExecution(Command);
 	// A synchronous callback may request another pass; it runs on the next tick.
 	bUpdatingExecutions = false;
 	FinishingActions.Reset();
@@ -384,8 +418,8 @@ UStageAction* UStageMemberComponent::SelectRecoveryTemplate() const
 	if (!RecoveryRulesAsset || !StatusComponent.IsValid()) return nullptr;
 	for (const FStageActionRule& Rule : RecoveryRulesAsset->Rules)
 	{
-		if (IsValid(Rule.Action) && !Rule.Action->GetClass()->HasAnyClassFlags(CLASS_Abstract) &&
-			Rule.ExecRequirements.GetIsAccess(StatusComponent->GetStatuses())) return Rule.Action;
+		if (IsValid(Rule.Action) && !Rule.Action->GetClass()->HasAnyClassFlags(CLASS_Abstract) && Rule.ExecRequirements.GetIsAccess(StatusComponent->GetStatuses()))
+			return Rule.Action;
 	}
 	return nullptr;
 }
@@ -405,11 +439,10 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	if (UStageAction* Main = Entry->CurrentMainAction)
 	{
 		if (Main->GetState() != EStageExecutionState::Running) return;
-		const bool bRequirementsMet = !IsPhysicallyBlocked() && StatusComponent.IsValid() &&
-			Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses()) &&
-			IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw);
-		if (Command->GetState() == EStageExecutionState::Running &&
-			(IsScenarioPaused(Command) || !bRequirementsMet || !Main->CanContinue())) Main->RequestStop(EStageActionStopReason::Interrupt);
+		const bool bRequirementsMet = !IsPhysicallyBlocked() && StatusComponent.IsValid() && Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses())
+		    && IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw);
+		if (Command->GetState() == EStageExecutionState::Running && (IsScenarioPaused(Command) || !bRequirementsMet || !Main->CanContinue()))
+			Main->RequestStop(EStageActionStopReason::Interrupt);
 		return;
 	}
 	if (Command->GetState() == EStageExecutionState::Finished)
@@ -417,8 +450,7 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		FinishExecution(Command, Command->GetResult());
 		return;
 	}
-	if (Command->GetState() == EStageExecutionState::Stopping || bClosingMember ||
-		!Manager.IsValid() || !StatusComponent.IsValid())
+	if (Command->GetState() == EStageExecutionState::Stopping || bClosingMember || !Manager.IsValid() || !StatusComponent.IsValid())
 	{
 		FinishExecution(Command, EStageCommandResult::Cancelled);
 		return;
@@ -426,7 +458,11 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 
 	const EStageCommandResult Admission = Manager->CheckCommandStart(Command);
 	if (!FindExecution(Command) || Command->GetState() != EStageExecutionState::Running) return;
-	if (Admission != EStageCommandResult::None) { FinishExecution(Command, Admission); return; }
+	if (Admission != EStageCommandResult::None)
+	{
+		FinishExecution(Command, Admission);
+		return;
+	}
 	if (IsScenarioPaused(Command))
 	{
 		LogWait(TEXT("Paused by reaction"));
@@ -434,16 +470,15 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
 		return;
 	}
-    if (IsPhysicallyBlocked())
-    {
+	if (IsPhysicallyBlocked())
+	{
 		LogWait(TEXT("Waiting for physical recovery"));
-        // Recovery movement cannot compete with ragdoll or the get-up montage.
-        FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
-        if (ActiveRecoveryAction) ActiveRecoveryAction->RequestStop(EStageActionStopReason::Interrupt);
-        return;
-    }
-	const bool bResultAchieved = IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw) &&
-		Command->IsResultAchieved(Command->Context);
+		// Recovery movement cannot compete with ragdoll or the get-up montage.
+		FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
+		if (ActiveRecoveryAction) ActiveRecoveryAction->RequestStop(EStageActionStopReason::Interrupt);
+		return;
+	}
+	const bool bResultAchieved = IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw) && Command->IsResultAchieved(Command->Context);
 	if (!FindExecution(Command) || Command->GetState() != EStageExecutionState::Running) return;
 	if (bResultAchieved)
 	{
@@ -460,14 +495,17 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		return;
 	}
 
-	if (Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses()) &&
-		IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw))
+	if (Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses()) && IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw))
 	{
 		UStageAction* Action = Command->CreateMainAction(Command->Context);
 		const EStageCommandResult MainAdmission = Manager.IsValid() ? Manager->CheckCommandStart(Command) : EStageCommandResult::Cancelled;
 		Entry = FindExecution(Command);
 		if (!Entry || Command->GetState() != EStageExecutionState::Running) return;
-		if (MainAdmission != EStageCommandResult::None) { FinishExecution(Command, MainAdmission); return; }
+		if (MainAdmission != EStageCommandResult::None)
+		{
+			FinishExecution(Command, MainAdmission);
+			return;
+		}
 		if (bClosingMember || !StatusComponent.IsValid())
 		{
 			FinishExecution(Command, EStageCommandResult::Cancelled);
@@ -484,8 +522,7 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 			bUpdateRequested = true;
 			return;
 		}
-		if (!Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses()) ||
-			!IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw))
+		if (!Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses()) || !IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw))
 		{
 			bUpdateRequested = true;
 			return;
@@ -505,8 +542,10 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		// A mark-constrained sibling may be paused while a Parallel Move/Look owns
 		// locomotion. Recovery must not replace that sibling's AI request.
 		if (Executions.ContainsByPredicate([Command](const FStageCommandExecution& Other)
-			{ return Other.Command && Other.Command != Command && Other.CurrentMainAction &&
-				Other.CurrentMainAction->GetState() == EStageExecutionState::Running && (Other.Command->GetResourceMask() & 3) != 0; }))
+		{
+			return Other.Command && Other.Command != Command && Other.CurrentMainAction && Other.CurrentMainAction->GetState() == EStageExecutionState::Running
+			    && (Other.Command->GetResourceMask() & 3) != 0;
+		}))
 		{
 			LogWait(TEXT("Recovery waiting for movement/rotation resource"));
 			FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
@@ -525,10 +564,14 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	Entry = FindExecution(Command);
 	if (!Entry || !GetWorld()) return;
 	const float Now = static_cast<float>(GetWorld()->GetTimeSeconds());
-    const float Timeout = RecoveryRulesAsset && RecoveryRulesAsset->RecoveryWaitTimeout > 0 ? RecoveryRulesAsset->RecoveryWaitTimeout : 30.0f;
+	const float Timeout = RecoveryRulesAsset && RecoveryRulesAsset->RecoveryWaitTimeout > 0 ? RecoveryRulesAsset->RecoveryWaitTimeout : 30.0f;
 	if (Entry->RecoveryWaitDeadline < 0.0f) Entry->RecoveryWaitDeadline = Now + Timeout;
 	LogWait(TEXT("Waiting for requirements or stage mark"));
-	if (Now >= Entry->RecoveryWaitDeadline) { LogWait(TEXT("Recovery wait deadline expired")); FinishExecution(Command, EStageCommandResult::Failed); }
+	if (Now >= Entry->RecoveryWaitDeadline)
+	{
+		LogWait(TEXT("Recovery wait deadline expired"));
+		FinishExecution(Command, EStageCommandResult::Failed);
+	}
 }
 
 void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageActionResult Result)
@@ -552,8 +595,10 @@ void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageAct
 		return;
 	}
 
-	FStageCommandExecution* Entry = Executions.FindByPredicate(
-		[Action](const FStageCommandExecution& Item) { return Item.CurrentMainAction == Action; });
+	FStageCommandExecution* Entry = Executions.FindByPredicate([Action](const FStageCommandExecution& Item)
+	{
+		return Item.CurrentMainAction == Action;
+	});
 	if (!Entry) return; // A late response from a different working Action.
 	UStageMemberCommand* Command = Entry->Command;
 	FinishingActions.AddUnique(Action);
@@ -575,15 +620,16 @@ void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageAct
 		const bool bResultAchieved = Command->IsResultAchieved(Command->Context);
 		if (FindExecution(Command)) FinishExecution(Command, bResultAchieved ? EStageCommandResult::Succeeded : EStageCommandResult::Failed);
 	}
-	else if (Result == EStageActionResult::Interrupted) bUpdateRequested = true;
-	else FinishExecution(Command, EStageCommandResult::Failed);
+	else if (Result == EStageActionResult::Interrupted)
+		bUpdateRequested = true;
+	else
+		FinishExecution(Command, EStageCommandResult::Failed);
 }
 
 void UStageMemberComponent::RemoveRecoveryWaiter(UStageMemberCommand* Command)
 {
 	RecoveryWaiters.Remove(Command);
-	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction)
-		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
+	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction) ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
 }
 
 void UStageMemberComponent::StopExecution(UStageMemberCommand* Command, EStageActionStopReason Reason)
@@ -591,14 +637,19 @@ void UStageMemberComponent::StopExecution(UStageMemberCommand* Command, EStageAc
 	if (!IsValid(Command)) return;
 	BeginDispatch();
 	RemoveRecoveryWaiter(Command);
-	if (UStageAction* Main = GetMainAction(Command)) Main->RequestStop(Reason);
-	else FinishExecution(Command, EStageCommandResult::Cancelled);
+	if (UStageAction* Main = GetMainAction(Command))
+		Main->RequestStop(Reason);
+	else
+		FinishExecution(Command, EStageCommandResult::Cancelled);
 	EndDispatch();
 }
 
 void UStageMemberComponent::FinishExecution(UStageMemberCommand* Command, EStageCommandResult Result)
 {
-	Executions.RemoveAll([Command](const FStageCommandExecution& Item) { return Item.Command == Command; });
+	Executions.RemoveAll([Command](const FStageCommandExecution& Item)
+	{
+		return Item.Command == Command;
+	});
 	RemoveRecoveryWaiter(Command);
 	if (IsValid(Command)) Command->Finish(Result);
 }
@@ -627,14 +678,13 @@ void UStageMemberComponent::EndDispatch()
 void UStageMemberComponent::HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result)
 {
 	if (!Manager.IsValid() || !RootCommands.Contains(Command->GetRootCommand())) return;
-	if (const auto* Entry = Manager->FindRoot(Command);
-		Entry && Entry->CommandType == EStageCommandType::Reaction && Entry->Command == Command)
+	if (const auto* Entry = Manager->FindRoot(Command); Entry && Entry->CommandType == EStageCommandType::Reaction && Entry->Command == Command)
 		bUpdateRequested = true; // Resume the existing scenario executions after the entire reaction.
 	if (Command->bRequireStageLocation || Command->bRequireStageYaw) bUpdateRequested = true;
 	Manager->AccountCommandResult(Command, Result);
 	OnCommandFinished.Broadcast(Command, Result);
-	if (Result == EStageCommandResult::Succeeded && Command->OnSuccessEventTag.IsValid() &&
-		(Command->IsComposite() || Command->HasStartedMainAction())) ReportStageEvent(Command->BuildSuccessEvent());
+	if (Result == EStageCommandResult::Succeeded && Command->OnSuccessEventTag.IsValid() && (Command->IsComposite() || Command->HasStartedMainAction()))
+		ReportStageEvent(Command->BuildSuccessEvent());
 }
 
 void UStageMemberComponent::ReportStageEvent(const FStageEvent& Event)
@@ -657,51 +707,57 @@ void UStageMemberComponent::EndStageMember()
 	for (UStageMemberCommand* Command : Roots)
 		if (IsValid(Command))
 		{
-			if (Command->GetState() == EStageExecutionState::NotStarted) CompleteBeforeStart(Command, EStageCommandResult::Cancelled);
-			else Command->RequestStop(EStageActionStopReason::Cancel);
+			if (Command->GetState() == EStageExecutionState::NotStarted)
+				CompleteBeforeStart(Command, EStageCommandResult::Cancelled);
+			else
+				Command->RequestStop(EStageActionStopReason::Cancel);
 		}
-	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction)
-		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
+	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction) ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
 	EndDispatch();
 }
 
 void UStageMemberComponent::ForceAbortMember(const FText& Reason)
 {
-    if (bMemberFinished) return;
-    BeginDispatch();
-    bClosingMember = true;
-    PendingCommands.Reset();
-    PendingReaction = nullptr;
-    const auto Roots = RootCommands;
-    for (UStageMemberCommand* Root : Roots)
-        if (IsValid(Root) && Root->GetState() != EStageExecutionState::NotStarted) Root->RequestStop(EStageActionStopReason::Cancel);
-    const auto Snapshot = Executions;
-    for (const auto& Entry : Snapshot) if (IsValid(Entry.CurrentMainAction)) Entry.CurrentMainAction->ForceAbort(Reason);
-    if (ActiveRecoveryAction) ActiveRecoveryAction->ForceAbort(Reason);
-    TFunction<void(UStageMemberCommand*)> Close = [&](UStageMemberCommand* Command)
-    {
-        if (!IsValid(Command)) return;
-        for (UStageMemberCommand* Child : Command->GetChildCommands()) Close(Child);
-        if (Command->GetState() != EStageExecutionState::Finished) Command->Finish(EStageCommandResult::Cancelled);
-    };
-    for (UStageMemberCommand* Root : Roots) Close(Root);
-    Executions.Reset(); RecoveryWaiters.Reset();
-    EndDispatch();
+	if (bMemberFinished) return;
+	BeginDispatch();
+	bClosingMember = true;
+	PendingCommands.Reset();
+	PendingReaction = nullptr;
+	const auto Roots = RootCommands;
+	for (UStageMemberCommand* Root : Roots)
+		if (IsValid(Root) && Root->GetState() != EStageExecutionState::NotStarted) Root->RequestStop(EStageActionStopReason::Cancel);
+	const auto Snapshot = Executions;
+	for (const auto& Entry : Snapshot)
+		if (IsValid(Entry.CurrentMainAction)) Entry.CurrentMainAction->ForceAbort(Reason);
+	if (ActiveRecoveryAction) ActiveRecoveryAction->ForceAbort(Reason);
+	TFunction<void(UStageMemberCommand*)> Close = [&](UStageMemberCommand* Command)
+	{
+		if (!IsValid(Command)) return;
+		for (UStageMemberCommand* Child : Command->GetChildCommands())
+			Close(Child);
+		if (Command->GetState() != EStageExecutionState::Finished) Command->Finish(EStageCommandResult::Cancelled);
+	};
+	for (UStageMemberCommand* Root : Roots)
+		Close(Root);
+	Executions.Reset();
+	RecoveryWaiters.Reset();
+	EndDispatch();
 }
 
 void UStageMemberComponent::TryFinishMember()
 {
-	if (!bClosingMember || bMemberFinished || DispatchDepth != 0 || bUpdatingExecutions ||
-		!Executions.IsEmpty() || ActiveRecoveryAction) return;
+	if (!bClosingMember || bMemberFinished || DispatchDepth != 0 || bUpdatingExecutions || !Executions.IsEmpty() || ActiveRecoveryAction) return;
 	if (RootCommands.ContainsByPredicate([](const UStageMemberCommand* Command)
-		{ return IsValid(Command) && Command->GetState() != EStageExecutionState::Finished; })) return;
+	{
+		return IsValid(Command) && Command->GetState() != EStageExecutionState::Finished;
+	}))
+		return;
 
 	if (UStatusesComponent* Statuses = StatusComponent.Get())
 	{
 		Statuses->OnAddStatuses.RemoveDynamic(this, &UStageMemberComponent::HandleStatusesChanged);
 		Statuses->OnRemoveStatuses.RemoveDynamic(this, &UStageMemberComponent::HandleStatusesChanged);
-		if (Statuses->GetStatuses().HasTagExact(TAG_OffStageMark))
-			Statuses->RemoveStatuses(TAG_OffStageMark.GetTag().GetSingleTagContainer());
+		if (Statuses->GetStatuses().HasTagExact(TAG_OffStageMark)) Statuses->RemoveStatuses(TAG_OffStageMark.GetTag().GetSingleTagContainer());
 	}
 	Manager.Reset();
 	StatusComponent.Reset();

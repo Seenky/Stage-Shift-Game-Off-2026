@@ -5,6 +5,7 @@
 #include "StageShiftHairAnimInstance.generated.h"
 
 UCLASS(Blueprintable)
+
 class STAGESHIFT_API UStageShiftHairAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()

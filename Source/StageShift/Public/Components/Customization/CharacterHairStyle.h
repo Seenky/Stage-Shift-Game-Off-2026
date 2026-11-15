@@ -10,10 +10,13 @@ class UStageShiftHairAnimInstance;
 UENUM(BlueprintType)
 enum class ECharacterHairBoneAxis : uint8
 {
-	X, Y, Z
+	X,
+	Y,
+	Z
 };
 
 USTRUCT(BlueprintType)
+
 struct STAGESHIFT_API FCharacterHairStrand
 {
 	GENERATED_BODY()
@@ -36,6 +39,7 @@ struct STAGESHIFT_API FCharacterHairStrand
 };
 
 USTRUCT(BlueprintType)
+
 struct STAGESHIFT_API FCharacterHairPhysicsSettings
 {
 	GENERATED_BODY()
@@ -71,6 +75,7 @@ struct STAGESHIFT_API FCharacterHairPhysicsSettings
 };
 
 UCLASS(BlueprintType)
+
 class STAGESHIFT_API UCharacterHairStyle : public UDataAsset
 {
 	GENERATED_BODY()
