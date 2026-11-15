@@ -43,7 +43,7 @@ struct FDialogueLine
 {
     GENERATED_BODY()
     
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(StageGraphParameter="SpeakerName"))
     FText SpeakersName = FText::FromString("Aria");
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -109,3 +109,31 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueLineEnded, FGuid, Playba
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueWordRevealed, FGuid, PlaybackId, int32, WordIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueRevealCompleted, FGuid, PlaybackId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDialogueCueTriggered, FGuid, PlaybackId, const FDialogueCue&, Cue);
+
+// Suspended playback belongs to the command that captured it, not a component's last line.
+USTRUCT()
+struct STAGESHIFT_API FDialogueResumeData
+{
+    GENERATED_BODY()
+    UPROPERTY()
+    FDialogueLine Line;
+    UPROPERTY()
+    TWeakObjectPtr<UObject> Source;
+    UPROPERTY()
+    EDialoguePlaybackPhase Phase = EDialoguePlaybackPhase::Idle;
+    UPROPERTY()
+    int32 RevealedLetters = 0;
+    UPROPERTY()
+    int32 RevealedWords = 0;
+    UPROPERTY()
+    float RemainingDelay = 0;
+    UPROPERTY()
+    TArray<int32> TriggeredCueIndices;
+    bool IsValid() const { return Source.IsValid() && Phase != EDialoguePlaybackPhase::Idle; }
+};
+
+namespace StageDialogue
+{
+    STAGESHIFT_API void Tokenize(const FString& Text, TArray<int32>& LetterEnds, TArray<int32>& WordStarts);
+    STAGESHIFT_API float GetDuration(const FDialogueLine& Line);
+}

@@ -7,6 +7,9 @@
 
 class UStageMemberCommand;
 
+UENUM(BlueprintType, meta=(Bitflags,UseEnumValuesAsMaskValuesInEditor="true"))
+enum class EStageCommandResource : uint8 { None=0, Movement=1, Rotation=2, Speech=4 };
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStageCommandFinished, UStageMemberCommand*, Command, EStageCommandResult, Result);
 
 // A task and its progress. Concrete engine work belongs to UStageAction.
@@ -16,25 +19,44 @@ class STAGESHIFT_API UStageMemberCommand : public UObject
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Command")
+    // Property path -> stable graph parameter ID. Names may change without breaking bindings.
+    UPROPERTY(VisibleAnywhere, AdvancedDisplay, Category="Graph Parameters")
+    TMap<FName,FGuid> GraphParameterBindings;
+    // Blueprint command classes declare resources without an editor-specific implementation.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Command", meta=(Bitmask,BitmaskEnum="/Script/StageShift.EStageCommandResource",NoGraphParameter))
+    int32 DeclaredResources = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category="Advanced", meta=(GetOptions="GetRoleOptions"))
+    FName RequiredSuccessRoleId;
+    FName GetEffectiveRequiredSuccessRoleId() const { return RequiredSuccessRoleId.IsNone() ? RequiredSuccessStepMemberTag.GetTagName() : RequiredSuccessRoleId; }
+    UFUNCTION()
+    TArray<FName> GetRoleOptions() const;
+    UFUNCTION()
+    TArray<FName> GetTargetOptions() const;
+    virtual uint8 GetResourceMask() const;
+    virtual void ValidateDefinition(const class UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const;
+#if WITH_EDITORONLY_DATA
+    UPROPERTY()
+    FGuid EditorGuid;
+#endif
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced")
 	EStageCatchUpPolicy CatchUpPolicy = EStageCatchUpPolicy::Keep;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Command")
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced")
 	FStageExecutionRequirements ExecutionRequirements;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Stage Mark")
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced")
 	bool bRequireStageLocation = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Stage Mark")
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced")
 	bool bRequireStageYaw = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Command")
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced")
 	FGameplayTag RequiredSuccessStepMemberTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Scoring", meta = (ClampMin = "0", UIMin = "0"))
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced", meta = (ClampMin = "0", UIMin = "0"))
 	int32 ScoreValue = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage|Command")
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category="Advanced")
 	FGameplayTag OnSuccessEventTag;
 
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Command")
@@ -75,7 +97,9 @@ public:
 	virtual const TArray<TObjectPtr<UStageMemberCommand>>& GetChildCommands() const;
 	virtual UWorld* GetWorld() const override;
 
+	UFUNCTION(BlueprintPure, Category="Stage|Command")
 	EStageExecutionState GetState() const { return CommandState; }
+	UFUNCTION(BlueprintPure, Category="Stage|Command")
 	EStageCommandResult GetResult() const { return CommandResult; }
 	UStageMemberCommand* GetRootCommand() const { return RootCommand.Get(); }
 

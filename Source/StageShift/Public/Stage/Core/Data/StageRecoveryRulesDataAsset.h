@@ -14,6 +14,10 @@ class STAGESHIFT_API UStageRecoveryRulesDataAsset : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
+    bool ValidateDefinition(TArray<FString>& Errors, const FString& Path = TEXT("RecoveryRules")) const;
+#if WITH_EDITOR
+    virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FStageActionRule> Rules;

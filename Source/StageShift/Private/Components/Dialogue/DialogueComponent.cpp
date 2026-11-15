@@ -8,6 +8,7 @@
 #include "Internationalization/BreakIterator.h"
 #include "Misc/Char.h"
 #include "TimerManager.h"
+#include "Components/FacialAnimation/FacialAnimationComponent.h"
 
 UDialogueComponent::UDialogueComponent()
 {
@@ -93,6 +94,12 @@ void UDialogueComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 bool UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 {
+    return PlayLineWithId(Line, FGuid::NewGuid(), bForceStop);
+}
+
+bool UDialogueComponent::PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop)
+{
+    if (!PlaybackId.IsValid()) return false;
     if (bEndingPlay || !HasBegunPlay() || !GetWorld())
     {
         return false;
@@ -129,7 +136,7 @@ bool UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 
     PlaybackState = FDialoguePlaybackState{};
     PlaybackState.Line = LineToPlay;
-    PlaybackState.PlaybackId = FGuid::NewGuid();
+    PlaybackState.PlaybackId = PlaybackId;
     PlaybackState.Phase = EDialoguePlaybackPhase::Revealing;
     PlaybackState.VisibleText = FText::GetEmpty();
 
@@ -141,22 +148,8 @@ bool UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
     RevealedLineData.RevealedWordCount = 0;
     bRevealAllRequested = false;
 
-    const TSharedRef<IBreakIterator> Characters = FBreakIterator::CreateCharacterBoundaryIterator();
-    Characters->SetStringRef(ResolvedText);
-    int32 Start = Characters->ResetToBeginning();
-    for (int32 End = Characters->MoveToNext(); End != INDEX_NONE; End = Characters->MoveToNext())
-    {
-        if (!FChar::IsWhitespace(ResolvedText[Start]))
-        {
-            RevealedLineData.LetterEndOffsets.Add(End);
-            if (Start == 0 || FChar::IsWhitespace(ResolvedText[Start - 1]))
-            {
-                RevealedLineData.WordStartOffsets.Add(Start);
-            }
-        }
-
-        Start = End;
-    }
+    TriggeredCueIndices.Reset();
+    StageDialogue::Tokenize(ResolvedText, RevealedLineData.LetterEndOffsets, RevealedLineData.WordStartOffsets);
 
     if (RevealedLineData.LetterEndOffsets.IsEmpty())
     {
@@ -256,12 +249,12 @@ bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
     {
         const int32 WordIndex = RevealedLineData.RevealedWordCount++;
         TArray<FDialogueCue, TInlineAllocator<4>> Cues;
-        for (const FDialogueCue& Cue : PlaybackState.Line.Cues)
+        TArray<int32> CueIndices;
+        for (int32 Index = 0; Index < PlaybackState.Line.Cues.Num(); ++Index)
         {
-            if (Cue.WordIndex == WordIndex)
-            {
-                Cues.Add(Cue);
-            }
+            const FDialogueCue& Cue = PlaybackState.Line.Cues[Index];
+            if (Cue.WordIndex == WordIndex && !TriggeredCueIndices.Contains(Index))
+            { Cues.Add(Cue); CueIndices.Add(Index); }
         }
         
         TGuardValue<bool> DispatchGuard(bDispatchingWord, true);
@@ -273,9 +266,10 @@ bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
             return false;
         }
 
-        for (const FDialogueCue& Cue : Cues)
+        for (int32 CueIndex = 0; CueIndex < Cues.Num(); ++CueIndex)
         {
-            OnDialogueCueTriggered.Broadcast(Id, Cue);
+            TriggeredCueIndices.AddUnique(CueIndices[CueIndex]);
+            OnDialogueCueTriggered.Broadcast(Id, Cues[CueIndex]);
             if (!IsValid(this) || PlaybackState.PlaybackId != Id ||
                 PlaybackState.Phase != EDialoguePlaybackPhase::Revealing)
             {
@@ -446,4 +440,65 @@ void UDialogueComponent::FinishPlayback(const EDialogueEndReason EndReason)
     bRevealAllRequested = false;
 
     OnDialogueLineEnded.Broadcast(EndedPlaybackId, EndReason);
+}
+
+bool UDialogueComponent::CaptureResumeData(FGuid PlaybackId, FDialogueResumeData& OutData) const
+{
+    OutData = {};
+    if (!IsPlaying() || PlaybackState.PlaybackId != PlaybackId || !GetWorld()) return false;
+    OutData.Line = PlaybackState.Line;
+    OutData.Source = const_cast<UDialogueComponent*>(this);
+    OutData.Phase = PlaybackState.Phase;
+    OutData.RevealedLetters = RevealedLineData.RevealedLetterCount;
+    OutData.RevealedWords = RevealedLineData.RevealedWordCount;
+    OutData.TriggeredCueIndices = TriggeredCueIndices;
+    OutData.RemainingDelay = FMath::Max(0.0f, GetWorld()->GetTimerManager().GetTimerRemaining(
+        PlaybackState.Phase == EDialoguePlaybackPhase::Holding ? HoldTimerHandle : RevealTimerHandle));
+    return true;
+}
+
+bool UDialogueComponent::ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId)
+{
+    if (bEndingPlay || !HasBegunPlay() || !GetWorld() || IsPlaying() || !PlaybackId.IsValid() || !Data.IsValid() || Data.Source.Get() != this ||
+        !FMath::IsFinite(Data.RemainingDelay) || Data.RemainingDelay < 0) return false;
+    TArray<int32> Ends, Starts;
+    const FString Text = Data.Line.Text.ToString();
+    StageDialogue::Tokenize(Text, Ends, Starts);
+    if (Ends.IsEmpty() || Data.RevealedLetters < 0 || Data.RevealedLetters > Ends.Num() || Data.RevealedWords < 0 || Data.RevealedWords > Starts.Num()) return false;
+    for (int32 Index : Data.TriggeredCueIndices) if (!Data.Line.Cues.IsValidIndex(Index)) return false;
+    PlaybackState = {};
+    PlaybackState.Line = Data.Line;
+    PlaybackState.PlaybackId = PlaybackId;
+    PlaybackState.Phase = Data.Phase;
+    ResolvedText = Text;
+    RevealedLineData.LetterEndOffsets = MoveTemp(Ends);
+    RevealedLineData.WordStartOffsets = MoveTemp(Starts);
+    RevealedLineData.RevealedLetterCount = Data.RevealedLetters;
+    RevealedLineData.RevealedWordCount = Data.RevealedWords;
+    TriggeredCueIndices = Data.TriggeredCueIndices;
+    bRevealAllRequested = false;
+    PlaybackState.VisibleText = FText::FromString(Text.Left(Data.RevealedLetters > 0 ? RevealedLineData.LetterEndOffsets[Data.RevealedLetters - 1] : 0));
+    TArray<FDialogueCue> StateCues;
+    for (int32 Index : TriggeredCueIndices) StateCues.Add(Data.Line.Cues[Index]);
+    StateCues.StableSort([](const FDialogueCue& A, const FDialogueCue& B) { return A.WordIndex < B.WordIndex; });
+    if (auto* Face = GetOwner()->FindComponentByClass<UFacialAnimationComponent>()) Face->RestoreDialogueState(PlaybackId, StateCues);
+    const auto State = PlaybackState;
+    OnDialoguePlaybackStateChanged.Broadcast(State);
+    if (!IsPlaying() || PlaybackState.PlaybackId != PlaybackId) return true;
+    // If interruption happened inside a word callback, finish its not-yet-fired cues once.
+    for (int32 Word = 0; Word < Data.RevealedWords; ++Word)
+        for (int32 Index = 0; Index < Data.Line.Cues.Num(); ++Index)
+            if (Data.Line.Cues[Index].WordIndex == Word && !TriggeredCueIndices.Contains(Index))
+            {
+                TriggeredCueIndices.Add(Index);
+                OnDialogueCueTriggered.Broadcast(PlaybackId, Data.Line.Cues[Index]);
+                if (!IsPlaying() || PlaybackState.PlaybackId != PlaybackId) return true;
+            }
+    const FTimerDelegate Continue = Data.Phase == EDialoguePlaybackPhase::Holding
+        ? FTimerDelegate::CreateUObject(this, &ThisClass::FinishPlayback, EDialogueEndReason::Completed)
+        : FTimerDelegate::CreateUObject(this, &ThisClass::RevealNextLetter);
+    FTimerHandle& Handle = Data.Phase == EDialoguePlaybackPhase::Holding ? HoldTimerHandle : RevealTimerHandle;
+    if (Data.RemainingDelay > 0) GetWorld()->GetTimerManager().SetTimer(Handle, Continue, Data.RemainingDelay, false);
+    else Handle = GetWorld()->GetTimerManager().SetTimerForNextTick(Continue);
+    return true;
 }

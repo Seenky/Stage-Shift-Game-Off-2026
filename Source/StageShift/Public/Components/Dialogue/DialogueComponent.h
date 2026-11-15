@@ -16,6 +16,9 @@ class STAGESHIFT_API UDialogueComponent : public UActorComponent
 
 public:
     UDialogueComponent();
+    bool PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop = false);
+    bool CaptureResumeData(FGuid PlaybackId, FDialogueResumeData& OutData) const;
+    bool ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId);
 
     void SetWidgetComponentProperty(FName ComponentProperty);
 
@@ -118,6 +121,7 @@ private:
     FGuid DispatchingPlaybackId;
     bool bRevealAllRequested = false;
     bool bEndingPlay = false;
+    TArray<int32> TriggeredCueIndices;
 
     FTimerHandle RevealTimerHandle;
     FTimerHandle HoldTimerHandle;

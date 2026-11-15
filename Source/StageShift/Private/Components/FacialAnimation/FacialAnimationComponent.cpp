@@ -599,6 +599,19 @@ void UFacialAnimationComponent::HandleCue(FGuid PlaybackId, const FDialogueCue& 
     }
 }
 
+void UFacialAnimationComponent::RestoreDialogueState(FGuid PlaybackId, const TArray<FDialogueCue>& StateCues)
+{
+    // Restore state without replaying word events, speech pulses or cue delegates.
+    if (!TrackDialogue(PlaybackId)) return;
+    ClearDialogueOverrides(0.0f);
+    for (FDialogueCue Cue : StateCues)
+    {
+        Cue.BlendTime = 0.0f;
+        HandleCue(PlaybackId, Cue);
+    }
+    if (BoundDialogue.IsValid()) HandlePlaybackStateChanged(BoundDialogue->GetPlaybackState());
+}
+
 void UFacialAnimationComponent::ClearDialogueOverrides(float BlendTime)
 {
     const bool bRestoreExpression = bHasDialogueExpression;

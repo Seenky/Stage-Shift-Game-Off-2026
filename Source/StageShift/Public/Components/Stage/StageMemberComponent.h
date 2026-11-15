@@ -23,6 +23,9 @@ class STAGESHIFT_API UStageMemberComponent : public UActorComponent
 
 public:
 	UStageMemberComponent();
+    virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+    bool IsPhysicallyBlocked() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TObjectPtr<UStageRecoveryRulesDataAsset> RecoveryRulesAsset;
@@ -81,6 +84,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void EndStageMember();
+    void ForceAbortMember(const FText& Reason);
 
 	UFUNCTION(BlueprintPure, Category = "Stage")
 	bool IsMemberFinished() const { return bMemberFinished; }
@@ -88,6 +92,12 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+    UFUNCTION()
+    void HandlePhysicsStarted();
+    UFUNCTION()
+    void HandlePhysicsRecovered();
+    UPROPERTY(Transient)
+    TWeakObjectPtr<class UPhysicalMontageComponent> PhysicalMontage;
 	friend class UStageAction;
 	friend class UStageMemberCommand;
 

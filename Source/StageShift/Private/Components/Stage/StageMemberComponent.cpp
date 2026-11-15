@@ -8,8 +8,55 @@
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/StageMemberCommand.h"
 #include "StatusesComponent.h"
+#include "Components/Physics/PhysicalMontageComponent.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_OffStageMark, "State.Member.OffStageMark");
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_StageMemberFallen, "State.Member.Fallen");
+
+void UStageMemberComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    PhysicalMontage = GetOwner()->FindComponentByClass<UPhysicalMontageComponent>();
+    if (PhysicalMontage.IsValid())
+    {
+        PhysicalMontage->OnPhysAnimStarted.AddUniqueDynamic(this, &ThisClass::HandlePhysicsStarted);
+        PhysicalMontage->OnRecoveryEnded.AddUniqueDynamic(this, &ThisClass::HandlePhysicsRecovered);
+        if (PhysicalMontage->IsPhysicsMontageActive()) HandlePhysicsStarted();
+    }
+}
+
+void UStageMemberComponent::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if (PhysicalMontage.IsValid())
+    {
+        PhysicalMontage->OnPhysAnimStarted.RemoveDynamic(this, &ThisClass::HandlePhysicsStarted);
+        PhysicalMontage->OnRecoveryEnded.RemoveDynamic(this, &ThisClass::HandlePhysicsRecovered);
+    }
+    ForceAbortMember(FText::FromString(TEXT("Participant EndPlay")));
+    Super::EndPlay(Reason);
+}
+
+void UStageMemberComponent::HandlePhysicsStarted()
+{
+    if (auto* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>())
+        Statuses->AddConstantStatuses(TAG_StageMemberFallen.GetTag().GetSingleTagContainer());
+    FStageEvent Event;
+    Event.EventTag = TAG_StageMemberFallen;
+    Event.SubjectActor = GetOwner();
+    ReportStageEvent(Event);
+}
+
+void UStageMemberComponent::HandlePhysicsRecovered()
+{
+    if (auto* Statuses = GetOwner()->FindComponentByClass<UStatusesComponent>())
+        Statuses->RemoveStatuses(TAG_StageMemberFallen.GetTag().GetSingleTagContainer());
+}
+
+bool UStageMemberComponent::IsPhysicallyBlocked() const
+{
+    return (PhysicalMontage.IsValid() && PhysicalMontage->IsPhysicsMontageActive()) ||
+        (StatusComponent.IsValid() && StatusComponent->GetStatuses().HasTag(TAG_StageMemberFallen));
+}
 
 UStageMemberComponent::UStageMemberComponent()
 {
@@ -284,7 +331,7 @@ void UStageMemberComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	if (bMemberFinished) return;
 	if (!Manager.IsValid() || !StatusComponent.IsValid())
 	{
-		EndStageMember();
+		ForceAbortMember(FText::FromString(TEXT("Participant lost manager or Statuses component")));
 		return;
 	}
 
@@ -347,10 +394,18 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 {
 	FStageCommandExecution* Entry = FindExecution(Command);
 	if (!Entry || !IsValid(Command)) return;
+	const auto LogWait = [&](const FString& Reason)
+	{
+		if (auto* Current = FindExecution(Command); Current && Current->LastWaitReason != Reason)
+		{
+			Current->LastWaitReason = Reason;
+			if (Manager.IsValid()) Manager->AddDiagnostic(Manager->DescribeCommand(Command) + TEXT(" / ") + Reason);
+		}
+	};
 	if (UStageAction* Main = Entry->CurrentMainAction)
 	{
 		if (Main->GetState() != EStageExecutionState::Running) return;
-		const bool bRequirementsMet = StatusComponent.IsValid() &&
+		const bool bRequirementsMet = !IsPhysicallyBlocked() && StatusComponent.IsValid() &&
 			Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses()) &&
 			IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw);
 		if (Command->GetState() == EStageExecutionState::Running &&
@@ -374,10 +429,19 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	if (Admission != EStageCommandResult::None) { FinishExecution(Command, Admission); return; }
 	if (IsScenarioPaused(Command))
 	{
+		LogWait(TEXT("Paused by reaction"));
 		// Reaction time must not expire a scenario's recovery wait or restart its Main.
 		FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
 		return;
 	}
+    if (IsPhysicallyBlocked())
+    {
+		LogWait(TEXT("Waiting for physical recovery"));
+        // Recovery movement cannot compete with ragdoll or the get-up montage.
+        FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
+        if (ActiveRecoveryAction) ActiveRecoveryAction->RequestStop(EStageActionStopReason::Interrupt);
+        return;
+    }
 	const bool bResultAchieved = IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw) &&
 		Command->IsResultAchieved(Command->Context);
 	if (!FindExecution(Command) || Command->GetState() != EStageExecutionState::Running) return;
@@ -427,16 +491,28 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 			return;
 		}
 		Entry->RecoveryWaitDeadline = -1.0f;
+		LogWait(TEXT("Main action started/resumed"));
 		Entry->CurrentMainAction = Action; // UPROPERTY holds the working Action before Start.
 		Action->OnFinished.AddUniqueDynamic(this, &UStageMemberComponent::HandleActionFinished);
+		Action->SetExecutionBudget(Command->GetRemainingTime() * 2.0f + 10.0f);
 		Command->NotifyMainActionStarted();
 		Action->Start(Command->Context);
 		return;
 	}
-	// Without a recovery profile, wait for external status changes or command cancellation.
-	if (!RecoveryRulesAsset) return;
+	// Waiting is bounded even without an authored recovery rule.
 	if (UStageAction* Template = SelectRecoveryTemplate())
 	{
+		// A mark-constrained sibling may be paused while a Parallel Move/Look owns
+		// locomotion. Recovery must not replace that sibling's AI request.
+		if (Executions.ContainsByPredicate([Command](const FStageCommandExecution& Other)
+			{ return Other.Command && Other.Command != Command && Other.CurrentMainAction &&
+				Other.CurrentMainAction->GetState() == EStageExecutionState::Running && (Other.Command->GetResourceMask() & 3) != 0; }))
+		{
+			LogWait(TEXT("Recovery waiting for movement/rotation resource"));
+			FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
+			return;
+		}
+		LogWait(TEXT("Recovery started: ") + Template->GetClass()->GetName());
 		ActiveRecoveryAction = DuplicateObject<UStageAction>(Template, this);
 		ActiveRecoveryAction->OnFinished.Clear();
 		RecoveryWaiters.AddUnique(Command);
@@ -448,14 +524,11 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 
 	Entry = FindExecution(Command);
 	if (!Entry || !GetWorld()) return;
-	if (RecoveryRulesAsset->RecoveryWaitTimeout == 0.0f)
-	{
-		Entry->RecoveryWaitDeadline = -1.0f;
-		return;
-	}
 	const float Now = static_cast<float>(GetWorld()->GetTimeSeconds());
-	if (Entry->RecoveryWaitDeadline < 0.0f) Entry->RecoveryWaitDeadline = Now + RecoveryRulesAsset->RecoveryWaitTimeout;
-	if (Now >= Entry->RecoveryWaitDeadline) FinishExecution(Command, EStageCommandResult::Failed);
+    const float Timeout = RecoveryRulesAsset && RecoveryRulesAsset->RecoveryWaitTimeout > 0 ? RecoveryRulesAsset->RecoveryWaitTimeout : 30.0f;
+	if (Entry->RecoveryWaitDeadline < 0.0f) Entry->RecoveryWaitDeadline = Now + Timeout;
+	LogWait(TEXT("Waiting for requirements or stage mark"));
+	if (Now >= Entry->RecoveryWaitDeadline) { LogWait(TEXT("Recovery wait deadline expired")); FinishExecution(Command, EStageCommandResult::Failed); }
 }
 
 void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageActionResult Result)
@@ -590,6 +663,30 @@ void UStageMemberComponent::EndStageMember()
 	if (RecoveryWaiters.IsEmpty() && ActiveRecoveryAction)
 		ActiveRecoveryAction->RequestStop(EStageActionStopReason::Cancel);
 	EndDispatch();
+}
+
+void UStageMemberComponent::ForceAbortMember(const FText& Reason)
+{
+    if (bMemberFinished) return;
+    BeginDispatch();
+    bClosingMember = true;
+    PendingCommands.Reset();
+    PendingReaction = nullptr;
+    const auto Roots = RootCommands;
+    for (UStageMemberCommand* Root : Roots)
+        if (IsValid(Root) && Root->GetState() != EStageExecutionState::NotStarted) Root->RequestStop(EStageActionStopReason::Cancel);
+    const auto Snapshot = Executions;
+    for (const auto& Entry : Snapshot) if (IsValid(Entry.CurrentMainAction)) Entry.CurrentMainAction->ForceAbort(Reason);
+    if (ActiveRecoveryAction) ActiveRecoveryAction->ForceAbort(Reason);
+    TFunction<void(UStageMemberCommand*)> Close = [&](UStageMemberCommand* Command)
+    {
+        if (!IsValid(Command)) return;
+        for (UStageMemberCommand* Child : Command->GetChildCommands()) Close(Child);
+        if (Command->GetState() != EStageExecutionState::Finished) Command->Finish(EStageCommandResult::Cancelled);
+    };
+    for (UStageMemberCommand* Root : Roots) Close(Root);
+    Executions.Reset(); RecoveryWaiters.Reset();
+    EndDispatch();
 }
 
 void UStageMemberComponent::TryFinishMember()

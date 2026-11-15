@@ -13,6 +13,8 @@ class STAGESHIFT_API UStageDialogueCommand : public UStageMemberCommand
 	GENERATED_BODY()
 	
 public:
+    virtual uint8 GetResourceMask() const override { return 4; }
+    virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	UStageDialogueCommand();
 
 	
@@ -22,9 +24,10 @@ public:
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 private:
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Scenario", meta=(ShowOnlyInnerProperties))
 	FDialogueLine CurrentLine;
 	
-	bool bIsNeedResumeLine;
+	UPROPERTY(Transient)
+	FDialogueResumeData ResumeData;
 	bool bDialogueCompleted;
 };

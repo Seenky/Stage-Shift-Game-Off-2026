@@ -6,10 +6,11 @@ public class StageShiftEditor : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "Blutility" });
+		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "Blutility", "StageShift" });
 		PrivateDependencyModuleNames.AddRange(new[]
 		{
-			"AnimationBlueprintLibrary", "UnrealEd"
+			"AnimationBlueprintLibrary", "UnrealEd", "StageShift", "PropertyEditor",
+            "GraphEditor", "Slate", "SlateCore", "AssetDefinition", "AssetTools", "ToolMenus", "InputCore", "GameplayTags", "AssetRegistry", "ApplicationCore", "StructUtilsEditor"
 		});
 	}
 }

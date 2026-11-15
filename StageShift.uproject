@@ -21,6 +21,10 @@
 		}
 	],
 	"Plugins": [
+        {
+            "Name": "ModelViewViewModel",
+            "Enabled": true
+        },
 		{
 			"Name": "PhysicsControl",
 			"Enabled": true

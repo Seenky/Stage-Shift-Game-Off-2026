@@ -76,6 +76,7 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Face|Dialogue")
     void BindDialogueComponent(UDialogueComponent* Dialogue);
+    void RestoreDialogueState(FGuid PlaybackId, const TArray<FDialogueCue>& StateCues);
 
     UFUNCTION(BlueprintCallable, Category = "Face|Dialogue")
     void UnbindDialogueComponent();

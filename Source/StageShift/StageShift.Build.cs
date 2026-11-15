@@ -13,6 +13,9 @@ public class StageShift : ModuleRules
 			"Core", 
 			"CoreUObject", 
 			"Engine",
+			"AIModule",
+			"ModelViewViewModel",
+			"StatusComponent",
 			"AnimGraphRuntime",
 			"PhysicsControl",
 			"PhysicsCore",
@@ -26,9 +29,6 @@ public class StageShift : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"AIModule", 
-			"StateTreeModule", 
-			"GameplayStateTreeModule", 
 			"GameplayTags", 
 			"AnimationCore",
 			"AnimGraphRuntime",
@@ -38,8 +38,7 @@ public class StageShift : ModuleRules
 			"RigVM",
 			"PBIK",
 			"Slate",
-			"ModelViewViewModel",
-			"StatusComponent"
+			"NavigationSystem",
 			
 		});
 

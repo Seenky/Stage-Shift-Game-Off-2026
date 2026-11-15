@@ -39,4 +39,6 @@ private:
 	FVector MoveToLoc;
 	float AcceptanceRadius;
 	TWeakObjectPtr<AAIController> AIController;
+    bool bStartingRequest = false;
+    TArray<TPair<FAIRequestID, EPathFollowingResult::Type>> StartingCompletions;
 };

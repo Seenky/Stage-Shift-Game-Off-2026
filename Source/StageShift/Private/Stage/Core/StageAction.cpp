@@ -1,6 +1,36 @@
 #include "Stage/Core/StageAction.h"
 
 #include "Components/Stage/StageMemberComponent.h"
+#include "Stage/Core/StageManager.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+
+void UStageAction::ForceAbort(const FText& Reason)
+{
+    if (ActionState == EStageExecutionState::Finished) return;
+    TerminationReason = Reason;
+    if (Context.Manager.IsValid()) Context.Manager->AddDiagnostic(GetClass()->GetName() + TEXT(" / ") + Reason.ToString());
+    ActionState = EStageExecutionState::Running;
+    Finish(EStageActionResult::Failed);
+}
+
+void UStageAction::HandleWatchdog()
+{
+    ForceAbort(FText::FromString(TEXT("Action watchdog expired")));
+}
+
+void UStageAction::SetExecutionBudget(float Seconds)
+{
+    if (!FMath::IsFinite(Seconds) || Seconds <= WatchdogSeconds) return;
+    WatchdogSeconds = Seconds;
+    if (GetWorld() && ActionState == EStageExecutionState::Running)
+        GetWorld()->GetTimerManager().SetTimer(WatchdogHandle, this, &ThisClass::HandleWatchdog, WatchdogSeconds, false);
+}
+
+void UStageAction::ValidateRecoveryTemplate(const FString& Path, TArray<FString>& Errors) const
+{
+    Errors.Add(Path + TEXT(" / action has no configured executable recovery template"));
+}
 
 void UStageAction::Start(const FStageExecutionContext& InContext)
 {
@@ -15,6 +45,12 @@ void UStageAction::Start(const FStageExecutionContext& InContext)
 		return;
 	}
 
+    if (!FMath::IsFinite(WatchdogSeconds) || WatchdogSeconds <= 0)
+    {
+        ForceAbort(FText::FromString(TEXT("Invalid Action watchdog budget")));
+        return;
+    }
+    GetWorld()->GetTimerManager().SetTimer(WatchdogHandle, this, &ThisClass::HandleWatchdog, WatchdogSeconds, false);
 	OnStart();
 }
 
@@ -66,6 +102,7 @@ void UStageAction::Finish(EStageActionResult InResult)
 	
 	ActionResult = InResult;
 	ActionState = EStageExecutionState::Finished;
+    if (GetWorld()) GetWorld()->GetTimerManager().ClearTimer(WatchdogHandle);
 	const TWeakObjectPtr<UStageMemberComponent> Member = Context.MemberComponent;
 	if (Member.IsValid()) Member->BeginDispatch();
 	Cleanup();

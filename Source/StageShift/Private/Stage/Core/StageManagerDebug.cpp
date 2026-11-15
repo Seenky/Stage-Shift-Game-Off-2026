@@ -48,7 +48,7 @@ void AStageManager::UpdateDebugDisplay() const
 	{
 		const float Elapsed = GetStageElapsedTime();
 		Text += FString::Printf(TEXT("Stage: %s | %s\nTime: %.2f / %.2fs | Deadline in: %.2fs | Tolerance: %.2fs\n"),
-			*ActiveStage->StageId.ToString(), *ActiveStage->GetName(), Elapsed,
+			*ActiveStage->GetEffectiveStageKey().ToString(), *ActiveStage->GetName(), Elapsed,
 			ActiveStage->MainDuration, FMath::Max(0.0f, ActiveStage->MainDuration - Elapsed), ActiveStage->AdditiveDuration);
 
 		int32 FinishedAssignments = 0;
@@ -80,13 +80,13 @@ void AStageManager::UpdateDebugDisplay() const
 	else Text += FString::Printf(TEXT("No active Stage | Last elapsed time: %.2fs\n"), StageElapsedTime);
 	if (!FailureReason.IsEmpty()) Text += FString::Printf(TEXT("Failure: %s\n"), *FailureReason.ToString());
 
-	TArray<FGameplayTag> Roles;
+	TArray<FName> Roles;
 	Members.GetKeys(Roles);
-	Roles.Sort([](const FGameplayTag& A, const FGameplayTag& B) { return A.ToString() < B.ToString(); });
+	Roles.Sort([](const FName& A, const FName& B) { return A.ToString() < B.ToString(); });
 	Text += FString::Printf(TEXT("Members: %d\n"), Roles.Num());
-	for (const FGameplayTag& MemberTag : Roles)
+	for (const FName& MemberTag : Roles)
 	{
-		const AActor* Actor = GetMember(MemberTag);
+		const AActor* Actor = GetParticipant(MemberTag);
 		const UStageMemberComponent* Member = IsValid(Actor) ? Actor->FindComponentByClass<UStageMemberComponent>() : nullptr;
 		const UStatusesComponent* Statuses = IsValid(Actor) ? Actor->FindComponentByClass<UStatusesComponent>() : nullptr;
 		const FString ActorName = IsValid(Actor) ? Actor->GetActorNameOrLabel() : TEXT("unavailable");
@@ -123,7 +123,7 @@ void AStageManager::UpdateDebugDisplay() const
 		bool bHasVisibleAssignment = false;
 		for (const FStageRootExecution& Entry : RootExecutions)
 		{
-			if (Entry.MemberTag != MemberTag) continue;
+			if (Entry.RoleId != MemberTag) continue;
 			const bool bCurrentStep = Entry.CommandType == EStageCommandType::Scenario && Entry.SourceIndex == CurrentStepIndex;
 			if (!bCurrentStep && Entry.CommandType != EStageCommandType::Finale && Entry.Result != EStageCommandResult::None) continue;
 			bHasVisibleAssignment = true;

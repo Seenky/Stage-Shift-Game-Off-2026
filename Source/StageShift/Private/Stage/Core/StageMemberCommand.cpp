@@ -1,4 +1,30 @@
 #include "Stage/Core/StageMemberCommand.h"
+#include "Stage/Core/Data/StageDataAsset.h"
+
+uint8 UStageMemberCommand::GetResourceMask() const
+{
+    uint8 Result = static_cast<uint8>(DeclaredResources & 7);
+    for (const UStageMemberCommand* Child : GetChildCommands()) if (Child) Result |= Child->GetResourceMask();
+    return Result;
+}
+
+void UStageMemberCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
+{
+    if (ScoreValue < 0) Errors.Add(Path + TEXT(" / ScoreValue must be nonnegative"));
+    if (DeclaredResources & ~7) Errors.Add(Path + TEXT(" / DeclaredResources contains unknown resource bits"));
+}
+
+TArray<FName> UStageMemberCommand::GetRoleOptions() const
+{
+    const auto* Data = GetTypedOuter<UStageDataAsset>();
+    return Data ? Data->GetRoleOptions() : TArray<FName>{};
+}
+
+TArray<FName> UStageMemberCommand::GetTargetOptions() const
+{
+    const auto* Data = GetTypedOuter<UStageDataAsset>();
+    return Data ? Data->GetTargetOptions() : TArray<FName>{};
+}
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"

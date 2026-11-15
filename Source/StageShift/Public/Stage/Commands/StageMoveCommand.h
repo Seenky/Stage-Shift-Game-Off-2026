@@ -15,6 +15,11 @@ class STAGESHIFT_API UStageMoveCommand : public UStageMemberCommand
 	GENERATED_BODY()
 
 public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Scenario", meta=(GetOptions="GetTargetOptions"))
+    FName TargetId;
+    AActor* ResolveTarget(const FStageExecutionContext& InContext) const;
+    virtual uint8 GetResourceMask() const override { return 3; }
+    virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot,
 		float InPlannedStartTime, float InPlannedEndTime) override;
 
@@ -30,9 +35,9 @@ private:
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
+	UPROPERTY(Category="Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
 	TSoftObjectPtr<AActor> MoveToActor;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
+	UPROPERTY(Category="Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
 	float AcceptanceRadius = 10.f;
 	
 	float NeedMoveTime;

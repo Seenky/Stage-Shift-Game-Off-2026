@@ -25,7 +25,7 @@ public class StatusComponent : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "GameplayTags",
+				"Core", "CoreUObject", "Engine", "GameplayTags",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -34,8 +34,6 @@ public class StatusComponent : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
 				"Slate",
 				"SlateCore",
 				"GameplayTags"

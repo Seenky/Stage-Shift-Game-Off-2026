@@ -18,6 +18,9 @@ class STAGESHIFT_API AButton3D : public AActor
 
 public:
     AButton3D();
+#if WITH_EDITOR
+    virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
 
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;

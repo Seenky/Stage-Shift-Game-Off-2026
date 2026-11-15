@@ -21,37 +21,12 @@ void UStageDialogueAction::OnStart_Implementation()
 	
 	DialogueComponent->OnDialogueLineEnded.AddDynamic(this, &ThisClass::HandleDialogueEnded);
 	DialogueComponent->OnDialoguePlaybackStateChanged.AddDynamic(this, &ThisClass::HandleDialogueStateChanged);
-	if (bResumeLine)
-	{
-		if (!DialogueComponent->ResumeLine())
-		{
-			if (!DialogueComponent->PlayLine(CurrentLine))
-			{
-				Finish(EStageActionResult::Failed);
-				return;
-			}
-		}
-	}
-	else
-	{
-		if (!DialogueComponent->PlayLine(CurrentLine))
-		{
-			Finish(EStageActionResult::Failed);
-			return;
-		}
-	}
-	
-	if (
-		DialogueComponent.IsValid() && 
-		DialogueComponent->IsPlaying() &&
-		GetState() == EStageExecutionState::Running)
-	{
-		CurrentPlaybackId = DialogueComponent->GetPlaybackState().PlaybackId;
-	}
-	else
-	{
-		Finish(EStageActionResult::Succeeded);
-	}
+    CurrentPlaybackId = FGuid::NewGuid(); // Identity precedes synchronous reveal/end callbacks.
+    const bool bStarted = ResumeData.IsValid()
+        ? (ResumeData.Line.Text.EqualTo(CurrentLine.Text) && DialogueComponent->ResumeSnapshotWithId(ResumeData, CurrentPlaybackId))
+        : DialogueComponent->PlayLineWithId(CurrentLine, CurrentPlaybackId);
+    if (!bStarted && GetState() != EStageExecutionState::Finished) Finish(EStageActionResult::Failed);
+
 }
 
 void UStageDialogueAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -62,7 +37,15 @@ void UStageDialogueAction::OnStop_Implementation(EStageActionStopMode Mode)
 		return;
 	}
 	
-	if (Mode == EStageActionStopMode::StopAction) DialogueComponent->StopPlayback();
+	if (Mode == EStageActionStopMode::StopAction)
+    {
+        if (DialogueComponent->GetPlaybackState().PlaybackId == CurrentPlaybackId)
+        {
+            DialogueComponent->CaptureResumeData(CurrentPlaybackId, ResumeData);
+            DialogueComponent->StopPlayback();
+        }
+        if (GetState() != EStageExecutionState::Finished) Finish(EStageActionResult::Interrupted);
+    }
 }
 
 void UStageDialogueAction::Cleanup_Implementation()
@@ -99,6 +82,7 @@ void UStageDialogueAction::SetupDialogueAction(
 
 void UStageDialogueAction::HandleDialogueEnded(FGuid PlaybackId, EDialogueEndReason Reason)
 {
+    if (PlaybackId != CurrentPlaybackId || GetState() == EStageExecutionState::Finished) return;
 	if (Reason == EDialogueEndReason::Completed)
 	{
 		bDialogueCompleted = true;
@@ -106,14 +90,12 @@ void UStageDialogueAction::HandleDialogueEnded(FGuid PlaybackId, EDialogueEndRea
 	}
 	else
 	{
-		Finish(EStageActionResult::Interrupted);
+		Finish(GetState() == EStageExecutionState::Stopping ? EStageActionResult::Interrupted : EStageActionResult::Failed);
 	}
 }
 
 void UStageDialogueAction::HandleDialogueStateChanged(const FDialoguePlaybackState& PlaybackState)
 {
-	if (PlaybackState.Phase == EDialoguePlaybackPhase::Holding)
-	{
-		bDialogueCompleted = true;
-	}
+    if (PlaybackState.PlaybackId != CurrentPlaybackId) return;
+    // Holding is still active playback, not completion of this command.
 }

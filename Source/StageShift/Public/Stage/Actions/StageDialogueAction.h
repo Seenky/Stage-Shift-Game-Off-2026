@@ -21,6 +21,8 @@ public:
 		const bool bInResumeLine,
 		const TObjectPtr<UDialogueComponent>& InDialogueComponent);
 
+	void SetupResumeSnapshot(const FDialogueResumeData& Data) { ResumeData = Data; }
+	const FDialogueResumeData& GetResumeSnapshot() const { return ResumeData; }
 	bool GetIsDialogueCompleted() const { return bDialogueCompleted; }
 	
 protected:
@@ -40,6 +42,8 @@ private:
 	
 	UPROPERTY()
 	FDialogueLine CurrentLine;
+	UPROPERTY()
+	FDialogueResumeData ResumeData;
 	UPROPERTY()
 	TWeakObjectPtr<UDialogueComponent> DialogueComponent;
 	FGuid CurrentPlaybackId;

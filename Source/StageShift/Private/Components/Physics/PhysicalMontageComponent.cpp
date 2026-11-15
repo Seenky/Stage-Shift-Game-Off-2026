@@ -413,6 +413,7 @@ void UPhysicalMontageComponent::RestorePhysics()
 		Mesh->RefreshBoneTransforms(nullptr);
 		Mesh->RefreshFollowerComponents();
 	}
+    if (!bIsRecovering) OnRecoveryEnded.Broadcast();
 }
 
 void UPhysicalMontageComponent::OnRecoveryMontageEnded(UAnimMontage* Montage, bool bInterrupted)

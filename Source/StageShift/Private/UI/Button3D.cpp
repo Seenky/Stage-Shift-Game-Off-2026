@@ -6,6 +6,20 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "TimerManager.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+
+EDataValidationResult AButton3D::IsDataValid(FDataValidationContext& Context) const
+{
+    const EDataValidationResult Parent = Super::IsDataValid(Context);
+    if (!IsValid(ClickEvent))
+    {
+        Context.AddError(FText::FromString(TEXT("Button3D requires ClickEvent.")));
+        return EDataValidationResult::Invalid;
+    }
+    return Parent == EDataValidationResult::Invalid ? Parent : EDataValidationResult::Valid;
+}
+#endif
 
 AButton3D::AButton3D()
 {
@@ -47,7 +61,7 @@ void AButton3D::BeginPlay()
 {
     Super::BeginPlay();
     
-    ClickEvent = DuplicateObject(ClickEvent, this);
+    if (IsValid(ClickEvent)) ClickEvent = DuplicateObject(ClickEvent, this);
 
     if (!InactiveButtonMaterial || !HoveredButtonMaterial || !ActiveButtonMaterial)
     {
@@ -117,6 +131,7 @@ void AButton3D::RequestMaterialUpdate()
 
 void AButton3D::OnButtonClicked(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed)
 {
+    if (!IsValid(ClickEvent) || !GetWorld()) return;
     if (GetWorld()->GetTimerManager().IsTimerActive(DeactivateTimerHandle)) return;
     
     bIsActive = true;
