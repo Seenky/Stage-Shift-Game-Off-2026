@@ -174,6 +174,7 @@ private:
 	const FStageRootExecution* FindRoot(const UStageMemberCommand* Command) const;
 	EStageCommandResult CheckCommandStart(UStageMemberCommand* Command);
 	bool ShouldSkipCommand(const UStageMemberCommand* Command) const;
+	bool IsReactionAllowedInCurrentStep(const FStageMemberReaction& Reaction) const;
 	bool CheckReaction(const FStageRootExecution& Entry) const;
 	void HandleCommandStarted(UStageMemberCommand* Command);
 	void AccountCommandResult(UStageMemberCommand* Command, EStageCommandResult Result);

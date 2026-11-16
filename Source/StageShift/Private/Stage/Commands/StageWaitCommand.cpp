@@ -5,6 +5,12 @@
 #include "Components/Stage/StageMemberComponent.h"
 #include "Stage/Actions/StageWaitAction.h"
 
+UStageWaitCommand::UStageWaitCommand()
+{
+	bRequireStageLocation = true;
+	bRequireStageYaw = true;
+}
+
 void UStageWaitCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
 	Super::ValidateDefinition(Data, Path, Errors);

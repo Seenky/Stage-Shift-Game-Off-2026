@@ -572,12 +572,19 @@ void AStageManager::UpdateTiming()
 	CurrentLatenessLevel = ResolveLatenessLevel(CurrentLatenessSeconds);
 }
 
+bool AStageManager::IsReactionAllowedInCurrentStep(const FStageMemberReaction& Reaction) const
+{
+	return Reaction.AllowedStepIds.IsEmpty()
+	    || (ActiveStage && ActiveStage->Steps.IsValidIndex(CurrentStepIndex) && Reaction.AllowedStepIds.Contains(ActiveStage->Steps[CurrentStepIndex].StepId));
+}
+
 bool AStageManager::CheckReaction(const FStageRootExecution& Entry) const
 {
 	if (!ActiveStage || !ActiveStage->MemberReactions.IsValidIndex(Entry.SourceIndex) || !Entry.MemberComponent.IsValid()) return false;
 	const auto& Reaction = ActiveStage->MemberReactions[Entry.SourceIndex];
 	const auto* Statuses = Entry.MemberComponent->GetOwner()->FindComponentByClass<UStatusesComponent>();
 	const bool OwnActivation = Entry.ReactionActivationId.IsValid() && StartedReactionActivations.Contains(Entry.ReactionActivationId);
+	if (!OwnActivation && !IsReactionAllowedInCurrentStep(Reaction)) return false;
 	return Statuses && (OwnActivation || !Reaction.bUseCooldown || GetStageElapsedTime() - LastReactionStartedTimes[Entry.SourceIndex] >= Reaction.CooldownDuration)
 	    && (OwnActivation || Reaction.MaxActivationsPerStage == 0 || ReactionActivationCounts[Entry.SourceIndex] < Reaction.MaxActivationsPerStage)
 	    && (!Reaction.CooldownTag.IsValid() || !Statuses->GetStatuses().HasTag(Reaction.CooldownTag)) && Reaction.ExecRequirements.GetIsAccess(Statuses->GetStatuses());
@@ -669,6 +676,11 @@ void AStageManager::ReceiveStageEvent(const FStageEvent& Event)
 			if (!Event.EventTag.MatchesTag(Reaction.EventTag)
 			    || (!Reaction.GetEffectiveSubjectRoleId().IsNone() && GetParticipant(Reaction.GetEffectiveSubjectRoleId()) != Event.SubjectActor))
 				continue;
+			if (!IsReactionAllowedInCurrentStep(Reaction))
+			{
+				AddDiagnostic(TEXT("Reaction[") + Reaction.ReactionId.ToString() + TEXT("] ignored: current StepId is not allowed"));
+				continue;
+			}
 			const auto Assignments = Reaction.GetAssignments();
 			bool Ready = true;
 			for (const auto& Assignment : Assignments)

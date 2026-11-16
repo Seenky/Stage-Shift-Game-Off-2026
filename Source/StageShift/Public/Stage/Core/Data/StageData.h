@@ -201,6 +201,9 @@ struct FStageMemberReaction
 	FName RoleId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions", meta = (GetOptions = "GetRoleOptions"))
 	FName SubjectRoleId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions",
+	    meta = (ToolTip = "Step IDs during which this reaction may start. An empty list allows any step. Running reactions are not stopped when the step changes."))
+	TArray<FName> AllowedStepIds;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions")
 	bool bUseCooldown = false;
 

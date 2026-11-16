@@ -127,6 +127,8 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 		if (!Reaction.EventTag.IsValid()) Error(Path, TEXT("EventTag is required"));
 		if (!Roles.Contains(Reaction.GetEffectiveRoleId())) Error(Path, TEXT("unknown performer role"));
 		if (!Reaction.GetEffectiveSubjectRoleId().IsNone() && !Roles.Contains(Reaction.GetEffectiveSubjectRoleId())) Error(Path, TEXT("unknown subject role"));
+		for (FName StepId : Reaction.AllowedStepIds)
+			if (StepId.IsNone() || !StepIds.Contains(StepId)) Error(Path, TEXT("unknown or empty AllowedStepId: ") + StepId.ToString());
 		if (Reaction.MaxActivationsPerStage < 0
 		    || ((Reaction.bUseCooldown || Reaction.CooldownTag.IsValid()) && (!FMath::IsFinite(Reaction.CooldownDuration) || Reaction.CooldownDuration <= 0)))
 			Error(Path, TEXT("invalid reaction cooldown or activation limit"));

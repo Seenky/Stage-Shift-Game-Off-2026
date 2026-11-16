@@ -13,6 +13,8 @@ class STAGESHIFT_API UStageWaitCommand : public UStageMemberCommand
 	GENERATED_BODY()
 
 public:
+	UStageWaitCommand();
+
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual float GetNeededTime_Implementation() const override;
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
