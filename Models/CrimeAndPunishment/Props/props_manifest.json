@@ -1,0 +1,39 @@
+[
+  {
+    "name": "SM_CP_Axe",
+    "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Props\\SM_CP_Axe.fbx",
+    "materials": [
+      "M_CP_OakLight",
+      "M_CP_Walnut",
+      "M_CP_Linen",
+      "M_CP_Steel",
+      "M_CP_Paper",
+      "M_CP_Iron",
+      "M_CP_Brass"
+    ],
+    "grip": [
+      0,
+      0,
+      0
+    ],
+    "hulls": 2
+  },
+  {
+    "name": "SM_CP_Parcel",
+    "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Props\\SM_CP_Parcel.fbx",
+    "materials": [
+      "M_CP_Paper",
+      "M_CP_Linen",
+      "M_CP_OakLight",
+      "M_CP_Walnut",
+      "M_CP_PlasterLight",
+      "M_CP_OakDark"
+    ],
+    "grip": [
+      0,
+      0,
+      0
+    ],
+    "hulls": 1
+  }
+]

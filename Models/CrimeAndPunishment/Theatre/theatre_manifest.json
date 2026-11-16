@@ -1,0 +1,1390 @@
+{
+  "materials": {
+    "M_CP_Oak": {
+      "color": [
+        0.27,
+        0.135,
+        0.058
+      ],
+      "roughness": 0.7,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_OakLight": {
+      "color": [
+        0.42,
+        0.24,
+        0.105
+      ],
+      "roughness": 0.65,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_OakDark": {
+      "color": [
+        0.115,
+        0.055,
+        0.025
+      ],
+      "roughness": 0.82,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Walnut": {
+      "color": [
+        0.17,
+        0.075,
+        0.035
+      ],
+      "roughness": 0.63,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Gold": {
+      "color": [
+        0.58,
+        0.31,
+        0.075
+      ],
+      "roughness": 0.38,
+      "metallic": 0.55,
+      "emission": 0
+    },
+    "M_CP_Brass": {
+      "color": [
+        0.32,
+        0.19,
+        0.065
+      ],
+      "roughness": 0.5,
+      "metallic": 0.6,
+      "emission": 0
+    },
+    "M_CP_Steel": {
+      "color": [
+        0.115,
+        0.13,
+        0.135
+      ],
+      "roughness": 0.55,
+      "metallic": 0.65,
+      "emission": 0
+    },
+    "M_CP_Iron": {
+      "color": [
+        0.027,
+        0.035,
+        0.035
+      ],
+      "roughness": 0.65,
+      "metallic": 0.45,
+      "emission": 0
+    },
+    "M_CP_Curtain": {
+      "color": [
+        0.28,
+        0.014,
+        0.022
+      ],
+      "roughness": 0.93,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_CurtainDark": {
+      "color": [
+        0.12,
+        0.008,
+        0.014
+      ],
+      "roughness": 0.96,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_RedRug": {
+      "color": [
+        0.28,
+        0.07,
+        0.05
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_GreenWall": {
+      "color": [
+        0.075,
+        0.11,
+        0.095
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_GreenTrim": {
+      "color": [
+        0.045,
+        0.069,
+        0.061
+      ],
+      "roughness": 0.85,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_FloorSlate": {
+      "color": [
+        0.14,
+        0.16,
+        0.17
+      ],
+      "roughness": 0.94,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Plaster": {
+      "color": [
+        0.48,
+        0.34,
+        0.21
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_PlasterLight": {
+      "color": [
+        0.61,
+        0.47,
+        0.29
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_PlasterPatch": {
+      "color": [
+        0.35,
+        0.24,
+        0.16
+      ],
+      "roughness": 1,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Brick": {
+      "color": [
+        0.28,
+        0.12,
+        0.065
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Office": {
+      "color": [
+        0.11,
+        0.18,
+        0.18
+      ],
+      "roughness": 0.95,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Sonya": {
+      "color": [
+        0.28,
+        0.36,
+        0.33
+      ],
+      "roughness": 0.97,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Paper": {
+      "color": [
+        0.73,
+        0.61,
+        0.42
+      ],
+      "roughness": 0.96,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_BookRed": {
+      "color": [
+        0.24,
+        0.033,
+        0.024
+      ],
+      "roughness": 0.85,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_BookBlue": {
+      "color": [
+        0.035,
+        0.09,
+        0.12
+      ],
+      "roughness": 0.85,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_BookGreen": {
+      "color": [
+        0.065,
+        0.11,
+        0.055
+      ],
+      "roughness": 0.85,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Linen": {
+      "color": [
+        0.46,
+        0.39,
+        0.28
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_CoatBrown": {
+      "color": [
+        0.13,
+        0.073,
+        0.045
+      ],
+      "roughness": 0.96,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_CoatGrey": {
+      "color": [
+        0.105,
+        0.12,
+        0.12
+      ],
+      "roughness": 0.98,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Teal": {
+      "color": [
+        0.035,
+        0.17,
+        0.17
+      ],
+      "roughness": 0.65,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_ButtonRed": {
+      "color": [
+        0.47,
+        0.02,
+        0.018
+      ],
+      "roughness": 0.4,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Glass": {
+      "color": [
+        0.19,
+        0.29,
+        0.31
+      ],
+      "roughness": 0.3,
+      "metallic": 0.15,
+      "emission": 0
+    },
+    "M_CP_WarmGlow": {
+      "color": [
+        1,
+        0.61,
+        0.2
+      ],
+      "roughness": 0.4,
+      "metallic": 0,
+      "emission": 3
+    },
+    "M_CP_WindowGlow": {
+      "color": [
+        0.23,
+        0.31,
+        0.34
+      ],
+      "roughness": 0.8,
+      "metallic": 0,
+      "emission": 0
+    },
+    "M_CP_Portrait": {
+      "color": [
+        0.15,
+        0.105,
+        0.065
+      ],
+      "roughness": 0.96,
+      "metallic": 0,
+      "emission": 0
+    }
+  },
+  "modules": [
+    {
+      "name": "SM_CP_TurntableDeck",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_TurntableDeck.fbx",
+      "materials": [
+        "M_CP_OakDark",
+        "M_CP_OakLight",
+        "M_CP_Oak",
+        "M_CP_Brass"
+      ],
+      "bounds": [
+        [
+          -860.0,
+          -860.0,
+          -34.0
+        ],
+        [
+          860.0,
+          860.0,
+          3.0
+        ]
+      ],
+      "vertices": 24918,
+      "faces": 23891,
+      "rotating": true,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 1
+    },
+    {
+      "name": "SM_CP_BackstageFloor",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_BackstageFloor.fbx",
+      "materials": [
+        "M_CP_FloorSlate",
+        "M_CP_Steel"
+      ],
+      "bounds": [
+        [
+          -1040.0,
+          -1400.0,
+          -35.0
+        ],
+        [
+          1270.0,
+          1400.0,
+          0.6499999761581421
+        ]
+      ],
+      "vertices": 3184,
+      "faces": 1848,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 48
+    },
+    {
+      "name": "SM_CP_TrackAndHardware",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_TrackAndHardware.fbx",
+      "materials": [
+        "M_CP_Iron",
+        "M_CP_Steel",
+        "M_CP_Brass"
+      ],
+      "bounds": [
+        [
+          -915.0,
+          -915.0,
+          0.0
+        ],
+        [
+          914.9852905273438,
+          915.0,
+          7.0
+        ]
+      ],
+      "vertices": 24900,
+      "faces": 23886,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 0
+    },
+    {
+      "name": "SM_CP_AuditoriumDeck",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_AuditoriumDeck.fbx",
+      "materials": [
+        "M_CP_OakDark",
+        "M_CP_Walnut",
+        "M_CP_Oak",
+        "M_CP_Curtain",
+        "M_CP_Gold"
+      ],
+      "bounds": [
+        [
+          -1975.0,
+          -1479.0,
+          -185.5
+        ],
+        [
+          -1125.0,
+          1470.0,
+          -141.0
+        ]
+      ],
+      "vertices": 2968,
+      "faces": 2862,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 1
+    },
+    {
+      "name": "SM_CP_StageApronAndSteps",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_StageApronAndSteps.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Gold",
+        "M_CP_OakDark",
+        "M_CP_Oak"
+      ],
+      "bounds": [
+        [
+          -1290.0,
+          -1182.5,
+          -142.5
+        ],
+        [
+          -0.24042093753814697,
+          1182.5,
+          -1.5
+        ]
+      ],
+      "vertices": 5140,
+      "faces": 4964,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 9
+    },
+    {
+      "name": "SM_CP_TheatreWalls",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_TheatreWalls.fbx",
+      "materials": [
+        "M_CP_GreenWall",
+        "M_CP_GreenTrim"
+      ],
+      "bounds": [
+        [
+          -1130.0,
+          -1414.449951171875,
+          0.0
+        ],
+        [
+          1282.0,
+          1410.0,
+          530.0
+        ]
+      ],
+      "vertices": 3952,
+      "faces": 3172,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 3
+    },
+    {
+      "name": "SM_CP_TimberStructure",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_TimberStructure.fbx",
+      "materials": [
+        "M_CP_OakDark",
+        "M_CP_Walnut",
+        "M_CP_Steel",
+        "M_CP_Iron"
+      ],
+      "bounds": [
+        [
+          -1185.0,
+          -1526.1693115234375,
+          0.0
+        ],
+        [
+          1265.0,
+          1526.1693115234375,
+          590.0
+        ]
+      ],
+      "vertices": 4424,
+      "faces": 4226,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 13
+    },
+    {
+      "name": "SM_CP_ScenicPartitionFrames",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_ScenicPartitionFrames.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Brass",
+        "M_CP_Steel",
+        "M_CP_OakLight",
+        "M_CP_Office",
+        "M_CP_OakDark",
+        "M_CP_Plaster"
+      ],
+      "bounds": [
+        [
+          -429.956298828125,
+          -728.9991455078125,
+          0.0
+        ],
+        [
+          833.0,
+          728.9991455078125,
+          339.0
+        ]
+      ],
+      "vertices": 3968,
+      "faces": 3756,
+      "rotating": true,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 23
+    },
+    {
+      "name": "SM_CP_CrimeRoomDetails",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeRoomDetails.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_OakLight",
+        "M_CP_PlasterPatch",
+        "M_CP_Brick"
+      ],
+      "bounds": [
+        [
+          -402.4787902832031,
+          -716.7307739257812,
+          13.5
+        ],
+        [
+          -28.46869468688965,
+          716.7307739257812,
+          271.5
+        ]
+      ],
+      "vertices": 4112,
+      "faces": 3924,
+      "rotating": true,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 0
+    },
+    {
+      "name": "SM_CP_CrimeDoor",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeDoor.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_OakDark",
+        "M_CP_Oak",
+        "M_CP_OakLight",
+        "M_CP_Brass"
+      ],
+      "bounds": [
+        [
+          -310.1524658203125,
+          -515.4927978515625,
+          0.0
+        ],
+        [
+          -164.84754943847656,
+          -307.2314453125,
+          257.0
+        ]
+      ],
+      "vertices": 1292,
+      "faces": 1282,
+      "rotating": true,
+      "pivot": [
+        -237.5,
+        -411.36212158203125,
+        0.0
+      ],
+      "collision_hulls": 1
+    },
+    {
+      "name": "SM_CP_CrimeWindow",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeWindow.fbx",
+      "materials": [
+        "M_CP_WindowGlow",
+        "M_CP_OakLight",
+        "M_CP_Oak",
+        "M_CP_Office"
+      ],
+      "bounds": [
+        [
+          -332.0040283203125,
+          292.88330078125,
+          84.5
+        ],
+        [
+          -142.99595642089844,
+          529.8408203125,
+          272.5
+        ]
+      ],
+      "vertices": 1456,
+      "faces": 1404,
+      "rotating": true,
+      "pivot": [
+        -237.5,
+        411.362060546875,
+        84.5
+      ],
+      "collision_hulls": 1
+    },
+    {
+      "name": "SM_CP_CrimeRug",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeRug.fbx",
+      "materials": [
+        "M_CP_RedRug",
+        "M_CP_Gold",
+        "M_CP_Linen"
+      ],
+      "bounds": [
+        [
+          -756.1569213867188,
+          -285.0,
+          0.0
+        ],
+        [
+          -354.8431091308594,
+          285.0,
+          2.799999952316284
+        ]
+      ],
+      "vertices": 952,
+      "faces": 606,
+      "rotating": true,
+      "pivot": [
+        -555.5,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 0
+    },
+    {
+      "name": "SM_CP_CrimeTable",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeTable.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_BookRed",
+        "M_CP_Paper",
+        "M_CP_Brass",
+        "M_CP_Gold",
+        "M_CP_Glass",
+        "M_CP_WarmGlow"
+      ],
+      "bounds": [
+        [
+          -527.5,
+          190.0,
+          0.0
+        ],
+        [
+          -432.5,
+          330.0,
+          137.60000610351562
+        ]
+      ],
+      "vertices": 1716,
+      "faces": 1578,
+      "rotating": true,
+      "pivot": [
+        -480.0,
+        260.0,
+        0.0
+      ],
+      "collision_hulls": 6
+    },
+    {
+      "name": "SM_CP_CrimeChair",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeChair.fbx",
+      "materials": [
+        "M_CP_Walnut"
+      ],
+      "bounds": [
+        [
+          -653.9442138671875,
+          232.5,
+          0.0
+        ],
+        [
+          -599.5,
+          281.5,
+          115.0
+        ]
+      ],
+      "vertices": 952,
+      "faces": 906,
+      "rotating": true,
+      "pivot": [
+        -626.7221069335938,
+        257.0,
+        0.0
+      ],
+      "collision_hulls": 6
+    },
+    {
+      "name": "SM_CP_CrimeCabinet",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeCabinet.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Oak",
+        "M_CP_Brass",
+        "M_CP_BookRed",
+        "M_CP_Paper",
+        "M_CP_BookGreen",
+        "M_CP_BookBlue"
+      ],
+      "bounds": [
+        [
+          -292.0,
+          -357.5,
+          2.0
+        ],
+        [
+          -175.0,
+          -182.5,
+          179.25
+        ]
+      ],
+      "vertices": 1796,
+      "faces": 1768,
+      "rotating": true,
+      "pivot": [
+        -233.5,
+        -270.0,
+        2.0
+      ],
+      "collision_hulls": 2
+    },
+    {
+      "name": "SM_CP_CrimeCoatAndIcon",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_CrimeCoatAndIcon.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Iron",
+        "M_CP_CoatBrown",
+        "M_CP_OakDark",
+        "M_CP_Gold",
+        "M_CP_Portrait",
+        "M_CP_Brass"
+      ],
+      "bounds": [
+        [
+          -153.34156799316406,
+          -301.2671203613281,
+          97.0
+        ],
+        [
+          -42.65321350097656,
+          -124.2645034790039,
+          256.5
+        ]
+      ],
+      "vertices": 838,
+      "faces": 861,
+      "rotating": true,
+      "pivot": [
+        -97.99739074707031,
+        -212.76580810546875,
+        97.0
+      ],
+      "collision_hulls": 0
+    },
+    {
+      "name": "SM_CP_PorfiryOfficeSet",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_PorfiryOfficeSet.fbx",
+      "materials": [
+        "M_CP_Office",
+        "M_CP_Oak",
+        "M_CP_Walnut",
+        "M_CP_BookGreen",
+        "M_CP_Paper",
+        "M_CP_Iron",
+        "M_CP_OakDark"
+      ],
+      "bounds": [
+        [
+          -67.92501831054688,
+          12.145405769348145,
+          0.0
+        ],
+        [
+          614.1685180664062,
+          653.9761962890625,
+          140.11392211914062
+        ]
+      ],
+      "vertices": 3248,
+      "faces": 3054,
+      "rotating": true,
+      "pivot": [
+        273.12176513671875,
+        333.060791015625,
+        0.0
+      ],
+      "collision_hulls": 18
+    },
+    {
+      "name": "SM_CP_SonyaRoomSet",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_SonyaRoomSet.fbx",
+      "materials": [
+        "M_CP_Sonya",
+        "M_CP_Walnut",
+        "M_CP_Linen",
+        "M_CP_OakDark",
+        "M_CP_Paper",
+        "M_CP_Oak",
+        "M_CP_BookRed",
+        "M_CP_Brass",
+        "M_CP_Gold",
+        "M_CP_Glass",
+        "M_CP_WarmGlow"
+      ],
+      "bounds": [
+        [
+          -110.64616394042969,
+          -682.971435546875,
+          0.0
+        ],
+        [
+          587.607666015625,
+          -23.15021514892578,
+          166.5
+        ]
+      ],
+      "vertices": 2772,
+      "faces": 2600,
+      "rotating": true,
+      "pivot": [
+        238.48074340820312,
+        -353.0608215332031,
+        0.0
+      ],
+      "collision_hulls": 13
+    },
+    {
+      "name": "SM_CP_TheatrePortal",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_TheatrePortal.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Oak",
+        "M_CP_Gold",
+        "M_CP_CurtainDark"
+      ],
+      "bounds": [
+        [
+          -1035.0,
+          -1320.0,
+          -0.5
+        ],
+        [
+          -917.0,
+          1320.0,
+          664.0
+        ]
+      ],
+      "vertices": 5270,
+      "faces": 5148,
+      "rotating": false,
+      "pivot": [
+        -970.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 2
+    },
+    {
+      "name": "SM_CP_PortalVelvetAndFringe",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_PortalVelvetAndFringe.fbx",
+      "materials": [
+        "M_CP_Curtain",
+        "M_CP_Gold"
+      ],
+      "bounds": [
+        [
+          -985.4988403320312,
+          -1243.050048828125,
+          12.015287399291992
+        ],
+        [
+          -930.0,
+          1243.050048828125,
+          626.0
+        ]
+      ],
+      "vertices": 9971,
+      "faces": 8568,
+      "rotating": false,
+      "pivot": [
+        -970.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 0
+    },
+    {
+      "name": "SM_CP_BackstageStorage",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_BackstageStorage.fbx",
+      "materials": [
+        "M_CP_OakDark",
+        "M_CP_Oak",
+        "M_CP_GreenTrim",
+        "M_CP_Brass",
+        "M_CP_Gold",
+        "M_CP_Walnut",
+        "M_CP_Iron",
+        "M_CP_BookRed",
+        "M_CP_OakLight",
+        "M_CP_BookBlue",
+        "M_CP_Paper"
+      ],
+      "bounds": [
+        [
+          1054.6319580078125,
+          -1205.0,
+          0.0
+        ],
+        [
+          1240.5,
+          -484.0,
+          431.0
+        ]
+      ],
+      "vertices": 3664,
+      "faces": 3472,
+      "rotating": false,
+      "pivot": [
+        1147.56591796875,
+        -844.5,
+        0.0
+      ],
+      "collision_hulls": 2
+    },
+    {
+      "name": "SM_CP_BackstageWardrobe",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_BackstageWardrobe.fbx",
+      "materials": [
+        "M_CP_Iron",
+        "M_CP_Steel",
+        "M_CP_Brass",
+        "M_CP_OakLight",
+        "M_CP_CoatBrown",
+        "M_CP_OakDark",
+        "M_CP_CoatGrey",
+        "M_CP_Linen",
+        "M_CP_Oak"
+      ],
+      "bounds": [
+        [
+          1095.0784912109375,
+          705.0,
+          0.0
+        ],
+        [
+          1222.0,
+          1270.0,
+          303.59881591796875
+        ]
+      ],
+      "vertices": 6370,
+      "faces": 6599,
+      "rotating": false,
+      "pivot": [
+        1158.539306640625,
+        987.5,
+        0.0
+      ],
+      "collision_hulls": 2
+    },
+    {
+      "name": "SM_CP_DressingTable",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_DressingTable.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Gold",
+        "M_CP_Glass",
+        "M_CP_Oak",
+        "M_CP_WarmGlow",
+        "M_CP_OakDark",
+        "M_CP_BookRed",
+        "M_CP_Paper"
+      ],
+      "bounds": [
+        [
+          1024.0,
+          362.0,
+          0.0
+        ],
+        [
+          1223.5,
+          598.0,
+          358.0
+        ]
+      ],
+      "vertices": 2902,
+      "faces": 2900,
+      "rotating": false,
+      "pivot": [
+        1123.75,
+        480.0,
+        0.0
+      ],
+      "collision_hulls": 3
+    },
+    {
+      "name": "SM_CP_BackstageRigging",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_BackstageRigging.fbx",
+      "materials": [
+        "M_CP_Linen",
+        "M_CP_OakDark",
+        "M_CP_Oak",
+        "M_CP_OakLight",
+        "M_CP_Iron",
+        "M_CP_Brass",
+        "M_CP_Gold",
+        "M_CP_Walnut"
+      ],
+      "bounds": [
+        [
+          928.9690551757812,
+          -595.5,
+          -1.0
+        ],
+        [
+          1235.024169921875,
+          215.0,
+          496.31097412109375
+        ]
+      ],
+      "vertices": 4608,
+      "faces": 4560,
+      "rotating": false,
+      "pivot": [
+        1081.99658203125,
+        -190.25,
+        -1.0
+      ],
+      "collision_hulls": 2
+    },
+    {
+      "name": "SM_CP_SceneryTrolley",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_SceneryTrolley.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Iron",
+        "M_CP_OakLight",
+        "M_CP_Office",
+        "M_CP_Sonya",
+        "M_CP_Plaster"
+      ],
+      "bounds": [
+        [
+          30.0,
+          1187.5,
+          -1.7960866216526483e-06
+        ],
+        [
+          490.0,
+          1322.5,
+          398.0
+        ]
+      ],
+      "vertices": 1672,
+      "faces": 1570,
+      "rotating": false,
+      "pivot": [
+        260.0,
+        1255.0,
+        -1.7960866216526483e-06
+      ],
+      "collision_hulls": 1
+    },
+    {
+      "name": "SM_CP_WorkCrates",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_WorkCrates.fbx",
+      "materials": [
+        "M_CP_Oak",
+        "M_CP_OakLight",
+        "M_CP_OakDark",
+        "M_CP_Walnut",
+        "M_CP_Brass",
+        "M_CP_Gold"
+      ],
+      "bounds": [
+        [
+          -362.646484375,
+          -1330.0,
+          -1.0
+        ],
+        [
+          257.194091796875,
+          1341.0,
+          169.0
+        ]
+      ],
+      "vertices": 2608,
+      "faces": 2508,
+      "rotating": false,
+      "pivot": [
+        -52.7261962890625,
+        5.5,
+        -1.0
+      ],
+      "collision_hulls": 5
+    },
+    {
+      "name": "SM_CP_TurntableConsole",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_TurntableConsole.fbx",
+      "materials": [
+        "M_CP_Brass",
+        "M_CP_Teal",
+        "M_CP_Gold",
+        "M_CP_ButtonRed"
+      ],
+      "bounds": [
+        [
+          -40.5,
+          -41.0,
+          0.0
+        ],
+        [
+          39.0,
+          41.0,
+          177.0
+        ]
+      ],
+      "vertices": 794,
+      "faces": 750,
+      "rotating": false,
+      "pivot": [
+        -0.75,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 2
+    },
+    {
+      "name": "SM_CP_PracticalFixtures",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_PracticalFixtures.fbx",
+      "materials": [
+        "M_CP_Iron",
+        "M_CP_WarmGlow",
+        "M_CP_Brass"
+      ],
+      "bounds": [
+        [
+          -1136.7784423828125,
+          -1335.6793212890625,
+          1.0
+        ],
+        [
+          1205.664794921875,
+          1335.6793212890625,
+          466.7152404785156
+        ]
+      ],
+      "vertices": 2860,
+      "faces": 2770,
+      "rotating": false,
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "collision_hulls": 0
+    },
+    {
+      "name": "SM_CP_AudienceSeatsLeft",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_AudienceSeatsLeft.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Curtain",
+        "M_CP_Iron"
+      ],
+      "bounds": [
+        [
+          -1744.4693603515625,
+          -1248.5,
+          -145.0
+        ],
+        [
+          -1301.8544921875,
+          -139.5,
+          -14.0
+        ]
+      ],
+      "vertices": 13440,
+      "faces": 12960,
+      "rotating": false,
+      "pivot": [
+        -1523.161865234375,
+        -694.0,
+        -145.0
+      ],
+      "collision_hulls": 30
+    },
+    {
+      "name": "SM_CP_AudienceSeatsRight",
+      "file": "G:\\UE\\Projects\\Stage Shift Game Off 2026\\Models\\CrimeAndPunishment\\Theatre\\SM_CP_AudienceSeatsRight.fbx",
+      "materials": [
+        "M_CP_Walnut",
+        "M_CP_Curtain",
+        "M_CP_Iron"
+      ],
+      "bounds": [
+        [
+          -1744.4693603515625,
+          139.5,
+          -145.0
+        ],
+        [
+          -1301.8544921875,
+          1248.5,
+          -14.0
+        ]
+      ],
+      "vertices": 13440,
+      "faces": 12960,
+      "rotating": false,
+      "pivot": [
+        -1523.161865234375,
+        694.0,
+        -145.0
+      ],
+      "collision_hulls": 30
+    }
+  ],
+  "lights": [
+    {
+      "pos": [
+        1170,
+        -1040,
+        405
+      ],
+      "kind": "backstage"
+    },
+    {
+      "pos": [
+        1170,
+        30,
+        405
+      ],
+      "kind": "backstage"
+    },
+    {
+      "pos": [
+        1170,
+        1030,
+        405
+      ],
+      "kind": "backstage"
+    },
+    {
+      "pos": [
+        220,
+        -1310,
+        325
+      ],
+      "kind": "backstage"
+    },
+    {
+      "pos": [
+        220,
+        1310,
+        325
+      ],
+      "kind": "backstage"
+    },
+    {
+      "pos": [
+        -846.7361986289201,
+        -700,
+        28
+      ],
+      "kind": "footlight"
+    },
+    {
+      "pos": [
+        -1036.8022414743716,
+        -350,
+        28
+      ],
+      "kind": "footlight"
+    },
+    {
+      "pos": [
+        -1093.0,
+        0,
+        28
+      ],
+      "kind": "footlight"
+    },
+    {
+      "pos": [
+        -1036.8022414743716,
+        350,
+        28
+      ],
+      "kind": "footlight"
+    },
+    {
+      "pos": [
+        -846.7361986289201,
+        700,
+        28
+      ],
+      "kind": "footlight"
+    },
+    {
+      "pos": [
+        -487,
+        283,
+        130
+      ],
+      "kind": "oil"
+    }
+  ]
+}

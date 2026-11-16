@@ -388,8 +388,8 @@ void UPhysicsManipulationComponent::OnPickupNotify(FName Name, const FBranchingP
 
 	float Weight = 0.0f;
 	GetPickupTarget(GrabLocation, Weight);
-	// An unreachable or moving-away prop stays where it is instead of snapping to the hand.
-	if (!CarryPoint.IsValid() || FVector::Dist(CarryPoint->GetComponentLocation(), GrabLocation) > 12.0f || !AttachCarriedObject(true))
+	// Selection already accepted the pickup; the reach animation must not veto it.
+	if (!AttachCarriedObject(false))
 	{
 		if (UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
 		ReleaseComponent();
