@@ -10,6 +10,8 @@ class STAGESHIFT_API UWaitForStatusCommand : public UStageMemberCommand
 	GENERATED_BODY()
 
 public:
+	FName GetTargetRoleId() const { return TargetRoleId; }
+	FGameplayTag GetStatusTag() const { return StatusTag; }
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 
 protected:

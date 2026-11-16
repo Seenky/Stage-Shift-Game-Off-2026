@@ -190,6 +190,7 @@ void AStageManager::BeginPlay()
 void AStageManager::EndPlay(const EEndPlayReason::Type Reason)
 {
 	bManagerEndingPlay = true;
+	RemoveDebugDisplay();
 	AbortProduction(FText::FromString(TEXT("Manager EndPlay")));
 	AbortStage(FText::FromString(TEXT("Manager EndPlay")));
 	Super::EndPlay(Reason);
