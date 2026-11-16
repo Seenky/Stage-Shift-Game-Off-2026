@@ -168,10 +168,6 @@ private:
 	void RemoveDebugDisplay();
 	TSharedPtr<class SStageDebugWidget> DebugWidget;
 	TSharedPtr<class SWindow> DebugWindow;
-#if WITH_EDITOR
-	TWeakPtr<class SDockTab> DebugTab;
-	FName DebugTabId;
-#endif
 	float GetCommandLateness(const UStageMemberCommand* Command) const;
 	EStageLatenessLevel ResolveLatenessLevel(float Seconds) const;
 	FStageRootExecution* FindRoot(const UStageMemberCommand* Command);

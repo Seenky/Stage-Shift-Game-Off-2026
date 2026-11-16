@@ -1,4 +1,5 @@
 #include "Stage/Core/StageManager.h"
+#include "Stage/Core/StageDebugDisplay.h"
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "Framework/Application/SlateApplication.h"
@@ -18,10 +19,6 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SWindow.h"
 #include "Widgets/Text/STextBlock.h"
-#if WITH_EDITOR
-#include "Framework/Docking/TabManager.h"
-#include "Widgets/Docking/SDockTab.h"
-#endif
 
 class SStageDebugWidget : public SCompoundWidget
 {
@@ -78,6 +75,11 @@ public:
 		EventsText->SetText(FText::FromString(Events));
 	}
 
+	void Clear()
+	{
+		for (const auto& Text : {TimeText, LatenessText, StepText, ScoreText, MembersText, EventsText}) Text->SetText(FText::GetEmpty());
+	}
+
 private:
 	TSharedRef<SWidget> Metric(const TCHAR* Label, TSharedPtr<STextBlock>& Value)
 	{
@@ -101,6 +103,10 @@ private:
 namespace
 {
 	TAutoConsoleVariable<int32> CVarStageDebug(TEXT("Stage.Debug"), 0, TEXT("Show Stage debug window: 1 = on, 0 = off."), ECVF_Cheat);
+#if WITH_EDITOR
+	TWeakPtr<SStageDebugWidget> EditorDebugWidget;
+	TWeakObjectPtr<AStageManager> EditorDebugSource;
+#endif
 
 	template <typename T> FString EnumName(T Value)
 	{
@@ -149,20 +155,26 @@ namespace
 	}
 }
 
+#if WITH_EDITOR
+TSharedRef<SWidget> StageDebugDisplay::CreateEditorContent()
+{
+	TSharedRef<SStageDebugWidget> Widget = SNew(SStageDebugWidget);
+	EditorDebugWidget = Widget;
+	EditorDebugSource.Reset();
+	return SNew(SScrollBox) + SScrollBox::Slot()[Widget];
+}
+
+void StageDebugDisplay::ClearEditorContent()
+{
+	if (auto Widget = EditorDebugWidget.Pin()) Widget->Clear();
+	EditorDebugSource.Reset();
+}
+#endif
+
 void AStageManager::RemoveDebugDisplay()
 {
 #if WITH_EDITOR
-	if (FSlateApplication::IsInitialized())
-	{
-		if (auto Tab = DebugTab.Pin())
-		{
-			Tab->SetOnTabClosed(SDockTab::FOnTabClosedCallback());
-			Tab->RequestCloseTab();
-		}
-		if (!DebugTabId.IsNone()) FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(DebugTabId);
-	}
-	DebugTab.Reset();
-	DebugTabId = NAME_None;
+	if (EditorDebugSource.Get() == this) StageDebugDisplay::ClearEditorContent();
 #endif
 	if (DebugWindow.IsValid())
 	{
@@ -180,62 +192,38 @@ void AStageManager::UpdateDebugDisplay()
 		RemoveDebugDisplay();
 		return;
 	}
-	if (!DebugWidget.IsValid()) DebugWidget = SNew(SStageDebugWidget);
+	TSharedPtr<SStageDebugWidget> DisplayWidget;
 #if WITH_EDITOR
 	if (GIsEditor)
 	{
-		if (!DebugTab.IsValid())
-		{
-			if (DebugTabId.IsNone())
-			{
-				DebugTabId = TEXT("StageShift.StageDebug");
-				const TWeakObjectPtr<AStageManager> WeakManager(this);
-				FGlobalTabmanager::Get()->RegisterNomadTabSpawner(DebugTabId, FOnSpawnTab::CreateLambda([WeakManager](const FSpawnTabArgs&) -> TSharedRef<SDockTab>
-				{
-					AStageManager* Manager = WeakManager.Get();
-					if (!Manager || !Manager->DebugWidget.IsValid()) return SNew(SDockTab).TabRole(ETabRole::NomadTab);
-					return SNew(SDockTab).TabRole(ETabRole::NomadTab)
-						[
-							SNew(SScrollBox)
-							+ SScrollBox::Slot()[Manager->DebugWidget.ToSharedRef()]
-						];
-				})).SetDisplayName(FText::FromString(TEXT("Stage.Debug"))).SetMenuType(ETabSpawnerMenuType::Hidden);
-			}
-			auto Tab = FGlobalTabmanager::Get()->TryInvokeTab(DebugTabId, true);
-			if (!Tab.IsValid())
-			{
-				RemoveDebugDisplay();
-				return;
-			}
-			DebugTab = Tab;
-			Tab->SetOnTabClosed(SDockTab::FOnTabClosedCallback::CreateWeakLambda(this, [this](TSharedRef<SDockTab>)
-			{
-				DebugTab.Reset();
-				DebugWidget.Reset();
-				CVarStageDebug->Set(0, ECVF_SetByConsole);
-			}));
-		}
+		DisplayWidget = EditorDebugWidget.Pin();
+		if (!DisplayWidget.IsValid()) return;
+		EditorDebugSource = this;
 	}
 	else
 #endif
-	if (!DebugWindow.IsValid())
 	{
-		DebugWindow = SNew(SWindow)
-			.Title(FText::FromString(TEXT("Stage.Debug")))
-			.ClientSize(FVector2D(660, 720))
-			.FocusWhenFirstShown(false)
-			.ActivationPolicy(EWindowActivationPolicy::Never)
-			[
-				SNew(SScrollBox)
-				+ SScrollBox::Slot()[DebugWidget.ToSharedRef()]
-			];
-		DebugWindow->SetOnWindowClosed(FOnWindowClosed::CreateWeakLambda(this, [this](const TSharedRef<SWindow>&)
+		if (!DebugWidget.IsValid()) DebugWidget = SNew(SStageDebugWidget);
+		DisplayWidget = DebugWidget;
+		if (!DebugWindow.IsValid())
 		{
-			DebugWindow.Reset();
-			DebugWidget.Reset();
-			CVarStageDebug->Set(0, ECVF_SetByConsole);
-		}));
-		FSlateApplication::Get().AddWindow(DebugWindow.ToSharedRef());
+			DebugWindow = SNew(SWindow)
+				.Title(FText::FromString(TEXT("Stage.Debug")))
+				.ClientSize(FVector2D(660, 720))
+				.FocusWhenFirstShown(false)
+				.ActivationPolicy(EWindowActivationPolicy::Never)
+				[
+					SNew(SScrollBox)
+					+ SScrollBox::Slot()[DebugWidget.ToSharedRef()]
+				];
+			DebugWindow->SetOnWindowClosed(FOnWindowClosed::CreateWeakLambda(this, [this](const TSharedRef<SWindow>&)
+			{
+				DebugWindow.Reset();
+				DebugWidget.Reset();
+				CVarStageDebug->Set(0, ECVF_SetByConsole);
+			}));
+			FSlateApplication::Get().AddWindow(DebugWindow.ToSharedRef());
+		}
 	}
 
 	const FStageProductionScene* ProductionScene = nullptr;
@@ -296,5 +284,5 @@ void AStageManager::UpdateDebugDisplay()
 	for (int32 Index = FMath::Max(0, RecentEvents.Num() - 6); Index < RecentEvents.Num(); ++Index)
 		Events += TEXT("\n") + RecentEvents[Index];
 	if (RecentEvents.IsEmpty()) Events += TEXT("\n-");
-	DebugWidget->Update(Time, Lateness, Step, Score, MembersDescription, Events);
+	DisplayWidget->Update(Time, Lateness, Step, Score, MembersDescription, Events);
 }
