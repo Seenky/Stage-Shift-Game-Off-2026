@@ -35,10 +35,9 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BodyMesh(TEXT("/Game/MODELS/Character/Body/SK_Character_Body"));
 	static ConstructorHelpers::FObjectFinder<UPhysicsAsset> BodyPhysics(TEXT("/Game/MODELS/Character/PA_Character_FullBody"));
-	static ConstructorHelpers::FClassFinder<UStageShiftAnimInstance> BodyAnimation(TEXT("/Game/ANIMATIONS/ABP_Character"));
+	DefaultAnimationClass = TSoftClassPtr<UStageShiftAnimInstance>(FSoftObjectPath(TEXT("/Game/ANIMATIONS/ABP_Character.ABP_Character_C")));
 	if (BodyMesh.Succeeded()) MeshComponent->SetSkeletalMeshAsset(BodyMesh.Object);
 	if (BodyPhysics.Succeeded()) MeshComponent->SetPhysicsAsset(BodyPhysics.Object);
-	if (BodyAnimation.Succeeded()) MeshComponent->SetAnimInstanceClass(BodyAnimation.Class);
 
 	ConfigureMovementCollision();
 
@@ -68,6 +67,12 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 		Part->SetupAttachment(GetMesh());
 		Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+}
+
+void AStageShiftCharacter::PostRegisterAllComponents()
+{
+	Super::PostRegisterAllComponents();
+	if (!IsTemplate() && GetMesh() && !GetMesh()->GetAnimClass() && !DefaultAnimationClass.IsNull()) GetMesh()->SetAnimInstanceClass(DefaultAnimationClass.LoadSynchronous());
 }
 
 void AStageShiftCharacter::PostInitializeComponents()
