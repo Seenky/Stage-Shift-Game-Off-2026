@@ -12,6 +12,7 @@ class UDialogueComponent;
 class UFacialAnimationComponent;
 class UWidgetComponent;
 class UCharacterHairComponent;
+class UStageShiftAnimInstance;
 
 UCLASS()
 
@@ -30,6 +31,7 @@ public:
 	UDollPhysicsComponent* GetDollPhysics() const { return DollPhysicsComponent; }
 
 protected:
+	virtual void PostRegisterAllComponents() override;
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -59,6 +61,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Meshes")
 	TObjectPtr<USkeletalMeshComponent> OutfitMesh;
+	// Keep the animation graph out of native CDO construction: its editor node module must load first.
+	UPROPERTY(EditDefaultsOnly, Category = "Character|Meshes")
+	TSoftClassPtr<UStageShiftAnimInstance> DefaultAnimationClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual|Squash")
 	TObjectPtr<UMeshDeformer> DollPressDeformer;
