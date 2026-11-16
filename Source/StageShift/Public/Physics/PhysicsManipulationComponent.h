@@ -21,6 +21,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction")
 	void SetCarryPoint(USceneComponent* NewCarryPoint);
+	USceneComponent* GetCarryPoint() const { return CarryPoint.Get(); }
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 	bool CanManipulate(const FHitResult& Hit, EPhysicsInteractionType Type) const;

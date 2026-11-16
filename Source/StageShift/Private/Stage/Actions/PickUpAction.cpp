@@ -5,6 +5,9 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "Physics/PhysicsActor.h"
+#include "Core/StageShiftCharacter.h"
+#include "Components/SceneComponent.h"
+#include "Stage/Core/StageManager.h"
 #include "StageInteractionHelpers.h"
 
 void UPickUpAction::SetupPickUp(AActor* Item, float InMaxDistance)
@@ -13,14 +16,29 @@ void UPickUpAction::SetupPickUp(AActor* Item, float InMaxDistance)
 	MaxDistance = InMaxDistance;
 }
 
+void UPickUpAction::FailPickup(const FString& Details)
+{
+	const FString Message = FString::Printf(TEXT("PickUpAction / Owner[%s] / Target[%s] / Failed: %s"),
+	    *GetNameSafe(StageInteraction::GetOwner(Context)), *GetNameSafe(Target.Get()), *Details);
+	if (Context.Manager.IsValid()) Context.Manager->AddDiagnostic(Message);
+	else UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
+	Finish(EStageActionResult::Failed);
+}
+
 void UPickUpAction::OnStart_Implementation()
 {
 	AActor* Owner = StageInteraction::GetOwner(Context);
 	auto* Item = Cast<AStagePhysicsActor>(Target.Get());
 	Manipulator = IsValid(Owner) ? Owner->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
-	if (!Manipulator.IsValid() || !Item || Item->GetInteractionType() != EPhysicsInteractionType::Carry)
+	if (!Manipulator.IsValid())
 	{
-		Finish(EStageActionResult::Failed);
+		FailPickup(TEXT("Interactor has no valid PhysicsManipulationComponent"));
+		return;
+	}
+	if (!Item || Item->GetInteractionType() != EPhysicsInteractionType::Carry)
+	{
+		FailPickup(FString::Printf(TEXT("Target must be StagePhysicsActor with Carry interaction: Class=%s, InteractionType=%s"),
+		    *GetNameSafe(Target.IsValid() ? Target->GetClass() : nullptr), Item ? *UEnum::GetValueAsString(Item->GetInteractionType()) : TEXT("None")));
 		return;
 	}
 	if (StageInteraction::IsHolding(Manipulator.Get(), Item))
@@ -29,10 +47,23 @@ void UPickUpAction::OnStart_Implementation()
 		return;
 	}
 	FInteractionContext Interaction;
-	if (!StageInteraction::MakeContext(Owner, Item, FGameplayTag(), EInteractionPhase::Start, MaxDistance, Interaction)
-	    || !IInteractionInterface::Execute_CanInteract(Item, Interaction))
+	FString ContextFailure;
+	if (!StageInteraction::MakeContext(Owner, Item, FGameplayTag(), EInteractionPhase::Start, MaxDistance, Interaction, &ContextFailure))
 	{
-		Finish(EStageActionResult::Failed);
+		FailPickup(ContextFailure);
+		return;
+	}
+	if (!IInteractionInterface::Execute_CanInteract(Item, Interaction))
+	{
+		const auto* Component = Interaction.Hit.GetComponent();
+		const auto* CarryPoint = Manipulator->GetCarryPoint();
+		const auto* Character = Cast<AStageShiftCharacter>(Owner);
+		FailPickup(FString::Printf(
+		    TEXT("CanInteract rejected: CanManipulate=%d, CarryPoint=%s, CarryPointOwner=%s, HitComponent=%s, Registered=%d, SimulatingPhysics=%d, IsRoot=%d, Manipulated=%s, Grabbed=%s, PhysicsMontageActive=%d"),
+		    Manipulator->CanManipulate(Interaction.Hit, EPhysicsInteractionType::Carry), *GetNameSafe(CarryPoint), *GetNameSafe(CarryPoint ? CarryPoint->GetOwner() : nullptr),
+		    *GetNameSafe(Component), Component && Component->IsRegistered(), Component && Component->IsSimulatingPhysics(Interaction.Hit.BoneName),
+		    Component && Component == Item->GetRootComponent(), *GetNameSafe(Manipulator->GetManipulatedComponent()), *GetNameSafe(Manipulator->GetGrabbedComponent()),
+		    Character && Character->IsPhysicsMontageActive()));
 		return;
 	}
 	if (GetState() == EStageExecutionState::Finished) return;
@@ -51,7 +82,8 @@ void UPickUpAction::OnStart_Implementation()
 	if (Result == EInteractionResult::Rejected)
 	{
 		bStarting = false;
-		Finish(EStageActionResult::Failed);
+		FailPickup(FString::Printf(TEXT("OnInteraction rejected pickup after CanInteract passed: Manipulated=%s, CarryPoint=%s"),
+		    *GetNameSafe(Manipulator->GetManipulatedComponent()), *GetNameSafe(Manipulator->GetCarryPoint())));
 		return;
 	}
 	if (StageInteraction::IsHolding(Manipulator.Get(), Target.Get()))
@@ -67,7 +99,8 @@ void UPickUpAction::OnStart_Implementation()
 	if (!bOwnPickup || !Animation || !Animation->Montage || !Instance)
 	{
 		bStarting = false;
-		Finish(EStageActionResult::Failed);
+		FailPickup(FString::Printf(TEXT("Item not attached and pickup animation unavailable: InteractionResult=%s, AnimationConfigured=%d, Montage=%s, AnimInstance=%s"),
+		    *UEnum::GetValueAsString(Result), Animation != nullptr, *GetNameSafe(Animation ? Animation->Montage.Get() : nullptr), *GetNameSafe(Instance)));
 		return;
 	}
 	UAnimMontage* MontageToPlay = Animation->Montage.Get();
@@ -91,7 +124,10 @@ void UPickUpAction::OnStart_Implementation()
 	if (StageInteraction::IsHolding(Manipulator.Get(), Target.Get()))
 		Finish(EStageActionResult::Succeeded);
 	else if (Duration <= 0.0f || !Instance->Montage_IsActive(PlayingMontage.Get()))
-		Finish(EStageActionResult::Failed);
+	{
+		FailPickup(FString::Printf(TEXT("Pickup montage did not start or is no longer active: Montage=%s, StartSection=%s, PlayResult=%.3f, Active=%d"),
+		    *GetNameSafe(MontageToPlay), *StartSection.ToString(), Duration, Instance->Montage_IsActive(MontageToPlay)));
+	}
 }
 
 void UPickUpAction::HandleItemPickedUp(AActor* Item)
@@ -103,7 +139,9 @@ void UPickUpAction::HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (bStarting || Montage != PlayingMontage.Get()) return;
 	if (PlaybackInstance.IsValid() && PlaybackInstance->Montage_IsActive(Montage)) return;
-	Finish(StageInteraction::IsHolding(Manipulator.Get(), Target.Get()) ? EStageActionResult::Succeeded : EStageActionResult::Failed);
+	if (StageInteraction::IsHolding(Manipulator.Get(), Target.Get())) Finish(EStageActionResult::Succeeded);
+	else FailPickup(FString::Printf(TEXT("Pickup montage ended without the item in hand: Montage=%s, Interrupted=%d, Manipulated=%s. Check GrabObject notify and hand reach."),
+	    *GetNameSafe(Montage), bInterrupted, *GetNameSafe(Manipulator.IsValid() ? Manipulator->GetManipulatedComponent() : nullptr)));
 }
 
 void UPickUpAction::OnStop_Implementation(EStageActionStopMode Mode)

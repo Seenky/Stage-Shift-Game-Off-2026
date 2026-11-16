@@ -27,6 +27,7 @@ private:
 	void HandleItemPickedUp(AActor* Item);
 	UFUNCTION()
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void FailPickup(const FString& Details);
 	void CancelPickup();
 	void StopPickupMontage();
 

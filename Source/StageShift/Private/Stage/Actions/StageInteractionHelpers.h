@@ -27,10 +27,19 @@ namespace StageInteraction
 		return Interaction ? Interaction->FindAnimationForTarget(Target) : nullptr;
 	}
 
-	inline bool MakeContext(AActor* Owner, AActor* Target, FGameplayTag ActionTag, EInteractionPhase Phase, float MaxDistance, FInteractionContext& Out)
+	inline bool MakeContext(AActor* Owner, AActor* Target, FGameplayTag ActionTag, EInteractionPhase Phase, float MaxDistance, FInteractionContext& Out, FString* OutFailure = nullptr)
 	{
-		if (!IsValid(Owner) || !IsValid(Target) || Owner == Target || !Owner->GetWorld() || Target->GetWorld() != Owner->GetWorld()
-		    || Target->IsActorBeingDestroyed() || !Target->Implements<UInteractionInterface>()) return false;
+		if (OutFailure) OutFailure->Reset();
+		const auto Reject = [OutFailure](const FString& Details)
+		{
+			if (OutFailure) *OutFailure = Details;
+			return false;
+		};
+		if (!IsValid(Owner) || !IsValid(Target)) return Reject(TEXT("Invalid interactor or target"));
+		if (Owner == Target) return Reject(TEXT("Interactor cannot interact with itself"));
+		if (!Owner->GetWorld() || Target->GetWorld() != Owner->GetWorld()) return Reject(TEXT("Interactor and target must belong to the same world"));
+		if (Target->IsActorBeingDestroyed()) return Reject(TEXT("Target is being destroyed"));
+		if (!Target->Implements<UInteractionInterface>()) return Reject(TEXT("Target does not implement InteractionInterface"));
 		auto* Component = Cast<UPrimitiveComponent>(Target->GetRootComponent());
 		if (!Component) Component = Target->FindComponentByClass<UPrimitiveComponent>();
 		const FVector Start = Owner->GetActorLocation();
@@ -38,10 +47,13 @@ namespace StageInteraction
 		if (Component && Component->GetClosestPointOnCollision(Start, Point) < 0.0f) Point = Component->Bounds.GetBox().GetClosestPointTo(Start);
 		if (Phase == EInteractionPhase::Start)
 		{
-			if (!FMath::IsFinite(MaxDistance) || MaxDistance <= 0 || FVector::DistSquared(Start, Point) > FMath::Square(MaxDistance)) return false;
+			if (!FMath::IsFinite(MaxDistance) || MaxDistance <= 0) return Reject(TEXT("MaxDistance must be positive and finite"));
+			if (FVector::DistSquared(Start, Point) > FMath::Square(MaxDistance))
+				return Reject(FString::Printf(TEXT("Target out of reach: Distance=%.1f cm, MaxDistance=%.1f cm, From=%s, To=%s"), FVector::Distance(Start, Point), MaxDistance, *Start.ToString(), *Point.ToString()));
 			FHitResult Obstacle;
 			FCollisionQueryParams Query(SCENE_QUERY_STAT(StageInteraction), false, Owner);
-			if (Owner->GetWorld()->LineTraceSingleByChannel(Obstacle, Start, Point, ECC_Visibility, Query) && Obstacle.GetActor() != Target) return false;
+			if (Owner->GetWorld()->LineTraceSingleByChannel(Obstacle, Start, Point, ECC_Visibility, Query) && Obstacle.GetActor() != Target)
+				return Reject(FString::Printf(TEXT("Target blocked by Actor[%s], Component[%s], Hit=%s"), *GetNameSafe(Obstacle.GetActor()), *GetNameSafe(Obstacle.GetComponent()), *Obstacle.ImpactPoint.ToString()));
 		}
 		Out.Interactor = Owner;
 		Out.ActionTag = ActionTag;
