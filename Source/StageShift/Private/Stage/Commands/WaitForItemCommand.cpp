@@ -5,6 +5,7 @@
 
 #include "Components/Stage/StageMemberComponent.h"
 #include "Physics/PhysicsManipulationComponent.h"
+#include "Stage/Actions/WaitForItemAction.h"
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 
@@ -19,16 +20,12 @@ bool UWaitForItemCommand::IsResultAchieved_Implementation(const FStageExecutionC
 {
 	if (!InContext.MemberComponent.Get() ||
 		!InContext.MemberComponent.Get()->GetOwner() ||
-		!InContext.Manager.IsValid())
+		!InContext.Manager.IsValid() ||
+		!NeededItem.IsValid() ||
+		!PhysicsManipulationComponent.IsValid())
 	{
 		return false;
 	}
-
-	const auto NeededItem = InContext.Manager->GetTarget(ItemId);
-	if (!NeededItem) return false;
-
-	UPhysicsManipulationComponent* PhysicsManipulationComponent = InContext.MemberComponent.Get()->GetOwner()->FindComponentByClass<UPhysicsManipulationComponent>();
-	if (!PhysicsManipulationComponent) return false;
 
 	if (PhysicsManipulationComponent->IsCarrying() &&
 		PhysicsManipulationComponent->GetManipulatedComponent() &&
@@ -39,4 +36,26 @@ bool UWaitForItemCommand::IsResultAchieved_Implementation(const FStageExecutionC
 	}
 
 	return false;
+}
+
+UStageAction* UWaitForItemCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
+{
+	if (!InContext.MemberComponent.Get() || !InContext.MemberComponent.Get()->GetOwner() || !InContext.Manager.Get()) return nullptr;
+
+	UWaitForItemAction* WaitForItemAction = NewObject<UWaitForItemAction>(InContext.MemberComponent.Get());
+	if (!WaitForItemAction) return nullptr;
+
+	WaitForItemAction->SetupWaitForItem(PhysicsManipulationComponent.Get(), NeededItem.Get());
+	if (const UStageDataAsset* Stage = InContext.Manager->GetActiveStage()) WaitForItemAction->SetExecutionBudget(Stage->MainDuration + Stage->FinaleBudget);
+
+	return WaitForItemAction;
+}
+
+void UWaitForItemCommand::OnPreStart_Implementation(const FStageExecutionContext& InContext)
+{
+	NeededItem = ResolveTarget(InContext, ItemId);
+	if (!NeededItem.IsValid()) return;
+
+	PhysicsManipulationComponent = InContext.MemberComponent.Get()->GetOwner()->FindComponentByClass<UPhysicsManipulationComponent>();
+	if (!PhysicsManipulationComponent.IsValid()) return;
 }

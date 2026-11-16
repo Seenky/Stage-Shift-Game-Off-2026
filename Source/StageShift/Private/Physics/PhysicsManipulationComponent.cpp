@@ -99,6 +99,9 @@ bool UPhysicsManipulationComponent::BeginManipulation(const FHitResult& Hit, EPh
 	}
 
 	ManipulatedActor->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnManipulatedActorEndPlay);
+
+	if (IsCarrying()) OnItemPickedUp.Broadcast(ManipulatedActor.Get());
+
 	return true;
 }
 
@@ -394,6 +397,8 @@ void UPhysicsManipulationComponent::OnPickupNotify(FName Name, const FBranchingP
 	}
 	bPickupPending = false;
 	SetComponentTickEnabled(false);
+
+	OnItemPickedUp.Broadcast(ManipulatedActor.Get());
 }
 
 void UPhysicsManipulationComponent::ClearPickupPlayback()

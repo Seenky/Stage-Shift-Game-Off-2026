@@ -3,6 +3,7 @@
 #include "Stage/Commands/StageDialogueCommand.h"
 
 #include "Components/Stage/StageMemberComponent.h"
+#include "Components/Dialogue/DialogueComponent.h"
 #include "Stage/Actions/StageDialogueAction.h"
 
 void UStageDialogueCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
@@ -60,4 +61,12 @@ void UStageDialogueCommand::OnMainActionResult_Implementation(UStageAction* Acti
 bool UStageDialogueCommand::IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const
 {
 	return bDialogueCompleted;
+}
+
+void UStageDialogueCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const
+{
+	Super::ValidateContext(InContext, Path, Errors);
+	const auto* Member = InContext.MemberComponent.Get();
+	const AActor* Actor = Member ? Member->GetOwner() : nullptr;
+	if (IsValid(Actor) && !Actor->FindComponentByClass<UDialogueComponent>()) Errors.Add(Path + TEXT(" / Speak requires DialogueComponent"));
 }

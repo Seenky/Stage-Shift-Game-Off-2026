@@ -15,11 +15,11 @@ class STAGESHIFT_API UStageLookToCommand : public UStageMemberCommand
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (GetOptions = "GetTargetOptions"))
 	FName TargetId;
-	AActor* ResolveTarget(const FStageExecutionContext& InContext) const;
 
 	virtual uint8 GetResourceMask() const override { return 2; }
 
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
+	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const override;
 	UStageLookToCommand();
 
 	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot, float InPlannedStartTime, float InPlannedEndTime) override;

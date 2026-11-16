@@ -6,6 +6,7 @@
 #include "Stage/Core/StageMemberCommand.h"
 #include "WaitForItemCommand.generated.h"
 
+class UPhysicsManipulationComponent;
 
 UCLASS()
 class STAGESHIFT_API UWaitForItemCommand : public UStageMemberCommand
@@ -16,7 +17,8 @@ public:
 
 	virtual void ValidateDefinition(const class UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
-
+	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
+	virtual void OnPreStart_Implementation(const FStageExecutionContext& InContext) override;
 private:
 
 	/*
@@ -24,4 +26,7 @@ private:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess, GetOptions = "GetTargetOptions"))
 	FName ItemId = NAME_None;
+
+	TWeakObjectPtr<UPhysicsManipulationComponent> PhysicsManipulationComponent = nullptr;
+	TWeakObjectPtr<AActor> NeededItem = nullptr;
 };

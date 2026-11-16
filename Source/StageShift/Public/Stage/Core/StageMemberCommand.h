@@ -41,6 +41,7 @@ public:
 	TArray<FName> GetTargetOptions() const;
 	virtual uint8 GetResourceMask() const;
 	virtual void ValidateDefinition(const class UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const;
+	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const;
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
 	FGuid EditorGuid;
@@ -153,6 +154,9 @@ protected:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Stage|Command", meta = (BlueprintProtected = "true"))
 	void OnStop(EStageActionStopReason Reason);
+
+	UFUNCTION(BlueprintCallable, Category = "Stage|Command", meta = (BlueprintProtected = "true", AutoCreateRefTerm="InTargetId"))
+	AActor* ResolveTarget(const FStageExecutionContext& InContext, const FName& InTargetId) const;
 
 	/*
 Called every time when main action call finish

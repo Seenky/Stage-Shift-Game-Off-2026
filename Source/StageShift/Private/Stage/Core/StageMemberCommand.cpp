@@ -15,6 +15,10 @@ void UStageMemberCommand::ValidateDefinition(const UStageDataAsset* Data, const 
 	if (DeclaredResources & ~7) Errors.Add(Path + TEXT(" / DeclaredResources contains unknown resource bits"));
 }
 
+void UStageMemberCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const
+{
+}
+
 TArray<FName> UStageMemberCommand::GetRoleOptions() const
 {
 	const auto* Data = GetTypedOuter<UStageDataAsset>();
@@ -120,6 +124,11 @@ float UStageMemberCommand::GetAccumulatedActiveTime() const
 		}
 	}
 	return Elapsed;
+}
+
+AActor* UStageMemberCommand::ResolveTarget(const FStageExecutionContext& InContext, const FName& InTargetId) const
+{
+	return !InTargetId.IsNone() && InContext.Manager.IsValid() ? InContext.Manager->GetTarget(InTargetId) : nullptr;
 }
 
 void UStageMemberCommand::SaveAccumulatedActiveTime()
