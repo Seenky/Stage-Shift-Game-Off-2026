@@ -19,7 +19,6 @@ void AStageManager::AddDiagnostic(const FString& Message)
 	    : FString::FromInt(CurrentStepIndex);
 	const FString Line = FString::Printf(
 	    TEXT("%s / Run[%s] / Step[%s] / %s"), ActiveStage ? *ActiveStage->GetEffectiveStageKey().ToString() : TEXT("None"), *RunId.ToString(EGuidFormats::Digits), *Step, *Message);
-	if (RecentEvents.Num() >= 32) RecentEvents.RemoveAt(0);
 	RecentEvents.Add(FString::Printf(TEXT("[%.1f] %s"), GetStageElapsedTime(), *Message));
 	UE_LOG(LogStageShiftStage, Display, TEXT("%s"), *Line);
 }

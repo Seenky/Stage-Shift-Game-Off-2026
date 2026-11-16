@@ -123,6 +123,8 @@ FGuid FStageScenarioGraphAdapter::Key(const UObject* Object)
 void FStageScenarioGraphAdapter::RenewGuids(UStageMemberCommand* Command)
 {
 	if (!Command) return;
+	// Commands pasted out of the transient clipboard are persistent asset templates.
+	Command->ClearFlags(RF_Transient);
 	Command->SetFlags(RF_Transactional);
 	Command->EditorGuid = FGuid::NewGuid();
 	for (UStageMemberCommand* Child : Command->GetChildCommands())

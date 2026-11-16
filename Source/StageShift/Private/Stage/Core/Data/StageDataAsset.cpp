@@ -8,6 +8,7 @@
 #include "UObject/StrongObjectPtr.h"
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
+#include "UObject/ObjectSaveContext.h"
 #endif
 
 TArray<FName> UStageDataAsset::GetRoleOptions() const
@@ -163,6 +164,33 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 }
 
 #if WITH_EDITOR
+void UStageDataAsset::PreSave(FObjectPreSaveContext SaveContext)
+{
+	// Clipboard imports can propagate RF_Transient to instanced Commands. Existing
+	// asset-owned templates must remain serializable, including their nested Commands.
+	TSet<UStageMemberCommand*> Visited;
+	TFunction<void(UStageMemberCommand*)> Prepare = [&](UStageMemberCommand* Command)
+	{
+		if (!IsValid(Command) || Visited.Contains(Command) || Command->GetTypedOuter<UStageDataAsset>() != this) return;
+		Visited.Add(Command);
+		Command->ClearFlags(RF_Transient);
+		for (UStageMemberCommand* Child : Command->GetChildCommands()) Prepare(Child);
+	};
+	for (const auto& Step : Steps)
+		for (const auto& Assignment : Step.Commands) Prepare(Assignment.Command);
+	for (const auto& Assignment : Finale) Prepare(Assignment.Command);
+	for (const auto& Reaction : MemberReactions)
+		for (const auto& Assignment : Reaction.GetAssignments()) Prepare(Assignment.Command);
+#if WITH_EDITORONLY_DATA
+	for (const auto& Draft : EditorDrafts)
+	{
+		for (const auto& Assignment : Draft.Step.Commands) Prepare(Assignment.Command);
+		for (const auto& Assignment : Draft.Reaction.GetAssignments()) Prepare(Assignment.Command);
+	}
+#endif
+	Super::PreSave(SaveContext);
+}
+
 EDataValidationResult UStageDataAsset::IsDataValid(FDataValidationContext& Context) const
 {
 	TArray<FString> Errors;

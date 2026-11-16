@@ -38,6 +38,7 @@ public:
 
 	bool ValidateDefinition(TArray<FString>& Errors, const FInstancedPropertyBag* Overrides = nullptr) const;
 #if WITH_EDITOR
+	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
 	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 #if WITH_EDITORONLY_DATA

@@ -14,6 +14,8 @@
 #include "GraphEditor.h"
 #include "PropertyEditorModule.h"
 #include "IDetailsView.h"
+#include "IDetailCustomization.h"
+#include "DetailLayoutBuilder.h"
 #include "IStructureDetailsView.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Widgets/Docking/SDockTab.h"
@@ -31,6 +33,39 @@
 namespace
 {
 	const FName StoryTab(TEXT("StageStory")), ReactionTab(TEXT("StageReactions")), SettingsTab(TEXT("StageSettings")), DetailsTab(TEXT("StageDetails"));
+
+	class FStageGraphDetails : public IDetailCustomization
+	{
+	public:
+		explicit FStageGraphDetails(TArray<FName> InHiddenProperties) : HiddenProperties(MoveTemp(InHiddenProperties)) {}
+
+		virtual void CustomizeDetails(IDetailLayoutBuilder& Layout) override
+		{
+			// Exclude graph-owned references from generation, not just row visibility:
+			// nested instanced Commands can otherwise recurse through shared categories.
+			UStruct* Structure = Layout.GetBaseClass();
+			TArray<TSharedPtr<FStructOnScope>> Structs;
+			if (!Structure)
+			{
+				Layout.GetStructsBeingCustomized(Structs);
+				if (!Structs.IsEmpty() && Structs[0]) Structure = const_cast<UStruct*>(Structs[0]->GetStruct());
+			}
+			for (FName Name : HiddenProperties)
+				if (FProperty* Property = FindFProperty<FProperty>(Structure, Name))
+					Layout.HideProperty(Name, Property->GetOwnerStruct());
+		}
+
+	private:
+		TArray<FName> HiddenProperties;
+	};
+
+	void HideGraphProperties(IDetailsView* View, TArray<FName> Names)
+	{
+		View->SetGenericLayoutDetailsDelegate(FOnGetDetailCustomizationInstance::CreateLambda([Names = MoveTemp(Names)]
+		{
+			return MakeShared<FStageGraphDetails>(Names);
+		}));
+	}
 }
 
 FText FStageScenarioEditorToolkit::GetBaseToolkitName() const
@@ -56,31 +91,15 @@ void FStageScenarioEditorToolkit::Init(UObject* InAsset, EToolkitMode::Type Mode
 	Args.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	CommandDetails = Properties.CreateDetailView(Args);
 	AssetDetails = Properties.CreateDetailView(Args);
-	CommandDetails->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P)
-	{
-		return P.Property.GetFName() != TEXT("Children") && P.Property.GetFName() != TEXT("GraphParameterBindings");
-	}));
+	HideGraphProperties(CommandDetails.Get(), {TEXT("Children"), TEXT("GraphParameterBindings")});
 	CommandDetails->SetIsPropertyReadOnlyDelegate(FIsPropertyReadOnly::CreateLambda([this](const FPropertyAndParent& P)
 	{
 		return FStageGraphParameters::IsBound(Selected.IsValid() ? Selected->Command.Get() : nullptr, P);
 	}));
-	AssetDetails->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P)
-	{
-		const FName N = P.Property.GetFName();
-		return N != TEXT("Steps") && N != TEXT("MemberReactions") && N != TEXT("Finale") && N != TEXT("Scenes");
-	}));
+	HideGraphProperties(AssetDetails.Get(), {TEXT("Steps"), TEXT("MemberReactions"), TEXT("Finale"), TEXT("Scenes")});
 	AssetDetails->SetObject(Asset);
 	ItemDetails = Properties.CreateStructureDetailView(Args, FStructureDetailsViewArgs(), nullptr);
-	ItemDetails->GetDetailsView()->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P)
-	{
-		const FName N = P.Property.GetFName();
-		if (P.ParentProperties.ContainsByPredicate([](const FProperty* Parent)
-		{
-			return Parent->GetFName() == TEXT("Command") || Parent->GetFName() == TEXT("Commands");
-		}))
-			return false;
-		return N != TEXT("Command") && N != TEXT("Commands") && N != TEXT("AdditionalPerformers") && N != TEXT("RoleId") && N != TEXT("SubjectRoleId");
-	}));
+	HideGraphProperties(ItemDetails->GetDetailsView(), {TEXT("Command"), TEXT("Commands"), TEXT("AdditionalPerformers"), TEXT("RoleId"), TEXT("SubjectRoleId")});
 	for (IDetailsView* Details : {CommandDetails.Get(), AssetDetails.Get(), ItemDetails->GetDetailsView()})
 		Details->SetIsPropertyEditingEnabledDelegate(FIsPropertyEditingEnabled::CreateLambda([this]
 		{

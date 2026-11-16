@@ -27,7 +27,7 @@ private:
 	FGameplayTag ActionTag;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "Advanced", meta = (AllowPrivateAccess, ToolTip = "Start an interaction, or send End to release a previously latched interaction."))
 	EInteractionPhase InteractionPhase = EInteractionPhase::Start;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "Advanced", meta = (AllowPrivateAccess, ClampMin = "0.0", Units = "s", ToolTip = "For Active results: wait this long before sending End. Completed results finish immediately."))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "Advanced", meta = (AllowPrivateAccess, ClampMin = "0.0", Units = "s", ToolTip = "Start + Active: wait this long before sending End. End: pass this duration immediately as throw charge; 0 drops the carried item. Throw starts above PhysicsManipulationComponent.TapDuration. Completed results finish immediately."))
 	float HoldDuration = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "Advanced", meta = (AllowPrivateAccess, ClampMin = "1.0", Units = "cm"))
 	float MaxDistance = 150.0f;

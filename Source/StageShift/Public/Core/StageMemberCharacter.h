@@ -7,6 +7,8 @@
 #include "Components/Stage/StageMemberComponent.h"
 #include "Components/Dialogue/DialogueComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Components/Interaction/InteractionComponent.h"
+#include "Physics/PhysicsManipulationComponent.h"
 #include "StageMemberCharacter.generated.h"
 
 UCLASS()
@@ -16,6 +18,8 @@ class STAGESHIFT_API AStageMemberCharacter : public AStageShiftCharacter
 
 public:
 	AStageMemberCharacter();
+
+	virtual void BeginPlay() override;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -29,4 +33,16 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
 	TObjectPtr<UDialogueComponent> DialogueComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
+	TObjectPtr<UPhysicsManipulationComponent> PhysicsManipulationComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Dialogue")
+	TObjectPtr<UInteractionComponent> InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USceneComponent> CarryPoint = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+	FName CarrySocketName = TEXT("hand_r");
 };

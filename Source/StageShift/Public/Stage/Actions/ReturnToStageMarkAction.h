@@ -20,6 +20,7 @@ protected:
 	virtual void Cleanup_Implementation() override;
 
 private:
+	void LogRecovery(const FString& Details) const;
 	void BeginTurn();
 	UFUNCTION()
 	void HandleChildFinished(UStageAction* Action, EStageActionResult Result);

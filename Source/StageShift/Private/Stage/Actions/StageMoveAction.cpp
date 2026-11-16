@@ -4,13 +4,31 @@
 #include "AIController.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "Stage/Core/StageManager.h"
 
-void UStageMoveAction::MoveToRequest(const FVector& InMoveToLoc, const float& InAcceptanceRadius, const FAIRequestID& LastRequestID)
+void UStageMoveAction::MoveToRequest(const FVector& InMoveToLoc, const float& InAcceptanceRadius, const FAIRequestID& LastRequestID, bool bInIncludeAgentRadius)
 {
 	// A previous attempt's request is never owned by this working Action.
 	CurrentRequestID = FAIRequestID::InvalidRequest;
 	MoveToLoc = InMoveToLoc;
 	AcceptanceRadius = InAcceptanceRadius;
+	bIncludeAgentRadius = bInIncludeAgentRadius;
+}
+
+void UStageMoveAction::LogMove(const FString& Details) const
+{
+	const UStageMemberComponent* Member = Context.MemberComponent.Get();
+	const AActor* Owner = Member ? Member->GetOwner() : nullptr;
+	FString Message = FString::Printf(TEXT("StageMoveAction / Owner[%s] / Label[%s] / Request[%s] / %s"),
+	    *GetNameSafe(Owner), Owner ? *Owner->GetActorNameOrLabel() : TEXT("None"), *CurrentRequestID.ToString(), *Details);
+	if (IsValid(Owner))
+	{
+		Message += FString::Printf(TEXT(" / From=%s, Goal=%s, Distance=%.2f cm, AcceptanceRadius=%.2f cm, IncludeAgentRadius=%d, State=%s"),
+		    *Owner->GetActorLocation().ToString(), *MoveToLoc.ToString(), FVector::Distance(Owner->GetActorLocation(), MoveToLoc),
+		    AcceptanceRadius, bIncludeAgentRadius, *UEnum::GetValueAsString(GetState()));
+	}
+	if (Context.Manager.IsValid()) Context.Manager->AddDiagnostic(Message);
+	else UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
 }
 
 void UStageMoveAction::OnStart_Implementation()
@@ -18,6 +36,7 @@ void UStageMoveAction::OnStart_Implementation()
 	const auto PawnOwner = Cast<APawn>(Context.MemberComponent.Get()->GetOwner());
 	if (!PawnOwner)
 	{
+		LogMove(TEXT("Start failed: owner is not a Pawn"));
 		Finish(EStageActionResult::Failed);
 		return;
 	}
@@ -25,18 +44,24 @@ void UStageMoveAction::OnStart_Implementation()
 	AIController = PawnOwner->GetController<AAIController>();
 	if (!AIController.IsValid())
 	{
+		LogMove(TEXT("Start failed: no valid AIController"));
 		Finish(EStageActionResult::Failed);
 		return;
 	}
 
 	FAIMoveRequest CurrentRequest(MoveToLoc);
 	CurrentRequest.SetAcceptanceRadius(AcceptanceRadius);
+	CurrentRequest.SetReachTestIncludesAgentRadius(bIncludeAgentRadius);
 
+	LogMove(TEXT("Move requested"));
 	AIController->ReceiveMoveCompleted.AddUniqueDynamic(this, &ThisClass::HandleReceiveMoveCompleted);
 	bStartingRequest = true;
 	const FPathFollowingRequestResult Result = AIController->MoveTo(CurrentRequest);
 	bStartingRequest = false;
 	CurrentRequestID = Result.MoveId;
+	const UPathFollowingComponent* PathFollowing = AIController.IsValid() ? AIController->GetPathFollowingComponent() : nullptr;
+	LogMove(FString::Printf(TEXT("MoveTo returned: Result=%s, PartialPath=%d"),
+	    *UEnum::GetValueAsString(Result.Code.GetValue()), PathFollowing && PathFollowing->HasPartialPath()));
 	if (GetState() == EStageExecutionState::Finished)
 	{
 		if (AIController.IsValid() && CurrentRequestID.IsValid() && AIController->GetCurrentMoveRequestID() == CurrentRequestID)
@@ -63,6 +88,7 @@ void UStageMoveAction::OnStart_Implementation()
 
 void UStageMoveAction::OnStop_Implementation(EStageActionStopMode Mode)
 {
+	LogMove(FString::Printf(TEXT("Stop requested: Mode=%s"), *UEnum::GetValueAsString(Mode)));
 	if (!AIController.IsValid())
 	{
 		Finish(EStageActionResult::Failed);
@@ -78,6 +104,7 @@ void UStageMoveAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 void UStageMoveAction::Cleanup_Implementation()
 {
+	LogMove(FString::Printf(TEXT("Action finished: Result=%s"), *UEnum::GetValueAsString(GetResult())));
 	if (AIController.IsValid())
 	{
 		AIController->ReceiveMoveCompleted.RemoveDynamic(this, &ThisClass::HandleReceiveMoveCompleted);
@@ -100,6 +127,7 @@ void UStageMoveAction::HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathF
 		return;
 	}
 	if (!CurrentRequestID.IsValid() || RequestID != CurrentRequestID || GetState() == EStageExecutionState::Finished) return;
+	LogMove(FString::Printf(TEXT("Navigation finished: Result=%s"), *UEnum::GetValueAsString(Result)));
 	if (Result == EPathFollowingResult::Type::Success)
 	{
 		Finish(EStageActionResult::Succeeded);

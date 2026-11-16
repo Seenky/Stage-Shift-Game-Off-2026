@@ -1,4 +1,5 @@
 #include "Stage/Core/StageManager.h"
+#include "Stage/Core/StageDebugDisplay.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
@@ -156,6 +157,10 @@ bool AStageManager::StartConfiguredStage(FText& Error)
 
 void AStageManager::BeginPlay()
 {
+	RecentEvents.Reset();
+#if WITH_EDITOR
+	StageDebugDisplay::ClearEditorContent();
+#endif
 	Super::BeginPlay();
 	if (bAutoStart)
 	{
@@ -167,9 +172,9 @@ void AStageManager::BeginPlay()
 void AStageManager::EndPlay(const EEndPlayReason::Type Reason)
 {
 	bManagerEndingPlay = true;
-	RemoveDebugDisplay();
 	AbortProduction(FText::FromString(TEXT("Manager EndPlay")));
 	AbortStage(FText::FromString(TEXT("Manager EndPlay")));
+	RemoveDebugDisplay();
 	Super::EndPlay(Reason);
 }
 

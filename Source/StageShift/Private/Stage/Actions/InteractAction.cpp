@@ -39,6 +39,7 @@ void UInteractAction::OnStart_Implementation()
 	}
 	InteractionHit = Interaction.Hit;
 	StartedAt = GetWorld()->GetTimeSeconds();
+	if (InteractionPhase == EInteractionPhase::End) Interaction.HoldDuration = HoldDuration;
 	const EInteractionResult Result = IInteractionInterface::Execute_OnInteraction(Target.Get(), Interaction);
 	bInteractionActive = InteractionPhase == EInteractionPhase::Start && (Result == EInteractionResult::Active || Result == EInteractionResult::Latched);
 	if (GetState() == EStageExecutionState::Finished)
