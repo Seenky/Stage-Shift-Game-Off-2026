@@ -6,13 +6,11 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "Stage/Core/StageManager.h"
 
-void UStageMoveAction::MoveToRequest(const FVector& InMoveToLoc, const float& InAcceptanceRadius, const FAIRequestID& LastRequestID, bool bInIncludeAgentRadius)
+void UStageMoveAction::MoveToRequest(const FAIMoveRequest& InRequest)
 {
 	// A previous attempt's request is never owned by this working Action.
 	CurrentRequestID = FAIRequestID::InvalidRequest;
-	MoveToLoc = InMoveToLoc;
-	AcceptanceRadius = InAcceptanceRadius;
-	bIncludeAgentRadius = bInIncludeAgentRadius;
+	MoveRequest = InRequest;
 }
 
 void UStageMoveAction::LogMove(const FString& Details) const
@@ -21,11 +19,13 @@ void UStageMoveAction::LogMove(const FString& Details) const
 	const AActor* Owner = Member ? Member->GetOwner() : nullptr;
 	FString Message = FString::Printf(TEXT("StageMoveAction / Owner[%s] / Label[%s] / Request[%s] / %s"),
 	    *GetNameSafe(Owner), Owner ? *Owner->GetActorNameOrLabel() : TEXT("None"), *CurrentRequestID.ToString(), *Details);
-	if (IsValid(Owner))
+	if (MoveRequest.IsMoveToActorRequest()) Message += TEXT(" / Target[") + GetNameSafe(MoveRequest.GetGoalActor()) + TEXT("]");
+	if (IsValid(Owner) && MoveRequest.IsValid())
 	{
+		const FVector Goal = MoveRequest.GetDestination();
 		Message += FString::Printf(TEXT(" / From=%s, Goal=%s, Distance=%.2f cm, AcceptanceRadius=%.2f cm, IncludeAgentRadius=%d, State=%s"),
-		    *Owner->GetActorLocation().ToString(), *MoveToLoc.ToString(), FVector::Distance(Owner->GetActorLocation(), MoveToLoc),
-		    AcceptanceRadius, bIncludeAgentRadius, *UEnum::GetValueAsString(GetState()));
+		    *Owner->GetActorLocation().ToString(), *Goal.ToString(), FVector::Distance(Owner->GetActorLocation(), Goal),
+		    MoveRequest.GetAcceptanceRadius(), MoveRequest.IsReachTestIncludingAgentRadius(), *UEnum::GetValueAsString(GetState()));
 	}
 	if (Context.Manager.IsValid()) Context.Manager->AddDiagnostic(Message);
 	else UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
@@ -49,9 +49,15 @@ void UStageMoveAction::OnStart_Implementation()
 		return;
 	}
 
-	FAIMoveRequest CurrentRequest(MoveToLoc);
-	CurrentRequest.SetAcceptanceRadius(AcceptanceRadius);
-	CurrentRequest.SetReachTestIncludesAgentRadius(bIncludeAgentRadius);
+	if (!MoveRequest.IsValid())
+	{
+		LogMove(TEXT("Start failed: invalid move request or missing target"));
+		Finish(EStageActionResult::Failed);
+		return;
+	}
+
+	// MoveTo may finish synchronously and clear the stored request in Cleanup.
+	const FAIMoveRequest CurrentRequest = MoveRequest;
 
 	LogMove(TEXT("Move requested"));
 	AIController->ReceiveMoveCompleted.AddUniqueDynamic(this, &ThisClass::HandleReceiveMoveCompleted);
@@ -114,8 +120,7 @@ void UStageMoveAction::Cleanup_Implementation()
 			AIController->GetPathFollowingComponent()->AbortMove(*this, FPathFollowingResultFlags::ForcedScript, CurrentRequestID);
 		}
 	}
-	MoveToLoc = FVector::ZeroVector;
-	AcceptanceRadius = 0.0f;
+	MoveRequest = FAIMoveRequest();
 	AIController = nullptr;
 }
 
@@ -130,7 +135,7 @@ void UStageMoveAction::HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathF
 	LogMove(FString::Printf(TEXT("Navigation finished: Result=%s"), *UEnum::GetValueAsString(Result)));
 	if (Result == EPathFollowingResult::Type::Success)
 	{
-		Finish(EStageActionResult::Succeeded);
+		Finish(MoveRequest.IsValid() ? EStageActionResult::Succeeded : EStageActionResult::Failed);
 	}
 	else if (GetState() == EStageExecutionState::Stopping)
 	{

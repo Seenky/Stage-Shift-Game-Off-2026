@@ -1,6 +1,7 @@
 #include "Stage/Actions/InteractAction.h"
 
 #include "Physics/PhysicsActor.h"
+#include "Stage/Core/StageManager.h"
 #include "StageInteractionHelpers.h"
 #include "TimerManager.h"
 
@@ -15,26 +16,42 @@ void UInteractAction::SetupInteraction(AActor* TargetActor, FGameplayTag InActio
 
 void UInteractAction::OnStart_Implementation()
 {
+	const auto FailInteraction = [this](const FString& Reason)
+	{
+		const FString Message = FString::Printf(TEXT("InteractAction / Target[%s] / Failed: %s"), *GetNameSafe(Target.Get()), *Reason);
+		if (Context.Manager.IsValid()) Context.Manager->AddDiagnostic(Message);
+		else UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
+		Finish(EStageActionResult::Failed);
+	};
+
 	FInteractionContext Interaction;
 	const auto* Item = Cast<AStagePhysicsActor>(Target.Get());
-	if (!FMath::IsFinite(HoldDuration) || HoldDuration < 0.0f
-	    || (InteractionPhase != EInteractionPhase::Start && InteractionPhase != EInteractionPhase::End)
-	    || (InteractionPhase == EInteractionPhase::Start && Item && Item->GetInteractionType() == EPhysicsInteractionType::Carry)
-	    || !StageInteraction::MakeContext(StageInteraction::GetOwner(Context), Target.Get(), ActionTag, InteractionPhase, MaxDistance, Interaction))
+	if (!FMath::IsFinite(HoldDuration) || HoldDuration < 0.0f || (InteractionPhase != EInteractionPhase::Start && InteractionPhase != EInteractionPhase::End))
 	{
-		Finish(EStageActionResult::Failed);
+		FailInteraction(TEXT("Invalid phase or hold duration"));
+		return;
+	}
+	if (InteractionPhase == EInteractionPhase::Start && Item && Item->GetInteractionType() == EPhysicsInteractionType::Carry)
+	{
+		FailInteraction(TEXT("Use PickUp to start carrying this item"));
+		return;
+	}
+	FString ContextFailure;
+	if (!StageInteraction::MakeContext(StageInteraction::GetOwner(Context), Target.Get(), ActionTag, InteractionPhase, MaxDistance, Interaction, &ContextFailure))
+	{
+		FailInteraction(ContextFailure);
 		return;
 	}
 	// End must also work when CanInteract rejects an already held item.
 	if (InteractionPhase == EInteractionPhase::Start && !IInteractionInterface::Execute_CanInteract(Target.Get(), Interaction))
 	{
-		Finish(EStageActionResult::Failed);
+		FailInteraction(TEXT("CanInteract returned false"));
 		return;
 	}
 	if (GetState() == EStageExecutionState::Finished) return;
 	if (!Target.IsValid())
 	{
-		Finish(EStageActionResult::Failed);
+		FailInteraction(TEXT("Target became invalid"));
 		return;
 	}
 	InteractionHit = Interaction.Hit;
@@ -62,7 +79,7 @@ void UInteractAction::OnStart_Implementation()
 		if (HoldDuration > 0.0f) GetWorld()->GetTimerManager().SetTimer(HoldTimer, this, &ThisClass::EndInteraction, HoldDuration, false);
 		else EndInteraction();
 	}
-	else Finish(EStageActionResult::Failed);
+	else FailInteraction(FString::Printf(TEXT("OnInteraction returned %s"), *UEnum::GetValueAsString(Result)));
 }
 
 EInteractionResult UInteractAction::SendEnd(bool bCancelled)

@@ -16,6 +16,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (GetOptions = "GetTargetOptions"))
 	FName TargetId;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (ToolTip = "Face the target actor's yaw instead of looking toward its position."))
+	bool bUseTargetDirection = false;
+
 	virtual uint8 GetResourceMask() const override { return 2; }
 
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
@@ -29,6 +32,8 @@ public:
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 
 private:
+	FVector GetLookTarget(const AActor& Target) const;
+
 	UFUNCTION()
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
 

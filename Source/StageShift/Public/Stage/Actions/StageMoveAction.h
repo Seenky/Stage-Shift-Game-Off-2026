@@ -17,9 +17,7 @@ class STAGESHIFT_API UStageMoveAction : public UStageAction
 	GENERATED_BODY()
 
 public:
-	void MoveToRequest(const FVector& InMoveToLoc, const float& InAcceptanceRadius, const FAIRequestID& LastRequestID, bool bInIncludeAgentRadius = true);
-
-	FAIRequestID GetCurrentRequestID() const { return CurrentRequestID; }
+	void MoveToRequest(const FAIMoveRequest& InRequest);
 
 protected:
 	virtual void OnStart_Implementation() override;
@@ -33,9 +31,7 @@ private:
 	void HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result);
 
 	FAIRequestID CurrentRequestID;
-	FVector MoveToLoc;
-	float AcceptanceRadius;
-	bool bIncludeAgentRadius = true;
+	FAIMoveRequest MoveRequest;
 	TWeakObjectPtr<AAIController> AIController;
 	bool bStartingRequest = false;
 	TArray<TPair<FAIRequestID, EPathFollowingResult::Type>> StartingCompletions;

@@ -27,7 +27,6 @@ public:
 
 protected:
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
-	virtual void OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult) override;
 	virtual float GetNeededTime_Implementation() const override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 	virtual void OnPreStart_Implementation(const FStageExecutionContext& InContext) override;
@@ -41,6 +40,5 @@ private:
 	float AcceptanceRadius = 10.f;
 
 	float NeedMoveTime;
-	FAIRequestID AIRequestID;
 	TWeakObjectPtr<AAIController> AIController;
 };

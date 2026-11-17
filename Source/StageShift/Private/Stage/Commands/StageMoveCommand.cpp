@@ -11,22 +11,19 @@
 
 UStageAction* UStageMoveCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
-	if (!InContext.MemberComponent.Get() || !InContext.MemberComponent.Get()->GetOwner() || !ResolveTarget(InContext, TargetId)) return nullptr;
+	UStageMemberComponent* Member = InContext.MemberComponent.Get();
+	const AActor* Target = ResolveTarget(InContext, TargetId);
+	if (!Member || !Member->GetOwner() || !Target) return nullptr;
 
-	UStageMoveAction* MoveAction = NewObject<UStageMoveAction>(InContext.MemberComponent.Get());
-	if (!MoveAction) return nullptr;
+	FAIMoveRequest Request(Target);
+	Request.SetAcceptanceRadius(AcceptanceRadius);
+	Request.SetReachTestIncludesGoalRadius(false);
+	Request.SetAllowPartialPath(false); // Reaching the end of a partial path does not reach the target.
 
-	MoveAction->MoveToRequest(ResolveTarget(InContext, TargetId)->GetActorLocation(), AcceptanceRadius, AIRequestID);
+	UStageMoveAction* MoveAction = NewObject<UStageMoveAction>(Member);
+	MoveAction->MoveToRequest(Request);
 
 	return MoveAction;
-}
-
-void UStageMoveCommand::OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult)
-{
-	if (const auto MoveAction = Cast<UStageMoveAction>(Action))
-	{
-		AIRequestID = MoveAction->GetCurrentRequestID();
-	}
 }
 
 float UStageMoveCommand::GetNeededTime_Implementation() const
@@ -36,11 +33,15 @@ float UStageMoveCommand::GetNeededTime_Implementation() const
 
 bool UStageMoveCommand::IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const
 {
-	if (!InContext.MemberComponent.Get() || !InContext.MemberComponent.Get()->GetOwner() || !ResolveTarget(InContext, TargetId) || !AIController.IsValid()
-	    || !AIController->GetPathFollowingComponent())
-		return false;
+	// The successful MoveAction has already checked arrival.
+	if (HasSuccessfulMainAction()) return true;
 
-	return AIController->GetPathFollowingComponent()->HasReached(ResolveTarget(InContext, TargetId)->GetActorLocation(), EPathFollowingReachMode::OverlapAgent, AcceptanceRadius);
+	const AActor* Target = ResolveTarget(InContext, TargetId);
+	const auto* Member = InContext.MemberComponent.Get();
+	const auto* PathFollowing = AIController.IsValid() ? AIController->GetPathFollowingComponent() : nullptr;
+	if (!Member || !Member->GetOwner() || !Target || !PathFollowing) return false;
+
+	return PathFollowing->HasReached(*Target, EPathFollowingReachMode::OverlapAgent, AcceptanceRadius);
 }
 
 void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& InContext)

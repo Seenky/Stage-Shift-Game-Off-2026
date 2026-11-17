@@ -62,7 +62,10 @@ void UReturnToStageMarkAction::OnStart_Implementation()
 	SetExecutionBudget(MoveAction->WatchdogSeconds + 360.0f / FMath::Max(TurnSpeed, 0.1f) + 10.0f);
 	const float AcceptanceRadius = FMath::Max(0.0f, Member->StageLocationTolerance * 0.5f);
 	// Match the stage mark check: measure from the actor center, without adding the capsule radius.
-	MoveAction->MoveToRequest(Member->GetStageLocation(), AcceptanceRadius, FAIRequestID::InvalidRequest, false);
+	FAIMoveRequest Request(Member->GetStageLocation());
+	Request.SetAcceptanceRadius(AcceptanceRadius);
+	Request.SetReachTestIncludesAgentRadius(false);
+	MoveAction->MoveToRequest(Request);
 	MoveAction->OnFinished.AddUniqueDynamic(this, &ThisClass::HandleChildFinished);
 	LogRecovery(FString::Printf(TEXT("Move started: AcceptanceRadius=%.2f cm"), AcceptanceRadius));
 	MoveAction->Start(Context);
