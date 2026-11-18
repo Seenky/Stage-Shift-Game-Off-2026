@@ -35,6 +35,11 @@ void UPickUpAction::OnStart_Implementation()
 		FailPickup(TEXT("Interactor has no valid PhysicsManipulationComponent"));
 		return;
 	}
+	if (!Target.IsValid())
+	{
+		FailPickup(TEXT("No available Pick Up target"));
+		return;
+	}
 	if (!Item || Item->GetInteractionType() != EPhysicsInteractionType::Carry)
 	{
 		FailPickup(FString::Printf(TEXT("Target must be StagePhysicsActor with Carry interaction: Class=%s, InteractionType=%s"),

@@ -23,6 +23,8 @@ public:
 	bool Wrap(const UStageScenarioEdNode* Node, UClass* Container);
 	bool SetTarget(const UStageScenarioEdNode* Node, FName TargetId);
 	bool MoveElementsAfter(const UStageScenarioEdGraph* Graph, const UStageScenarioEdNode* Node, const UStageScenarioEdNode* After);
+	bool ConnectStep(const UStageScenarioEdNode* To, const UStageScenarioEdNode* From, bool bOnFailed);
+	void EnableStepLinks();
 	bool AddStep(FName RoleId);
 	bool AddReaction(FName RoleId);
 	bool AddCommand(const UStageScenarioEdNode* Node, UClass* Class, FName RoleId, bool bChild);

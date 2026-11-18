@@ -147,6 +147,16 @@ struct FStageStep
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario")
 	FName StepId;
+
+	UPROPERTY()
+	FName ThenStepId;
+
+	// Secondary exit: On Failed for a Step, False for a Branch.
+	UPROPERTY()
+	FName FailedStepId;
+
+	UPROPERTY(Instanced)
+	TObjectPtr<class UStageBranch> Branch;
 #if WITH_EDITORONLY_DATA
 	UPROPERTY() FGuid EditorGuid;
 #endif
@@ -372,5 +382,7 @@ struct FStageCommandExecution
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Stage|Runtime")
 	float RecoveryWaitDeadline = -1.0f;
+	int32 RetriesScheduled = 0;
+	double RetryAt = -1.0;
 	FString LastWaitReason;
 };

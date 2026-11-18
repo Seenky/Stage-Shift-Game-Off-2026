@@ -3,6 +3,7 @@
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Stage/Core/StageMemberCommand.h"
+#include "Stage/Core/StageCondition.h"
 #include "Stage/Core/ParallelStageMemberCommand.h"
 #include "Stage/Core/Data/StageCommandParameters.h"
 #include "UObject/StrongObjectPtr.h"
@@ -18,6 +19,52 @@ TArray<FName> UStageDataAsset::GetRoleOptions() const
 	for (const auto& Pair : StageMembers)
 		Result.AddUnique(Pair.Key.GetTagName());
 	return Result;
+}
+
+int32 UStageDataAsset::FindStepIndex(FName StepId) const
+{
+	if (StepId.IsNone()) return INDEX_NONE;
+	return Steps.IndexOfByPredicate([StepId](const FStageStep& Step) { return Step.StepId == StepId; });
+}
+
+bool UStageDataAsset::ValidateStepLinks(TArray<FString>& Errors) const
+{
+	if (!bUseStepLinks) return true;
+
+	const int32 Initial = Errors.Num();
+	TMap<FName, int32> Indices;
+	for (int32 Index = 0; Index < Steps.Num(); ++Index)
+	{
+		const FName Id = Steps[Index].StepId;
+		if (Id.IsNone() || Indices.Contains(Id))
+			Errors.Add(GetName() + TEXT(" / linked Steps need unique StepIds"));
+		Indices.Add(Id, Index);
+	}
+	if (!Steps.IsEmpty() && (EntryStepId.IsNone() || !Indices.Contains(EntryStepId)))
+		Errors.Add(GetName() + TEXT(" / connect Execute to the first Step"));
+
+	TArray<uint8> State;
+	State.Init(0, Steps.Num());
+	TFunction<void(int32)> Visit = [&](int32 Index)
+	{
+		const FStageStep& Step = Steps[Index];
+		if (State[Index] == 2) return;
+		if (State[Index] == 1)
+		{
+			Errors.Add(GetName() + TEXT(" / Step link cycle at ") + Step.StepId.ToString());
+			return;
+		}
+		State[Index] = 1;
+		for (const FName Next : {Step.ThenStepId, Step.FailedStepId})
+		{
+			if (Next.IsNone()) continue;
+			if (const int32* Target = Indices.Find(Next)) Visit(*Target);
+			else Errors.Add(GetName() + TEXT(" / missing Step link target: ") + Next.ToString());
+		}
+		State[Index] = 2;
+	};
+	for (int32 Index = 0; Index < Steps.Num(); ++Index) Visit(Index);
+	return Errors.Num() == Initial;
 }
 
 bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstancedPropertyBag* Overrides) const
@@ -46,6 +93,7 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 	Unique(TargetIds, TEXT("Targets"));
 	if (Roles.IsEmpty()) Error(Root, TEXT("at least one role is required"));
 	if (Steps.IsEmpty()) Error(Root, TEXT("Steps cannot be empty"));
+	ValidateStepLinks(Errors);
 	if (Finale.IsEmpty()) Error(Root, TEXT("Finale cannot be empty"));
 	float PreviousSeconds = 0;
 	for (int32 Level = 0; Level <= static_cast<int32>(EStageLatenessLevel::Hard); ++Level)
@@ -90,6 +138,13 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 			Check(Child, Command, Path + FString::Printf(TEXT(" / Child[%d]"), ChildIndex++), Previous);
 		// Resource traversal is safe only after structural validation of the entire subtree.
 	};
+	TMultiMap<FName, const FStageStep*> Incoming;
+	if (bUseStepLinks)
+		for (const FStageStep& Step : Steps)
+		{
+			if (!Step.ThenStepId.IsNone()) Incoming.Add(Step.ThenStepId, &Step);
+			if (!Step.FailedStepId.IsNone()) Incoming.AddUnique(Step.FailedStepId, &Step);
+		}
 	TSet<FName> StepIds, ReactionIds, PreviousRoles;
 	int32 StepIndex = 0;
 	for (const auto& Step : Steps)
@@ -97,7 +152,40 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 		const FString Path = Root + TEXT(" / Step[") + (Step.StepId.IsNone() ? FString::FromInt(StepIndex) : Step.StepId.ToString()) + TEXT("]");
 		if (!Step.StepId.IsNone() && StepIds.Contains(Step.StepId)) Error(Path, TEXT("duplicate StepId"));
 		StepIds.Add(Step.StepId);
+		if (Step.Branch)
+		{
+			if (!bUseStepLinks || !Step.Commands.IsEmpty()) Error(Path, TEXT("Branch requires linked Story Steps and cannot contain Commands"));
+			const auto* Condition = Step.Branch->Condition.Get();
+			if (!IsValid(Condition) || Condition->GetClass()->HasAnyClassFlags(CLASS_Abstract)) Error(Path, TEXT("Branch requires a condition"));
+			else if (Step.Branch->GetOuter() != this || Condition->GetOuter() != Step.Branch.Get()) Error(Path, TEXT("Branch has a foreign condition or Outer"));
+			else Condition->ValidateDefinition(this, Path, Errors);
+			++StepIndex;
+			continue;
+		}
 		if (Step.Commands.IsEmpty()) Error(Path, TEXT("step cannot be empty"));
+		if (bUseStepLinks)
+		{
+			PreviousRoles.Reset();
+			bool bFirstPredecessor = true;
+			TArray<const FStageStep*> Pending;
+			if (Step.StepId != EntryStepId) Incoming.MultiFind(Step.StepId, Pending);
+			TSet<const FStageStep*> SeenPredecessors;
+			while (!Pending.IsEmpty())
+			{
+				const FStageStep* Predecessor = Pending.Pop();
+				if (SeenPredecessors.Contains(Predecessor)) continue;
+				SeenPredecessors.Add(Predecessor);
+				if (Predecessor->Branch && Predecessor->StepId != EntryStepId)
+				{
+					Incoming.MultiFind(Predecessor->StepId, Pending);
+					continue;
+				}
+				TSet<FName> RolesAtPredecessor;
+				for (const auto& Assignment : Predecessor->Commands) RolesAtPredecessor.Add(Assignment.GetEffectiveRoleId());
+				PreviousRoles = bFirstPredecessor ? MoveTemp(RolesAtPredecessor) : PreviousRoles.Intersect(RolesAtPredecessor);
+				bFirstPredecessor = false;
+			}
+		}
 		TSet<FName> Assigned;
 		for (const auto& Assignment : Step.Commands)
 		{
@@ -176,14 +264,24 @@ void UStageDataAsset::PreSave(FObjectPreSaveContext SaveContext)
 		Command->ClearFlags(RF_Transient);
 		for (UStageMemberCommand* Child : Command->GetChildCommands()) Prepare(Child);
 	};
+	const auto PrepareBranch = [this](UStageBranch* Branch)
+	{
+		if (!IsValid(Branch) || Branch->GetOuter() != this) return;
+		Branch->ClearFlags(RF_Transient);
+		if (IsValid(Branch->Condition) && Branch->Condition->GetOuter() == Branch) Branch->Condition->ClearFlags(RF_Transient);
+	};
 	for (const auto& Step : Steps)
+	{
+		PrepareBranch(Step.Branch);
 		for (const auto& Assignment : Step.Commands) Prepare(Assignment.Command);
+	}
 	for (const auto& Assignment : Finale) Prepare(Assignment.Command);
 	for (const auto& Reaction : MemberReactions)
 		for (const auto& Assignment : Reaction.GetAssignments()) Prepare(Assignment.Command);
 #if WITH_EDITORONLY_DATA
 	for (const auto& Draft : EditorDrafts)
 	{
+		PrepareBranch(Draft.Step.Branch);
 		for (const auto& Assignment : Draft.Step.Commands) Prepare(Assignment.Command);
 		for (const auto& Assignment : Draft.Reaction.GetAssignments()) Prepare(Assignment.Command);
 	}
@@ -215,9 +313,14 @@ void UStageDataAsset::RecalculateEstimatedScore()
 		return Value;
 	};
 	int64 Total = 0;
-	for (const auto& Step : Steps)
-		for (const auto& Assignment : Step.Commands)
+	TSet<int32> CountedSteps;
+	for (int32 Index = bUseStepLinks ? FindStepIndex(EntryStepId) : 0; Steps.IsValidIndex(Index) && !CountedSteps.Contains(Index);
+	     Index = bUseStepLinks ? FindStepIndex(Steps[Index].ThenStepId) : Index + 1)
+	{
+		CountedSteps.Add(Index);
+		for (const auto& Assignment : Steps[Index].Commands)
 			Total += Sum(Assignment.Command);
+	}
 	for (const auto& Assignment : Finale)
 		Total += Sum(Assignment.Command);
 	EstimatedScore = static_cast<int32>(FMath::Min<int64>(Total, MAX_int32));

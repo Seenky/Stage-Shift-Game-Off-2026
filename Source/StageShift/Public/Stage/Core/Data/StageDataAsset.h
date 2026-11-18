@@ -37,6 +37,8 @@ public:
 	TArray<FName> GetTargetOptions() const { return TargetIds; }
 
 	bool ValidateDefinition(TArray<FString>& Errors, const FInstancedPropertyBag* Overrides = nullptr) const;
+	int32 FindStepIndex(FName StepId) const;
+	bool ValidateStepLinks(TArray<FString>& Errors) const;
 #if WITH_EDITOR
 	virtual void PreSave(FObjectPreSaveContext SaveContext) override;
 	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
@@ -73,6 +75,10 @@ public:
 	TMap<FGameplayTag, TSoftObjectPtr<AActor>> StageMembers;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (TitleProperty = "StepId"))
 	TArray<FStageStep> Steps;
+	UPROPERTY()
+	bool bUseStepLinks = false;
+	UPROPERTY()
+	FName EntryStepId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions", meta = (TitleProperty = "ReactionId"))
 	TArray<FStageMemberReaction> MemberReactions;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (TitleProperty = "RoleId"))

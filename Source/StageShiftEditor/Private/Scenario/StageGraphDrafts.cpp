@@ -7,6 +7,7 @@
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/Data/StageProductionDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
+#include "Stage/Core/StageCondition.h"
 #include "Stage/Core/SequenceStageMemberCommand.h"
 #include "Stage/Core/ParallelStageMemberCommand.h"
 #include "Stage/Commands/StageWaitCommand.h"
@@ -178,6 +179,33 @@ bool FStageGraphDrafts::Add(UStageScenarioEdGraph* G, UClass* Class, const UStag
 	return true;
 }
 
+bool FStageGraphDrafts::AddBranch(UStageScenarioEdGraph* G, const UStageScenarioEdNode* Context, FVector2D Position)
+{
+	if (!G || !G->IsStorySteps() || !Begin(G)) return false;
+	auto* Data = G->Scenario.Get();
+	FStageScenarioGraphAdapter Adapter(Data);
+	const FScopedTransaction Transaction(NSLOCTEXT("StageScenario", "AddBranch", "Add Branch"));
+	Adapter.EnsureIdentities();
+	auto& Draft = Data->EditorDrafts.AddDefaulted_GetRef();
+	Draft.Id = Draft.Step.EditorGuid = FGuid::NewGuid();
+	Draft.Scope = G->ScopeId;
+	Draft.Group = G->ActiveGroup;
+	Draft.Kind = EStageGraphDraftKind::Step;
+	Draft.Step.StepId = Unique(TEXT("Branch"), [&](FName Id)
+	{
+		return Data->FindStepIndex(Id) != INDEX_NONE || Data->EditorDrafts.ContainsByPredicate([Id](const auto& Item) { return Item.Step.StepId == Id; });
+	});
+	Draft.Step.Branch = NewObject<UStageBranch>(Data, NAME_None, RF_Transactional);
+	auto* Condition = NewObject<UStageHasHeldItemCondition>(Draft.Step.Branch, NAME_None, RF_Transactional);
+	const auto Roles = Data->GetRoleOptions();
+	if (const auto* Assignment = Adapter.Assignment(Context)) Condition->RoleId = Assignment->GetEffectiveRoleId();
+	else if (!Roles.IsEmpty()) Condition->RoleId = Roles[0];
+	Draft.Step.Branch->Condition = Condition;
+	G->Positions().Add(Draft.Id, Position);
+	Changed(G);
+	return true;
+}
+
 bool FStageGraphDrafts::AddScene(UStageScenarioEdGraph* G, FVector2D Position)
 {
 	if (!Begin(G) || !G->Production) return false;
@@ -300,6 +328,11 @@ void FStageGraphDrafts::Project(UStageScenarioEdGraph* G)
 		{
 			const auto& D = G->Scenario->EditorDrafts[I];
 			if (D.Scope != G->ScopeId || D.Group != G->ActiveGroup) continue;
+			if (D.Step.Branch)
+			{
+				Make(I, D.Id, EStageScenarioNodeKind::Branch, TEXT("Branch"), nullptr);
+				continue;
+			}
 			auto* C = D.GetCommand();
 			Make(I, D.Id, EStageScenarioNodeKind::Command, C ? FStageCommandCatalog::Name(C->GetClass()).ToString() : TEXT("Missing action"), C);
 			if (D.Kind == EStageGraphDraftKind::Reaction)
@@ -325,7 +358,7 @@ void FStageGraphDrafts::Project(UStageScenarioEdGraph* G)
 		}
 }
 
-bool FStageGraphDrafts::Connect(UStageScenarioEdGraph* G, const UStageScenarioEdNode* To, const UStageScenarioEdNode* From)
+bool FStageGraphDrafts::Connect(UStageScenarioEdGraph* G, const UStageScenarioEdNode* To, const UStageScenarioEdNode* From, bool bOnFailed)
 {
 	if (!Begin(G) || !To || !From) return false;
 	const auto* Node = To->IsDraft() ? To : From->IsDraft() ? From : nullptr;
@@ -382,7 +415,7 @@ bool FStageGraphDrafts::Connect(UStageScenarioEdGraph* G, const UStageScenarioEd
 	FGuid ConnectedId = D.Id;
 	if (D.Kind == EStageGraphDraftKind::Step)
 	{
-		if (D.Step.Commands.IsEmpty() || !Data->GetRoleOptions().Contains(D.Step.Commands[0].GetEffectiveRoleId())) return false;
+		if (!D.Step.Branch && (D.Step.Commands.IsEmpty() || !Data->GetRoleOptions().Contains(D.Step.Commands[0].GetEffectiveRoleId()))) return false;
 		TArray<FGuid> Order;
 		for (const auto& S : Data->Steps)
 			Order.Add(S.EditorGuid);
@@ -392,15 +425,38 @@ bool FStageGraphDrafts::Connect(UStageScenarioEdGraph* G, const UStageScenarioEd
 		{
 			return S.StepId == Step.StepId;
 		}))
-			Step.StepId = Unique(TEXT("Step"), [&](FName Name)
+			Step.StepId = Unique(Step.Branch ? TEXT("Branch") : TEXT("Step"), [&](FName Name)
 			{
 				return Data->Steps.ContainsByPredicate([&](const auto& S)
 				{
 					return S.StepId == Name;
 				});
 			});
-		Data->Steps.Insert(Step, Index);
-		if (Data->Finale.IsEmpty())
+		if (Data->bUseStepLinks || bOnFailed || Step.Branch)
+		{
+			if (Node != To || (!Data->Steps.IsValidIndex(From->StepIndex) && From->Kind != EStageScenarioNodeKind::Start)) return false;
+			A.EnableStepLinks();
+			Step.FailedStepId = NAME_None;
+			if (From->Kind == EStageScenarioNodeKind::Start)
+			{
+				Step.ThenStepId = Data->EntryStepId;
+				Data->EntryStepId = Step.StepId;
+			}
+			else
+			{
+				FStageStep& Source = Data->Steps[From->StepIndex];
+				FName& Link = bOnFailed ? Source.FailedStepId : Source.ThenStepId;
+				// Insert the new Step on this exit, retaining its original destination.
+				Step.ThenStepId = bOnFailed && Link.IsNone() && !Source.Branch ? Source.ThenStepId : Link;
+				Link = Step.StepId;
+			}
+			Data->Steps.Add(Step);
+		}
+		else
+		{
+			Data->Steps.Insert(Step, Index);
+		}
+		if (Data->Finale.IsEmpty() && !Step.Branch)
 		{
 			auto Entry = D.Step.Commands[0];
 			Entry.Command = A.NewCommand(UStageWaitCommand::StaticClass(), Data);

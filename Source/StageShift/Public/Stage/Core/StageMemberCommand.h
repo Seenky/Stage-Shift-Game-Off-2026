@@ -52,6 +52,12 @@ public:
 	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced")
 	FStageExecutionRequirements ExecutionRequirements;
 
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced", meta = (ClampMin = "0", ToolTip = "Number of retries after the Main Action fails. For Sequence and Parallel, configure the child Command."))
+	int32 MaxRetries = 0;
+
+	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced", meta = (ClampMin = "0.01", Units = "s"))
+	float RetryInterval = 0.5f;
+
 	UPROPERTY(AdvancedDisplay, EditAnywhere, BlueprintReadWrite, Category = "Advanced")
 	bool bRequireStageLocation = false;
 

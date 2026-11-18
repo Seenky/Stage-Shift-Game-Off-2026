@@ -8,6 +8,7 @@ enum class EStageScenarioNodeKind : uint8
 {
 	Start,
 	Step,
+	Branch,
 	Command,
 	Reaction,
 	Finale,
@@ -23,6 +24,12 @@ class STAGESHIFTEDITOR_API UStageScenarioEdNode : public UEdGraphNode
 	GENERATED_BODY()
 
 public:
+	static const FName FailedPin;
+	static const FName TruePin;
+	static const FName FalsePin;
+	static bool IsAlternateExit(FName Pin) { return Pin == FailedPin || Pin == FalsePin; }
+	FName GetExitPinName(bool bAlternate) const;
+
 	EStageScenarioNodeKind Kind = EStageScenarioNodeKind::Command;
 	int32 StepIndex = INDEX_NONE;
 	int32 AssignmentIndex = INDEX_NONE;

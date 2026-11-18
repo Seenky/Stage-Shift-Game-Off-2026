@@ -8,6 +8,7 @@
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/Data/StageProductionDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
+#include "Stage/Core/StageCondition.h"
 #include "Stage/Core/SequenceStageMemberCommand.h"
 #include "Stage/Core/ParallelStageMemberCommand.h"
 #include "Editor.h"
@@ -376,15 +377,19 @@ void FStageScenarioEditorToolkit::Build(bool bReaction, bool bFrame)
 	{
 		Action(Raw, Op, Class, Node, At);
 	};
-	Graph->OnConnect = [this, Raw](UStageScenarioEdNode* Node, UStageScenarioEdNode* After)
+	Graph->OnConnect = [this, Raw](UStageScenarioEdNode* Node, UStageScenarioEdNode* After, bool bAlternate)
 	{
 		ItemDetails->SetStructureData(nullptr);
 		CommandDetails->SetObject(nullptr);
-		const bool Done = Node->IsDraft() || After->IsDraft() ? FStageGraphDrafts::Connect(Raw, Node, After)
+		const bool bLinked = Raw->IsStorySteps() && (Data->bUseStepLinks || bAlternate || Node->Kind == EStageScenarioNodeKind::Branch);
+		const bool Done = Node->IsDraft() || After->IsDraft() ? FStageGraphDrafts::Connect(Raw, Node, After, bAlternate)
 		    : Production                                      ? FStageProductionGraphAdapter(Production).MoveAfter(Raw, Node, After)
+		    : bLinked                                         ? FStageScenarioGraphAdapter(Data).ConnectStep(Node, After, bAlternate)
 		                                                      : FStageScenarioGraphAdapter(Data).MoveElementsAfter(Raw, Node, After);
-		if (!Done) Message = TEXT("Cannot connect: check role/resource conflicts and connect from Execute or an existing action.");
+		if (!Done) Message = bLinked ? TEXT("Cannot connect Steps: check for a cycle or an invalid destination.")
+		                             : TEXT("Cannot connect: check role/resource conflicts and connect from Execute or an existing action.");
 		QueueRefresh();
+		return Done;
 	};
 	SGraphEditor::FGraphEditorEvents Events;
 	Events.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FStageScenarioEditorToolkit::Select);
@@ -477,6 +482,14 @@ void FStageScenarioEditorToolkit::Select(const TSet<UObject*>& Objects)
 	if (!Node) return;
 	Selected = Node;
 	ActiveGraph = CastChecked<UStageScenarioEdGraph>(Node->GetGraph());
+	if (Data && Node->Kind == EStageScenarioNodeKind::Branch)
+	{
+		const FStageStep* Step = nullptr;
+		if (Node->IsDraft() && Data->EditorDrafts.IsValidIndex(Node->DraftIndex)) Step = &Data->EditorDrafts[Node->DraftIndex].Step;
+		else if (Data->Steps.IsValidIndex(Node->StepIndex)) Step = &Data->Steps[Node->StepIndex];
+		if (Step) CommandDetails->SetObject(Step->Branch);
+		return;
+	}
 	CommandDetails->SetObject(Node->Command);
 	if (Node->Kind == EStageScenarioNodeKind::Group) return;
 	TSharedPtr<FStructOnScope> Scope;
@@ -679,6 +692,8 @@ void FStageScenarioEditorToolkit::Action(UStageScenarioEdGraph* Graph, EStageGra
 			if (auto* A = Adapter.Assignment(Node)) RoleId = A->GetEffectiveRoleId();
 		if (Op == EStageGraphAction::Add || Op == EStageGraphAction::AddReaction)
 			Done = Adapter.AddInView(Graph, Class, Node, Location);
+		else if (Op == EStageGraphAction::AddBranch)
+			Done = FStageGraphDrafts::AddBranch(Graph, Node, Location);
 		else if (Op == EStageGraphAction::AddParallelRole && Node)
 		{
 			const auto& Entries = Node->StepIndex == INDEX_NONE ? Data->Finale : Data->Steps[Node->StepIndex].Commands;

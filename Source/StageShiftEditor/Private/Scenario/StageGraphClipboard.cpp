@@ -5,6 +5,7 @@
 #include "StageScenarioGraphAdapter.h"
 #include "StageProductionGraphAdapter.h"
 #include "Stage/Core/Data/StageDataAsset.h"
+#include "Stage/Core/StageCondition.h"
 #include "Stage/Core/SequenceStageMemberCommand.h"
 #include "Stage/Core/ParallelStageMemberCommand.h"
 #include "EdGraphUtilities.h"
@@ -112,6 +113,7 @@ bool FStageGraphClipboard::Copy(UStageScenarioEdGraph* Graph, const TArray<UStag
 			{
 				auto S = Graph->Scenario->Steps[I];
 				S.EditorGuid = FStageScenarioGraphAdapter::StepKey(Graph->Scenario, I);
+				if (S.Branch) S.Branch = DuplicateObject<UStageBranch>(S.Branch, Payload);
 				for (auto& A : S.Commands)
 					A.Command = CopyCommand(A.Command);
 				Payload->Steps.Add(S);
@@ -130,6 +132,7 @@ bool FStageGraphClipboard::Copy(UStageScenarioEdGraph* Graph, const TArray<UStag
 		if (Payload->Mode == 1)
 		{
 			auto S = D.Step;
+			if (S.Branch) S.Branch = DuplicateObject<UStageBranch>(S.Branch, Payload);
 			for (auto& A : S.Commands)
 				A.Command = CopyCommand(A.Command);
 			Payload->Steps.Add(S);
@@ -318,9 +321,11 @@ bool FStageGraphClipboard::Paste(UStageScenarioEdGraph* Graph, const FString& Te
 		{
 			const FGuid Old = S.EditorGuid;
 			S.EditorGuid = FGuid::NewGuid();
+			S.ThenStepId = NAME_None;
+			S.FailedStepId = NAME_None;
 			Remap.Add(Old, S.EditorGuid);
 			NewIds.Add(S.EditorGuid);
-			S.StepId = Unique(TEXT("Step"), [&](FName Id)
+			S.StepId = Unique(S.Branch ? TEXT("Branch") : TEXT("Step"), [&](FName Id)
 			{
 				return Data->Steps.ContainsByPredicate(
 				           [&](const auto& V)
@@ -332,6 +337,7 @@ bool FStageGraphClipboard::Paste(UStageScenarioEdGraph* Graph, const FString& Te
 					return V.Step.StepId == Id;
 				});
 			});
+			if (S.Branch) S.Branch = DuplicateObject<UStageBranch>(S.Branch, Data);
 			for (auto& A : S.Commands)
 				A.Command = Duplicate(A.Command, Data);
 			Data->Steps.Insert(S, Insert++);

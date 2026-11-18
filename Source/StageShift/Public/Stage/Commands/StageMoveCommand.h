@@ -17,7 +17,14 @@ class STAGESHIFT_API UStageMoveCommand : public UStageMemberCommand
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (GetOptions = "GetTargetOptions"))
+	TArray<FName> TargetIds;
+
+	// Serialized by older assets and may still be set by a graph parameter binding.
+	UPROPERTY(BlueprintReadWrite, Category = "Scenario")
 	FName TargetId;
+
+	virtual void PostLoad() override;
+	TConstArrayView<FName> GetMoveTargets() const;
 
 	virtual uint8 GetResourceMask() const override { return 3; }
 
@@ -39,6 +46,7 @@ private:
 	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float AcceptanceRadius = 10.f;
 
-	float NeedMoveTime;
+	FName SelectedTargetId;
+	float NeedMoveTime = 0.0f;
 	TWeakObjectPtr<AAIController> AIController;
 };

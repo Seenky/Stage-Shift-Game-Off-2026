@@ -13,6 +13,8 @@ void UStageMemberCommand::ValidateDefinition(const UStageDataAsset* Data, const 
 {
 	if (ScoreValue < 0) Errors.Add(Path + TEXT(" / ScoreValue must be nonnegative"));
 	if (DeclaredResources & ~7) Errors.Add(Path + TEXT(" / DeclaredResources contains unknown resource bits"));
+	if (MaxRetries < 0) Errors.Add(Path + TEXT(" / MaxRetries must be nonnegative"));
+	if (MaxRetries > 0 && (!FMath::IsFinite(RetryInterval) || RetryInterval < 0.01f)) Errors.Add(Path + TEXT(" / RetryInterval must be at least 0.01 seconds"));
 }
 
 void UStageMemberCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const

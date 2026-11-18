@@ -9,10 +9,26 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "NavigationSystem.h"
 
+void UStageMoveCommand::PostLoad()
+{
+	Super::PostLoad();
+	if (TargetIds.IsEmpty() && !TargetId.IsNone() && !GraphParameterBindings.Contains(TEXT("TargetId")))
+	{
+		TargetIds.Add(TargetId);
+		TargetId = NAME_None;
+	}
+}
+
+TConstArrayView<FName> UStageMoveCommand::GetMoveTargets() const
+{
+	if (TargetIds.IsEmpty() && !TargetId.IsNone()) return MakeArrayView(&TargetId, 1);
+	return TargetIds;
+}
+
 UStageAction* UStageMoveCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
 	UStageMemberComponent* Member = InContext.MemberComponent.Get();
-	const AActor* Target = ResolveTarget(InContext, TargetId);
+	const AActor* Target = ResolveTarget(InContext, SelectedTargetId);
 	if (!Member || !Member->GetOwner() || !Target) return nullptr;
 
 	FAIMoveRequest Request(Target);
@@ -36,7 +52,7 @@ bool UStageMoveCommand::IsResultAchieved_Implementation(const FStageExecutionCon
 	// The successful MoveAction has already checked arrival.
 	if (HasSuccessfulMainAction()) return true;
 
-	const AActor* Target = ResolveTarget(InContext, TargetId);
+	const AActor* Target = ResolveTarget(InContext, SelectedTargetId);
 	const auto* Member = InContext.MemberComponent.Get();
 	const auto* PathFollowing = AIController.IsValid() ? AIController->GetPathFollowingComponent() : nullptr;
 	if (!Member || !Member->GetOwner() || !Target || !PathFollowing) return false;
@@ -46,9 +62,14 @@ bool UStageMoveCommand::IsResultAchieved_Implementation(const FStageExecutionCon
 
 void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& InContext)
 {
-	if (!InContext.MemberComponent.Get() || !InContext.MemberComponent.Get()->GetOwner() || !ResolveTarget(InContext, TargetId)) return;
+	const TConstArrayView<FName> Targets = GetMoveTargets();
+	if (Targets.IsEmpty()) return;
+	SelectedTargetId = Targets.Num() == 1 ? Targets[0] : Targets[FMath::RandHelper(Targets.Num())];
+	const auto* Member = InContext.MemberComponent.Get();
+	const auto* Owner = Member ? Member->GetOwner() : nullptr;
+	const auto* Target = ResolveTarget(InContext, SelectedTargetId);
+	if (!Owner || !Target) return;
 
-	const auto Owner = Context.MemberComponent.Get()->GetOwner();
 	float Speed = 150.f;
 	if (const auto MovementComp = Owner->FindComponentByClass<UCharacterMovementComponent>())
 	{
@@ -57,19 +78,19 @@ void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& 
 
 	Speed = FMath::Max(Speed, 1.f);
 
-	const float AllDistance = FVector::Distance(InContext.MemberComponent.Get()->GetOwner()->GetActorLocation(), ResolveTarget(InContext, TargetId)->GetActorLocation());
+	const float AllDistance = FVector::Distance(Owner->GetActorLocation(), Target->GetActorLocation());
 	const float StopDistance = AcceptanceRadius + Owner->GetSimpleCollisionRadius();
 	const float RemainingDistance = FMath::Max(0.f, AllDistance - StopDistance);
 	NeedMoveTime = RemainingDistance / Speed;
 
-	const auto Pawn = Cast<APawn>(InContext.MemberComponent.Get()->GetOwner());
+	const auto* Pawn = Cast<APawn>(Owner);
 	if (!Pawn) return;
 	AIController = Pawn->GetController<AAIController>();
 }
 
 void UStageMoveCommand::OnStart_Implementation()
 {
-	if (!Context.MemberComponent.Get() || !Context.MemberComponent.Get()->GetOwner() || !ResolveTarget(Context, TargetId) || !AIController.IsValid())
+	if (!Context.MemberComponent.Get() || !Context.MemberComponent.Get()->GetOwner() || !ResolveTarget(Context, SelectedTargetId) || !AIController.IsValid())
 	{
 		Finish(EStageCommandResult::Failed);
 		return;
@@ -95,15 +116,18 @@ void UStageMoveCommand::HandleCommandFinished(UStageMemberCommand* Command, ESta
 void UStageMoveCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
 	Super::ValidateDefinition(Data, Path, Errors);
-	if (!TargetId.IsNone() && !Data->TargetIds.Contains(TargetId)) Errors.Add(Path + TEXT(" / unknown TargetId: ") + TargetId.ToString());
-	if (TargetId.IsNone()) Errors.Add(Path + TEXT(" / TargetId is required"));
+	const TConstArrayView<FName> Targets = GetMoveTargets();
+	if (Targets.IsEmpty()) Errors.Add(Path + TEXT(" / Move requires at least one Target Id"));
+	for (const FName Id : Targets)
+		if (Id.IsNone() || !Data || !Data->TargetIds.Contains(Id)) Errors.Add(Path + TEXT(" / undeclared Move target: ") + Id.ToString());
 	if (!FMath::IsFinite(AcceptanceRadius) || AcceptanceRadius < 0) Errors.Add(Path + TEXT(" / AcceptanceRadius must be finite and nonnegative"));
 }
 
 void UStageMoveCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const
 {
 	Super::ValidateContext(InContext, Path, Errors);
-	if (!ResolveTarget(InContext, TargetId)) Errors.Add(Path + TEXT(" / Move target is unloaded or belongs to another world"));
+	for (const FName Id : GetMoveTargets())
+		if (!ResolveTarget(InContext, Id)) Errors.Add(Path + TEXT(" / Move target is unloaded or belongs to another world: ") + Id.ToString());
 	const auto* Member = InContext.MemberComponent.Get();
 	if (!Member) return;
 	const auto* Pawn = Cast<APawn>(Member->GetOwner());

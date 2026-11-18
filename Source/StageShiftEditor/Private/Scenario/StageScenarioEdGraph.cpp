@@ -7,6 +7,11 @@ UObject* UStageScenarioEdGraph::GetAsset() const
 	return Scenario ? static_cast<UObject*>(Scenario) : Production.Get();
 }
 
+bool UStageScenarioEdGraph::IsStorySteps() const
+{
+	return Scenario && !Production && !bReactions && !ScopeCommand && !bParallelAssignments && !bReactionAssignments;
+}
+
 TMap<FGuid, FVector2D>& UStageScenarioEdGraph::Positions() const
 {
 	return Scenario ? Scenario->EditorPositions : Production->EditorPositions;

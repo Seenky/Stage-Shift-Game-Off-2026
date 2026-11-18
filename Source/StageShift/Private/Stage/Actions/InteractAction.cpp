@@ -25,19 +25,29 @@ void UInteractAction::OnStart_Implementation()
 	};
 
 	FInteractionContext Interaction;
+	AActor* Owner = StageInteraction::GetOwner(Context);
 	const auto* Item = Cast<AStagePhysicsActor>(Target.Get());
 	if (!FMath::IsFinite(HoldDuration) || HoldDuration < 0.0f || (InteractionPhase != EInteractionPhase::Start && InteractionPhase != EInteractionPhase::End))
 	{
 		FailInteraction(TEXT("Invalid phase or hold duration"));
 		return;
 	}
-	if (InteractionPhase == EInteractionPhase::Start && Item && Item->GetInteractionType() == EPhysicsInteractionType::Carry)
+	if (!Target.IsValid())
 	{
-		FailInteraction(TEXT("Use PickUp to start carrying this item"));
+		FailInteraction(TEXT("No available Interact target: no matching held item or reachable interaction target"));
 		return;
 	}
+	if (Item && Item->GetInteractionType() == EPhysicsInteractionType::Carry)
+	{
+		const auto* Manipulator = IsValid(Owner) ? Owner->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
+		if (!StageInteraction::IsHolding(Manipulator, Item))
+		{
+			FailInteraction(TEXT("The Interact target is no longer held by this participant"));
+			return;
+		}
+	}
 	FString ContextFailure;
-	if (!StageInteraction::MakeContext(StageInteraction::GetOwner(Context), Target.Get(), ActionTag, InteractionPhase, MaxDistance, Interaction, &ContextFailure))
+	if (!StageInteraction::MakeContext(Owner, Target.Get(), ActionTag, InteractionPhase, MaxDistance, Interaction, &ContextFailure))
 	{
 		FailInteraction(ContextFailure);
 		return;

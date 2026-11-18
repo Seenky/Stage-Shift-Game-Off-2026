@@ -12,6 +12,7 @@ class STAGESHIFT_API UInteractCommand : public UStageMemberCommand
 
 public:
 	UInteractCommand();
+	virtual void PostLoad() override;
 	virtual uint8 GetResourceMask() const override { return 3; }
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const override;
@@ -21,7 +22,14 @@ protected:
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 
 private:
+	TConstArrayView<FName> GetInteractionTargets() const;
+	AActor* FindInteractionTarget(const FStageExecutionContext& InContext) const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scenario", meta = (AllowPrivateAccess, GetOptions = "GetTargetOptions"))
+	TArray<FName> TargetIds;
+
+	// Serialized by older assets and may still be set by a graph parameter binding.
+	UPROPERTY(BlueprintReadOnly, Category = "Scenario", meta = (AllowPrivateAccess))
 	FName TargetId;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scenario", meta = (AllowPrivateAccess))
 	FGameplayTag ActionTag;

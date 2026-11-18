@@ -12,6 +12,10 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 
+const FName UStageScenarioEdNode::FailedPin(TEXT("On Failed"));
+const FName UStageScenarioEdNode::TruePin(TEXT("True"));
+const FName UStageScenarioEdNode::FalsePin(TEXT("False"));
+
 class SStageScenarioNode : public SGraphNode
 {
 public:
@@ -132,6 +136,8 @@ FLinearColor UStageScenarioEdNode::GetNodeTitleColor() const
 		return FLinearColor(0.55f, 0.22f, 0.08f);
 	case EStageScenarioNodeKind::Step:
 		return FLinearColor(0.06f, 0.32f, 0.42f);
+	case EStageScenarioNodeKind::Branch:
+		return FLinearColor(0.20f, 0.30f, 0.48f);
 	case EStageScenarioNodeKind::Group:
 		return FLinearColor(0.16f, 0.23f, 0.45f);
 	case EStageScenarioNodeKind::Scene:
@@ -148,8 +154,20 @@ FLinearColor UStageScenarioEdNode::GetNodeTitleColor() const
 void UStageScenarioEdNode::AllocateDefaultPins()
 {
 	if (Kind != EStageScenarioNodeKind::Start && Kind != EStageScenarioNodeKind::Reaction) CreatePin(EGPD_Input, TEXT("StageOrder"), TEXT("Execute"));
+	if (Kind == EStageScenarioNodeKind::Branch)
+	{
+		CreatePin(EGPD_Output, TEXT("StageOrder"), TruePin);
+		CreatePin(EGPD_Output, TEXT("StageOrder"), FalsePin);
+		return;
+	}
 	if (Kind != EStageScenarioNodeKind::Return)
 		CreatePin(EGPD_Output, TEXT("StageOrder"), Kind == EStageScenarioNodeKind::Start || Kind == EStageScenarioNodeKind::Reaction ? TEXT("Execute") : TEXT("Then"));
+}
+
+FName UStageScenarioEdNode::GetExitPinName(bool bAlternate) const
+{
+	if (Kind == EStageScenarioNodeKind::Branch) return bAlternate ? FalsePin : TruePin;
+	return bAlternate ? FailedPin : FName(TEXT("Then"));
 }
 
 TSharedPtr<SGraphNode> UStageScenarioEdNode::CreateVisualWidget()

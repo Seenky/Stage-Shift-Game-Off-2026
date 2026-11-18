@@ -191,7 +191,7 @@ UStageMemberCommand* FStageScenarioGraphAdapter::NewCommand(UClass* Class, UObje
 	if (!Class || !Class->IsChildOf(UStageMemberCommand::StaticClass()) || Class->HasAnyClassFlags(CLASS_Abstract)) return nullptr;
 	auto* Command = NewObject<UStageMemberCommand>(Outer, Class, NAME_None, RF_Transactional);
 	RenewGuids(Command);
-	if (auto* Move = Cast<UStageMoveCommand>(Command); Move && Move->TargetId.IsNone()) Move->TargetId = Data->TargetIds.IsEmpty() ? NAME_None : Data->TargetIds[0];
+	if (auto* Move = Cast<UStageMoveCommand>(Command); Move && Move->GetMoveTargets().IsEmpty() && !Data->TargetIds.IsEmpty()) Move->TargetIds.Add(Data->TargetIds[0]);
 	if (auto* Look = Cast<UStageLookToCommand>(Command); Look && Look->TargetId.IsNone()) Look->TargetId = Data->TargetIds.IsEmpty() ? NAME_None : Data->TargetIds[0];
 	if (Command->IsA<UStageDialogueCommand>())
 	{
