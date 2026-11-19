@@ -21,6 +21,13 @@ namespace StageInteraction
 		return IsValid(Item) && Manipulator && Manipulator->IsCarrying() && IsValid(Component) && Component->GetOwner() == Item;
 	}
 
+	inline const AActor* GetOtherItemHolder(const AActor* Owner, const AActor* Item)
+	{
+		const AActor* Holder = IsValid(Item) ? Item->GetAttachParentActor() : nullptr;
+		if (!IsValid(Holder) || Holder == Owner) return nullptr;
+		return IsHolding(Holder->FindComponentByClass<UPhysicsManipulationComponent>(), Item) ? Holder : nullptr;
+	}
+
 	inline const FInteractionAnimation* FindAnimation(AActor* Owner, AActor* Target)
 	{
 		const auto* Interaction = IsValid(Owner) ? Owner->FindComponentByClass<UInteractionComponent>() : nullptr;

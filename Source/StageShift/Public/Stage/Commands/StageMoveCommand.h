@@ -40,6 +40,8 @@ protected:
 	virtual void OnStart_Implementation() override;
 
 private:
+	AActor* ResolveMoveTarget(const FStageExecutionContext& InContext);
+
 	UFUNCTION()
 	void HandleCommandFinished(UStageMemberCommand* Command, EStageCommandResult Result);
 

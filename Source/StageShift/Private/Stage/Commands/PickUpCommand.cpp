@@ -94,6 +94,7 @@ AActor* UPickUpCommand::FindPickupTarget(const FStageExecutionContext& InContext
 	{
 		auto* Item = Cast<AStagePhysicsActor>(ResolveTarget(InContext, Id));
 		if (!Item || Item->GetInteractionType() != EPhysicsInteractionType::Carry) continue;
+		if (StageInteraction::GetOtherItemHolder(Owner, Item)) continue;
 		FInteractionContext Interaction;
 		if (StageInteraction::MakeContext(Owner, Item, FGameplayTag(), EInteractionPhase::Start, MaxDistance, Interaction) &&
 		    Interaction.Hit.Distance < BestDistance && IInteractionInterface::Execute_CanInteract(Item, Interaction))

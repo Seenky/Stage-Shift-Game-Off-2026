@@ -4,6 +4,7 @@
 #include "AIController.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Stage/Actions/StageInteractionHelpers.h"
 #include "Stage/Actions/StageMoveAction.h"
 #include "Engine/World.h"
 #include "GameFramework/PawnMovementComponent.h"
@@ -25,13 +26,32 @@ TConstArrayView<FName> UStageMoveCommand::GetMoveTargets() const
 	return TargetIds;
 }
 
+AActor* UStageMoveCommand::ResolveMoveTarget(const FStageExecutionContext& InContext)
+{
+	const AActor* Owner = StageInteraction::GetOwner(InContext);
+	AActor* Preferred = ResolveTarget(InContext, SelectedTargetId);
+	if (Preferred && !StageInteraction::GetOtherItemHolder(Owner, Preferred)) return Preferred;
+
+	TArray<FName> Available;
+	for (const FName Id : GetMoveTargets())
+	{
+		const AActor* Candidate = ResolveTarget(InContext, Id);
+		if (Candidate && !StageInteraction::GetOtherItemHolder(Owner, Candidate)) Available.Add(Id);
+	}
+	// The Action rejects and logs an occupied goal when there is no free alternative.
+	if (Available.IsEmpty()) return Preferred;
+	SelectedTargetId = Available.Num() == 1 ? Available[0] : Available[FMath::RandHelper(Available.Num())];
+	return ResolveTarget(InContext, SelectedTargetId);
+}
+
 UStageAction* UStageMoveCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
 	UStageMemberComponent* Member = InContext.MemberComponent.Get();
-	const AActor* Target = ResolveTarget(InContext, SelectedTargetId);
-	if (!Member || !Member->GetOwner() || !Target) return nullptr;
+	if (!Member || !Member->GetOwner()) return nullptr;
 
-	FAIMoveRequest Request(Target);
+	const AActor* Target = ResolveMoveTarget(InContext);
+	FAIMoveRequest Request;
+	if (Target) Request.SetGoalActor(Target);
 	Request.SetAcceptanceRadius(AcceptanceRadius);
 	Request.SetReachTestIncludesGoalRadius(false);
 	Request.SetAllowPartialPath(false); // Reaching the end of a partial path does not reach the target.
@@ -53,9 +73,9 @@ bool UStageMoveCommand::IsResultAchieved_Implementation(const FStageExecutionCon
 	if (HasSuccessfulMainAction()) return true;
 
 	const AActor* Target = ResolveTarget(InContext, SelectedTargetId);
-	const auto* Member = InContext.MemberComponent.Get();
+	const AActor* Owner = StageInteraction::GetOwner(InContext);
 	const auto* PathFollowing = AIController.IsValid() ? AIController->GetPathFollowingComponent() : nullptr;
-	if (!Member || !Member->GetOwner() || !Target || !PathFollowing) return false;
+	if (!Owner || !Target || !PathFollowing || StageInteraction::GetOtherItemHolder(Owner, Target)) return false;
 
 	return PathFollowing->HasReached(*Target, EPathFollowingReachMode::OverlapAgent, AcceptanceRadius);
 }
@@ -67,6 +87,8 @@ void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& 
 	SelectedTargetId = Targets.Num() == 1 ? Targets[0] : Targets[FMath::RandHelper(Targets.Num())];
 	const auto* Member = InContext.MemberComponent.Get();
 	const auto* Owner = Member ? Member->GetOwner() : nullptr;
+	const auto* Pawn = Cast<APawn>(Owner);
+	AIController = Pawn ? Pawn->GetController<AAIController>() : nullptr;
 	const auto* Target = ResolveTarget(InContext, SelectedTargetId);
 	if (!Owner || !Target) return;
 
@@ -82,15 +104,11 @@ void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& 
 	const float StopDistance = AcceptanceRadius + Owner->GetSimpleCollisionRadius();
 	const float RemainingDistance = FMath::Max(0.f, AllDistance - StopDistance);
 	NeedMoveTime = RemainingDistance / Speed;
-
-	const auto* Pawn = Cast<APawn>(Owner);
-	if (!Pawn) return;
-	AIController = Pawn->GetController<AAIController>();
 }
 
 void UStageMoveCommand::OnStart_Implementation()
 {
-	if (!Context.MemberComponent.Get() || !Context.MemberComponent.Get()->GetOwner() || !ResolveTarget(Context, SelectedTargetId) || !AIController.IsValid())
+	if (!StageInteraction::GetOwner(Context) || !AIController.IsValid())
 	{
 		Finish(EStageCommandResult::Failed);
 		return;

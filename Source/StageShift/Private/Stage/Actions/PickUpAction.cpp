@@ -51,6 +51,11 @@ void UPickUpAction::OnStart_Implementation()
 		Finish(EStageActionResult::Succeeded);
 		return;
 	}
+	if (const AActor* Holder = StageInteraction::GetOtherItemHolder(Owner, Item))
+	{
+		FailPickup(FString::Printf(TEXT("Target is held by [%s]"), *Holder->GetActorNameOrLabel()));
+		return;
+	}
 	FInteractionContext Interaction;
 	FString ContextFailure;
 	if (!StageInteraction::MakeContext(Owner, Item, FGameplayTag(), EInteractionPhase::Start, MaxDistance, Interaction, &ContextFailure))

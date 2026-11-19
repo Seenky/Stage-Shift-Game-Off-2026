@@ -26,6 +26,7 @@ protected:
 
 private:
 	void LogMove(const FString& Details) const;
+	bool FailIfTargetHeld();
 
 	UFUNCTION()
 	void HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathFollowingResult::Type Result);
@@ -33,6 +34,7 @@ private:
 	FAIRequestID CurrentRequestID;
 	FAIMoveRequest MoveRequest;
 	TWeakObjectPtr<AAIController> AIController;
+	FTimerHandle TargetAvailabilityTimer;
 	bool bStartingRequest = false;
 	TArray<TPair<FAIRequestID, EPathFollowingResult::Type>> StartingCompletions;
 };

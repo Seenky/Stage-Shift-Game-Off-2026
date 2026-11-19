@@ -4,7 +4,10 @@
 #include "AIController.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "Physics/PhysicsActor.h"
+#include "StageInteractionHelpers.h"
 #include "Stage/Core/StageManager.h"
+#include "TimerManager.h"
 
 void UStageMoveAction::MoveToRequest(const FAIMoveRequest& InRequest)
 {
@@ -31,6 +34,16 @@ void UStageMoveAction::LogMove(const FString& Details) const
 	else UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
 }
 
+bool UStageMoveAction::FailIfTargetHeld()
+{
+	if (GetState() != EStageExecutionState::Running || !MoveRequest.IsMoveToActorRequest()) return false;
+	const AActor* Holder = StageInteraction::GetOtherItemHolder(StageInteraction::GetOwner(Context), MoveRequest.GetGoalActor());
+	if (!Holder) return false;
+	LogMove(FString::Printf(TEXT("Move failed: target held by [%s]"), *Holder->GetActorNameOrLabel()));
+	Finish(EStageActionResult::Failed);
+	return true;
+}
+
 void UStageMoveAction::OnStart_Implementation()
 {
 	const auto PawnOwner = Cast<APawn>(Context.MemberComponent.Get()->GetOwner());
@@ -55,6 +68,7 @@ void UStageMoveAction::OnStart_Implementation()
 		Finish(EStageActionResult::Failed);
 		return;
 	}
+	if (FailIfTargetHeld()) return;
 
 	// MoveTo may finish synchronously and clear the stored request in Cleanup.
 	const FAIMoveRequest CurrentRequest = MoveRequest;
@@ -80,7 +94,7 @@ void UStageMoveAction::OnStart_Implementation()
 		Finish(EStageActionResult::Failed);
 		return;
 	case EPathFollowingRequestResult::AlreadyAtGoal:
-		Finish(EStageActionResult::Succeeded);
+		if (!FailIfTargetHeld()) Finish(EStageActionResult::Succeeded);
 		return;
 	case EPathFollowingRequestResult::RequestSuccessful:
 	default:
@@ -90,6 +104,15 @@ void UStageMoveAction::OnStart_Implementation()
 	const auto Completions = MoveTemp(StartingCompletions);
 	for (const auto& Completion : Completions)
 		HandleReceiveMoveCompleted(Completion.Key, Completion.Value);
+	if (GetState() != EStageExecutionState::Running || !MoveRequest.IsMoveToActorRequest()) return;
+	const auto* Item = Cast<AStagePhysicsActor>(MoveRequest.GetGoalActor());
+	if (UWorld* World = GetWorld(); World && Item && Item->GetInteractionType() == EPhysicsInteractionType::Carry)
+	{
+		World->GetTimerManager().SetTimer(TargetAvailabilityTimer, FTimerDelegate::CreateWeakLambda(this, [this]
+		{
+			FailIfTargetHeld();
+		}), 0.1f, true);
+	}
 }
 
 void UStageMoveAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -110,6 +133,7 @@ void UStageMoveAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 void UStageMoveAction::Cleanup_Implementation()
 {
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(TargetAvailabilityTimer);
 	LogMove(FString::Printf(TEXT("Action finished: Result=%s"), *UEnum::GetValueAsString(GetResult())));
 	if (AIController.IsValid())
 	{
@@ -135,7 +159,7 @@ void UStageMoveAction::HandleReceiveMoveCompleted(FAIRequestID RequestID, EPathF
 	LogMove(FString::Printf(TEXT("Navigation finished: Result=%s"), *UEnum::GetValueAsString(Result)));
 	if (Result == EPathFollowingResult::Type::Success)
 	{
-		Finish(MoveRequest.IsValid() ? EStageActionResult::Succeeded : EStageActionResult::Failed);
+		if (!FailIfTargetHeld()) Finish(MoveRequest.IsValid() ? EStageActionResult::Succeeded : EStageActionResult::Failed);
 	}
 	else if (GetState() == EStageExecutionState::Stopping)
 	{
