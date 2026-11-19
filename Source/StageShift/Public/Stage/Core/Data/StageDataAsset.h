@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "StageData.h"
+#include "Stage/Cues/StageCueTypes.h"
 #include "StructUtils/PropertyBag.h"
 #include "Engine/DataAsset.h"
 #include "StageDataAsset.generated.h"
@@ -16,6 +17,9 @@ class STAGESHIFT_API UStageDataAsset : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (TitleProperty = "Title"))
+	TArray<FStageCueDefinition> PlayerCues;
+
 	UPROPERTY(EditAnywhere, Category = "Graph Parameters") FInstancedPropertyBag Parameters;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario")

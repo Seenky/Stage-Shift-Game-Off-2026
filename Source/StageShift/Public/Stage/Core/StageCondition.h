@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "UObject/Object.h"
 #include "StageCondition.generated.h"
 
@@ -27,9 +28,26 @@ class STAGESHIFT_API UStageHasHeldItemCondition : public UStageCondition
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition", meta = (GetOptions = "GetRoleOptions"))
 	FName RoleId;
+	// Empty keeps the existing "any carried item" behavior.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition", meta = (GetOptions = "GetTargetOptions")) FName TargetId;
+	UFUNCTION() TArray<FName> GetTargetOptions() const;
 
 	UFUNCTION()
 	TArray<FName> GetRoleOptions() const;
+	virtual bool Evaluate_Implementation(AStageManager* Manager) const override;
+	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
+};
+
+UCLASS(meta = (DisplayName = "Role Has Status"))
+class STAGESHIFT_API UStageRoleHasStatusCondition : public UStageCondition
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition", meta = (GetOptions = "GetRoleOptions")) FName RoleId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition") FGameplayTag Status;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition") bool bExpected = true;
+	UFUNCTION() TArray<FName> GetRoleOptions() const;
 	virtual bool Evaluate_Implementation(AStageManager* Manager) const override;
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 };

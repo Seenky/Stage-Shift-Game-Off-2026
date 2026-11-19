@@ -117,6 +117,24 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 	{
 		Errors.Add(Path + TEXT(" / ") + Message);
 	};
+	TSet<FName> CueIds;
+	for (const FStageCueDefinition& Cue : PlayerCues)
+	{
+		const FString Path = Root + TEXT(" / PlayerCue[") + Cue.CueId.ToString() + TEXT("]");
+		if (Cue.CueId.IsNone() || CueIds.Contains(Cue.CueId) || Cue.Title.IsEmpty()) Error(Path, TEXT("requires a unique local ID and a title"));
+		CueIds.Add(Cue.CueId);
+		if (!FMath::IsFinite(Cue.TimeLimit) || Cue.TimeLimit < 0.0f) Error(Path, TEXT("TimeLimit must be finite and nonnegative"));
+		for (FName Step : {Cue.ShowAtStepId, Cue.ActivateAtStepId, Cue.HideAtStepId})
+			if (!Step.IsNone() && FindStepIndex(Step) == INDEX_NONE) Error(Path, TEXT("unknown StepId: ") + Step.ToString());
+		if (!Cue.SubjectRoleId.IsNone() && !GetRoleOptions().Contains(Cue.SubjectRoleId)) Error(Path, TEXT("unknown event subject role"));
+		if (Cue.Targets.Num() > 3) Error(Path, TEXT("at most three world markers per cue"));
+		for (const FStageCueTarget& Target : Cue.Targets)
+		{
+			if (!TargetIds.Contains(Target.BindingId) && !GetRoleOptions().Contains(Target.BindingId)) Error(Path, TEXT("unknown marker binding: ") + Target.BindingId.ToString());
+			if (!FMath::IsFinite(Target.Radius) || Target.Radius < 10.0f || Target.Offset.ContainsNaN()) Error(Path, TEXT("invalid marker radius or offset"));
+		}
+		if (Cue.CompletionCondition) Cue.CompletionCondition->ValidateDefinition(this, Path, Errors);
+	}
 	if (GetEffectiveStageKey().IsNone()) Error(Root, TEXT("StageKey is required"));
 	if (TimingPolicy > EStageTimingPolicy::FixedMainDuration) Error(Root, TEXT("unknown timing policy"));
 	if (!FMath::IsFinite(MainDuration) || MainDuration <= 0 || !FMath::IsFinite(AdditiveDuration) || AdditiveDuration < 0 || !FMath::IsFinite(FinaleBudget) || FinaleBudget <= 0)

@@ -7,6 +7,7 @@
 #include "StageManager.generated.h"
 
 class UStageDataAsset;
+class UStageCueComponent;
 DECLARE_LOG_CATEGORY_EXTERN(LogStageShiftStage, Log, All);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStageFinishedById, FName, StageKey, bool, bSucceeded, FText, Reason);
@@ -24,6 +25,7 @@ class STAGESHIFT_API AStageManager : public AActor
 
 public:
 	AStageManager();
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player Cues") TObjectPtr<UStageCueComponent> PlayerCues;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Production|Bindings") TMap<FName, FStageSceneBindings> ProductionBindings;
 	UPROPERTY(BlueprintAssignable, Category = "Production") FStageProductionPhaseChanged OnProductionPhaseChanged;

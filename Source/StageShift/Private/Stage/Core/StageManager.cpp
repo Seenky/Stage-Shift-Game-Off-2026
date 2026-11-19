@@ -9,6 +9,7 @@
 #include "StatusesComponent.h"
 #include "StatusesInfo.h"
 #include "UObject/Package.h"
+#include "Stage/Cues/StageCueComponent.h"
 
 DEFINE_LOG_CATEGORY(LogStageShiftStage);
 
@@ -60,6 +61,7 @@ FString AStageManager::DescribeCommand(const UStageMemberCommand* Command) const
 AStageManager::AStageManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PlayerCues = CreateDefaultSubobject<UStageCueComponent>(TEXT("Player Cues"));
 	ScoreMultipliers.Add(EStageLatenessLevel::OnTime, 1.0f);
 }
 
@@ -212,6 +214,7 @@ bool AStageManager::StartStageWithBindings(
 	}
 	StageStartedAt = GetWorld()->GetTimeSeconds();
 	State = EStageState::Running;
+	PlayerCues->StartStage(Data);
 	bAdvanceRequested = true;
 	AdvanceStage();
 	return true;
@@ -453,6 +456,7 @@ void AStageManager::AdvanceStage()
 				PreviousStepResults = MoveTemp(CurrentStepResults);
 				CurrentStepResults.Reset();
 				CurrentStepIndex = NextStepIndex;
+				PlayerCues->NotifyStepStarted(PreparedSteps[CurrentStepIndex].StepId);
 				const auto& Assignments = PreparedSteps[CurrentStepIndex].Commands;
 				for (const auto& Assignment : Assignments)
 					CurrentStepResults.Add(Assignment.GetEffectiveRoleId(), EStageCommandResult::None);
@@ -542,6 +546,7 @@ void AStageManager::FinishStageIfReady()
 
 void AStageManager::CleanupStage()
 {
+	PlayerCues->ResetCues();
 	for (auto& Entry : RootExecutions)
 		if (IsValid(Entry.Command)) Entry.Command->OnFinished.RemoveDynamic(this, &AStageManager::HandleRootFinished);
 	for (const auto& Member : BoundMembers)
