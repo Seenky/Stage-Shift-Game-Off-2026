@@ -12,6 +12,7 @@
 #include "ScopedTransaction.h"
 #include "StageCommandCatalog.h"
 #include "StageGraphDrafts.h"
+#include "Stage/Core/StageCondition.h"
 #include "UObject/UnrealType.h"
 
 namespace
@@ -198,7 +199,7 @@ bool FStageScenarioGraphAdapter::SetTarget(const UStageScenarioEdNode* Node, FNa
 	const FScopedTransaction Transaction(NSLOCTEXT("StageScenario", "Target", "Set target"));
 	Data->Modify();
 	Node->Command->Modify();
-	if (auto* Move = Cast<UStageMoveCommand>(Node->Command)) Move->TargetId = Id;
+	if (auto* Move = Cast<UStageMoveCommand>(Node->Command)) Move->TargetIds = {Id};
 	if (auto* Look = Cast<UStageLookToCommand>(Node->Command)) Look->TargetId = Id;
 	Changed();
 	return true;
@@ -206,6 +207,7 @@ bool FStageScenarioGraphAdapter::SetTarget(const UStageScenarioEdNode* Node, FNa
 
 bool FStageScenarioGraphAdapter::MoveElementsAfter(const UStageScenarioEdGraph* Graph, const UStageScenarioEdNode* Node, const UStageScenarioEdNode* After)
 {
+	if (Graph->IsStorySteps() && Data->bUseStepLinks) return false;
 	if (!Graph->bLinear || !Node || !After || Node == After || Node->Kind == EStageScenarioNodeKind::Finale || After->Kind == EStageScenarioNodeKind::Finale || !Backup(Data))
 		return false;
 	FScopedTransaction Transaction(NSLOCTEXT("StageScenario", "Order", "Reorder execution"));
@@ -298,6 +300,52 @@ bool FStageScenarioGraphAdapter::MoveElementsAfter(const UStageScenarioEdGraph* 
 	return true;
 }
 
+void FStageScenarioGraphAdapter::EnableStepLinks()
+{
+	if (Data->bUseStepLinks) return;
+	for (FStageStep& Step : Data->Steps)
+		if (Step.StepId.IsNone()) Step.StepId = NextStepId(Data);
+	for (int32 Index = 0; Index < Data->Steps.Num(); ++Index)
+	{
+		auto& Step = Data->Steps[Index];
+		Step.ThenStepId = Data->Steps.IsValidIndex(Index + 1) ? Data->Steps[Index + 1].StepId : NAME_None;
+		Step.FailedStepId = NAME_None;
+	}
+	Data->EntryStepId = Data->Steps.IsEmpty() ? NAME_None : Data->Steps[0].StepId;
+	Data->bUseStepLinks = true;
+}
+
+bool FStageScenarioGraphAdapter::ConnectStep(const UStageScenarioEdNode* To, const UStageScenarioEdNode* From, bool bOnFailed)
+{
+	if (!From || !Backup(Data)) return false;
+	const bool bEntry = From->Kind == EStageScenarioNodeKind::Start;
+	if ((!bEntry && !Data->Steps.IsValidIndex(From->StepIndex)) || (bEntry && (!To || bOnFailed))) return false;
+	FScopedTransaction Transaction(NSLOCTEXT("StageScenario", "LinkStep", "Connect Stage step"));
+	EnsureIdentities();
+	const TArray<FStageStep> Before = Data->Steps;
+	const FName BeforeEntry = Data->EntryStepId;
+	const bool bBeforeLinks = Data->bUseStepLinks;
+	EnableStepLinks();
+	const FName Next = To && Data->Steps.IsValidIndex(To->StepIndex) ? Data->Steps[To->StepIndex].StepId : NAME_None;
+	if (bEntry)
+		Data->EntryStepId = Next;
+	else if (bOnFailed)
+		Data->Steps[From->StepIndex].FailedStepId = Next;
+	else
+		Data->Steps[From->StepIndex].ThenStepId = Next;
+	TArray<FString> Errors;
+	if (!Data->ValidateStepLinks(Errors))
+	{
+		Data->Steps = Before;
+		Data->EntryStepId = BeforeEntry;
+		Data->bUseStepLinks = bBeforeLinks;
+		Transaction.Cancel();
+		return false;
+	}
+	Changed();
+	return true;
+}
+
 void FStageScenarioGraphAdapter::BuildView(UStageScenarioEdGraph* Graph) const
 {
 	Graph->Nodes.Reset();
@@ -324,7 +372,11 @@ void FStageScenarioGraphAdapter::BuildView(UStageScenarioEdGraph* Graph) const
 		if (C && C->IsComposite())
 			N->Summary = FString::Printf(TEXT("%d actions · double-click to open"), C->GetChildCommands().Num());
 		else if (const auto* Move = Cast<UStageMoveCommand>(C))
-			N->Summary = Move->TargetId.ToString();
+		{
+			const TConstArrayView<FName> Targets = Move->GetMoveTargets();
+			if (Targets.Num() == 1) N->Summary = Targets[0].ToString();
+			else if (Targets.Num() > 1) N->Summary = FString::Printf(TEXT("Random (%d targets)"), Targets.Num());
+		}
 		else if (const auto* Look = Cast<UStageLookToCommand>(C))
 			N->Summary = Look->TargetId.ToString();
 		else if (C && C->IsA<UStageDialogueCommand>())
@@ -456,10 +508,16 @@ void FStageScenarioGraphAdapter::BuildView(UStageScenarioEdGraph* Graph) const
 		{
 			const auto& Step = Data->Steps[I];
 			const bool Single = Step.Commands.Num() == 1;
-			auto* N = Make(Single ? EStageScenarioNodeKind::Command : EStageScenarioNodeKind::Step, StepKey(Data, I));
+			auto* N = Make(Step.Branch ? EStageScenarioNodeKind::Branch : Single ? EStageScenarioNodeKind::Command : EStageScenarioNodeKind::Step, StepKey(Data, I));
 			N->StepIndex = I;
 			N->bStepRoot = true;
-			if (Single)
+			if (!Step.Branch) N->CreatePin(EGPD_Output, TEXT("StageOrder"), UStageScenarioEdNode::FailedPin);
+			if (Step.Branch)
+			{
+				N->Title = FText::FromString(TEXT("Branch"));
+				if (const auto* Condition = Step.Branch->Condition.Get()) N->Summary = Condition->GetClass()->GetDisplayNameText().ToString();
+			}
+			else if (Single)
 			{
 				N->AssignmentIndex = 0;
 				Describe(N, Step.Commands[0].Command);

@@ -8,6 +8,8 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "PhysicsManipulationComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemPickedUp, AActor*, PickedItem);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 
 class STAGESHIFT_API UPhysicsManipulationComponent : public UPhysicsHandleComponent
@@ -19,6 +21,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction")
 	void SetCarryPoint(USceneComponent* NewCarryPoint);
+	USceneComponent* GetCarryPoint() const { return CarryPoint.Get(); }
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 	bool CanManipulate(const FHitResult& Hit, EPhysicsInteractionType Type) const;
@@ -57,6 +60,9 @@ public:
 
 	virtual void ReleaseComponent() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnItemPickedUp OnItemPickedUp;
 
 protected:
 	virtual void BeginPlay() override;

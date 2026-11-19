@@ -216,4 +216,5 @@ private:
 	bool bIssuingCommands = false;
 	bool bAdvancing = false;
 	bool bAdvanceRequested = false;
+	bool bStoryComplete = false;
 };

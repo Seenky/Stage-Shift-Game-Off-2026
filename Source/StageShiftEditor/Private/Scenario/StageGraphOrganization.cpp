@@ -77,13 +77,17 @@ void FStageGraphOrganization::Project(UStageScenarioEdGraph* Graph, const TArray
 		return Item;
 	};
 	auto* Entry = Boundary(EStageScenarioNodeKind::Start, TEXT("Execute"), -270);
+	const bool bLinkedStory = Graph->IsStorySteps() && Graph->Scenario->bUseStepLinks;
 	UStageScenarioEdNode* Previous = Entry;
-	auto Link = [](UStageScenarioEdNode* A, UStageScenarioEdNode* B)
+	auto Link = [](UStageScenarioEdNode* A, UStageScenarioEdNode* B, bool bOnFailed = false)
 	{
-		auto* Out = A->FindPin(TEXT("Then"), EGPD_Output);
-		if (!Out) Out = A->FindPin(TEXT("Execute"), EGPD_Output);
+		if (!A || !B || A == B) return;
+		auto* Out = A->FindPin(A->GetExitPinName(bOnFailed), EGPD_Output);
+		if (!Out && bOnFailed && A->Kind == EStageScenarioNodeKind::Group)
+			Out = A->CreatePin(EGPD_Output, TEXT("StageOrder"), UStageScenarioEdNode::FailedPin);
+		if (!Out && !bOnFailed) Out = A->FindPin(TEXT("Execute"), EGPD_Output);
 		auto* In = B->FindPin(TEXT("Execute"), EGPD_Input);
-		if (Out && In) Out->MakeLinkTo(In);
+		if (Out && In && !Out->LinkedTo.Contains(In)) Out->MakeLinkTo(In);
 	};
 	int32 Index = 0;
 	for (auto* Item : Visible)
@@ -97,11 +101,44 @@ void FStageGraphOrganization::Project(UStageScenarioEdGraph* Graph, const TArray
 			Item->NodePosY = Position->Y;
 		}
 		Graph->Nodes.Add(Item);
-		Link(Graph->bLinear ? Previous : Entry, Item);
+		if (!bLinkedStory) Link(Graph->bLinear ? Previous : Entry, Item);
 		Previous = Item;
 		++Index;
 	}
-	if (Graph->ActiveGroup.IsValid() || Graph->ScopeCommand || Graph->bParallelAssignments || Graph->bReactionAssignments)
+	if (bLinkedStory)
+	{
+		TMap<FGuid, UStageScenarioEdNode*> VisibleById;
+		for (auto* Item : Visible)
+			for (const FGuid& Id : Item->RepresentedIds) VisibleById.Add(Id, Item);
+		const auto* Data = Graph->Scenario.Get();
+		const auto FindStep = [&](FName Id)
+		{
+			return VisibleById.FindRef(FStageScenarioGraphAdapter::StepKey(Data, Data->FindStepIndex(Id)));
+		};
+		UStageScenarioEdNode* Exit = nullptr;
+		if (Graph->ActiveGroup.IsValid())
+			Exit = Boundary(EStageScenarioNodeKind::Return, TEXT("Return"), Index * 330);
+		else if (!Logical.IsEmpty() && Logical.Last()->Kind == EStageScenarioNodeKind::Finale)
+			Exit = Logical.Last();
+		Link(Entry, FindStep(Data->EntryStepId));
+		for (const FStageStep& Step : Data->Steps)
+		{
+			auto* From = FindStep(Step.StepId);
+			auto* Then = FindStep(Step.ThenStepId);
+			auto* Failed = FindStep(Step.FailedStepId);
+			if (From)
+			{
+				Link(From, Then ? Then : Exit);
+				if (Step.Branch || !Step.FailedStepId.IsNone()) Link(From, Failed ? Failed : Exit, true);
+			}
+			else if (Graph->ActiveGroup.IsValid())
+			{
+				Link(Entry, Then);
+				Link(Entry, Failed);
+			}
+		}
+	}
+	else if (Graph->ActiveGroup.IsValid() || Graph->ScopeCommand || Graph->bParallelAssignments || Graph->bReactionAssignments)
 	{
 		auto* Exit = Boundary(EStageScenarioNodeKind::Return, Graph->bLinear ? TEXT("Return") : TEXT("All completed"), Index * 330);
 		if (Graph->bLinear)
@@ -237,7 +274,33 @@ bool FStageGraphOrganization::Rename(UStageScenarioEdGraph* Graph, UStageScenari
 	else if (Graph->Production && Node->Kind == EStageScenarioNodeKind::Scene && Graph->Production->Scenes.IsValidIndex(Node->StepIndex))
 		Graph->Production->Scenes[Node->StepIndex].SceneId = Id;
 	else if (Graph->Scenario && Node->bStepRoot && Graph->Scenario->Steps.IsValidIndex(Node->StepIndex))
-		Graph->Scenario->Steps[Node->StepIndex].StepId = Id;
+	{
+		auto* Data = Graph->Scenario.Get();
+		const FName OldId = Data->Steps[Node->StepIndex].StepId;
+		Data->Steps[Node->StepIndex].StepId = Id;
+		if (!OldId.IsNone())
+		{
+			const auto RenameReactionStep = [OldId, Id](FStageMemberReaction& Reaction)
+			{
+				if (Reaction.AllowedFromStepId == OldId) Reaction.AllowedFromStepId = Id;
+				if (Reaction.AllowedToStepId == OldId) Reaction.AllowedToStepId = Id;
+				for (FName& Allowed : Reaction.AllowedStepIds)
+					if (Allowed == OldId) Allowed = Id;
+			};
+			for (FStageMemberReaction& Reaction : Data->MemberReactions) RenameReactionStep(Reaction);
+			for (FStageGraphDraft& Draft : Data->EditorDrafts)
+				if (Draft.Kind == EStageGraphDraftKind::Reaction) RenameReactionStep(Draft.Reaction);
+		}
+		if (Data->bUseStepLinks)
+		{
+			if (Data->EntryStepId == OldId) Data->EntryStepId = Id;
+			for (FStageStep& Step : Data->Steps)
+			{
+				if (Step.ThenStepId == OldId) Step.ThenStepId = Id;
+				if (Step.FailedStepId == OldId) Step.FailedStepId = Id;
+			}
+		}
+	}
 	else
 		return false;
 	Graph->GetAsset()->MarkPackageDirty();
@@ -294,6 +357,7 @@ bool FStageGraphOrganization::Delete(UStageScenarioEdGraph* Graph, const TArray<
 		auto* Data = Graph->Scenario.Get();
 		FStageScenarioGraphAdapter(Data).EnsureIdentities();
 		auto BeforeSteps = Data->Steps;
+		const FName BeforeEntry = Data->EntryStepId;
 		auto BeforeFinale = Data->Finale;
 		auto BeforeReactions = Data->MemberReactions;
 		TArray<FString> BeforeErrors;
@@ -350,10 +414,31 @@ bool FStageGraphOrganization::Delete(UStageScenarioEdGraph* Graph, const TArray<
 			});
 		}
 		else
+		{
 			Data->Steps.RemoveAll([&](const auto& S)
 			{
 				return Ids.Contains(S.EditorGuid);
 			});
+			if (Data->bUseStepLinks)
+			{
+				const auto AfterDeleted = [&](FName Id) -> FName
+				{
+					for (int32 Hop = 0; !Id.IsNone() && Data->FindStepIndex(Id) == INDEX_NONE; ++Hop)
+					{
+						const FStageStep* Removed = BeforeSteps.FindByPredicate([Id](const auto& S) { return S.StepId == Id; });
+						if (!Removed || Hop >= BeforeSteps.Num()) return NAME_None;
+						Id = Removed->ThenStepId;
+					}
+					return Id;
+				};
+				Data->EntryStepId = AfterDeleted(Data->EntryStepId);
+				for (auto& Step : Data->Steps)
+				{
+					Step.ThenStepId = AfterDeleted(Step.ThenStepId);
+					Step.FailedStepId = AfterDeleted(Step.FailedStepId);
+				}
+			}
+		}
 		TArray<FString> Errors;
 		Data->ValidateDefinition(Errors);
 		if (Errors.ContainsByPredicate([&](const FString& E)
@@ -362,6 +447,7 @@ bool FStageGraphOrganization::Delete(UStageScenarioEdGraph* Graph, const TArray<
 		}))
 		{
 			Data->Steps = BeforeSteps;
+			Data->EntryStepId = BeforeEntry;
 			Data->Finale = BeforeFinale;
 			Data->MemberReactions = BeforeReactions;
 			if (Children) *Children = BeforeChildren;

@@ -5,6 +5,7 @@
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
 #include "Stage/Core/Data/StageCommandParameters.h"
 #include "Stage/Core/StageMemberCommand.h"
+#include "Stage/Core/StageCondition.h"
 #include "StatusesComponent.h"
 #include "StatusesInfo.h"
 #include "UObject/Package.h"
@@ -19,7 +20,6 @@ void AStageManager::AddDiagnostic(const FString& Message)
 	    : FString::FromInt(CurrentStepIndex);
 	const FString Line = FString::Printf(
 	    TEXT("%s / Run[%s] / Step[%s] / %s"), ActiveStage ? *ActiveStage->GetEffectiveStageKey().ToString() : TEXT("None"), *RunId.ToString(EGuidFormats::Digits), *Step, *Message);
-	if (RecentEvents.Num() >= 32) RecentEvents.RemoveAt(0);
 	RecentEvents.Add(FString::Printf(TEXT("[%.1f] %s"), GetStageElapsedTime(), *Message));
 	UE_LOG(LogStageShiftStage, Display, TEXT("%s"), *Line);
 }
@@ -145,6 +145,7 @@ bool AStageManager::StartStageWithBindings(
 	StageElapsedTime = CurrentLatenessSeconds = MaxLatenessSeconds = 0.0f;
 	CurrentLatenessLevel = EStageLatenessLevel::OnTime;
 	CurrentStepIndex = INDEX_NONE;
+	bStoryComplete = false;
 	PlannedStepStarts.Reset();
 	PreparedSteps = Data->Steps;
 	const auto RejectPreparation = [&]()
@@ -154,10 +155,10 @@ bool AStageManager::StartStageWithBindings(
 		CleanupStage();
 		return false;
 	};
-	float Start = 0.0f;
+	TArray<float> StepDurations;
+	PlannedStepStarts.Init(-1.0f, PreparedSteps.Num());
 	for (auto& Step : PreparedSteps)
 	{
-		PlannedStepStarts.Add(Start);
 		float Duration = 0.0f;
 		for (auto& Assignment : Step.Commands)
 		{
@@ -165,11 +166,48 @@ bool AStageManager::StartStageWithBindings(
 			if (!Assignment.Command) return RejectPreparation();
 			Duration = FMath::Max(Duration, Assignment.Command->GetNeededTime());
 		}
-		Start += Duration;
-		if (!FMath::IsFinite(Start))
+		StepDurations.Add(Duration);
+	}
+	if (Data->bUseStepLinks)
+	{
+		TArray<int32> Planned;
+		const auto PlanRoute = [&](int32 Index, float Start)
+		{
+			while (PreparedSteps.IsValidIndex(Index) && PlannedStepStarts[Index] < 0.0f)
+			{
+				PlannedStepStarts[Index] = Start;
+				Planned.Add(Index);
+				Start += StepDurations[Index];
+				if (!FMath::IsFinite(Start)) return false;
+				Index = Data->FindStepIndex(PreparedSteps[Index].ThenStepId);
+			}
+			return true;
+		};
+		// Keep the planned start of a join on the main route. Fallbacks are detours.
+		bool bValidPlan = PlanRoute(Data->FindStepIndex(Data->EntryStepId), 0.0f);
+		for (int32 Cursor = 0; bValidPlan && Cursor < Planned.Num(); ++Cursor)
+		{
+			const int32 Index = Planned[Cursor];
+			bValidPlan = PlanRoute(Data->FindStepIndex(PreparedSteps[Index].FailedStepId), PlannedStepStarts[Index] + StepDurations[Index]);
+		}
+		if (!bValidPlan)
 		{
 			Error = FText::FromString(TEXT("Stage plan duration overflow."));
 			return RejectPreparation();
+		}
+	}
+	else
+	{
+		float Start = 0.0f;
+		for (int32 Index = 0; Index < PreparedSteps.Num(); ++Index)
+		{
+			PlannedStepStarts[Index] = Start;
+			Start += StepDurations[Index];
+			if (!FMath::IsFinite(Start))
+			{
+				Error = FText::FromString(TEXT("Stage plan duration overflow."));
+				return RejectPreparation();
+			}
 		}
 	}
 	StageStartedAt = GetWorld()->GetTimeSeconds();
@@ -375,24 +413,51 @@ void AStageManager::AdvanceStage()
 		UpdateTiming();
 		if (StageElapsedTime >= ActiveStage->MainDuration)
 			BeginFinale();
-		else if (!CurrentStepResults.FindKey(EStageCommandResult::None))
+		else if (!bStoryComplete && !CurrentStepResults.FindKey(EStageCommandResult::None))
 		{
-			if (CurrentStepIndex + 1 >= ActiveStage->Steps.Num())
+			TGuardValue<bool> Advancing(bAdvancing, true);
+			int32 NextStepIndex = CurrentStepIndex + 1;
+			if (ActiveStage->bUseStepLinks && CurrentStepIndex == INDEX_NONE)
 			{
+				NextStepIndex = ActiveStage->FindStepIndex(ActiveStage->EntryStepId);
+			}
+			else if (ActiveStage->bUseStepLinks && PreparedSteps.IsValidIndex(CurrentStepIndex))
+			{
+				const FStageStep& Step = PreparedSteps[CurrentStepIndex];
+				const bool bTakeFallback = !Step.FailedStepId.IsNone() && CurrentStepResults.FindKey(EStageCommandResult::Failed);
+				NextStepIndex = ActiveStage->FindStepIndex(bTakeFallback ? Step.FailedStepId : Step.ThenStepId);
+				if (bTakeFallback) AddDiagnostic(TEXT("On Failed -> ") + Step.FailedStepId.ToString());
+			}
+			while (PreparedSteps.IsValidIndex(NextStepIndex) && PreparedSteps[NextStepIndex].Branch)
+			{
+				const FStageStep& Step = PreparedSteps[NextStepIndex];
+				const UStageCondition* Condition = Step.Branch->Condition;
+				const bool bConditionMet = IsValid(Condition) && Condition->Evaluate(this);
+				if (State != EStageState::Running) break;
+				AddDiagnostic(TEXT("Branch[") + Step.StepId.ToString() + (bConditionMet ? TEXT("] -> True") : TEXT("] -> False")));
+				NextStepIndex = ActiveStage->FindStepIndex(bConditionMet ? Step.ThenStepId : Step.FailedStepId);
+			}
+			if (State != EStageState::Running)
+			{
+				bAdvanceRequested = true;
+				return;
+			}
+			if (!PreparedSteps.IsValidIndex(NextStepIndex))
+			{
+				bStoryComplete = true;
 				if (ActiveStage->TimingPolicy != EStageTimingPolicy::FixedMainDuration) BeginFinale();
 			}
 			else
 			{
-				bAdvancing = bIssuingCommands = true;
+				TGuardValue<bool> Issuing(bIssuingCommands, true);
 				PreviousStepResults = MoveTemp(CurrentStepResults);
 				CurrentStepResults.Reset();
-				++CurrentStepIndex;
+				CurrentStepIndex = NextStepIndex;
 				const auto& Assignments = PreparedSteps[CurrentStepIndex].Commands;
 				for (const auto& Assignment : Assignments)
 					CurrentStepResults.Add(Assignment.GetEffectiveRoleId(), EStageCommandResult::None);
 				const auto Prepared = PrepareCommands(Assignments, EStageCommandType::Scenario, CurrentStepIndex);
 				IssueCommands(Prepared);
-				bAdvancing = bIssuingCommands = false;
 			}
 		}
 	}
@@ -574,6 +639,13 @@ void AStageManager::UpdateTiming()
 
 bool AStageManager::IsReactionAllowedInCurrentStep(const FStageMemberReaction& Reaction) const
 {
+	if (Reaction.bIsAllowedStepRange)
+	{
+		if (!ActiveStage || !ActiveStage->Steps.IsValidIndex(CurrentStepIndex)) return false;
+		TSet<FName> Range;
+		return ActiveStage->GetStepRange(Reaction.AllowedFromStepId, Reaction.AllowedToStepId, Range)
+		    && Range.Contains(ActiveStage->Steps[CurrentStepIndex].StepId);
+	}
 	return Reaction.AllowedStepIds.IsEmpty()
 	    || (ActiveStage && ActiveStage->Steps.IsValidIndex(CurrentStepIndex) && Reaction.AllowedStepIds.Contains(ActiveStage->Steps[CurrentStepIndex].StepId));
 }

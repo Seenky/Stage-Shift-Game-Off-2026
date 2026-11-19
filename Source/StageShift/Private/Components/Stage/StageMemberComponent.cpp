@@ -370,9 +370,10 @@ void UStageMemberComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		CachedStatuses = StatusComponent->GetStatuses();
 		bUpdateRequested = true;
 	}
-	if (Executions.ContainsByPredicate([](const FStageCommandExecution& Entry)
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (Executions.ContainsByPredicate([Now](const FStageCommandExecution& Entry)
 	{
-		return Entry.RecoveryWaitDeadline >= 0.0f;
+		return Entry.RecoveryWaitDeadline >= 0.0f || (Entry.RetryAt >= 0.0 && Now >= Entry.RetryAt);
 	}))
 		bUpdateRequested = true;
 	// Position and heading can change without a status event.
@@ -457,11 +458,17 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	}
 
 	const EStageCommandResult Admission = Manager->CheckCommandStart(Command);
-	if (!FindExecution(Command) || Command->GetState() != EStageExecutionState::Running) return;
+	Entry = FindExecution(Command);
+	if (!Entry || Command->GetState() != EStageExecutionState::Running) return;
 	if (Admission != EStageCommandResult::None)
 	{
 		FinishExecution(Command, Admission);
 		return;
+	}
+	if (Entry->RetryAt >= 0.0)
+	{
+		if (GetWorld()->GetTimeSeconds() < Entry->RetryAt) return;
+		Entry->RetryAt = -1.0;
 	}
 	if (IsScenarioPaused(Command))
 	{
@@ -574,6 +581,22 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	}
 }
 
+bool UStageMemberComponent::ScheduleMainRetry(UStageMemberCommand* Command)
+{
+	FStageCommandExecution* Entry = FindExecution(Command);
+	const UWorld* World = GetWorld();
+	if (!Entry || !World || bClosingMember || Entry->RetriesScheduled >= Command->MaxRetries || !FMath::IsFinite(Command->RetryInterval)) return false;
+
+	const float Delay = FMath::Max(Command->RetryInterval, 0.01f);
+	Entry->RetryAt = World->GetTimeSeconds() + Delay;
+	++Entry->RetriesScheduled;
+	if (Manager.IsValid())
+	{
+		Manager->AddDiagnostic(Manager->DescribeCommand(Command) + FString::Printf(TEXT(" / Retry %d/%d in %.2fs"), Entry->RetriesScheduled, Command->MaxRetries, Delay));
+	}
+	return true;
+}
+
 void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageActionResult Result)
 {
 	if (ActiveRecoveryAction == Action)
@@ -622,7 +645,7 @@ void UStageMemberComponent::HandleActionFinished(UStageAction* Action, EStageAct
 	}
 	else if (Result == EStageActionResult::Interrupted)
 		bUpdateRequested = true;
-	else
+	else if (Result != EStageActionResult::Failed || !ScheduleMainRetry(Command))
 		FinishExecution(Command, EStageCommandResult::Failed);
 }
 

@@ -1,18 +1,11 @@
 #include "Stage/Core/StageManager.h"
+#include "Stage/Core/StageDebugDisplay.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
-#include "Stage/Commands/StageMoveCommand.h"
-#include "Stage/Commands/StageLookToCommand.h"
-#include "Stage/Commands/StageDialogueCommand.h"
 #include "Components/Stage/StageMemberComponent.h"
-#include "Components/Dialogue/DialogueComponent.h"
 #include "StatusesComponent.h"
-#include "AIController.h"
-#include "GameFramework/Pawn.h"
-#include "GameFramework/PawnMovementComponent.h"
 #include "Engine/World.h"
-#include "NavigationSystem.h"
 #include "UObject/Package.h"
 
 TMap<FName, AActor*> AStageManager::ResolveBindings(UStageDataAsset* Data, const TMap<FName, AActor*>& Overrides) const
@@ -109,22 +102,7 @@ bool AStageManager::CollectValidationErrors(UStageDataAsset* Data, const TMap<FN
 		FStageExecutionContext Context;
 		Context.Manager = const_cast<AStageManager*>(this);
 		Context.MemberComponent = Actor->FindComponentByClass<UStageMemberComponent>();
-		if (const auto* Move = Cast<UStageMoveCommand>(Command))
-		{
-			if (!Move->ResolveTarget(Context)) Errors.Add(Path + TEXT(" / Move target is unloaded or belongs to another world"));
-			const auto* Pawn = Cast<APawn>(Actor);
-			if (!Pawn || !Pawn->FindComponentByClass<UPawnMovementComponent>())
-				Errors.Add(Path + TEXT(" / Move requires a pawn with navigation movement"));
-			else if (GetWorld()->IsGameWorld() && !Pawn->GetController<AAIController>())
-				Errors.Add(Path + TEXT(" / Move requires an AIController"));
-			else if (!GetWorld()->IsGameWorld() && Pawn->AutoPossessAI == EAutoPossessAI::Disabled && !Pawn->GetController<AAIController>())
-				Errors.Add(Path + TEXT(" / Move requires AI possession"));
-			const auto* Navigation = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
-			if (!Navigation || !Navigation->GetDefaultNavDataInstance()) Errors.Add(Path + TEXT(" / Move requires navigation data in the current world"));
-		}
-		if (const auto* Look = Cast<UStageLookToCommand>(Command))
-			if (!Look->ResolveTarget(Context)) Errors.Add(Path + TEXT(" / Look target is unloaded or belongs to another world"));
-		if (Command->IsA<UStageDialogueCommand>() && !Actor->FindComponentByClass<UDialogueComponent>()) Errors.Add(Path + TEXT(" / Speak requires DialogueComponent"));
+		Command->ValidateContext(Context, Path, Errors);
 		int32 Index = 0;
 		for (const UStageMemberCommand* Child : Command->GetChildCommands())
 			Check(Child, RoleId, Path + FString::Printf(TEXT(" / Child[%d]"), Index++));
@@ -179,6 +157,10 @@ bool AStageManager::StartConfiguredStage(FText& Error)
 
 void AStageManager::BeginPlay()
 {
+	RecentEvents.Reset();
+#if WITH_EDITOR
+	StageDebugDisplay::ClearEditorContent();
+#endif
 	Super::BeginPlay();
 	if (bAutoStart)
 	{
@@ -190,9 +172,9 @@ void AStageManager::BeginPlay()
 void AStageManager::EndPlay(const EEndPlayReason::Type Reason)
 {
 	bManagerEndingPlay = true;
-	RemoveDebugDisplay();
 	AbortProduction(FText::FromString(TEXT("Manager EndPlay")));
 	AbortStage(FText::FromString(TEXT("Manager EndPlay")));
+	RemoveDebugDisplay();
 	Super::EndPlay(Reason);
 }
 

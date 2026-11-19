@@ -5,23 +5,25 @@
 #include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"
 
-void UStageLookToAction::SetupLookTo(const FVector& InLookToLoc, const float& InTurnSpeed, const float& InAcceptanceAngleDeg)
+void UStageLookToAction::SetupLookTo(const FVector& InLookTarget, const float& InTurnSpeed, const float& InAcceptanceAngleDeg, bool bInUseTargetDirection)
 {
-	LookToLoc = InLookToLoc;
+	LookTarget = InLookTarget;
+	bUseTargetDirection = bInUseTargetDirection;
 	TurnSpeed = InTurnSpeed;
 	AcceptanceDotThreshold = FMath::Cos(FMath::DegreesToRadians(InAcceptanceAngleDeg));
 }
 
 void UStageLookToAction::OnStart_Implementation()
 {
-	const auto Owner = Context.MemberComponent.Get()->GetOwner();
+	const UStageMemberComponent* Member = Context.MemberComponent.Get();
+	const AActor* Owner = Member ? Member->GetOwner() : nullptr;
 	if (!Owner || !GetWorld())
 	{
 		Finish(EStageActionResult::Failed);
 		return;
 	}
 
-	if (GetIsSucceeded(LookToLoc))
+	if (IsFacingTarget(*Owner))
 	{
 		Finish(EStageActionResult::Succeeded);
 		return;
@@ -56,23 +58,23 @@ EStageActionStopMode UStageLookToAction::GetStopMode_Implementation(EStageAction
 	return Reason == EStageActionStopReason::Cancel ? EStageActionStopMode::FinishAction : EStageActionStopMode::StopAction;
 }
 
-bool UStageLookToAction::GetIsSucceeded(const FVector& InLookToLoc) const
+FVector UStageLookToAction::GetLookDirection(const AActor& Owner) const
 {
-	const auto Owner = Context.MemberComponent.Get()->GetOwner();
-	if (!Owner) return false;
+	return (bUseTargetDirection ? LookTarget : LookTarget - Owner.GetActorLocation()).GetSafeNormal2D();
+}
 
-	const FVector OwnerDir = Owner->GetActorForwardVector().GetSafeNormal2D();
-	const FVector LookAtDir = (InLookToLoc - Owner->GetActorLocation()).GetSafeNormal2D();
-	const auto DotProduct = FVector::DotProduct(OwnerDir, LookAtDir);
-
-	return DotProduct >= AcceptanceDotThreshold;
+bool UStageLookToAction::IsFacingTarget(const AActor& Owner) const
+{
+	const FVector OwnerDir = Owner.GetActorForwardVector().GetSafeNormal2D();
+	return FVector::DotProduct(OwnerDir, GetLookDirection(Owner)) >= AcceptanceDotThreshold;
 }
 
 void UStageLookToAction::TurnAtLoc(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
 	if (World != GetWorld() || TickType != LEVELTICK_All || DeltaSeconds <= 0.f) return;
 
-	const auto Owner = Context.MemberComponent.Get()->GetOwner();
+	const UStageMemberComponent* Member = Context.MemberComponent.Get();
+	AActor* Owner = Member ? Member->GetOwner() : nullptr;
 	if (!Owner)
 	{
 		Finish(EStageActionResult::Failed);
@@ -80,12 +82,12 @@ void UStageLookToAction::TurnAtLoc(UWorld* World, ELevelTick TickType, float Del
 	}
 
 	const FRotator ActorRotation = Owner->GetActorRotation();
-	const FRotator LookAtRotation = (LookToLoc - Owner->GetActorLocation()).GetSafeNormal2D().Rotation();
+	const FRotator LookAtRotation = GetLookDirection(*Owner).Rotation();
 	const FRotator NewRotation = FMath::RInterpConstantTo(ActorRotation, LookAtRotation, DeltaSeconds, TurnSpeed);
 
 	Owner->SetActorRotation(NewRotation);
 
-	if (GetIsSucceeded(LookToLoc))
+	if (IsFacingTarget(*Owner))
 	{
 		Finish(EStageActionResult::Succeeded);
 	}

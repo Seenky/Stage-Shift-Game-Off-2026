@@ -10,6 +10,7 @@ class UStageScenarioEdNode;
 enum class EStageGraphAction : uint8
 {
 	Add,
+	AddBranch,
 	AddParallelRole,
 	AddChild,
 	AddReaction,
@@ -57,11 +58,12 @@ public:
 	int32 ScopeReaction = INDEX_NONE;
 	int32 ScopeStep = INDEX_NONE;
 	TFunction<void(EStageGraphAction, UClass*, UStageScenarioEdNode*, FVector2D)> OnAction;
-	TFunction<void(UStageScenarioEdNode*, UStageScenarioEdNode*)> OnConnect;
+	TFunction<bool(UStageScenarioEdNode*, UStageScenarioEdNode*, bool)> OnConnect;
 	TFunction<void()> OnEdited;
 	UObject* GetAsset() const;
 	TMap<FGuid, FVector2D>& Positions() const;
 	TArray<struct FStageGraphGroup>& Groups() const;
 	TMap<FGuid, struct FStageGraphViewState>& Views() const;
 	FGuid ViewKey() const;
+	bool IsStorySteps() const;
 };

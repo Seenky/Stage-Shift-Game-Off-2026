@@ -17,6 +17,7 @@ public:
 	virtual uint8 GetResourceMask() const override { return 4; }
 
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
+	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const override;
 	UStageDialogueCommand();
 
 	virtual float GetNeededTime_Implementation() const override;

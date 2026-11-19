@@ -53,6 +53,7 @@ void UStageScenarioGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder&
 		Builder.AddAction(MakeShared<FStageMenuAction>(TEXT("Production"), FText::FromString(TEXT("Scene")), EStageGraphAction::AddScene));
 	else
 	{
+		if (Graph->IsStorySteps()) Builder.AddAction(MakeShared<FStageMenuAction>(TEXT("Graph"), FText::FromString(TEXT("Branch")), EStageGraphAction::AddBranch));
 		EStageGraphAction Action = Graph->bReactions && !Graph->ScopeCommand && !Graph->bReactionAssignments ? EStageGraphAction::AddReaction : EStageGraphAction::Add;
 		for (const auto& Type : FStageCommandCatalog::Get())
 			Builder.AddAction(MakeShared<FStageMenuAction>(Type.Category, Type.Name, Action, Type.Path));
@@ -98,7 +99,7 @@ void UStageScenarioGraphSchema::GetContextMenuActions(UToolMenu* Menu, UGraphNod
 				})));
 		}));
 	};
-	if (Graph->Scenario && Node->Kind != EStageScenarioNodeKind::Group && (Node->bStepRoot || Node->Kind == EStageScenarioNodeKind::Finale))
+	if (Graph->Scenario && Node->Kind != EStageScenarioNodeKind::Group && Node->Kind != EStageScenarioNodeKind::Branch && (Node->bStepRoot || Node->Kind == EStageScenarioNodeKind::Finale))
 		Submenu(TEXT("Add parallel performer"), EStageGraphAction::AddParallelRole);
 	if (Node->Kind == EStageScenarioNodeKind::Reaction && !Node->IsDraft())
 	{
@@ -131,7 +132,7 @@ void UStageScenarioGraphSchema::GetContextMenuActions(UToolMenu* Menu, UGraphNod
 		Add(TEXT("Delete"), EStageGraphAction::Delete);
 	}
 	Add(TEXT("Collapse selected nodes to subgraph"), EStageGraphAction::Collapse);
-	if (Graph->bLinear && Node->CanUserDeleteNode())
+	if (Graph->bLinear && Node->CanUserDeleteNode() && !(Graph->IsStorySteps() && Graph->Scenario->bUseStepLinks))
 	{
 		Add(TEXT("Move earlier"), EStageGraphAction::MoveEarlier);
 		Add(TEXT("Move later"), EStageGraphAction::MoveLater);
@@ -144,8 +145,26 @@ const FPinConnectionResponse UStageScenarioGraphSchema::CanCreateConnection(cons
 	const auto* To = B ? Cast<UStageScenarioEdNode>(B->GetOwningNode()) : nullptr;
 	if (!From || !To || From == To || A->Direction == B->Direction || From->GetGraph() != To->GetGraph())
 		return {CONNECT_RESPONSE_DISALLOW, TEXT("Choose an output and input in this graph.")};
-	if (A->Direction == EGPD_Input) Swap(From, To);
+	if (A->Direction == EGPD_Input)
+	{
+		Swap(From, To);
+		Swap(A, B);
+	}
 	const auto* Graph = CastChecked<UStageScenarioEdGraph>(From->GetGraph());
+	const bool bAlternate = UStageScenarioEdNode::IsAlternateExit(A->PinName);
+	const bool bBranchExit = From->Kind == EStageScenarioNodeKind::Branch;
+	if (Graph->IsStorySteps() && (bAlternate || bBranchExit || To->Kind == EStageScenarioNodeKind::Branch || Graph->Scenario->bUseStepLinks))
+	{
+		const bool bEntry = From->Kind == EStageScenarioNodeKind::Start && !Graph->ActiveGroup.IsValid();
+		const bool bStep = From->bStepRoot && From->Kind != EStageScenarioNodeKind::Group;
+		const bool bDraft = To->IsDraft() && Graph->Scenario->EditorDrafts.IsValidIndex(To->DraftIndex)
+		    && Graph->Scenario->EditorDrafts[To->DraftIndex].Kind == EStageGraphDraftKind::Step;
+		const bool bDestination = bDraft || (To->bStepRoot && To->Kind != EStageScenarioNodeKind::Group);
+		if (!Graph->bReadOnly && (bStep || (bEntry && !bAlternate)) &&
+		    (bDestination || (bStep && (!bAlternate || bBranchExit) && To->Kind == EStageScenarioNodeKind::Finale)))
+			return {CONNECT_RESPONSE_MAKE, TEXT("Connect the Step exit to this destination.")};
+		return {CONNECT_RESPONSE_DISALLOW, TEXT("Connect from Execute or a Step to a Step. Expand a group to edit its Steps.")};
+	}
 	if ((From->Kind == EStageScenarioNodeKind::Group && From->RepresentedIds.IsEmpty()) || (To->Kind == EStageScenarioNodeKind::Group && To->RepresentedIds.IsEmpty()))
 		return {CONNECT_RESPONSE_DISALLOW, TEXT("Open this block and connect its actions first.")};
 	if (From->IsDraft() || To->IsDraft())
@@ -175,15 +194,35 @@ bool UStageScenarioGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin*
 	if (CanCreateConnection(A, B).Response != CONNECT_RESPONSE_MAKE) return false;
 	auto* From = CastChecked<UStageScenarioEdNode>(A->GetOwningNode());
 	auto* To = CastChecked<UStageScenarioEdNode>(B->GetOwningNode());
-	if (A->Direction == EGPD_Input) Swap(From, To);
-	auto* Graph = CastChecked<UStageScenarioEdGraph>(From->GetGraph());
-	if (Graph->OnConnect)
+	if (A->Direction == EGPD_Input)
 	{
-		Graph->OnConnect(To, From);
-		return true;
+		Swap(From, To);
+		Swap(A, B);
 	}
-	const bool Result = From->IsDraft() || To->IsDraft() ? FStageGraphDrafts::Connect(Graph, To, From)
-	                                                     : Graph->Scenario && FStageScenarioGraphAdapter(Graph->Scenario).MoveElementsAfter(Graph, To, From);
+	auto* Graph = CastChecked<UStageScenarioEdGraph>(From->GetGraph());
+	const bool bAlternate = UStageScenarioEdNode::IsAlternateExit(A->PinName);
+	if (Graph->OnConnect)
+		return Graph->OnConnect(To, From, bAlternate);
+	const bool bLinked = Graph->IsStorySteps() && (Graph->Scenario->bUseStepLinks || bAlternate);
+	const bool Result = From->IsDraft() || To->IsDraft() ? FStageGraphDrafts::Connect(Graph, To, From, bAlternate)
+	    : bLinked                                         ? FStageScenarioGraphAdapter(Graph->Scenario).ConnectStep(To, From, bAlternate)
+	                                                      : Graph->Scenario && FStageScenarioGraphAdapter(Graph->Scenario).MoveElementsAfter(Graph, To, From);
 	if (Result && Graph->OnEdited) Graph->OnEdited();
 	return Result;
+}
+
+void UStageScenarioGraphSchema::BreakPinLinks(UEdGraphPin& TargetPin, bool bSendsNodeNotification) const
+{
+	const bool bAlternate = UStageScenarioEdNode::IsAlternateExit(TargetPin.PinName);
+	if ((!bAlternate && TargetPin.PinName != UStageScenarioEdNode::TruePin) || TargetPin.LinkedTo.IsEmpty()) return;
+	auto* Node = CastChecked<UStageScenarioEdNode>(TargetPin.GetOwningNode());
+	auto* Graph = CastChecked<UStageScenarioEdGraph>(Node->GetGraph());
+	if (!Graph->bReadOnly && Graph->IsStorySteps() && Node->Kind != EStageScenarioNodeKind::Group)
+		if (FStageScenarioGraphAdapter(Graph->Scenario).ConnectStep(nullptr, Node, bAlternate) && Graph->OnEdited) Graph->OnEdited();
+}
+
+void UStageScenarioGraphSchema::BreakSinglePinLink(UEdGraphPin* SourcePin, UEdGraphPin* TargetPin) const
+{
+	UEdGraphPin* Exit = SourcePin && SourcePin->Direction == EGPD_Output ? SourcePin : TargetPin;
+	if (Exit) BreakPinLinks(*Exit, true);
 }

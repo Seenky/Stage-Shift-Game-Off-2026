@@ -115,6 +115,7 @@ private:
 	void PumpCommands();
 	void UpdateExecutions();
 	void AdvanceExecution(UStageMemberCommand* Command);
+	bool ScheduleMainRetry(UStageMemberCommand* Command);
 	void FinishExecution(UStageMemberCommand* Command, EStageCommandResult Result);
 	void RemoveRecoveryWaiter(UStageMemberCommand* Command);
 	void TryFinishMember();

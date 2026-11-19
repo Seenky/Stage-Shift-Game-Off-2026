@@ -22,8 +22,12 @@ public:
 protected:
 
 	virtual void OnStart_Implementation() override;
-
+	virtual void OnStop_Implementation(EStageActionStopMode Mode) override;
+	virtual void Cleanup_Implementation() override;
 private:
+
+	UFUNCTION()
+	void OnPickupItem(AActor* InItem);
 
 	TWeakObjectPtr<UPhysicsManipulationComponent> PhysicsManipulationComponent = nullptr;
 	TWeakObjectPtr<AActor> NeededItem = nullptr;

@@ -18,22 +18,30 @@ float UStageLookToCommand::GetNeededTime_Implementation() const
 
 UStageAction* UStageLookToCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
-	if (!InContext.MemberComponent.Get() || !InContext.MemberComponent.Get()->GetOwner() || !ResolveTarget(InContext)) return nullptr;
+	UStageMemberComponent* Member = InContext.MemberComponent.Get();
+	const AActor* Target = ResolveTarget(InContext, TargetId);
+	if (!Member || !Member->GetOwner() || !Target) return nullptr;
 
-	UStageLookToAction* LookToAction = NewObject<UStageLookToAction>(InContext.MemberComponent.Get());
-	if (!LookToAction) return nullptr;
-
-	LookToAction->SetupLookTo(ResolveTarget(InContext)->GetActorLocation(), TurnSpeed, AcceptanceAngleDeg);
-
+	auto* LookToAction = NewObject<UStageLookToAction>(Member);
+	LookToAction->SetupLookTo(GetLookTarget(*Target), TurnSpeed, AcceptanceAngleDeg, bUseTargetDirection);
 	return LookToAction;
+}
+
+FVector UStageLookToCommand::GetLookTarget(const AActor& Target) const
+{
+	return bUseTargetDirection ? FRotator(0.0, Target.GetActorRotation().Yaw, 0.0).Vector() : Target.GetActorLocation();
 }
 
 bool UStageLookToCommand::IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const
 {
-	if (!InContext.MemberComponent.Get() || !InContext.MemberComponent.Get()->GetOwner() || !ResolveTarget(InContext)) return 0.0f;
+	const UStageMemberComponent* Member = InContext.MemberComponent.Get();
+	const AActor* Owner = Member ? Member->GetOwner() : nullptr;
+	const AActor* Target = ResolveTarget(InContext, TargetId);
+	if (!Owner || !Target) return false;
 
-	const auto OwnerDir = InContext.MemberComponent.Get()->GetOwner()->GetActorForwardVector().GetSafeNormal2D();
-	const auto LookToDir = (ResolveTarget(InContext)->GetActorLocation() - InContext.MemberComponent.Get()->GetOwner()->GetActorLocation()).GetSafeNormal2D();
+	const FVector OwnerDir = Owner->GetActorForwardVector().GetSafeNormal2D();
+	const FVector LookTarget = GetLookTarget(*Target);
+	const FVector LookToDir = (bUseTargetDirection ? LookTarget : LookTarget - Owner->GetActorLocation()).GetSafeNormal2D();
 
 	const float DotProduct = FVector::DotProduct(OwnerDir, LookToDir);
 
@@ -53,13 +61,7 @@ void UStageLookToCommand::HandleCommandFinished(UStageMemberCommand* Command, ES
 		if (UStageMemberComponent* Member = Context.MemberComponent.Get()) Member->RememberStageYaw(Command);
 }
 
-#include "Stage/Core/StageManager.h"
 #include "Stage/Core/Data/StageDataAsset.h"
-
-AActor* UStageLookToCommand::ResolveTarget(const FStageExecutionContext& InContext) const
-{
-	return !TargetId.IsNone() && InContext.Manager.IsValid() ? InContext.Manager->GetTarget(TargetId) : nullptr;
-}
 
 void UStageLookToCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
@@ -68,4 +70,10 @@ void UStageLookToCommand::ValidateDefinition(const UStageDataAsset* Data, const 
 	if (TargetId.IsNone()) Errors.Add(Path + TEXT(" / TargetId is required"));
 	if (!FMath::IsFinite(TurnSpeed) || TurnSpeed <= 0 || !FMath::IsFinite(AcceptanceAngleDeg) || AcceptanceAngleDeg < 0 || AcceptanceAngleDeg > 180)
 		Errors.Add(Path + TEXT(" / invalid TurnSpeed or AcceptanceAngleDeg"));
+}
+
+void UStageLookToCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const
+{
+	Super::ValidateContext(InContext, Path, Errors);
+	if (!ResolveTarget(InContext, TargetId)) Errors.Add(Path + TEXT(" / Look target is unloaded or belongs to another world"));
 }

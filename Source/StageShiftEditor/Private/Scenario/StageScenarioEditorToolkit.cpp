@@ -8,12 +8,18 @@
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/Data/StageProductionDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
+#include "Stage/Core/StageCondition.h"
 #include "Stage/Core/SequenceStageMemberCommand.h"
 #include "Stage/Core/ParallelStageMemberCommand.h"
 #include "Editor.h"
 #include "GraphEditor.h"
 #include "PropertyEditorModule.h"
 #include "IDetailsView.h"
+#include "IDetailCustomization.h"
+#include "IDetailPropertyRow.h"
+#include "DetailLayoutBuilder.h"
+#include "DetailWidgetRow.h"
+#include "PropertyHandle.h"
 #include "IStructureDetailsView.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Widgets/Docking/SDockTab.h"
@@ -21,8 +27,10 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SComboButton.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Framework/Commands/GenericCommands.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Containers/Ticker.h"
 #include "ScopedTransaction.h"
@@ -31,6 +39,78 @@
 namespace
 {
 	const FName StoryTab(TEXT("StageStory")), ReactionTab(TEXT("StageReactions")), SettingsTab(TEXT("StageSettings")), DetailsTab(TEXT("StageDetails"));
+
+	class FStageGraphDetails : public IDetailCustomization
+	{
+	public:
+		FStageGraphDetails(TArray<FName> InHiddenProperties, TWeakObjectPtr<UStageDataAsset> InData) : HiddenProperties(MoveTemp(InHiddenProperties)), Data(InData) {}
+
+		virtual void CustomizeDetails(IDetailLayoutBuilder& Layout) override
+		{
+			// Exclude graph-owned references from generation, not just row visibility:
+			// nested instanced Commands can otherwise recurse through shared categories.
+			UStruct* Structure = Layout.GetBaseClass();
+			TArray<TSharedPtr<FStructOnScope>> Structs;
+			if (!Structure)
+			{
+				Layout.GetStructsBeingCustomized(Structs);
+				if (!Structs.IsEmpty() && Structs[0]) Structure = const_cast<UStruct*>(Structs[0]->GetStruct());
+			}
+			for (FName Name : HiddenProperties)
+				if (FProperty* Property = FindFProperty<FProperty>(Structure, Name))
+					Layout.HideProperty(Name, Property->GetOwnerStruct());
+			if (Structure == FStageMemberReaction::StaticStruct() && Data.IsValid())
+			{
+				CustomizeStepPicker(Layout, GET_MEMBER_NAME_CHECKED(FStageMemberReaction, AllowedFromStepId));
+				CustomizeStepPicker(Layout, GET_MEMBER_NAME_CHECKED(FStageMemberReaction, AllowedToStepId));
+			}
+		}
+
+	private:
+		void CustomizeStepPicker(IDetailLayoutBuilder& Layout, FName Name) const
+		{
+			const auto Property = Layout.GetProperty(Name, FStageMemberReaction::StaticStruct());
+			IDetailPropertyRow* Row = Property->IsValidHandle() ? Layout.EditDefaultProperty(Property) : nullptr;
+			if (!Row) return;
+			Row->CustomWidget()
+			.NameContent()[Property->CreatePropertyNameWidget()]
+			.ValueContent().MinDesiredWidth(150.0f)
+			[
+				SNew(SComboButton)
+				.OnGetMenuContent_Lambda([WeakData = Data, Property]
+				{
+					FMenuBuilder Menu(true, nullptr);
+					if (const UStageDataAsset* Scenario = WeakData.Get())
+						for (FName StepId : Scenario->GetStepOptions())
+							Menu.AddMenuEntry(FText::FromName(StepId), FText(), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([Property, StepId]
+							{
+								Property->SetValue(StepId);
+							})));
+					return Menu.MakeWidget();
+				})
+				.ButtonContent()
+				[
+					SNew(STextBlock).Text_Lambda([Property]
+					{
+						FName StepId;
+						Property->GetValue(StepId);
+						return FText::FromName(StepId);
+					})
+				]
+			];
+		}
+
+		TArray<FName> HiddenProperties;
+		TWeakObjectPtr<UStageDataAsset> Data;
+	};
+
+	void HideGraphProperties(IDetailsView* View, TArray<FName> Names, UStageDataAsset* Data = nullptr)
+	{
+		View->SetGenericLayoutDetailsDelegate(FOnGetDetailCustomizationInstance::CreateLambda([Names = MoveTemp(Names), WeakData = TWeakObjectPtr<UStageDataAsset>(Data)]
+		{
+			return MakeShared<FStageGraphDetails>(Names, WeakData);
+		}));
+	}
 }
 
 FText FStageScenarioEditorToolkit::GetBaseToolkitName() const
@@ -56,31 +136,15 @@ void FStageScenarioEditorToolkit::Init(UObject* InAsset, EToolkitMode::Type Mode
 	Args.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	CommandDetails = Properties.CreateDetailView(Args);
 	AssetDetails = Properties.CreateDetailView(Args);
-	CommandDetails->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P)
-	{
-		return P.Property.GetFName() != TEXT("Children") && P.Property.GetFName() != TEXT("GraphParameterBindings");
-	}));
+	HideGraphProperties(CommandDetails.Get(), {TEXT("Children"), TEXT("GraphParameterBindings")});
 	CommandDetails->SetIsPropertyReadOnlyDelegate(FIsPropertyReadOnly::CreateLambda([this](const FPropertyAndParent& P)
 	{
 		return FStageGraphParameters::IsBound(Selected.IsValid() ? Selected->Command.Get() : nullptr, P);
 	}));
-	AssetDetails->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P)
-	{
-		const FName N = P.Property.GetFName();
-		return N != TEXT("Steps") && N != TEXT("MemberReactions") && N != TEXT("Finale") && N != TEXT("Scenes");
-	}));
+	HideGraphProperties(AssetDetails.Get(), {TEXT("Steps"), TEXT("MemberReactions"), TEXT("Finale"), TEXT("Scenes")});
 	AssetDetails->SetObject(Asset);
 	ItemDetails = Properties.CreateStructureDetailView(Args, FStructureDetailsViewArgs(), nullptr);
-	ItemDetails->GetDetailsView()->SetIsPropertyVisibleDelegate(FIsPropertyVisible::CreateLambda([](const FPropertyAndParent& P)
-	{
-		const FName N = P.Property.GetFName();
-		if (P.ParentProperties.ContainsByPredicate([](const FProperty* Parent)
-		{
-			return Parent->GetFName() == TEXT("Command") || Parent->GetFName() == TEXT("Commands");
-		}))
-			return false;
-		return N != TEXT("Command") && N != TEXT("Commands") && N != TEXT("AdditionalPerformers") && N != TEXT("RoleId") && N != TEXT("SubjectRoleId");
-	}));
+	HideGraphProperties(ItemDetails->GetDetailsView(), {TEXT("Command"), TEXT("Commands"), TEXT("AdditionalPerformers"), TEXT("RoleId"), TEXT("SubjectRoleId")}, Data);
 	for (IDetailsView* Details : {CommandDetails.Get(), AssetDetails.Get(), ItemDetails->GetDetailsView()})
 		Details->SetIsPropertyEditingEnabledDelegate(FIsPropertyEditingEnabled::CreateLambda([this]
 		{
@@ -357,15 +421,19 @@ void FStageScenarioEditorToolkit::Build(bool bReaction, bool bFrame)
 	{
 		Action(Raw, Op, Class, Node, At);
 	};
-	Graph->OnConnect = [this, Raw](UStageScenarioEdNode* Node, UStageScenarioEdNode* After)
+	Graph->OnConnect = [this, Raw](UStageScenarioEdNode* Node, UStageScenarioEdNode* After, bool bAlternate)
 	{
 		ItemDetails->SetStructureData(nullptr);
 		CommandDetails->SetObject(nullptr);
-		const bool Done = Node->IsDraft() || After->IsDraft() ? FStageGraphDrafts::Connect(Raw, Node, After)
+		const bool bLinked = Raw->IsStorySteps() && (Data->bUseStepLinks || bAlternate || Node->Kind == EStageScenarioNodeKind::Branch);
+		const bool Done = Node->IsDraft() || After->IsDraft() ? FStageGraphDrafts::Connect(Raw, Node, After, bAlternate)
 		    : Production                                      ? FStageProductionGraphAdapter(Production).MoveAfter(Raw, Node, After)
+		    : bLinked                                         ? FStageScenarioGraphAdapter(Data).ConnectStep(Node, After, bAlternate)
 		                                                      : FStageScenarioGraphAdapter(Data).MoveElementsAfter(Raw, Node, After);
-		if (!Done) Message = TEXT("Cannot connect: check role/resource conflicts and connect from Execute or an existing action.");
+		if (!Done) Message = bLinked ? TEXT("Cannot connect Steps: check for a cycle or an invalid destination.")
+		                             : TEXT("Cannot connect: check role/resource conflicts and connect from Execute or an existing action.");
 		QueueRefresh();
+		return Done;
 	};
 	SGraphEditor::FGraphEditorEvents Events;
 	Events.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FStageScenarioEditorToolkit::Select);
@@ -458,6 +526,14 @@ void FStageScenarioEditorToolkit::Select(const TSet<UObject*>& Objects)
 	if (!Node) return;
 	Selected = Node;
 	ActiveGraph = CastChecked<UStageScenarioEdGraph>(Node->GetGraph());
+	if (Data && Node->Kind == EStageScenarioNodeKind::Branch)
+	{
+		const FStageStep* Step = nullptr;
+		if (Node->IsDraft() && Data->EditorDrafts.IsValidIndex(Node->DraftIndex)) Step = &Data->EditorDrafts[Node->DraftIndex].Step;
+		else if (Data->Steps.IsValidIndex(Node->StepIndex)) Step = &Data->Steps[Node->StepIndex];
+		if (Step) CommandDetails->SetObject(Step->Branch);
+		return;
+	}
 	CommandDetails->SetObject(Node->Command);
 	if (Node->Kind == EStageScenarioNodeKind::Group) return;
 	TSharedPtr<FStructOnScope> Scope;
@@ -660,6 +736,8 @@ void FStageScenarioEditorToolkit::Action(UStageScenarioEdGraph* Graph, EStageGra
 			if (auto* A = Adapter.Assignment(Node)) RoleId = A->GetEffectiveRoleId();
 		if (Op == EStageGraphAction::Add || Op == EStageGraphAction::AddReaction)
 			Done = Adapter.AddInView(Graph, Class, Node, Location);
+		else if (Op == EStageGraphAction::AddBranch)
+			Done = FStageGraphDrafts::AddBranch(Graph, Node, Location);
 		else if (Op == EStageGraphAction::AddParallelRole && Node)
 		{
 			const auto& Entries = Node->StepIndex == INDEX_NONE ? Data->Finale : Data->Steps[Node->StepIndex].Commands;

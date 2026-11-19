@@ -54,30 +54,50 @@ public:
 					.AutoWrapText(true)
 				]
 				+ SVerticalBox::Slot().AutoHeight().Padding(0, 10)[SNew(SSeparator)]
-				+ SVerticalBox::Slot().AutoHeight()
+				+ SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 6)
 				[
-					SAssignNew(EventsText, STextBlock)
-					.Font(FCoreStyle::GetDefaultFontStyle("Mono", 10))
-					.ColorAndOpacity(FLinearColor(0.7f, 0.76f, 0.85f))
-					.AutoWrapText(true)
+					SNew(STextBlock).Text(FText::FromString(TEXT("Events")))
+				]
+				+ SVerticalBox::Slot().FillHeight(1)
+				[
+					SAssignNew(EventsScrollBox, SScrollBox)
+					.ScrollBarAlwaysVisible(true)
+					+ SScrollBox::Slot()
+					[
+						SAssignNew(EventsText, STextBlock)
+						.Font(FCoreStyle::GetDefaultFontStyle("Mono", 10))
+						.ColorAndOpacity(FLinearColor(0.7f, 0.76f, 0.85f))
+						.AutoWrapText(true)
+					]
 				]
 			]
 		];
 	}
 
-	void Update(const FString& Time, const FString& Lateness, const FString& Step, int32 Score, const FString& Members, const FString& Events)
+	void Update(const FString& Time, const FString& Lateness, const FString& Step, int32 Score, const FString& Members, const TArray<FString>& Events)
 	{
 		TimeText->SetText(FText::FromString(Time));
 		LatenessText->SetText(FText::FromString(Lateness));
 		StepText->SetText(FText::FromString(Step));
 		ScoreText->SetText(FText::AsNumber(Score));
 		MembersText->SetText(FText::FromString(Members));
-		EventsText->SetText(FText::FromString(Events));
+		UpdateEvents(Events);
+	}
+
+	void UpdateEvents(const TArray<FString>& Events)
+	{
+		if (LastEventCount == Events.Num()) return;
+		const bool bFollowLatest = EventsScrollBox->GetScrollOffset() >= EventsScrollBox->GetScrollOffsetOfEnd() - 1.0f;
+		EventsText->SetText(FText::FromString(Events.IsEmpty() ? TEXT("-") : FString::Join(Events, TEXT("\n"))));
+		LastEventCount = Events.Num();
+		if (bFollowLatest) EventsScrollBox->ScrollToEnd();
 	}
 
 	void Clear()
 	{
 		for (const auto& Text : {TimeText, LatenessText, StepText, ScoreText, MembersText, EventsText}) Text->SetText(FText::GetEmpty());
+		LastEventCount = INDEX_NONE;
+		EventsScrollBox->ScrollToStart();
 	}
 
 private:
@@ -98,6 +118,8 @@ private:
 	}
 
 	TSharedPtr<STextBlock> TimeText, LatenessText, StepText, ScoreText, MembersText, EventsText;
+	TSharedPtr<SScrollBox> EventsScrollBox;
+	int32 LastEventCount = INDEX_NONE;
 };
 
 namespace
@@ -161,7 +183,7 @@ TSharedRef<SWidget> StageDebugDisplay::CreateEditorContent()
 	TSharedRef<SStageDebugWidget> Widget = SNew(SStageDebugWidget);
 	EditorDebugWidget = Widget;
 	EditorDebugSource.Reset();
-	return SNew(SScrollBox) + SScrollBox::Slot()[Widget];
+	return Widget;
 }
 
 void StageDebugDisplay::ClearEditorContent()
@@ -174,7 +196,12 @@ void StageDebugDisplay::ClearEditorContent()
 void AStageManager::RemoveDebugDisplay()
 {
 #if WITH_EDITOR
-	if (EditorDebugSource.Get() == this) StageDebugDisplay::ClearEditorContent();
+	if (EditorDebugSource.Get() == this)
+	{
+		// Keep the last snapshot in the editor tab after PIE, including EndPlay diagnostics.
+		if (auto Widget = EditorDebugWidget.Pin()) Widget->UpdateEvents(RecentEvents);
+		EditorDebugSource.Reset();
+	}
 #endif
 	if (DebugWindow.IsValid())
 	{
@@ -213,8 +240,7 @@ void AStageManager::UpdateDebugDisplay()
 				.FocusWhenFirstShown(false)
 				.ActivationPolicy(EWindowActivationPolicy::Never)
 				[
-					SNew(SScrollBox)
-					+ SScrollBox::Slot()[DebugWidget.ToSharedRef()]
+					DebugWidget.ToSharedRef()
 				];
 			DebugWindow->SetOnWindowClosed(FOnWindowClosed::CreateWeakLambda(this, [this](const TSharedRef<SWindow>&)
 			{
@@ -280,9 +306,5 @@ void AStageManager::UpdateDebugDisplay()
 	if (MembersDescription.IsEmpty()) MembersDescription = TEXT("Members  -");
 	MembersDescription.TrimEndInline();
 
-	FString Events = TEXT("Events");
-	for (int32 Index = FMath::Max(0, RecentEvents.Num() - 6); Index < RecentEvents.Num(); ++Index)
-		Events += TEXT("\n") + RecentEvents[Index];
-	if (RecentEvents.IsEmpty()) Events += TEXT("\n-");
-	DisplayWidget->Update(Time, Lateness, Step, Score, MembersDescription, Events);
+	DisplayWidget->Update(Time, Lateness, Step, Score, MembersDescription, RecentEvents);
 }
