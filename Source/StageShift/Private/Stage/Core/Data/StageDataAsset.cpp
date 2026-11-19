@@ -27,6 +27,48 @@ int32 UStageDataAsset::FindStepIndex(FName StepId) const
 	return Steps.IndexOfByPredicate([StepId](const FStageStep& Step) { return Step.StepId == StepId; });
 }
 
+TArray<FName> UStageDataAsset::GetStepOptions() const
+{
+	TArray<FName> Options;
+	for (const FStageStep& Step : Steps)
+		if (!Step.StepId.IsNone()) Options.Add(Step.StepId);
+	return Options;
+}
+
+bool UStageDataAsset::GetStepRange(FName From, FName To, TSet<FName>& OutSteps) const
+{
+	OutSteps.Reset();
+	const int32 First = FindStepIndex(From);
+	const int32 Last = FindStepIndex(To);
+	if (First == INDEX_NONE || Last == INDEX_NONE) return false;
+	if (!bUseStepLinks)
+	{
+		if (First > Last) return false;
+		for (int32 Index = First; Index <= Last; ++Index) OutSteps.Add(Steps[Index].StepId);
+		return true;
+	}
+
+	TSet<FName> Visited;
+	TFunction<bool(FName)> Collect = [&](FName Id)
+	{
+		if (OutSteps.Contains(Id)) return true;
+		if (Id.IsNone() || Visited.Contains(Id)) return false;
+		Visited.Add(Id);
+		const int32 Index = FindStepIndex(Id);
+		if (Index == INDEX_NONE) return false;
+		if (Id != To)
+		{
+			const FStageStep& Step = Steps[Index];
+			const bool bThenReachesEnd = Collect(Step.ThenStepId);
+			const bool bAlternateReachesEnd = Collect(Step.FailedStepId);
+			if (!bThenReachesEnd && !bAlternateReachesEnd) return false;
+		}
+		OutSteps.Add(Id);
+		return true;
+	};
+	return Collect(From);
+}
+
 bool UStageDataAsset::ValidateStepLinks(TArray<FString>& Errors) const
 {
 	if (!bUseStepLinks) return true;
@@ -216,8 +258,17 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 		if (!Reaction.EventTag.IsValid()) Error(Path, TEXT("EventTag is required"));
 		if (!Roles.Contains(Reaction.GetEffectiveRoleId())) Error(Path, TEXT("unknown performer role"));
 		if (!Reaction.GetEffectiveSubjectRoleId().IsNone() && !Roles.Contains(Reaction.GetEffectiveSubjectRoleId())) Error(Path, TEXT("unknown subject role"));
-		for (FName StepId : Reaction.AllowedStepIds)
-			if (StepId.IsNone() || !StepIds.Contains(StepId)) Error(Path, TEXT("unknown or empty AllowedStepId: ") + StepId.ToString());
+		if (Reaction.bIsAllowedStepRange)
+		{
+			TSet<FName> Range;
+			if (!GetStepRange(Reaction.AllowedFromStepId, Reaction.AllowedToStepId, Range))
+				Error(Path, TEXT("Allowed Step Range needs a route from ") + Reaction.AllowedFromStepId.ToString() + TEXT(" to ") + Reaction.AllowedToStepId.ToString());
+		}
+		else
+		{
+			for (FName StepId : Reaction.AllowedStepIds)
+				if (StepId.IsNone() || !StepIds.Contains(StepId)) Error(Path, TEXT("unknown or empty AllowedStepId: ") + StepId.ToString());
+		}
 		if (Reaction.MaxActivationsPerStage < 0
 		    || ((Reaction.bUseCooldown || Reaction.CooldownTag.IsValid()) && (!FMath::IsFinite(Reaction.CooldownDuration) || Reaction.CooldownDuration <= 0)))
 			Error(Path, TEXT("invalid reaction cooldown or activation limit"));

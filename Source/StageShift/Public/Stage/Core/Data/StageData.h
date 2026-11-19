@@ -211,8 +211,14 @@ struct FStageMemberReaction
 	FName RoleId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions", meta = (GetOptions = "GetRoleOptions"))
 	FName SubjectRoleId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions", meta = (DisplayName = "Use Allowed Step Range"))
+	bool bIsAllowedStepRange = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions", meta = (EditCondition = "bIsAllowedStepRange", EditConditionHides, GetOptions = "GetStepOptions"))
+	FName AllowedFromStepId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions", meta = (EditCondition = "bIsAllowedStepRange", EditConditionHides, GetOptions = "GetStepOptions"))
+	FName AllowedToStepId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions",
-	    meta = (ToolTip = "Step IDs during which this reaction may start. An empty list allows any step. Running reactions are not stopped when the step changes."))
+	    meta = (EditCondition = "!bIsAllowedStepRange", EditConditionHides, ToolTip = "Step IDs during which this reaction may start. An empty list allows any step. Running reactions are not stopped when the step changes."))
 	TArray<FName> AllowedStepIds;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions")
 	bool bUseCooldown = false;

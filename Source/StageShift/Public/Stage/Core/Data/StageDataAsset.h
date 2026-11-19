@@ -35,9 +35,12 @@ public:
 	UFUNCTION()
 
 	TArray<FName> GetTargetOptions() const { return TargetIds; }
+	UFUNCTION()
+	TArray<FName> GetStepOptions() const;
 
 	bool ValidateDefinition(TArray<FString>& Errors, const FInstancedPropertyBag* Overrides = nullptr) const;
 	int32 FindStepIndex(FName StepId) const;
+	bool GetStepRange(FName From, FName To, TSet<FName>& OutSteps) const;
 	bool ValidateStepLinks(TArray<FString>& Errors) const;
 #if WITH_EDITOR
 	virtual void PreSave(FObjectPreSaveContext SaveContext) override;

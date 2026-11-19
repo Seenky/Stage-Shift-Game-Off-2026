@@ -278,6 +278,19 @@ bool FStageGraphOrganization::Rename(UStageScenarioEdGraph* Graph, UStageScenari
 		auto* Data = Graph->Scenario.Get();
 		const FName OldId = Data->Steps[Node->StepIndex].StepId;
 		Data->Steps[Node->StepIndex].StepId = Id;
+		if (!OldId.IsNone())
+		{
+			const auto RenameReactionStep = [OldId, Id](FStageMemberReaction& Reaction)
+			{
+				if (Reaction.AllowedFromStepId == OldId) Reaction.AllowedFromStepId = Id;
+				if (Reaction.AllowedToStepId == OldId) Reaction.AllowedToStepId = Id;
+				for (FName& Allowed : Reaction.AllowedStepIds)
+					if (Allowed == OldId) Allowed = Id;
+			};
+			for (FStageMemberReaction& Reaction : Data->MemberReactions) RenameReactionStep(Reaction);
+			for (FStageGraphDraft& Draft : Data->EditorDrafts)
+				if (Draft.Kind == EStageGraphDraftKind::Reaction) RenameReactionStep(Draft.Reaction);
+		}
 		if (Data->bUseStepLinks)
 		{
 			if (Data->EntryStepId == OldId) Data->EntryStepId = Id;

@@ -639,6 +639,13 @@ void AStageManager::UpdateTiming()
 
 bool AStageManager::IsReactionAllowedInCurrentStep(const FStageMemberReaction& Reaction) const
 {
+	if (Reaction.bIsAllowedStepRange)
+	{
+		if (!ActiveStage || !ActiveStage->Steps.IsValidIndex(CurrentStepIndex)) return false;
+		TSet<FName> Range;
+		return ActiveStage->GetStepRange(Reaction.AllowedFromStepId, Reaction.AllowedToStepId, Range)
+		    && Range.Contains(ActiveStage->Steps[CurrentStepIndex].StepId);
+	}
 	return Reaction.AllowedStepIds.IsEmpty()
 	    || (ActiveStage && ActiveStage->Steps.IsValidIndex(CurrentStepIndex) && Reaction.AllowedStepIds.Contains(ActiveStage->Steps[CurrentStepIndex].StepId));
 }

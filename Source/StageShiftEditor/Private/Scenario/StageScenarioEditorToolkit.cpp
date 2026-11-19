@@ -16,7 +16,10 @@
 #include "PropertyEditorModule.h"
 #include "IDetailsView.h"
 #include "IDetailCustomization.h"
+#include "IDetailPropertyRow.h"
 #include "DetailLayoutBuilder.h"
+#include "DetailWidgetRow.h"
+#include "PropertyHandle.h"
 #include "IStructureDetailsView.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Widgets/Docking/SDockTab.h"
@@ -24,8 +27,10 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SComboButton.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Framework/Commands/GenericCommands.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Containers/Ticker.h"
 #include "ScopedTransaction.h"
@@ -38,7 +43,7 @@ namespace
 	class FStageGraphDetails : public IDetailCustomization
 	{
 	public:
-		explicit FStageGraphDetails(TArray<FName> InHiddenProperties) : HiddenProperties(MoveTemp(InHiddenProperties)) {}
+		FStageGraphDetails(TArray<FName> InHiddenProperties, TWeakObjectPtr<UStageDataAsset> InData) : HiddenProperties(MoveTemp(InHiddenProperties)), Data(InData) {}
 
 		virtual void CustomizeDetails(IDetailLayoutBuilder& Layout) override
 		{
@@ -54,17 +59,56 @@ namespace
 			for (FName Name : HiddenProperties)
 				if (FProperty* Property = FindFProperty<FProperty>(Structure, Name))
 					Layout.HideProperty(Name, Property->GetOwnerStruct());
+			if (Structure == FStageMemberReaction::StaticStruct() && Data.IsValid())
+			{
+				CustomizeStepPicker(Layout, GET_MEMBER_NAME_CHECKED(FStageMemberReaction, AllowedFromStepId));
+				CustomizeStepPicker(Layout, GET_MEMBER_NAME_CHECKED(FStageMemberReaction, AllowedToStepId));
+			}
 		}
 
 	private:
+		void CustomizeStepPicker(IDetailLayoutBuilder& Layout, FName Name) const
+		{
+			const auto Property = Layout.GetProperty(Name, FStageMemberReaction::StaticStruct());
+			IDetailPropertyRow* Row = Property->IsValidHandle() ? Layout.EditDefaultProperty(Property) : nullptr;
+			if (!Row) return;
+			Row->CustomWidget()
+			.NameContent()[Property->CreatePropertyNameWidget()]
+			.ValueContent().MinDesiredWidth(150.0f)
+			[
+				SNew(SComboButton)
+				.OnGetMenuContent_Lambda([WeakData = Data, Property]
+				{
+					FMenuBuilder Menu(true, nullptr);
+					if (const UStageDataAsset* Scenario = WeakData.Get())
+						for (FName StepId : Scenario->GetStepOptions())
+							Menu.AddMenuEntry(FText::FromName(StepId), FText(), FSlateIcon(), FUIAction(FExecuteAction::CreateLambda([Property, StepId]
+							{
+								Property->SetValue(StepId);
+							})));
+					return Menu.MakeWidget();
+				})
+				.ButtonContent()
+				[
+					SNew(STextBlock).Text_Lambda([Property]
+					{
+						FName StepId;
+						Property->GetValue(StepId);
+						return FText::FromName(StepId);
+					})
+				]
+			];
+		}
+
 		TArray<FName> HiddenProperties;
+		TWeakObjectPtr<UStageDataAsset> Data;
 	};
 
-	void HideGraphProperties(IDetailsView* View, TArray<FName> Names)
+	void HideGraphProperties(IDetailsView* View, TArray<FName> Names, UStageDataAsset* Data = nullptr)
 	{
-		View->SetGenericLayoutDetailsDelegate(FOnGetDetailCustomizationInstance::CreateLambda([Names = MoveTemp(Names)]
+		View->SetGenericLayoutDetailsDelegate(FOnGetDetailCustomizationInstance::CreateLambda([Names = MoveTemp(Names), WeakData = TWeakObjectPtr<UStageDataAsset>(Data)]
 		{
-			return MakeShared<FStageGraphDetails>(Names);
+			return MakeShared<FStageGraphDetails>(Names, WeakData);
 		}));
 	}
 }
@@ -100,7 +144,7 @@ void FStageScenarioEditorToolkit::Init(UObject* InAsset, EToolkitMode::Type Mode
 	HideGraphProperties(AssetDetails.Get(), {TEXT("Steps"), TEXT("MemberReactions"), TEXT("Finale"), TEXT("Scenes")});
 	AssetDetails->SetObject(Asset);
 	ItemDetails = Properties.CreateStructureDetailView(Args, FStructureDetailsViewArgs(), nullptr);
-	HideGraphProperties(ItemDetails->GetDetailsView(), {TEXT("Command"), TEXT("Commands"), TEXT("AdditionalPerformers"), TEXT("RoleId"), TEXT("SubjectRoleId")});
+	HideGraphProperties(ItemDetails->GetDetailsView(), {TEXT("Command"), TEXT("Commands"), TEXT("AdditionalPerformers"), TEXT("RoleId"), TEXT("SubjectRoleId")}, Data);
 	for (IDetailsView* Details : {CommandDetails.Get(), AssetDetails.Get(), ItemDetails->GetDetailsView()})
 		Details->SetIsPropertyEditingEnabledDelegate(FIsPropertyEditingEnabled::CreateLambda([this]
 		{
