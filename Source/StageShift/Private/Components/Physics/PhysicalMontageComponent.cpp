@@ -147,6 +147,44 @@ bool UPhysicalMontageComponent::PlayPhysicsAnimation(const FPhysicalMontageSetti
 	return BeginPhysicsAnimation(Settings, Input, NAME_None);
 }
 
+bool UPhysicalMontageComponent::StayDown(UAnimMontage* FallMontage, const FVector& PushDirection)
+{
+	if (!GetWorld()) return false;
+	if (IsStayingDown()) return true;
+	bStayDown = true;
+	bHasRecoveryTarget = false;
+	GetWorld()->GetTimerManager().ClearTimer(RecoveryTimerHandle);
+	if (bMeshCollisionSaved)
+	{
+		if (bIsSimActive) SetStrengthMultiplyer(0.0f);
+		return true;
+	}
+
+	// An ongoing get-up can be replaced by the new fall without queuing another recovery.
+	const bool bWasRecovering = bIsRecovering;
+	bIsRecovering = false;
+	FPhysicalMontageSettings Settings;
+	Settings.Montage = FallMontage;
+	Settings.bAllowWithoutAnimation = true;
+	Settings.bApplyLaunchVelocity = false;
+	Settings.StrengthMultiplier = 0.0f;
+	Settings.PhysicsActivationDelay = FallMontage ? 0.15f : 0.0f;
+	FPhysicalAnimationInput Input;
+	if (const AActor* Owner = GetOwner()) Input.InitialVelocity = Owner->GetVelocity();
+	Input.InitialVelocity += PushDirection.GetSafeNormal2D() * 85.0f;
+	if (BeginPhysicsAnimation(Settings, Input, NAME_None) && IsStayingDown()) return true;
+	bStayDown = false;
+	bIsRecovering = bWasRecovering;
+	return false;
+}
+
+void UPhysicalMontageComponent::EndStageFall()
+{
+	if (!bStayDown) return;
+	bStayDown = false;
+	if (bIsSimActive && GetWorld()) GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, 0.1f, false);
+}
+
 bool UPhysicalMontageComponent::BeginPhysicsAnimation(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input, FName ActionName)
 {
 	if (IsPhysicsMontageActive() || !PreparePhysics(Settings, Input, ActionName)) return false;
@@ -290,11 +328,13 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	}
 	bIsSimActive = true;
 
-	GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);
+	if (!bStayDown)
+		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);
 }
 
 void UPhysicalMontageComponent::RestorePhysics()
 {
+	if (bStayDown) return;
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
 	USkeletalMeshComponent* Mesh = GetSkeletalMesh();
 	if (!Character || !Mesh || !bIsSimActive) return;

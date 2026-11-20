@@ -73,7 +73,8 @@ bool AStageManager::StartConfiguredProduction(FText& Error)
 bool AStageManager::StartProduction(UStageProductionDataAsset* Production, FText& Error)
 {
 	Error = FText::GetEmpty();
-	if (bManagerEndingPlay || bAbortingProduction || IsActorBeingDestroyed() || IsProductionActive() || State != EStageState::Idle || !GetWorld())
+	if (bManagerEndingPlay || bAbortingProduction || IsActorBeingDestroyed() || IsProductionActive() || State != EStageState::Idle || !GetWorld() ||
+	    !PendingSceneBriefing.IsEmpty())
 	{
 		Error = FText::FromString(TEXT("Finish the active scene/production before starting a production"));
 		return false;
@@ -107,10 +108,17 @@ void AStageManager::AdvanceProduction()
 		return;
 	}
 	const auto& Scene = ActiveProduction->Scenes[ProductionSceneIndex];
-	if (Scene.bPrepareBefore)
+	const bool bShowBriefing = ProductionSceneIndex == 0 && Scene.Scenario && !Scene.Scenario->SceneBriefing.IsEmpty();
+	if (Scene.bPrepareBefore || bShowBriefing || !IsStageNavigationReady())
 	{
 		ProductionState = EStageProductionState::Preparing;
 		PreparationStartedAt = GetWorld()->GetTimeSeconds();
+		FText Error;
+		if (bShowBriefing && !QueueSceneBriefing(Scene.Scenario->SceneBriefing, Error))
+		{
+			FinishProduction(false, Error);
+			return;
+		}
 		AddDiagnostic(TEXT("Production[") + ActiveProduction->ProductionId.ToString() + TEXT("] / preparing Scene[") + Scene.SceneId.ToString() + TEXT("]"));
 		OnProductionPhaseChanged.Broadcast(ProductionState, Scene.SceneId, ProductionSceneIndex);
 	}
@@ -175,6 +183,8 @@ TArray<FString> AStageManager::GetPreparationErrors() const
 		Errors.Add(TEXT("Production scenario disappeared"));
 		return Errors;
 	}
+	if (!IsStageNavigationReady())
+		Errors.Add(NSLOCTEXT("StageNavigation", "WaitingForStage", "Дождись остановки сцены и обновления навигации.").ToString());
 	const auto Bindings = ResolveProductionBindings(Scene);
 	const auto Resolve = [&](FName Id) -> AActor*
 	{
@@ -218,6 +228,11 @@ TArray<FString> AStageManager::GetPreparationErrors() const
 
 bool AStageManager::ConfirmProductionPreparation(FText& Error)
 {
+	if (!PendingSceneBriefing.IsEmpty() && !bConfirmingSceneBriefing)
+	{
+		Error = NSLOCTEXT("StageBriefing", "WaitingForContinue", "Нажми «Продолжить», чтобы начать сцену.");
+		return false;
+	}
 	const auto Errors = GetPreparationErrors();
 	if (!Errors.IsEmpty())
 	{
@@ -249,6 +264,7 @@ void AStageManager::TickProduction()
 		AdvanceProduction();
 	}
 	if (!ActiveProduction || ProductionState != EStageProductionState::Preparing) return;
+	if (!PendingSceneBriefing.IsEmpty()) return;
 	if (!ActiveProduction->Scenes.IsValidIndex(ProductionSceneIndex))
 	{
 		FinishProduction(false, FText::FromString(TEXT("Production scene disappeared")));
@@ -260,7 +276,7 @@ void AStageManager::TickProduction()
 		FinishProduction(false, FText::FromString(TEXT("Preparation timeout expired")));
 		return;
 	}
-	if (Scene.bAutoStartWhenReady && GetPreparationErrors().IsEmpty())
+	if ((Scene.bAutoStartWhenReady || !Scene.bPrepareBefore) && GetPreparationErrors().IsEmpty())
 	{
 		FText Error;
 		ConfirmProductionPreparation(Error);
@@ -270,6 +286,7 @@ void AStageManager::TickProduction()
 void AStageManager::FinishProduction(bool bSucceeded, const FText& Reason)
 {
 	if (!ActiveProduction) return;
+	CloseSceneBriefing();
 	const FName Key = ActiveProduction->ProductionId;
 	ProductionState = bSucceeded ? EStageProductionState::Completed : EStageProductionState::Failed;
 	FailureReason = Reason;

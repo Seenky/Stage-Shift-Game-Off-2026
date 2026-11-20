@@ -15,6 +15,7 @@
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
 #include "Misc/ScopeExit.h"
+#include "Physics/PhysicsActor.h"
 #include "DrawDebugHelpers.h"
 
 UInteractionComponent::UInteractionComponent()
@@ -46,9 +47,10 @@ void UInteractionComponent::RefreshInteractionCandidate(FGameplayTag ActionTag)
 {
 	if (bDispatchingInteraction) return;
 	FHitResult Hit;
-	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() && !HasActiveInteraction() && !IsPlayingReleaseAnimation())
+	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() && !IsPlayingReleaseAnimation())
 	{
-		Hit = ResolveInteractionCandidate(ActionTag);
+		if (!HasActiveInteraction()) Hit = ResolveInteractionCandidate(ActionTag);
+		else if (ActiveResult == EInteractionResult::Latched) Hit = ResolveHandoffCandidate();
 	}
 	SetInteractionCandidate(Hit);
 }
@@ -98,7 +100,6 @@ void UInteractionComponent::BindInput(UEnhancedInputComponent& Input, const UInp
 void UInteractionComponent::OnInputStarted()
 {
 	const bool bResuming = ActiveResult == EInteractionResult::Latched;
-	if (bResuming && !CanResumeInteraction()) return;
 	FInteractionPayload Payload;
 	if (BeginInteraction(FInteractionContext(), Payload) == EInteractionResult::Rejected) return;
 
@@ -106,6 +107,48 @@ void UInteractionComponent::OnInputStarted()
 	{
 		PlaySection(*Animation, bResuming ? Animation->ResumeSection : Animation->StartSection);
 	}
+}
+
+FHitResult UInteractionComponent::ResolveHandoffCandidate() const
+{
+	const auto* Prop = Cast<AStagePhysicsActor>(ActiveInteraction.InteractedActor.Get());
+	const AActor* Owner = GetOwner();
+	if (!Prop || !IsValid(Owner) || !GetWorld() || Prop->GetAttachParentActor() != Owner) return {};
+
+	TArray<FOverlapResult> Overlaps;
+	FCollisionQueryParams Query(SCENE_QUERY_STAT(StagePropHandoff), false, Owner);
+	const FVector Start = Owner->GetActorLocation();
+	GetWorld()->OverlapMultiByObjectType(Overlaps, Start, FQuat::Identity, FCollisionObjectQueryParams(ECC_Pawn),
+	    FCollisionShape::MakeSphere(Prop->GetHandoffRange()), Query);
+	double BestDistance = FMath::Square(Prop->GetHandoffRange());
+	FHitResult Hit;
+	for (const FOverlapResult& Overlap : Overlaps)
+	{
+		AActor* Actor = Overlap.GetActor();
+		if (!IsValid(Actor)) continue;
+		const FVector Offset = Actor->GetActorLocation() - Start;
+		if (Offset.SizeSquared() >= BestDistance || FVector::DotProduct(Owner->GetActorForwardVector(), Offset.GetSafeNormal2D()) < -0.1
+		    || !Prop->CanHandOff(Owner, Actor)) continue;
+		BestDistance = Offset.SizeSquared();
+		Hit = FHitResult(Actor, Overlap.GetComponent(), Actor->GetActorLocation(), -Offset.GetSafeNormal());
+	}
+	return Hit;
+}
+
+bool UInteractionComponent::TryHandOff()
+{
+	if (ActiveResult != EInteractionResult::Latched || bDispatchingInteraction || bEndingPlay || !IsActive()) return false;
+	auto* Prop = Cast<AStagePhysicsActor>(ActiveInteraction.InteractedActor.Get());
+	AActor* Receiver = ResolveHandoffCandidate().GetActor();
+	if (!Prop || !Receiver) return false;
+	{
+		TGuardValue<bool> DispatchGuard(bDispatchingInteraction, true);
+		if (!Prop->TryHandOff(GetOwner(), Receiver)) return false;
+		ClearActiveInteraction();
+		StopInteractionMontage();
+	}
+	RefreshInteractionCandidate();
+	return true;
 }
 
 void UInteractionComponent::OnInputReleased()
@@ -120,7 +163,7 @@ void UInteractionComponent::OnInputReleased()
 		if (const FAnimMontageInstance* Montage = Instance ? Instance->GetActiveInstanceForMontage(PlayingMontage.Get()) : nullptr)
 		{
 			// Charge stops now; the timer decides when the result takes effect.
-			ReleasedHoldDuration = GetWorld()->GetTimeSeconds() - PressStartTime;
+			ReleasedHoldDuration = GetInteractionHoldDuration();
 			ReleaseMontageId = Montage->GetInstanceID();
 			ReleaseSectionName = Animation->ReleaseSection;
 			FOnMontageEnded OnEnded;
@@ -232,6 +275,7 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 	{
 		return EInteractionResult::Rejected;
 	}
+	if (TryHandOff()) return EInteractionResult::Completed;
 
 	RefreshInteractionCandidate(InteractionContext.ActionTag);
 	ON_SCOPE_EXIT
@@ -381,6 +425,13 @@ bool UInteractionComponent::EndInteraction()
 	return FinishInteraction(false);
 }
 
+float UInteractionComponent::GetInteractionHoldDuration() const
+{
+	if (ReleaseMontageId != INDEX_NONE) return ReleasedHoldDuration;
+	const UWorld* World = GetWorld();
+	return World ? FMath::Max(0.0, World->GetTimeSeconds() - PressStartTime) : 0.0f;
+}
+
 void UInteractionComponent::CancelInteraction()
 {
 	FinishInteraction(true);
@@ -397,7 +448,7 @@ bool UInteractionComponent::FinishInteraction(bool bCancelled)
 	AActor* Target = ActiveInteraction.InteractedActor.Get();
 	FInteractionContext Context = ActiveContext;
 	Context.InteractionPhase = EInteractionPhase::End;
-	Context.HoldDuration = ReleaseMontageId != INDEX_NONE ? ReleasedHoldDuration : (GetWorld() ? FMath::Max(0.0, GetWorld()->GetTimeSeconds() - PressStartTime) : 0.0);
+	Context.HoldDuration = GetInteractionHoldDuration();
 	Context.bCancelled = bCancelled;
 	ClearActiveInteraction();
 

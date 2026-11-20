@@ -6,6 +6,8 @@
 #include "Stage/Core/StageMemberCommand.h"
 #include "StageWaitCommand.generated.h"
 
+class UAnimSequenceBase;
+
 UCLASS()
 
 class STAGESHIFT_API UStageWaitCommand : public UStageMemberCommand
@@ -24,6 +26,9 @@ public:
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess, ClampMin = 0.0001, UIMin = 0.0001))
 	float WaitTime = 3.f;
+
+	UPROPERTY(EditAnywhere, Category = "Scenario")
+	TObjectPtr<UAnimSequenceBase> GestureAnimation;
 
 	float CurrentTime = 0.f;
 };

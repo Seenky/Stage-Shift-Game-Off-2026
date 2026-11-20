@@ -2,9 +2,17 @@
 
 #include "Stage/Actions/StageWaitAction.h"
 
-void UStageWaitAction::SetupWait(const float& InTime)
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimSequenceBase.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "StageInteractionHelpers.h"
+
+void UStageWaitAction::SetupWait(float InTime, UAnimSequenceBase* InGesture)
 {
 	WaitTime = InTime;
+	Gesture = InGesture;
 }
 
 void UStageWaitAction::OnStart_Implementation()
@@ -22,6 +30,16 @@ void UStageWaitAction::OnStart_Implementation()
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(WaitTimerHandle, this, &ThisClass::FinishTimer, WaitTime);
+	if (Gesture && Gesture->GetPlayLength() > 0.0f)
+	{
+		const auto* Character = Cast<ACharacter>(StageInteraction::GetOwner(Context));
+		auto* Instance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
+		if (Instance)
+		{
+			GestureInstance = Instance;
+			GestureMontage = Instance->PlaySlotAnimationAsDynamicMontage(Gesture, TEXT("RightHand"), 0.08f, 0.12f, Gesture->GetPlayLength() / WaitTime);
+		}
+	}
 }
 
 void UStageWaitAction::OnStop_Implementation(EStageActionStopMode Mode)
@@ -42,9 +60,8 @@ void UStageWaitAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 void UStageWaitAction::Cleanup_Implementation()
 {
-	if (!GetWorld()) return;
-
-	GetWorld()->GetTimerManager().ClearTimer(WaitTimerHandle);
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(WaitTimerHandle);
+	if (auto* Instance = GestureInstance.Get(); Instance && GestureMontage.IsValid()) Instance->Montage_Stop(0.1f, GestureMontage.Get());
 }
 
 void UStageWaitAction::FinishTimer()

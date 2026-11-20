@@ -29,7 +29,7 @@ UStageAction* UStageWaitCommand::CreateMainAction_Implementation(const FStageExe
 	UStageWaitAction* WaitAction = NewObject<UStageWaitAction>(InContext.MemberComponent.Get());
 	if (!WaitAction) return nullptr;
 
-	WaitAction->SetupWait(CurrentTime);
+	WaitAction->SetupWait(CurrentTime, GestureAnimation);
 
 	return WaitAction;
 }

@@ -1,17 +1,70 @@
 #include "Stage/Cues/StageCueComponent.h"
 
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/Dialogue/DialogueBubbleWidget.h"
+#include "Components/WidgetComponent.h"
+#include "Core/MainCameraActor.h"
+#include "Engine/Texture2D.h"
 #include "Engine/World.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/StageCondition.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Cues/StageCueWorldMarker.h"
+#include "Stage/Environment/StageSoundControl.h"
 #include "UI/StageCueWidget.h"
 #include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
+
+namespace
+{
+constexpr double SignalSize = 72.0;
+constexpr double SignalGap = 8.0;
+
+FVector OffsetSignalOnScreen(const APlayerController& Player, const FVector& MarkerLocation, const FVector2D& PixelOffset,
+    double Padding, TConstArrayView<FBox2D> DialogueBounds)
+{
+	FVector2D Original;
+	if (!Player.ProjectWorldLocationToScreen(MarkerLocation, Original)) return MarkerLocation;
+	FVector2D ScreenPosition = Original + PixelOffset;
+	for (const FBox2D& Bounds : DialogueBounds)
+	{
+		if (Bounds.ExpandBy(Padding).IsInsideOrOn(ScreenPosition))
+			ScreenPosition.Y = Bounds.Min.Y - Padding;
+	}
+	if (ScreenPosition.Equals(Original)) return MarkerLocation;
+
+	FVector RayStart, RayDirection;
+	if (!Player.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection)) return MarkerLocation;
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	Player.GetPlayerViewPoint(CameraLocation, CameraRotation);
+	const FVector CameraForward = CameraRotation.Vector();
+	const double Alignment = FVector::DotProduct(RayDirection, CameraForward);
+	if (Alignment <= UE_SMALL_NUMBER) return MarkerLocation;
+	const double Depth = FVector::DotProduct(MarkerLocation - RayStart, CameraForward);
+	return RayStart + RayDirection * (Depth / Alignment);
+}
+}
 
 UStageCueComponent::UStageCueComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	SignalWidgetClass = TSoftClassPtr<UStageCueSignalWidget>(FSoftObjectPath(TEXT("/Game/DEV/UI/StageSignals/W_StageCueSignal.W_StageCueSignal_C")));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> General(TEXT("/Game/DEV/UI/StageSignals/Icons/T_Cue_General"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Props(TEXT("/Game/DEV/UI/StageSignals/Icons/T_Cue_Props"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Lighting(TEXT("/Game/DEV/UI/StageSignals/Icons/T_Cue_Lighting"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Mechanism(TEXT("/Game/DEV/UI/StageSignals/Icons/T_Cue_Mechanism"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> Sound(TEXT("/Game/DEV/UI/StageSignals/Icons/T_Cue_Sound"));
+	SignalIcons = {
+	    {EStageCueKind::General, General.Object},
+	    {EStageCueKind::Props, Props.Object},
+	    {EStageCueKind::Lighting, Lighting.Object},
+	    {EStageCueKind::Mechanism, Mechanism.Object},
+	    {EStageCueKind::Sound, Sound.Object},
+	};
 }
 
 void UStageCueComponent::BeginPlay()
@@ -42,6 +95,9 @@ bool UStageCueComponent::ShowCue(const FStageCueDefinition& Definition)
 	Cue->View.bOverdue = false;
 	Cue->ActorOverride.Reset();
 	Cue->CompletedAt = 0.0;
+	Cue->SoundEarliestAt = Cue->SoundLatestAt = Cue->SoundFeedbackUntil = 0.0;
+	Cue->SoundFeedback = FText::GetEmpty();
+	Cue->bSoundWindowClosed = false;
 	SetCueTimeRemaining(Definition.CueId, Definition.TimeLimit);
 	Refresh();
 	return true;
@@ -66,7 +122,8 @@ void UStageCueComponent::SetCueTimeRemaining(FName CueId, float Seconds)
 		if (Cue->View.State == EStageCueState::Completed) return;
 		Cue->TimerDuration = Seconds;
 		Cue->View.bHasDeadline = Seconds > 0.0f && Cue->View.State != EStageCueState::Upcoming;
-		Cue->Deadline = Cue->View.bHasDeadline ? GetWorld()->GetTimeSeconds() + Seconds : 0.0;
+		Cue->SignalStartedAt = GetWorld()->GetTimeSeconds();
+		Cue->Deadline = Cue->View.bHasDeadline ? Cue->SignalStartedAt + Seconds : 0.0;
 		Cue->View.SecondsRemaining = Seconds;
 		Cue->View.TimeFraction = 1.0f;
 		Cue->View.bOverdue = false;
@@ -86,11 +143,43 @@ void UStageCueComponent::ResolveCue(FName CueId)
 	}
 }
 
+void UStageCueComponent::SetSoundWindow(FName CueId, const FStageSoundWindow& Window)
+{
+	if (!GetWorld()) return;
+	if (auto* Cue = Cues.FindByPredicate([CueId](const auto& Entry) { return Entry.View.CueId == CueId; }))
+	{
+		Cue->SoundEarliestAt = Window.EarliestAt;
+		Cue->SoundLatestAt = Window.LatestAt;
+		SetCueTimeRemaining(CueId, FMath::Max(0.0f, Window.ExpiresAt - static_cast<float>(GetWorld()->GetTimeSeconds())));
+		Refresh();
+	}
+}
+
+void UStageCueComponent::ReportSoundResult(FName CueId, EStageSoundResult Result, bool bWindowActive)
+{
+	if (!GetWorld()) return;
+	auto* Cue = Cues.FindByPredicate([CueId](const auto& Entry) { return Entry.View.CueId == CueId; });
+	if (!Cue) return;
+	switch (Result)
+	{
+	case EStageSoundResult::Early: Cue->SoundFeedback = NSLOCTEXT("StageCues", "SoundEarly", "РАНО"); break;
+	case EStageSoundResult::OnTime: Cue->SoundFeedback = NSLOCTEXT("StageCues", "SoundPerfect", "ВОВРЕМЯ"); break;
+	case EStageSoundResult::Late: Cue->SoundFeedback = NSLOCTEXT("StageCues", "SoundLate", "ПОЗДНО"); break;
+	case EStageSoundResult::Missed: Cue->SoundFeedback = NSLOCTEXT("StageCues", "SoundMissed", "ПРОПУЩЕНО"); break;
+	case EStageSoundResult::WrongSound: Cue->SoundFeedback = NSLOCTEXT("StageCues", "SoundWrong", "ДРУГОЙ ЗВУК"); break;
+	default: return;
+	}
+	Cue->bSoundWindowClosed = !bWindowActive;
+	Cue->SoundFeedbackUntil = GetWorld()->GetTimeSeconds() + (bWindowActive ? 0.6 : 0.9);
+	UpdatePresentation();
+}
+
 void UStageCueComponent::ReportProblem(FName CueId, const FText& Details)
 {
 	if (auto* Cue = Cues.FindByPredicate([&](const auto& Entry) { return Entry.View.CueId == CueId; }))
 	{
 		if (Cue->View.State == EStageCueState::Completed) return;
+		if (Cue->View.State != EStageCueState::Problem && GetWorld()) Cue->SignalStartedAt = GetWorld()->GetTimeSeconds();
 		Cue->View.State = EStageCueState::Problem;
 		if (!Details.IsEmpty()) Cue->View.Details = Details;
 		UpdatePresentation();
@@ -153,7 +242,10 @@ void UStageCueComponent::Refresh()
 {
 	if (bEndingPlay || !GetWorld()) return;
 	const double Now = GetWorld()->GetTimeSeconds();
-	Cues.RemoveAll([&](const auto& Cue) { return Cue.View.State == EStageCueState::Completed && Now - Cue.CompletedAt >= CompletedDisplayTime; });
+	Cues.RemoveAll([&](const auto& Cue) {
+		return (Cue.bSoundWindowClosed && Now >= Cue.SoundFeedbackUntil)
+		    || (Cue.View.State == EStageCueState::Completed && Now - Cue.CompletedAt >= CompletedDisplayTime);
+	});
 	for (auto& Cue : Cues)
 	{
 		if (Cue.View.State == EStageCueState::Completed) continue;
@@ -177,10 +269,21 @@ void UStageCueComponent::Refresh()
 	UpdatePresentation();
 }
 
-TArray<int32> UStageCueComponent::GetVisibleIndices() const
+TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly) const
 {
 	TArray<int32> Indices;
-	for (int32 Index = 0; Index < Cues.Num(); ++Index) Indices.Add(Index);
+	const double Now = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0;
+	for (int32 Index = 0; Index < Cues.Num(); ++Index)
+	{
+		const auto& Cue = Cues[Index];
+		const auto& View = Cue.View;
+		if (bSignalsOnly)
+		{
+			if (View.State != EStageCueState::Active && View.State != EStageCueState::Problem) continue;
+			if (Now >= Cue.SoundFeedbackUntil && (View.bHasDeadline ? Now >= Cue.Deadline : Now - Cue.SignalStartedAt >= UntimedSignalDuration)) continue;
+		}
+		Indices.Add(Index);
+	}
 	const auto Priority = [](EStageCueState State) { return State == EStageCueState::Problem ? 3 : State == EStageCueState::Active ? 2 : State == EStageCueState::Upcoming ? 1 : 0; };
 	Indices.Sort([&](int32 A, int32 B)
 	{
@@ -191,6 +294,16 @@ TArray<int32> UStageCueComponent::GetVisibleIndices() const
 		if (Left.bHasDeadline && Left.SecondsRemaining != Right.SecondsRemaining) return Left.SecondsRemaining < Right.SecondsRemaining;
 		return Left.Number < Right.Number;
 	});
+	if (bSignalsOnly)
+	{
+		TSet<EStageCueKind> Seen;
+		Indices.RemoveAll([&](int32 Index)
+		{
+			bool bAlreadySeen = false;
+			Seen.Add(Cues[Index].Definition.Kind, &bAlreadySeen);
+			return bAlreadySeen;
+		});
+	}
 	Indices.SetNum(FMath::Min(Indices.Num(), FMath::Clamp(MaxCards, 1, 5)));
 	return Indices;
 }
@@ -216,6 +329,13 @@ AActor* UStageCueComponent::ResolveTarget(const FStageCueTarget& Target, const F
 void UStageCueComponent::UpdatePresentation()
 {
 	if (bEndingPlay || !GetWorld() || GetNetMode() == NM_DedicatedServer) return;
+	if (bUseWorldSignals)
+	{
+		UpdateWorldSignals();
+		OnCuesChanged.Broadcast();
+		return;
+	}
+	if (!WorldSignals.IsEmpty()) ClearWorldSignals();
 	if (WidgetClass)
 	{
 		for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
@@ -280,6 +400,163 @@ void UStageCueComponent::UpdatePresentation()
 	OnCuesChanged.Broadcast();
 }
 
+void UStageCueComponent::UpdateWorldSignals()
+{
+	const TArray<int32> Indices = GetVisibleIndices(true);
+	APlayerController* Player = GetWorld()->GetFirstPlayerController();
+	if (Indices.IsEmpty() || !Player || !Player->IsLocalController())
+	{
+		ClearWorldSignals();
+		return;
+	}
+	const auto* Camera = Cast<AMainCameraActor>(Player->GetViewTarget());
+	const double Dpi = UWidgetLayoutLibrary::GetViewportScale(Player);
+	TArray<FBox2D, TInlineAllocator<4>> DialogueBounds;
+	if (Manager.IsValid())
+	{
+		if (const UStageDataAsset* Stage = Manager->GetActiveStage())
+			for (FName Role : Stage->GetRoleOptions())
+				if (AActor* Actor = Manager->GetParticipant(Role))
+					for (const auto* Widget : TInlineComponentArray<UWidgetComponent*>(Actor))
+					{
+						const auto* Bubble = Cast<UDialogueBubbleWidget>(Widget->GetUserWidgetObject());
+						FBox2D Bounds;
+						if (Bubble && Widget->IsVisible() && Widget->GetWidgetSpace() == EWidgetSpace::Screen && Bubble->GetScreenBounds(Bounds))
+							DialogueBounds.Add(Bounds);
+					}
+		DialogueBounds.Sort([](const FBox2D& A, const FBox2D& B) { return A.Max.Y > B.Max.Y; });
+	}
+	const AActor* Anchor = SignalAnchor.Get();
+	const bool bHasAnchor = IsValid(Anchor) && !Anchor->IsActorBeingDestroyed() && Anchor->GetWorld() == GetWorld();
+	FVector Origin;
+	if (bHasAnchor) Origin = Anchor->GetActorLocation();
+	else if (Camera)
+		Origin = Camera->GetActorLocation() - Camera->GetActorForwardVector().GetSafeNormal2D() * 220.0 + FVector(0, 0, 430);
+	else Origin = GetOwner()->GetActorLocation() + FVector(0, 0, 215);
+	TMap<AActor*, int32> ActorSlots;
+	TSet<EStageCueKind> Visible;
+	for (int32 Slot = 0; Slot < Indices.Num(); ++Slot)
+	{
+		const FStageCueRuntime& Cue = Cues[Indices[Slot]];
+		const EStageCueKind Kind = Cue.Definition.Kind;
+		UTexture2D* Icon = SignalIcons.FindRef(Kind);
+		if (!Icon) Icon = SignalIcons.FindRef(EStageCueKind::General);
+		if (!Icon) continue;
+
+		AActor* TrackedActor = Cue.ActorOverride.Get();
+		FVector TargetOffset = FVector::ZeroVector;
+		if (!TrackedActor && Manager.IsValid())
+		{
+			for (const FStageCueTarget& Target : Cue.Definition.Targets)
+			{
+				if (Target.Type != EStageCueMarkerType::Recipient) continue;
+				if (AActor* Actor = Manager->GetParticipant(Target.BindingId))
+				{
+					TrackedActor = Actor;
+					TargetOffset = Target.Offset;
+					break;
+				}
+			}
+			if (!TrackedActor && !Cue.Definition.SubjectRoleId.IsNone()) TrackedActor = Manager->GetParticipant(Cue.Definition.SubjectRoleId);
+			if (!TrackedActor)
+				for (const FStageCueTarget& Target : Cue.Definition.Targets)
+					if (AActor* Actor = ResolveTarget(Target, Cue))
+					{
+						TrackedActor = Actor;
+						TargetOffset = Target.Offset;
+						break;
+					}
+		}
+
+		USceneComponent* Parent = nullptr;
+		FVector Location = Origin;
+		FVector2D ScreenOffset((Slot - (Indices.Num() - 1) * 0.5) * (SignalSize + SignalGap), 0.0);
+		if (IsValid(TrackedActor) && !TrackedActor->IsActorBeingDestroyed() && TrackedActor->GetWorld() == GetWorld())
+		{
+			Parent = TrackedActor->GetRootComponent();
+			FVector Center, Extent;
+			if (const auto* Character = Cast<ACharacter>(TrackedActor))
+			{
+				const UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+				Center = Capsule->GetComponentLocation();
+				Extent = FVector(0, 0, Capsule->GetScaledCapsuleHalfHeight());
+			}
+			else TrackedActor->GetActorBounds(true, Center, Extent);
+			Location = Center + FVector(0, 0, Extent.Z + 18.0) + TargetOffset;
+			const int32 ActorSlot = ActorSlots.FindOrAdd(TrackedActor)++;
+			ScreenOffset = FVector2D(0.0, -SignalSize * 0.5 - ActorSlot * (SignalSize + SignalGap));
+		}
+		Location = OffsetSignalOnScreen(*Player, Location + SignalOffset, ScreenOffset * Dpi, (SignalSize * 0.5 + SignalGap) * Dpi, DialogueBounds);
+		auto& Signal = WorldSignals.FindOrAdd(Kind);
+		if (!IsValid(Signal))
+		{
+			auto* Widget = CreateWidget<UStageCueSignalWidget>(Player, SignalWidgetClass.LoadSynchronous());
+			if (!Widget) continue;
+			Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+			Signal = NewObject<UWidgetComponent>(GetOwner(), NAME_None, RF_Transient);
+			GetOwner()->AddInstanceComponent(Signal);
+			Signal->SetWidgetSpace(EWidgetSpace::Screen);
+			Signal->SetDrawSize(FVector2D(SignalSize));
+			Signal->SetOwnerPlayer(Player->GetLocalPlayer());
+			Signal->SetInitialSharedLayerName(TEXT("StageCueSignals"));
+			Signal->SetInitialLayerZOrder(1);
+			Signal->SetWindowFocusable(false);
+			Signal->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Signal->SetCanEverAffectNavigation(false);
+			Signal->SetWidget(Widget);
+			Signal->SetWorldLocation(Location);
+			Signal->RegisterComponentWithWorld(GetWorld());
+		}
+		if (Signal->GetAttachParent() != Parent)
+		{
+			if (Parent) Signal->AttachToComponent(Parent, FAttachmentTransformRules::KeepWorldTransform);
+			else Signal->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		}
+		Signal->SetWorldLocation(Location);
+		if (auto* Widget = Cast<UStageCueSignalWidget>(Signal->GetUserWidgetObject()))
+		{
+			const double Now = GetWorld()->GetTimeSeconds();
+			FText Caption;
+			float Remaining = Cue.View.SecondsRemaining;
+			float Fraction = Cue.View.TimeFraction;
+			if (Now < Cue.SoundFeedbackUntil) Caption = Cue.SoundFeedback;
+			else if (Cue.SoundLatestAt > 0.0)
+			{
+				const bool bWaiting = Now < Cue.SoundEarliestAt;
+				const bool bOnTime = !bWaiting && Now <= Cue.SoundLatestAt;
+				Caption = bWaiting ? NSLOCTEXT("StageCues", "SoundWait", "ЖДИ") : bOnTime ? NSLOCTEXT("StageCues", "SoundNow", "СЕЙЧАС")
+				    : NSLOCTEXT("StageCues", "SoundWindowLate", "ПОЗДНО");
+				const double Start = bWaiting ? Cue.SignalStartedAt : bOnTime ? Cue.SoundEarliestAt : Cue.SoundLatestAt;
+				const double End = bWaiting ? Cue.SoundEarliestAt : bOnTime ? Cue.SoundLatestAt : Cue.Deadline;
+				Remaining = FMath::Max(End - Now, 0.0);
+				Fraction = FMath::Clamp(Remaining / FMath::Max(End - Start, 0.01), 0.0, 1.0);
+			}
+			Widget->UpdateSignal(Icon, Fraction, Cue.View.bHasDeadline && !Cue.bSoundWindowClosed, Remaining);
+			Widget->SetSignalCaption(Caption);
+		}
+		FVector2D ScreenCenter;
+		if (Player->ProjectWorldLocationToScreen(Location, ScreenCenter))
+		{
+			const FVector2D HalfSize(SignalSize * Dpi * 0.5);
+			DialogueBounds.Emplace(ScreenCenter - HalfSize, ScreenCenter + HalfSize);
+			DialogueBounds.Sort([](const FBox2D& A, const FBox2D& B) { return A.Max.Y > B.Max.Y; });
+		}
+		Visible.Add(Kind);
+	}
+	for (auto It = WorldSignals.CreateIterator(); It; ++It)
+	{
+		if (Visible.Contains(It.Key())) continue;
+		if (IsValid(It.Value())) It.Value()->DestroyComponent();
+		It.RemoveCurrent();
+	}
+}
+
+void UStageCueComponent::ClearWorldSignals()
+{
+	for (const auto& Pair : WorldSignals) if (IsValid(Pair.Value)) Pair.Value->DestroyComponent();
+	WorldSignals.Reset();
+}
+
 TArray<AStageCueWorldMarker*> UStageCueComponent::GetVisibleMarkers() const
 {
 	TArray<AStageCueWorldMarker*> Result;
@@ -289,6 +566,7 @@ TArray<AStageCueWorldMarker*> UStageCueComponent::GetVisibleMarkers() const
 
 void UStageCueComponent::ResetCues()
 {
+	ClearWorldSignals();
 	Cues.Reset();
 	DefinitionSource = nullptr;
 	NextNumber = 1;

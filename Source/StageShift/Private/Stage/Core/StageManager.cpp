@@ -10,6 +10,7 @@
 #include "StatusesInfo.h"
 #include "UObject/Package.h"
 #include "Stage/Cues/StageCueComponent.h"
+#include "Stage/Environment/StageTurntable.h"
 
 DEFINE_LOG_CATEGORY(LogStageShiftStage);
 
@@ -65,6 +66,12 @@ AStageManager::AStageManager()
 	ScoreMultipliers.Add(EStageLatenessLevel::OnTime, 1.0f);
 }
 
+bool AStageManager::IsStageNavigationReady() const
+{
+	const AStageTurntable* Platform = ResolveTurntable();
+	return !Platform || Platform->IsNavigationReady();
+}
+
 bool AStageManager::ValidateStage(UStageDataAsset* Data, const TMap<FName, AActor*>& Actors, FText& Error) const
 {
 	TArray<FString> Errors;
@@ -90,9 +97,15 @@ bool AStageManager::StartStageWithBindings(
     UStageDataAsset* Data, const TMap<FName, AActor*>& Overrides, const TMap<FName, TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery)
 {
 	Error = FText::GetEmpty();
-	if (bManagerEndingPlay || IsActorBeingDestroyed() || State != EStageState::Idle || !IsValid(Data) || !GetWorld() || (IsProductionActive() && !bStartingProductionScene))
+	if (bManagerEndingPlay || IsActorBeingDestroyed() || State != EStageState::Idle || !IsValid(Data) || !GetWorld() ||
+	    (IsProductionActive() && !bStartingProductionScene) || (!PendingSceneBriefing.IsEmpty() && !bConfirmingSceneBriefing))
 	{
 		Error = FText::FromString(TEXT("Manager must be Idle and StageData must be valid."));
+		return false;
+	}
+	if (!IsStageNavigationReady())
+	{
+		Error = NSLOCTEXT("StageNavigation", "WaitingForStage", "Дождись остановки сцены и обновления навигации.");
 		return false;
 	}
 	const TArray<FName> Roles = Data->GetRoleOptions();
@@ -214,6 +227,7 @@ bool AStageManager::StartStageWithBindings(
 	}
 	StageStartedAt = GetWorld()->GetTimeSeconds();
 	State = EStageState::Running;
+	CloseSceneBriefing();
 	PlayerCues->StartStage(Data);
 	bAdvanceRequested = true;
 	AdvanceStage();
@@ -379,6 +393,7 @@ const FStageRootExecution* AStageManager::FindRoot(const UStageMemberCommand* Co
 void AStageManager::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	RefreshSceneBriefing();
 	TickProduction();
 	if (State != EStageState::Idle)
 	{
@@ -757,6 +772,20 @@ void AStageManager::ReceiveStageEvent(const FStageEvent& Event)
 			{
 				AddDiagnostic(TEXT("Reaction[") + Reaction.ReactionId.ToString() + TEXT("] ignored: current StepId is not allowed"));
 				continue;
+			}
+			if (Reaction.bRequireSubjectInSight)
+			{
+				const AActor* Observer = GetParticipant(Reaction.GetEffectiveRoleId());
+				const AActor* Subject = Event.SubjectActor;
+				if (!IsValid(Observer) || !IsValid(Subject) || Observer == Subject) continue;
+				const FVector ToSubject = Subject->GetActorLocation() - Observer->GetActorLocation();
+				if (FVector::DotProduct(Observer->GetActorForwardVector().GetSafeNormal2D(), ToSubject.GetSafeNormal2D()) < 0.42) continue;
+				FVector Eyes;
+				FRotator EyeRotation;
+				Observer->GetActorEyesViewPoint(Eyes, EyeRotation);
+				FCollisionQueryParams Query(SCENE_QUERY_STAT(StageReactionSight), false, Observer);
+				Query.AddIgnoredActor(Subject);
+				if (GetWorld()->LineTraceTestByChannel(Eyes, Subject->GetActorLocation(), ECC_Visibility, Query)) continue;
 			}
 			const auto Assignments = Reaction.GetAssignments();
 			bool Ready = true;

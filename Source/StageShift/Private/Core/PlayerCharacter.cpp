@@ -14,6 +14,8 @@
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
 #include "Components/Interaction/InteractionOutlineComponent.h"
+#include "Stage/Environment/StageSoundControl.h"
+#include "UObject/ConstructorHelpers.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -25,6 +27,9 @@ APlayerCharacter::APlayerCharacter()
 	CarryPoint->SetupAttachment(GetRootComponent());
 	CarryPoint->SetRelativeLocation(FVector(75.0, 0.0, 25.0));
 	PhysicsManipulationComponent->SetCarryPoint(CarryPoint);
+	static ConstructorHelpers::FObjectFinder<UInputAction> CycleSound(
+	    TEXT("/Game/DEV/Core/Input/Inputs/IA_CycleStageSound.IA_CycleStageSound"));
+	CycleStageSoundInputAction = CycleSound.Object;
 }
 
 void APlayerCharacter::BeginPlay()
@@ -32,6 +37,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	TargetSpeed = WalkSpeed;
+	InteractionComponent->OnInteractionCandidateChanged.AddUObject(this, &ThisClass::OnInteractionCandidateChanged);
 
 	PhysicsManipulationComponent->SetCarryPoint(CarryPoint);
 	if (!CarrySocketName.IsNone() && GetMesh()->DoesSocketExist(CarrySocketName))
@@ -58,6 +64,7 @@ void APlayerCharacter::UnPossessed()
 	InteractionComponent->CancelInteraction();
 	ThrowAimComponent->StopAiming();
 	Super::UnPossessed();
+	OnInteractionCandidateChanged(nullptr);
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -89,6 +96,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		Input->BindAction(CameraInputAction, ETriggerEvent::Completed, this, &ThisClass::OnCameraInput);
 		Input->BindAction(CameraInputAction, ETriggerEvent::Canceled, this, &ThisClass::OnCameraInput);
 	}
+	if (CycleStageSoundInputAction)
+		Input->BindAction(CycleStageSoundInputAction, ETriggerEvent::Triggered, this, &ThisClass::OnCycleStageSound);
 
 	InteractionComponent->BindInput(*Input, InteractInputAction);
 
@@ -131,7 +140,37 @@ FVector APlayerCharacter::MovementInputToWorld(const FInputActionValue& Value) c
 void APlayerCharacter::OnCameraInput(const FInputActionInstance& Instance)
 {
 	const bool bReleased = Instance.GetTriggerEvent() == ETriggerEvent::Completed || Instance.GetTriggerEvent() == ETriggerEvent::Canceled;
-	ThrowAimComponent->SetStickInput(bReleased ? FVector2D::ZeroVector : Instance.GetValue().Get<FVector2D>());
+	const FVector2D Axis = bReleased ? FVector2D::ZeroVector : Instance.GetValue().Get<FVector2D>();
+	if (auto* Console = FocusedSoundControl.Get(); Console && !InteractionComponent->HasActiveInteraction())
+	{
+		if (FMath::Abs(Axis.X) < 0.35) bSoundStickHeld = false;
+		else if (!bSoundStickHeld && FMath::Abs(Axis.X) >= 0.6)
+		{
+			bSoundStickHeld = true;
+			Console->CycleSound(Axis.X > 0.0 ? 1 : -1);
+		}
+		ThrowAimComponent->SetStickInput(FVector2D::ZeroVector);
+		return;
+	}
+	bSoundStickHeld = false;
+	ThrowAimComponent->SetStickInput(Axis);
+}
+
+void APlayerCharacter::OnCycleStageSound(const FInputActionValue& Value)
+{
+	const float Scroll = Value.Get<float>();
+	if (auto* Console = FocusedSoundControl.Get(); Console && Scroll != 0.0f && !InteractionComponent->HasActiveInteraction())
+		Console->CycleSound(Scroll > 0.0f ? 1 : -1);
+}
+
+void APlayerCharacter::OnInteractionCandidateChanged(AActor* Candidate)
+{
+	auto* Console = IsLocallyControlled() ? Cast<AStageSoundControl>(Candidate) : nullptr;
+	if (Console == FocusedSoundControl.Get()) return;
+	if (auto* Previous = FocusedSoundControl.Get()) Previous->SetSelectorFocused(false);
+	FocusedSoundControl = Console;
+	bSoundStickHeld = false;
+	if (Console) Console->SetSelectorFocused(true);
 }
 
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)

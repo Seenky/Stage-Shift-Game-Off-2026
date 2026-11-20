@@ -4,10 +4,14 @@
 #include "Stage/Environment/StageDoor.h"
 
 #include "Components/SceneComponent.h"
+#include "NativeGameplayTags.h"
 #if WITH_EDITOR
 #include "UObject/UnrealType.h"
 #endif
 
+
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_DoorOpen, "Interaction.Door.Open");
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_DoorClose, "Interaction.Door.Close");
 
 AStageDoor::AStageDoor()
 {
@@ -34,30 +38,21 @@ void AStageDoor::BeginPlay()
 
 bool AStageDoor::CanInteract_Implementation(const FInteractionContext& InteractionContext) const
 {
-	return CurrentDoorDirection == EDoorState::None;
+	return InteractionContext.InteractionPhase == EInteractionPhase::Start && !InteractionContext.bCancelled &&
+	    (CurrentDoorDirection == EDoorState::None || InteractionContext.ActionTag == TAG_DoorOpen || InteractionContext.ActionTag == TAG_DoorClose);
 }
 
 EInteractionResult AStageDoor::OnInteraction_Implementation(const FInteractionContext& InteractionContext)
 {
-	if (CurrentDoorDirection != EDoorState::None) return EInteractionResult::Rejected;
+	if (!CanInteract_Implementation(InteractionContext)) return EInteractionResult::Rejected;
 
-	CurrentDoorDirection = CurrentDoorState == EDoorState::None || CurrentDoorState == EDoorState::Close ?
-		EDoorState::Open : EDoorState::Close;
-
-	FString Direction = "None";
-	switch (CurrentDoorDirection)
-	{
-		case EDoorState::None:
-			break;
-		case EDoorState::Open:
-			Direction = "Open";
-			break;
-		case EDoorState::Close:
-			Direction = "Close";
-			break;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Direction Current - %s"), *Direction);
+	const bool bWantsOpen = InteractionContext.ActionTag == TAG_DoorOpen ||
+	    (InteractionContext.ActionTag != TAG_DoorClose && CurrentDoorState != EDoorState::Open);
+	const EDoorState Requested = bWantsOpen ? EDoorState::Open : EDoorState::Close;
+	if (CurrentDoorDirection == Requested || (CurrentDoorDirection == EDoorState::None && CurrentDoorState == Requested))
+		return EInteractionResult::Completed;
+	CurrentDoorDirection = Requested;
+	UE_LOG(LogTemp, Display, TEXT("Direction Current - %s"), bWantsOpen ? TEXT("Open") : TEXT("Close"));
 
 	return EInteractionResult::Completed;
 }

@@ -68,6 +68,7 @@ bool UStageMemberComponent::BindToStage(AStageManager* InManager)
 	if (!Statuses || (RecoveryRulesAsset && (!FMath::IsFinite(RecoveryRulesAsset->RecoveryWaitTimeout) || RecoveryRulesAsset->RecoveryWaitTimeout < 0.0f))) return false;
 
 	Manager = InManager;
+	if (PhysicalMontage.IsValid()) PhysicalMontage->EndStageFall();
 	StatusComponent = Statuses;
 	StageLocation = GetOwner()->GetActorLocation();
 	StageYaw = GetOwner()->GetActorRotation().Yaw;
@@ -440,7 +441,7 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 	if (UStageAction* Main = Entry->CurrentMainAction)
 	{
 		if (Main->GetState() != EStageExecutionState::Running) return;
-		const bool bRequirementsMet = !IsPhysicallyBlocked() && StatusComponent.IsValid() && Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses())
+		const bool bRequirementsMet = (Command->CanRunWhileFallen() || !IsPhysicallyBlocked()) && StatusComponent.IsValid() && Command->ExecutionRequirements.GetIsAccess(StatusComponent->GetStatuses())
 		    && IsAtStageMark(Command->bRequireStageLocation, Command->bRequireStageYaw);
 		if (Command->GetState() == EStageExecutionState::Running && (IsScenarioPaused(Command) || !bRequirementsMet || !Main->CanContinue()))
 			Main->RequestStop(EStageActionStopReason::Interrupt);
@@ -477,7 +478,7 @@ void UStageMemberComponent::AdvanceExecution(UStageMemberCommand* Command)
 		FindExecution(Command)->RecoveryWaitDeadline = -1.0f;
 		return;
 	}
-	if (IsPhysicallyBlocked())
+	if (!Command->CanRunWhileFallen() && IsPhysicallyBlocked())
 	{
 		LogWait(TEXT("Waiting for physical recovery"));
 		// Recovery movement cannot compete with ragdoll or the get-up montage.

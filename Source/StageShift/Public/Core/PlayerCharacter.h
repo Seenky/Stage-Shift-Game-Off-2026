@@ -14,6 +14,7 @@ class UPhysicsManipulationComponent;
 class USceneComponent;
 class UThrowAimComponent;
 class UInteractionOutlineComponent;
+class AStageSoundControl;
 
 UCLASS()
 
@@ -42,6 +43,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> CameraInputAction = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> CycleStageSoundInputAction = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpInputAction = nullptr;
@@ -87,6 +91,8 @@ private:
 
 	UFUNCTION()
 	void OnCameraInput(const FInputActionInstance& Instance);
+	void OnCycleStageSound(const FInputActionValue& Value);
+	void OnInteractionCandidateChanged(AActor* Candidate);
 
 	UFUNCTION()
 	void OnJumpInput(const FInputActionInstance& Instance);
@@ -95,4 +101,6 @@ private:
 	void OnSprintInput(const FInputActionInstance& Instance);
 
 	float TargetSpeed = 0.0f;
+	TWeakObjectPtr<AStageSoundControl> FocusedSoundControl;
+	bool bSoundStickHeld = false;
 };

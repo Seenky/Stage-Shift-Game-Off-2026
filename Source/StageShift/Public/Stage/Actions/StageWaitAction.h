@@ -6,6 +6,10 @@
 #include "Stage/Core/StageAction.h"
 #include "StageWaitAction.generated.h"
 
+class UAnimInstance;
+class UAnimMontage;
+class UAnimSequenceBase;
+
 UCLASS()
 
 class STAGESHIFT_API UStageWaitAction : public UStageAction
@@ -13,7 +17,7 @@ class STAGESHIFT_API UStageWaitAction : public UStageAction
 	GENERATED_BODY()
 
 public:
-	void SetupWait(const float& InTime);
+	void SetupWait(float InTime, UAnimSequenceBase* InGesture = nullptr);
 
 	float GetWaitTime() const { return WaitTime; }
 
@@ -25,6 +29,10 @@ protected:
 private:
 	void FinishTimer();
 
-	float WaitTime;
+	float WaitTime = 0.0f;
+	UPROPERTY(Transient)
+	TObjectPtr<UAnimSequenceBase> Gesture;
+	TWeakObjectPtr<UAnimInstance> GestureInstance;
+	TWeakObjectPtr<UAnimMontage> GestureMontage;
 	FTimerHandle WaitTimerHandle;
 };

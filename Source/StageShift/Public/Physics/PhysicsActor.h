@@ -10,6 +10,15 @@
 #include "PhysicsActor.generated.h"
 
 class UPhysicsManipulationComponent;
+class AStagePhysicsActor;
+
+UENUM(BlueprintType)
+enum class EStagePropTransferResult : uint8
+{
+	HandedOff, Thrown, Caught, Missed, Recovered
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FStagePropTransferEvent, AStagePhysicsActor*, Prop, AActor*, From, AActor*, To, EStagePropTransferResult, Result, float, CatchWindowSeconds);
 
 UCLASS()
 
@@ -30,15 +39,44 @@ public:
 
 	EPhysicsInteractionType GetInteractionType() const { return InteractionType; }
 
+	UFUNCTION(BlueprintCallable, Category = "Stage|Props")
+	bool TryHandOff(AActor* From, AActor* To);
+	bool CanHandOff(const AActor* From, const AActor* To) const;
+	float GetHandoffRange() const { return HandoffRange; }
+	void WatchThrownProp(AActor* Thrower);
+	void IgnoreCatchFor(AActor* Actor) { IgnoredCatchActor = Actor; }
+	void NotifyPropCarried(AActor* Carrier);
+
+	UPROPERTY(BlueprintAssignable, Category = "Stage|Props")
+	FStagePropTransferEvent OnPropTransfer;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	EPhysicsInteractionType InteractionType = EPhysicsInteractionType::None;
+	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "1.0", Units = "cm"))
+	float HandoffRange = 185.f;
+	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "1.0", Units = "cm"))
+	float CatchRadius = 65.f;
+	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "0.05", Units = "s"))
+	float CatchWindow = 1.25f;
 
 private:
 	void ConfigureCharacterContact();
+	void CheckCatch();
+	void IgnoreThrowerDuringRelease(const AActor& Source);
+	void RestoreThrowerCollision();
+	bool HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const;
+
+	FTimerHandle CatchTimer;
+	FTimerHandle ThrowerCollisionTimer;
+	TWeakObjectPtr<AActor> Thrower;
+	TWeakObjectPtr<AActor> IgnoredCatchActor;
+	FVector PreviousFlightPosition;
+	double CatchDeadline = 0;
+	bool bMissedThrow = false;
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;

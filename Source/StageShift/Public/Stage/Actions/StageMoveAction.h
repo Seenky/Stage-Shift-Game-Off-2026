@@ -17,7 +17,7 @@ class STAGESHIFT_API UStageMoveAction : public UStageAction
 	GENERATED_BODY()
 
 public:
-	void MoveToRequest(const FAIMoveRequest& InRequest);
+	void MoveToRequest(const FAIMoveRequest& InRequest, float InTimeLimit = 0.0f);
 
 protected:
 	virtual void OnStart_Implementation() override;
@@ -33,8 +33,10 @@ private:
 
 	FAIRequestID CurrentRequestID;
 	FAIMoveRequest MoveRequest;
+	float TimeLimit = 0.0f;
 	TWeakObjectPtr<AAIController> AIController;
 	FTimerHandle TargetAvailabilityTimer;
+	FTimerHandle MoveTimeoutTimer;
 	bool bStartingRequest = false;
 	TArray<TPair<FAIRequestID, EPathFollowingResult::Type>> StartingCompletions;
 };

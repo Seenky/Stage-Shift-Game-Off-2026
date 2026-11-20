@@ -2,7 +2,11 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "NavigationSystem.h"
+#include "Stage/Core/StageManager.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UObject/Package.h"
 
 AStageTurntable::AStageTurntable()
 {
@@ -29,6 +33,32 @@ void AStageTurntable::BeginPlay()
 {
 	Super::BeginPlay();
 	InitialRotation = GetActorRotation();
+	const UWorld* World = GetWorld();
+	for (const TSoftObjectPtr<AActor>& Reference : SceneryToRotate)
+	{
+		FSoftObjectPath Path = Reference.ToSoftObjectPath();
+		if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
+		AActor* Scenery = Cast<AActor>(Path.ResolveObject());
+		if (IsValid(Scenery) && Scenery != this && Scenery->GetWorld() == World)
+			Scenery->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+	}
+}
+
+void AStageTurntable::SetStageManager(AStageManager* Manager)
+{
+	StageManager = Manager;
+}
+
+bool AStageTurntable::CanRotate() const
+{
+	const AStageManager* Manager = StageManager.Get();
+	return !bRotating && (!Manager || Manager->GetState() == EStageState::Idle);
+}
+
+bool AStageTurntable::IsNavigationReady() const
+{
+	UWorld* World = GetWorld();
+	return World && !bRotating && !UNavigationSystemV1::IsNavigationBeingBuiltOrLocked(World);
 }
 
 bool AStageTurntable::RotateNext()
@@ -38,7 +68,7 @@ bool AStageTurntable::RotateNext()
 
 bool AStageTurntable::RotateToSector(int32 SectorIndex)
 {
-	if (!HasActorBegunPlay() || bRotating || SectorIndex < 0 || SectorIndex >= FMath::Max(2, SectorCount) || SectorIndex == CurrentSector) return false;
+	if (!HasActorBegunPlay() || !CanRotate() || SectorIndex < 0 || SectorIndex >= FMath::Max(2, SectorCount) || SectorIndex == CurrentSector) return false;
 	TargetSector = SectorIndex;
 	StartYaw = GetActorRotation().Yaw;
 	const float SectorYaw = InitialRotation.Yaw + 360.0f * static_cast<float>(SectorIndex) / FMath::Max(2, SectorCount);

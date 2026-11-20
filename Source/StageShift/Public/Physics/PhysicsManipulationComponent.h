@@ -9,6 +9,7 @@
 #include "PhysicsManipulationComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemPickedUp, AActor*, PickedItem);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStagePropReadinessChanged, bool, bReady);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 
@@ -38,6 +39,13 @@ public:
 
 	bool IsCarrying() const { return bCarryAttached; }
 
+	UFUNCTION(BlueprintPure, Category = "Physics Interaction|Stage Props")
+	bool CanReceiveStageProp() const;
+	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Stage Props")
+	void SetAcceptStageProps(bool bAccept);
+	UPROPERTY(BlueprintAssignable, Category = "Physics Interaction|Stage Props")
+	FOnStagePropReadinessChanged OnStagePropReadinessChanged;
+
 	bool IsDragging() const { return ActiveType == EPhysicsInteractionType::Drag && ManipulatedComponent.IsValid(); }
 
 	float GetDragMovementScale() const;
@@ -46,15 +54,17 @@ public:
 
 	void SetThrowDirection(const FVector& Direction)
 	{
-		ThrowDirection = Direction.GetSafeNormal2D();
-		bHasThrowTarget = false;
+		ThrowAim.Direction = Direction.GetSafeNormal2D();
+		ThrowAim.bHasTarget = false;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Throw")
 	void SetThrowTarget(const FVector& WorldLocation, const FVector& SurfaceNormal = FVector::UpVector);
 	void SetThrowTargetFromView(const FVector& WorldLocation, const FVector& SurfaceNormal, const FVector& ViewDirection);
 
-	void ClearThrowTarget() { bHasThrowTarget = false; }
+	void ClearThrowTarget() { ThrowAim.bHasTarget = false; }
+
+	bool PredictThrow(float HoldDuration, TArray<FVector>& Path, FHitResult& Hit) const;
 
 	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
 
@@ -124,6 +134,17 @@ protected:
 	FName GripSocket = TEXT("Grip");
 
 private:
+	friend class AStagePhysicsActor;
+	bool BeginManipulationInternal(const FHitResult& Hit, EPhysicsInteractionType Type, bool bPlayPickupAnimation);
+	bool TransferCarriedPropTo(UPhysicsManipulationComponent& Receiver);
+	UFUNCTION()
+	void UpdateStagePropReadiness();
+
+	UPROPERTY(EditAnywhere, Category = "Stage Props", meta = (AllowPrivateAccess))
+	bool bAcceptStageProps = false;
+	bool bLastPropReady = false;
+	bool bPropPlayEnded = false;
+
 	UPROPERTY(Transient)
 	TWeakObjectPtr<USceneComponent> CarryPoint;
 
@@ -152,11 +173,16 @@ private:
 	bool bSavedControllerYaw = false;
 	FVector LocalGripLocation = FVector::ZeroVector;
 	FVector GrabLocation = FVector::ZeroVector;
-	FVector ThrowDirection = FVector::ZeroVector;
-	FVector ThrowTarget = FVector::ZeroVector;
-	FVector ThrowTargetNormal = FVector::UpVector;
-	FVector ThrowViewDirection = FVector::ZeroVector;
-	bool bHasThrowTarget = false;
+	FVector LocalCarryCenter = FVector::ZeroVector;
+	struct FThrowAim
+	{
+		FVector Direction = FVector::ZeroVector;
+		FVector Target = FVector::ZeroVector;
+		FVector SurfaceNormal = FVector::UpVector;
+		FVector ViewDirection = FVector::ZeroVector;
+		bool bHasTarget = false;
+	};
+	FThrowAim ThrowAim;
 	TWeakObjectPtr<class UAnimInstance> PickupInstance;
 	TWeakObjectPtr<class UAnimMontage> PickupMontage;
 	bool bPickupPending = false;
@@ -169,8 +195,9 @@ private:
 	void CancelManipulation();
 	FTransform GetDragFrame() const;
 	void ClearPickupPlayback();
-	FVector CalculateThrowVelocity(const UPrimitiveComponent& Component, const FVector& Target, float Speed) const;
-	void ResolveThrowRelease(UPrimitiveComponent& Component) const;
+	FVector CalculateThrowVelocity(
+	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration) const;
+	FVector GetThrowReleaseAdjustment(const UPrimitiveComponent& Component, const FVector& Start) const;
 
 	UFUNCTION()
 	void OnPickupNotify(FName Name, const struct FBranchingPointNotifyPayload& Payload);

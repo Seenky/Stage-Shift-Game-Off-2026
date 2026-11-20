@@ -115,6 +115,9 @@ public:
 	FPhysicsRecoverySelector RecoverySelector;
 
 	bool IsPhysicsMontageActive() const { return bMeshCollisionSaved || bIsRecovering; }
+	bool IsStayingDown() const { return bStayDown && (bIsSimActive || bMeshCollisionSaved); }
+	bool StayDown(UAnimMontage* FallMontage, const FVector& PushDirection);
+	void EndStageFall();
 
 	UFUNCTION(BlueprintCallable)
 	void ActivatePhysics(FName MontageName);
@@ -189,4 +192,5 @@ private:
 	TEnumAsByte<ECollisionEnabled::Type> CurrentCollisionEnabled = ECollisionEnabled::NoCollision;
 	bool bIsSimActive = false;
 	bool bIsRecovering = false;
+	bool bStayDown = false;
 };

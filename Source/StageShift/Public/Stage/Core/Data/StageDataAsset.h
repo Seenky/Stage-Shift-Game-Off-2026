@@ -17,6 +17,9 @@ class STAGESHIFT_API UStageDataAsset : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing", meta = (MultiLine))
+	FText SceneBriefing;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (TitleProperty = "Title"))
 	TArray<FStageCueDefinition> PlayerCues;
 

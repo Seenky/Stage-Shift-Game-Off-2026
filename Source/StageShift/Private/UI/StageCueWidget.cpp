@@ -12,6 +12,13 @@
 
 #define LOCTEXT_NAMESPACE "StageCues"
 
+void UStageCueSignalWidget::SetSignalCaption(const FText& Caption)
+{
+	if (!SignalCaption) return;
+	SignalCaption->SetText(Caption);
+	SignalCaption->SetVisibility(Caption.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+}
+
 void UStageCueCardWidget::Present(const FStageCueView& View)
 {
 	const bool bCompleted = View.State == EStageCueState::Completed;

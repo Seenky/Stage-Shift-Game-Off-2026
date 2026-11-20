@@ -12,6 +12,21 @@ class UVerticalBox;
 class UCanvasPanel;
 class UStageCueComponent;
 class AStageCueWorldMarker;
+class UTexture2D;
+
+UCLASS(Abstract, Blueprintable)
+class STAGESHIFT_API UStageCueSignalWidget : public UUserWidget
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Cue")
+	void UpdateSignal(UTexture2D* Icon, float TimeFraction, bool bTimed, float SecondsRemaining);
+	void SetSignalCaption(const FText& Caption);
+
+protected:
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> SignalCaption;
+};
 
 UCLASS(Abstract, Blueprintable)
 class STAGESHIFT_API UStageCueCardWidget : public UUserWidget

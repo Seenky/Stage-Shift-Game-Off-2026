@@ -57,7 +57,7 @@ UStageAction* UStageMoveCommand::CreateMainAction_Implementation(const FStageExe
 	Request.SetAllowPartialPath(false); // Reaching the end of a partial path does not reach the target.
 
 	UStageMoveAction* MoveAction = NewObject<UStageMoveAction>(Member);
-	MoveAction->MoveToRequest(Request);
+	MoveAction->MoveToRequest(Request, MoveTimeLimit);
 
 	return MoveAction;
 }
@@ -104,6 +104,7 @@ void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& 
 	const float StopDistance = AcceptanceRadius + Owner->GetSimpleCollisionRadius();
 	const float RemainingDistance = FMath::Max(0.f, AllDistance - StopDistance);
 	NeedMoveTime = RemainingDistance / Speed;
+	if (MoveTimeLimit > 0.0f) NeedMoveTime = FMath::Min(NeedMoveTime, MoveTimeLimit);
 }
 
 void UStageMoveCommand::OnStart_Implementation()
@@ -139,6 +140,7 @@ void UStageMoveCommand::ValidateDefinition(const UStageDataAsset* Data, const FS
 	for (const FName Id : Targets)
 		if (Id.IsNone() || !Data || !Data->TargetIds.Contains(Id)) Errors.Add(Path + TEXT(" / undeclared Move target: ") + Id.ToString());
 	if (!FMath::IsFinite(AcceptanceRadius) || AcceptanceRadius < 0) Errors.Add(Path + TEXT(" / AcceptanceRadius must be finite and nonnegative"));
+	if (!FMath::IsFinite(MoveTimeLimit) || MoveTimeLimit < 0.0f) Errors.Add(Path + TEXT(" / Move Time Limit must be finite and nonnegative"));
 }
 
 void UStageMoveCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const

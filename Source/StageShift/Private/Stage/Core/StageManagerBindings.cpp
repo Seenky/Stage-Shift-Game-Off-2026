@@ -1,4 +1,5 @@
 #include "Stage/Core/StageManager.h"
+#include "Stage/Environment/StageTurntable.h"
 #include "Stage/Core/StageDebugDisplay.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
@@ -145,6 +146,12 @@ void AStageManager::ValidateConfiguredStage()
 
 bool AStageManager::StartConfiguredStage(FText& Error)
 {
+	Error = FText::GetEmpty();
+	if (bManagerEndingPlay || State != EStageState::Idle || IsProductionActive() || !PendingSceneBriefing.IsEmpty())
+	{
+		Error = FText::FromString(TEXT("The manager is already running or waiting for a scene."));
+		return false;
+	}
 	TArray<FString> Errors;
 	CollectValidationErrors(ConfiguredStage, ResolveBindings(ConfiguredStage, {}), Errors);
 	if (!Errors.IsEmpty())
@@ -152,12 +159,24 @@ bool AStageManager::StartConfiguredStage(FText& Error)
 		Error = FText::FromString(FString::Join(Errors, TEXT("\n")));
 		return false;
 	}
-	return StartStageByIds(ConfiguredStage, {}, Error);
+	return ConfiguredStage->SceneBriefing.IsEmpty() ? StartStageByIds(ConfiguredStage, {}, Error) :
+	    QueueSceneBriefing(ConfiguredStage->SceneBriefing, Error);
+}
+
+AStageTurntable* AStageManager::ResolveTurntable() const
+{
+	const UWorld* World = GetWorld();
+	if (!World || Turntable.IsNull()) return nullptr;
+	FSoftObjectPath Path = Turntable.ToSoftObjectPath();
+	if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
+	AStageTurntable* Platform = Cast<AStageTurntable>(Path.ResolveObject());
+	return IsValid(Platform) && Platform->GetWorld() == World ? Platform : nullptr;
 }
 
 void AStageManager::BeginPlay()
 {
 	RecentEvents.Reset();
+	if (AStageTurntable* Platform = ResolveTurntable()) Platform->SetStageManager(this);
 #if WITH_EDITOR
 	StageDebugDisplay::ClearEditorContent();
 #endif
@@ -183,6 +202,7 @@ void AStageManager::AbortStage(const FText& Reason)
 	if (State == EStageState::Idle)
 	{
 		if (IsProductionActive() && !bAbortingProduction) AbortProduction(Reason);
+		CloseSceneBriefing();
 		return;
 	}
 	State = EStageState::Stopping;

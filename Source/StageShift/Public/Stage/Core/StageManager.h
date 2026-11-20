@@ -8,6 +8,8 @@
 
 class UStageDataAsset;
 class UStageCueComponent;
+class UStageBriefingWidget;
+class AStageTurntable;
 DECLARE_LOG_CATEGORY_EXTERN(LogStageShiftStage, Log, All);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStageFinishedById, FName, StageKey, bool, bSucceeded, FText, Reason);
@@ -26,7 +28,12 @@ class STAGESHIFT_API AStageManager : public AActor
 public:
 	AStageManager();
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player Cues") TObjectPtr<UStageCueComponent> PlayerCues;
+	UPROPERTY(EditAnywhere, Category = "Briefing")
+	TSoftClassPtr<UStageBriefingWidget> BriefingWidgetClass = TSoftClassPtr<UStageBriefingWidget>(
+	    FSoftObjectPath(TEXT("/Game/DEV/UI/StageSignals/W_StageBriefing.W_StageBriefing_C")));
+	UFUNCTION(BlueprintCallable, Category = "Briefing") bool ContinueSceneBriefing(FText& OutError);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Production") TSoftObjectPtr<AStageTurntable> Turntable;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Production|Bindings") TMap<FName, FStageSceneBindings> ProductionBindings;
 	UPROPERTY(BlueprintAssignable, Category = "Production") FStageProductionPhaseChanged OnProductionPhaseChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Production") FStageFinishedById OnProductionFinished;
@@ -125,7 +132,17 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
+	bool QueueSceneBriefing(const FText& Text, FText& Error);
+	void RefreshSceneBriefing();
+	void CloseSceneBriefing();
+	FText PendingSceneBriefing;
+	UPROPERTY(Transient) TObjectPtr<UStageBriefingWidget> BriefingWidget;
+	bool bConfirmingSceneBriefing = false;
+	bool bSavedBriefingCursor = false;
+
 	bool IsProductionActive() const { return ProductionState == EStageProductionState::Preparing || ProductionState == EStageProductionState::Playing; }
+	bool IsStageNavigationReady() const;
+	AStageTurntable* ResolveTurntable() const;
 
 	bool StartStageWithBindings(UStageDataAsset* Data, const TMap<FName, AActor*>& Roles, const TMap<FName, TObjectPtr<AActor>>& Targets, FText& Error, bool bStrictRecovery);
 	struct FResolvedSceneBindings

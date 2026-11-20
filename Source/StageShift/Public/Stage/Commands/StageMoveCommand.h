@@ -47,6 +47,8 @@ private:
 
 	UPROPERTY(Category = "Advanced", AdvancedDisplay, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 	float AcceptanceRadius = 10.f;
+	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Advanced", meta = (ClampMin = "0.0", Units = "s"))
+	float MoveTimeLimit = 0.0f;
 
 	FName SelectedTargetId;
 	float NeedMoveTime = 0.0f;

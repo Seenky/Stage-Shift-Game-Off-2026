@@ -1,6 +1,7 @@
 #include "Components/Interaction/InteractionOutlineComponent.h"
 
 #include "Components/Interaction/InteractionComponent.h"
+#include "Components/Interaction/InteractionInterface.h"
 #include "Components/MeshComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "GameFramework/Pawn.h"
@@ -93,10 +94,11 @@ void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
 		PostProcess->Settings.AddBlendable(MaterialInstance, 1.0f);
 		PostProcess->RegisterComponent();
 	}
-	TInlineComponentArray<UPrimitiveComponent*> Primitives(Target);
-	for (UPrimitiveComponent* Primitive : Primitives)
+	const auto* Interactable = Cast<IInteractionInterface>(Target);
+	const UMeshComponent* InteractionMesh = Interactable ? Interactable->GetInteractionMesh() : nullptr;
+	for (UMeshComponent* Primitive : TInlineComponentArray<UMeshComponent*>(Target))
 	{
-		if (!IsValid(Primitive) || !Primitive->IsA<UMeshComponent>() || !Primitive->IsRegistered()) continue;
+		if (!IsValid(Primitive) || !Primitive->IsRegistered() || (InteractionMesh && Primitive != InteractionMesh)) continue;
 		if ((Primitive->CustomDepthStencilValue & StencilBit) != 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Outline: %s already owns reserved stencil bit 128; skipped"), *Primitive->GetPathName());

@@ -18,7 +18,7 @@ AStageTurntableControl::AStageTurntableControl()
 
 bool AStageTurntableControl::CanInteract_Implementation(const FInteractionContext& Context) const
 {
-	return IsValid(Context.Interactor) && IsValid(Turntable) && !Turntable->IsRotating();
+	return IsValid(Context.Interactor) && IsValid(Turntable) && Turntable->CanRotate();
 }
 
 EInteractionResult AStageTurntableControl::OnInteraction_Implementation(const FInteractionContext& Context)

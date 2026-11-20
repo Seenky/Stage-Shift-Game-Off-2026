@@ -44,6 +44,8 @@ public:
 
 	bool IsPreparingRelease() const { return HasActiveInteraction() && ActiveResult == EInteractionResult::Active && ReleaseMontageId == INDEX_NONE; }
 
+	float GetInteractionHoldDuration() const;
+
 	bool IsPlayingReleaseAnimation() const;
 
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
@@ -98,6 +100,8 @@ private:
 	FHitResult CandidateHit;
 	bool CanResumeInteraction() const;
 	FHitResult ResolveInteractionCandidate(FGameplayTag ActionTag) const;
+	FHitResult ResolveHandoffCandidate() const;
+	bool TryHandOff();
 	void SetInteractionCandidate(const FHitResult& Hit);
 	UFUNCTION()
 	void OnCandidateEndPlay(AActor* Actor, EEndPlayReason::Type EndPlayReason);

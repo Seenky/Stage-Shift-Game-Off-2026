@@ -11,6 +11,11 @@ class AStageManager;
 class AStageCueWorldMarker;
 class UStageDataAsset;
 class UStageCueHUDWidget;
+class UStageCueSignalWidget;
+class UWidgetComponent;
+class UTexture2D;
+struct FStageSoundWindow;
+enum class EStageSoundResult : uint8;
 
 DECLARE_MULTICAST_DELEGATE(FStageCuesChanged);
 
@@ -22,6 +27,13 @@ class STAGESHIFT_API UStageCueComponent : public UActorComponent
 
 public:
 	UStageCueComponent();
+	UPROPERTY(EditAnywhere, Category = "Presentation|Signals") bool bUseWorldSignals = true;
+	UPROPERTY(EditAnywhere, Category = "Presentation|Signals", meta = (ToolTip = "Shared location for signals without a bound actor."))
+	TSoftObjectPtr<AActor> SignalAnchor;
+	UPROPERTY(EditAnywhere, Category = "Presentation|Signals") FVector SignalOffset = FVector::ZeroVector;
+	UPROPERTY(EditAnywhere, Category = "Presentation|Signals") TMap<EStageCueKind, TObjectPtr<UTexture2D>> SignalIcons;
+	UPROPERTY(EditAnywhere, Category = "Presentation|Signals") TSoftClassPtr<UStageCueSignalWidget> SignalWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "Presentation|Signals", meta = (ClampMin = "0.1", Units = "s")) float UntimedSignalDuration = 3.0f;
 	UPROPERTY(EditAnywhere, Category = "Presentation") TSubclassOf<UStageCueHUDWidget> WidgetClass;
 	UPROPERTY(EditAnywhere, Category = "Presentation") TSubclassOf<AStageCueWorldMarker> MarkerClass;
 	UPROPERTY(EditAnywhere, Category = "Presentation", meta = (ClampMin = "1", ClampMax = "5")) int32 MaxCards = 3;
@@ -42,6 +54,8 @@ public:
 	void StartStage(UStageDataAsset* Data);
 	void NotifyStepStarted(FName StepId);
 	void ResetCues();
+	void SetSoundWindow(FName CueId, const FStageSoundWindow& Window);
+	void ReportSoundResult(FName CueId, EStageSoundResult Result, bool bWindowActive);
 
 protected:
 	virtual void BeginPlay() override;
@@ -50,13 +64,16 @@ protected:
 private:
 	void Refresh();
 	void UpdatePresentation();
-	TArray<int32> GetVisibleIndices() const;
+	void UpdateWorldSignals();
+	void ClearWorldSignals();
+	TArray<int32> GetVisibleIndices(bool bSignalsOnly = false) const;
 	AActor* ResolveTarget(const FStageCueTarget& Target, const FStageCueRuntime& Cue) const;
 	UFUNCTION() void HandleStageEvent(FStageEvent Event);
 	UPROPERTY(Transient) TObjectPtr<UStageDataAsset> DefinitionSource;
 	UPROPERTY(Transient) TArray<FStageCueRuntime> Cues;
 	UPROPERTY(Transient) TArray<TObjectPtr<UStageCueHUDWidget>> Widgets;
 	UPROPERTY(Transient) TMap<FString, TObjectPtr<AStageCueWorldMarker>> Markers;
+	UPROPERTY(Transient) TMap<EStageCueKind, TObjectPtr<UWidgetComponent>> WorldSignals;
 	TWeakObjectPtr<AStageManager> Manager;
 	FTimerHandle RefreshTimer;
 	int32 NextNumber = 1;

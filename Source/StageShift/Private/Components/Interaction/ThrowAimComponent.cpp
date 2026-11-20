@@ -1,5 +1,7 @@
 #include "Components/Interaction/ThrowAimComponent.h"
 
+#include "Components/DecalComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Engine/GameViewportClient.h"
@@ -12,12 +14,19 @@
 #include "Physics/PhysicsManipulationComponent.h"
 #include "SceneView.h"
 #include "UI/ThrowAimWidget.h"
+#include "UObject/ConstructorHelpers.h"
 
 UThrowAimComponent::UThrowAimComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickGroup = TG_PrePhysics;
 	ReticleWidgetClass = UThrowAimWidget::StaticClass();
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Dot(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowTrajectory.M_ThrowTrajectory"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DecalMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowLanding.M_ThrowLanding"));
+	TrajectoryDotMesh = Dot.Object;
+	TrajectoryMaterial = DotMaterial.Object;
+	LandingMaterial = DecalMaterial.Object;
 }
 
 void UThrowAimComponent::BeginPlay()
@@ -96,7 +105,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			bSavedControllerYaw = Pawn->bUseControllerRotationYaw;
 			bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
 		}
-		Reticle = ReticleWidgetClass ? CreateWidget<UUserWidget>(PC, ReticleWidgetClass) : nullptr;
+		Reticle = bDraggingAim && ReticleWidgetClass ? CreateWidget<UUserWidget>(PC, ReticleWidgetClass) : nullptr;
 		if (Reticle)
 		{
 			Reticle->SetIsFocusable(false);
@@ -117,6 +126,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (!bPreparing && bWasPreparing) bAimFrozen = true;
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
+	UpdateThrowPreview(bPreparing && !bAimFrozen);
 	if (Reticle)
 	{
 		Reticle->SetVisibility(bInteractive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -178,7 +188,7 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		else if (bAbsoluteMouse && bHasMouse)
 			ScreenPosition = Mouse;
 		else
-			ScreenPosition += MouseDelta * MouseSensitivity;
+			ScreenPosition += MouseDelta * (MouseSensitivity * Bounds.Height() / 1080.0);
 		LastCursorUpdateFrame = GFrameCounter;
 		bStickMoved = false;
 	}
@@ -223,6 +233,56 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 	if (!Manipulation->IsDragging()) Manipulation->SetThrowTargetFromView(AimTarget, SurfaceNormal, RayDirection);
 }
 
+void UThrowAimComponent::UpdateThrowPreview(bool bShow)
+{
+	TArray<FVector> Path;
+	FHitResult Hit;
+	if (!bShow || !Manipulation->PredictThrow(Interaction->GetInteractionHoldDuration(), Path, Hit))
+	{
+		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
+		if (LandingDecal) LandingDecal->SetVisibility(false);
+		return;
+	}
+
+	if (!TrajectoryDots && TrajectoryDotMesh && TrajectoryMaterial)
+	{
+		TrajectoryDots = NewObject<UInstancedStaticMeshComponent>(GetOwner(), TEXT("ThrowTrajectory"));
+		TrajectoryDots->SetStaticMesh(TrajectoryDotMesh);
+		TrajectoryDots->SetMaterial(0, TrajectoryMaterial);
+		TrajectoryDots->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		TrajectoryDots->SetCanEverAffectNavigation(false);
+		TrajectoryDots->SetCastShadow(false);
+		TrajectoryDots->RegisterComponent();
+	}
+
+	if (TrajectoryDots)
+	{
+		TArray<FTransform> Dots;
+		for (int32 Index = 1; Index < Path.Num() - 1; ++Index)
+			Dots.Emplace(FQuat::Identity, Path[Index], FVector(0.10));
+		TrajectoryDots->ClearInstances();
+		TrajectoryDots->AddInstances(Dots, false, true, false);
+		TrajectoryDots->SetVisibility(true);
+	}
+
+	if (!LandingDecal && LandingMaterial)
+	{
+		LandingDecal = NewObject<UDecalComponent>(GetOwner(), TEXT("ThrowLanding"));
+		LandingDecal->SetDecalMaterial(LandingMaterial);
+		LandingDecal->DecalSize = FVector(18.0, 46.0, 46.0);
+		LandingDecal->SortOrder = 20;
+		LandingDecal->SetFadeScreenSize(0.001f);
+		LandingDecal->RegisterComponent();
+	}
+
+	if (LandingDecal)
+	{
+		LandingDecal->SetVisibility(Hit.bBlockingHit);
+		if (Hit.bBlockingHit)
+			LandingDecal->SetWorldLocationAndRotation(Hit.ImpactPoint, (-Hit.ImpactNormal).Rotation());
+	}
+}
+
 void UThrowAimComponent::FreezeAim()
 {
 	if (!bAiming || bAimFrozen || bDraggingAim) return;
@@ -248,6 +308,7 @@ void UThrowAimComponent::StopAiming()
 	}
 	if (Reticle) Reticle->RemoveFromParent();
 	Reticle = nullptr;
+	UpdateThrowPreview(false);
 	bAiming = bDraggingAim = bWasPreparing = bStickMoved = false;
 	bAimFrozen = bHasAimTarget = false;
 	if (Manipulation.IsValid()) Manipulation->ClearThrowTarget();
@@ -256,5 +317,7 @@ void UThrowAimComponent::StopAiming()
 void UThrowAimComponent::EndPlay(const EEndPlayReason::Type Reason)
 {
 	StopAiming();
+	if (TrajectoryDots) TrajectoryDots->DestroyComponent();
+	if (LandingDecal) LandingDecal->DestroyComponent();
 	Super::EndPlay(Reason);
 }

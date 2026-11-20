@@ -2,9 +2,23 @@
 
 #include "Components/Dialogue/DialogueBubbleWidget.h"
 
+#include "Blueprint/SlateBlueprintLibrary.h"
 #include "Components/Border.h"
 #include "Components/Dialogue/DialogueTextWidget.h"
 #include "Components/Dialogue/DialogueViewModel.h"
+
+bool UDialogueBubbleWidget::GetScreenBounds(FBox2D& Bounds) const
+{
+	if (!DialogueBorder || !DialogueBorder->IsVisible() || DialogueBorder->GetBrushColor().A <= 0.01f) return false;
+	const FGeometry& Geometry = DialogueBorder->GetCachedGeometry();
+	FVector2D Min, Max, ViewportPosition;
+	USlateBlueprintLibrary::AbsoluteToViewport(this, Geometry.GetAbsolutePosition(), Min, ViewportPosition);
+	USlateBlueprintLibrary::AbsoluteToViewport(this, Geometry.LocalToAbsolute(Geometry.GetLocalSize()), Max, ViewportPosition);
+	if (!FMath::IsFinite(Min.X) || !FMath::IsFinite(Min.Y) || !FMath::IsFinite(Max.X) || !FMath::IsFinite(Max.Y) ||
+	    Max.X <= Min.X || Max.Y <= Min.Y) return false;
+	Bounds = FBox2D(Min, Max);
+	return true;
+}
 
 void UDialogueBubbleWidget::SetDialogueViewModel(UDialogueViewModel* ViewModel)
 {

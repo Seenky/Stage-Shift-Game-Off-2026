@@ -7,6 +7,8 @@
 #include "UObject/Interface.h"
 #include "InteractionInterface.generated.h"
 
+class UMeshComponent;
+
 UINTERFACE(Blueprintable)
 
 class STAGESHIFT_API UInteractionInterface : public UInterface
@@ -19,6 +21,9 @@ class STAGESHIFT_API IInteractionInterface
 	GENERATED_BODY()
 
 public:
+	// Optional mesh used for the interaction outline.
+	virtual const UMeshComponent* GetInteractionMesh() const { return nullptr; }
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	bool CanInteract(const FInteractionContext& InteractionContext) const;
 	virtual bool CanInteract_Implementation(const FInteractionContext& InteractionContext) const;

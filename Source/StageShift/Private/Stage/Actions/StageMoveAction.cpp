@@ -9,11 +9,12 @@
 #include "Stage/Core/StageManager.h"
 #include "TimerManager.h"
 
-void UStageMoveAction::MoveToRequest(const FAIMoveRequest& InRequest)
+void UStageMoveAction::MoveToRequest(const FAIMoveRequest& InRequest, float InTimeLimit)
 {
 	// A previous attempt's request is never owned by this working Action.
 	CurrentRequestID = FAIRequestID::InvalidRequest;
 	MoveRequest = InRequest;
+	TimeLimit = InTimeLimit;
 }
 
 void UStageMoveAction::LogMove(const FString& Details) const
@@ -105,6 +106,12 @@ void UStageMoveAction::OnStart_Implementation()
 	for (const auto& Completion : Completions)
 		HandleReceiveMoveCompleted(Completion.Key, Completion.Value);
 	if (GetState() != EStageExecutionState::Running || !MoveRequest.IsMoveToActorRequest()) return;
+	if (UWorld* World = GetWorld(); World && TimeLimit > 0.0f)
+		World->GetTimerManager().SetTimer(MoveTimeoutTimer, FTimerDelegate::CreateWeakLambda(this, [this]
+		{
+			LogMove(TEXT("Move time limit reached"));
+			Finish(EStageActionResult::Failed);
+		}), TimeLimit, false);
 	const auto* Item = Cast<AStagePhysicsActor>(MoveRequest.GetGoalActor());
 	if (UWorld* World = GetWorld(); World && Item && Item->GetInteractionType() == EPhysicsInteractionType::Carry)
 	{
@@ -133,7 +140,11 @@ void UStageMoveAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 void UStageMoveAction::Cleanup_Implementation()
 {
-	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(TargetAvailabilityTimer);
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(TargetAvailabilityTimer);
+		World->GetTimerManager().ClearTimer(MoveTimeoutTimer);
+	}
 	LogMove(FString::Printf(TEXT("Action finished: Result=%s"), *UEnum::GetValueAsString(GetResult())));
 	if (AIController.IsValid())
 	{

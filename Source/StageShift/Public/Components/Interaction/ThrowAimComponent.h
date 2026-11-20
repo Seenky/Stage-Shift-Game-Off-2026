@@ -5,8 +5,12 @@
 
 class ACharacter;
 class APlayerController;
+class UDecalComponent;
+class UInstancedStaticMeshComponent;
 class UInteractionComponent;
+class UMaterialInterface;
 class UPhysicsManipulationComponent;
+class UStaticMesh;
 class UUserWidget;
 
 UCLASS(ClassGroup = (Interaction), meta = (BlueprintSpawnableComponent))
@@ -40,7 +44,13 @@ protected:
 	float StickDeadZone = 0.2f;
 
 	UPROPERTY(EditAnywhere, Category = "Aim", meta = (ClampMin = "0.1"))
-	float MouseSensitivity = 1.0f;
+	float MouseSensitivity = 0.55f;
+
+	UPROPERTY(EditAnywhere, Category = "Aim|Preview")
+	TObjectPtr<UMaterialInterface> LandingMaterial;
+
+	UPROPERTY(EditAnywhere, Category = "Aim|Preview")
+	TObjectPtr<UMaterialInterface> TrajectoryMaterial;
 
 	UPROPERTY(EditAnywhere, Category = "Aim|Cursor", meta = (ClampMin = "1.0", ToolTip = "Cursor speed in pixels per second at 1080p."))
 	float StickCursorSpeed = 900.0f;
@@ -62,12 +72,19 @@ protected:
 
 private:
 	void UpdateAim(APlayerController& Controller, float DeltaTime);
+	void UpdateThrowPreview(bool bShow);
 	bool GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const;
 	TWeakObjectPtr<ACharacter> Character;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
 	TWeakObjectPtr<UPhysicsManipulationComponent> Manipulation;
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> Reticle;
+	UPROPERTY(Transient)
+	TObjectPtr<UDecalComponent> LandingDecal;
+	UPROPERTY(Transient)
+	TObjectPtr<UInstancedStaticMeshComponent> TrajectoryDots;
+	UPROPERTY()
+	TObjectPtr<UStaticMesh> TrajectoryDotMesh;
 	FVector2D StickInput = FVector2D::ZeroVector;
 	FVector2D StickDeviceSample = FVector2D::ZeroVector;
 	FVector2D ScreenPosition = FVector2D::ZeroVector;

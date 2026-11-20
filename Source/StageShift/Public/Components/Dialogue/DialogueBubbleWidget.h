@@ -19,6 +19,7 @@ class STAGESHIFT_API UDialogueBubbleWidget : public UUserWidget
 
 public:
 	void SetDialogueViewModel(UDialogueViewModel* ViewModel);
+	bool GetScreenBounds(FBox2D& Bounds) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Events")
 	void OnDialogueViewModelSet(UDialogueViewModel* ViewModel);

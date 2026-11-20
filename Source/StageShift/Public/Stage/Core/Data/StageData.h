@@ -221,6 +221,8 @@ struct FStageMemberReaction
 	    meta = (EditCondition = "!bIsAllowedStepRange", EditConditionHides, ToolTip = "Step IDs during which this reaction may start. An empty list allows any step. Running reactions are not stopped when the step changes."))
 	TArray<FName> AllowedStepIds;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions")
+	bool bRequireSubjectInSight = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reactions")
 	bool bUseCooldown = false;
 
 	FName GetEffectiveRoleId() const { return RoleId.IsNone() ? MemberTag.GetTagName() : RoleId; }

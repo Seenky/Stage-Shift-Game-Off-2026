@@ -16,6 +16,16 @@ enum class EStageCueState : uint8
 };
 
 UENUM(BlueprintType)
+enum class EStageCueKind : uint8
+{
+	General,
+	Props,
+	Lighting,
+	Mechanism,
+	Sound
+};
+
+UENUM(BlueprintType)
 enum class EStageCueMarkerType : uint8
 {
 	Object,
@@ -43,7 +53,8 @@ struct STAGESHIFT_API FStageCueDefinition
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue") FName CueId;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue") FText Title;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue") EStageCueKind Kind = EStageCueKind::General;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "Cue") FText Title = NSLOCTEXT("StageCues", "Signal", "Сигнал");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue", meta = (MultiLine)) FText Details;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue", meta = (MultiLine)) FText OverdueDetails;
 	// These triggers follow actual scenario execution, including branches and delays.
@@ -85,5 +96,11 @@ struct FStageCueRuntime
 	UPROPERTY() TWeakObjectPtr<AActor> ActorOverride;
 	double Deadline = 0.0;
 	double CompletedAt = 0.0;
+	double SignalStartedAt = 0.0;
 	float TimerDuration = 0.0f;
+	double SoundEarliestAt = 0.0;
+	double SoundLatestAt = 0.0;
+	double SoundFeedbackUntil = 0.0;
+	FText SoundFeedback;
+	bool bSoundWindowClosed = false;
 };
