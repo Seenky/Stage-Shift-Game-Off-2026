@@ -57,13 +57,27 @@ bool UStageMemberComponent::IsPhysicallyBlocked() const
 	return (PhysicalMontage.IsValid() && PhysicalMontage->IsPhysicsMontageActive()) || (StatusComponent.IsValid() && StatusComponent->GetStatuses().HasTag(TAG_StageMemberFallen));
 }
 
-bool UStageMemberComponent::IsWaitingForStageProp() const
+bool UStageMemberComponent::IsWaitingForStageProp(double AcceptedAt) const
 {
-	return !bMemberFinished && !bClosingMember && Manager.IsValid() && Executions.ContainsByPredicate([this](const FStageCommandExecution& Entry)
+	return !bMemberFinished && !bClosingMember && Manager.IsValid() && Executions.ContainsByPredicate([this, AcceptedAt](const FStageCommandExecution& Entry)
 	{
 		const UStageMemberCommand* Command = Entry.Command;
-		return IsValid(Command) && Command->GetState() == EStageExecutionState::Running && Command->ExpectsStageProp() && !IsScenarioPaused(Command);
+		if (!IsValid(Command) || Command->GetState() != EStageExecutionState::Running || !Command->ExpectsStageProp() || IsScenarioPaused(Command))
+			return false;
+		const auto Window = Command->GetPropThrowWindow();
+		return !Window.IsSet() || Window->Contains(AcceptedAt);
 	});
+}
+
+TOptional<TRange<double>> UStageMemberComponent::GetStagePropThrowWindow() const
+{
+	for (const FStageCommandExecution& Entry : Executions)
+	{
+		const UStageMemberCommand* Command = Entry.Command;
+		if (!IsValid(Command) || Command->GetState() != EStageExecutionState::Running || !Command->ExpectsStageProp()) continue;
+		if (const auto Window = Command->GetPropThrowWindow(); Window.IsSet()) return Window;
+	}
+	return {};
 }
 
 void UStageMemberComponent::UpdateStagePropReadiness() const

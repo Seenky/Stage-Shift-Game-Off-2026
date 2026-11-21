@@ -51,11 +51,17 @@ void UPhysicsManipulationComponent::SetCarryPoint(USceneComponent* NewCarryPoint
 
 bool UPhysicsManipulationComponent::CanReceiveStageProp() const
 {
+	const UWorld* World = GetWorld();
+	return World && CanReceiveStagePropAt(World->GetTimeSeconds());
+}
+
+bool UPhysicsManipulationComponent::CanReceiveStagePropAt(double AcceptedAt) const
+{
 	const AActor* Owner = GetOwner();
 	if (!bAcceptStageProps || bPropPlayEnded || !IsValid(Owner) || Owner->IsActorBeingDestroyed() || !HasBegunPlay() || !CarryPoint.IsValid()
 	    || CarryPoint->GetOwner() != Owner || ManipulatedComponent.IsValid() || GetGrabbedComponent()) return false;
 	const auto* Member = Owner->FindComponentByClass<UStageMemberComponent>();
-	if (Member && !Member->IsWaitingForStageProp()) return false;
+	if (Member && !Member->IsWaitingForStageProp(AcceptedAt)) return false;
 	const auto* Physics = Owner->FindComponentByClass<UPhysicalMontageComponent>();
 	return !Physics || !Physics->IsPhysicsMontageActive();
 }

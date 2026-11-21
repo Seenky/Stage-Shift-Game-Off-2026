@@ -27,7 +27,8 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 	bool IsPhysicallyBlocked() const;
-	bool IsWaitingForStageProp() const;
+	bool IsWaitingForStageProp(double AcceptedAt) const;
+	TOptional<TRange<double>> GetStagePropThrowWindow() const;
 	void ShowPartnerInteractionPose();
 	bool IsPartnerInteractionPoseActive() const;
 	bool IsListeningToCheatOutDialogue() const;

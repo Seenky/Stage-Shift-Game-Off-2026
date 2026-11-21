@@ -190,7 +190,8 @@ void AStagePhysicsActor::CheckCatch()
 		AActor* Candidate = Overlap.GetActor();
 		if (Candidate == IgnoredCatchActor.Get()) continue;
 		auto* Receiver = IsValid(Candidate) ? Candidate->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
-		if (!Receiver || !Receiver->CanReceiveStageProp()) continue;
+		// A throw released on time may still be in flight after the cue closes.
+		if (!Receiver || !Receiver->CanReceiveStagePropAt(CatchDeadline - CatchWindow)) continue;
 		const FVector Hand = Receiver->GetCarryPoint()->GetComponentLocation();
 		const FVector Intercept = FMath::ClosestPointOnSegment(Hand, Previous, Current);
 		const double Distance = FVector::DistSquared(Hand, Intercept);

@@ -4,13 +4,30 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Stage/Cues/StageCueComponent.h"
 #include "Stage/Cues/StageCueWorldMarker.h"
 
 #define LOCTEXT_NAMESPACE "StageCues"
+
+void UStageCueSignalWidget::SetSignalWindow(float StartFraction, float EndFraction, EStageCueWindowPhase Phase)
+{
+	static const FName TimerRingName(TEXT("TimerRing"));
+	auto* TimerRing = Cast<UImage>(GetWidgetFromName(TimerRingName));
+	auto* Material = TimerRing ? TimerRing->GetDynamicMaterial() : nullptr;
+	if (!Material) return;
+
+	static const FName WindowStart(TEXT("WindowStart"));
+	static const FName WindowEnd(TEXT("WindowEnd"));
+	static const FName WindowPhase(TEXT("WindowPhase"));
+	Material->SetScalarParameterValue(WindowStart, StartFraction);
+	Material->SetScalarParameterValue(WindowEnd, EndFraction);
+	Material->SetScalarParameterValue(WindowPhase, static_cast<float>(Phase));
+}
 
 void UStageCueSignalWidget::SetSignalCaption(const FText& Caption)
 {
