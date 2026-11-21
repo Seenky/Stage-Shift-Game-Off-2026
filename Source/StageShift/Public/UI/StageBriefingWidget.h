@@ -15,6 +15,7 @@ class STAGESHIFT_API UStageBriefingWidget : public UUserWidget
 
 public:
 	void SetSceneBriefing(AStageManager* InManager, const FText& Text);
+	void SetProductionResult(AStageManager* InManager, const FText& Text);
 	UButton* GetContinueButton() const { return ContinueButton; }
 
 protected:

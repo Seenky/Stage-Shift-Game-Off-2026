@@ -10,6 +10,8 @@ class UStageDataAsset;
 class UStageCueComponent;
 class UStageBriefingWidget;
 class AStageTurntable;
+class AStageCurtainRail;
+class USoundBase;
 DECLARE_LOG_CATEGORY_EXTERN(LogStageShiftStage, Log, All);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStageFinishedById, FName, StageKey, bool, bSucceeded, FText, Reason);
@@ -18,6 +20,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FStageProductionPhaseChanged, ESt
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageCompleted, FGameplayTag, StageId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStageFailed, FGameplayTag, StageId, FText, Reason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageManagerEvent, FStageEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStageOpeningOverdue);
 
 UCLASS(BlueprintType, Blueprintable)
 
@@ -34,6 +37,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Briefing") bool ContinueSceneBriefing(FText& OutError);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Production") TSoftObjectPtr<AStageTurntable> Turntable;
+	UPROPERTY(EditInstanceOnly, Category = "Production|Curtain") TSoftObjectPtr<AStageCurtainRail> CurtainRail;
+	UPROPERTY(EditAnywhere, Category = "Production|Curtain") TObjectPtr<USoundBase> OpeningOverdueSound;
+	UPROPERTY(BlueprintAssignable, Category = "Production|Curtain") FStageOpeningOverdue OnOpeningOverdue;
+	bool CanMoveCurtain() const;
+	bool CanUseTurntable() const;
+	void HandleCurtainEnd(bool bOpen);
 	UPROPERTY(EditInstanceOnly, Category = "Stage|Cheating Out", meta = (ToolTip = "Place a Target Point on stage and point its forward arrow toward the audience. Only yaw is used."))
 	TSoftObjectPtr<AActor> CheatOutReference;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Production|Bindings") TMap<FName, FStageSceneBindings> ProductionBindings;
@@ -135,12 +144,35 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
+	enum class ECurtainPhase : uint8 { Idle, Opening, Playing, Closing, Exiting, Rotating, Entering };
+	struct FCastMove
+	{
+		TWeakObjectPtr<AActor> Actor;
+		TWeakObjectPtr<AActor> Mark;
+		bool bStarted = false;
+	};
+	AActor* ResolveLevelActor(const FSoftObjectPath& Reference) const;
+	void BeginCurtainOpening(bool bFirstScene);
+	void TickCurtainProduction();
+	bool PrepareCurtainCast(const FStageProductionScene& Scene, FText& Error);
+	void MoveCurtainCast(const FStageProductionScene& Scene, bool bEntering);
+	void FinishCurtainCastMoves(bool bEntering);
+	void ShowProductionResult();
+	TWeakObjectPtr<AStageCurtainRail> RuntimeCurtain;
+	TMap<FName, TWeakObjectPtr<AActor>> RuntimeCast;
+	TArray<FCastMove> CastMoves;
+	ECurtainPhase CurtainPhase = ECurtainPhase::Idle;
+	double OpeningDeadline = -1.;
+	double NextOpeningPenaltyAt = -1.;
+	double CastMoveDeadline = 0.;
+	int32 ExpectedSector = INDEX_NONE;
 	bool QueueSceneBriefing(const FText& Text, FText& Error);
 	void RefreshSceneBriefing();
 	void CloseSceneBriefing();
 	FText PendingSceneBriefing;
 	UPROPERTY(Transient) TObjectPtr<UStageBriefingWidget> BriefingWidget;
 	bool bConfirmingSceneBriefing = false;
+	bool bShowingProductionResult = false;
 	bool bSavedBriefingCursor = false;
 
 	bool IsProductionActive() const { return ProductionState == EStageProductionState::Preparing || ProductionState == EStageProductionState::Playing; }

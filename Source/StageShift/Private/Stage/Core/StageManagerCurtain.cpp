@@ -1,0 +1,241 @@
+#include "Stage/Core/StageManager.h"
+
+#include "AIController.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/Interaction/InteractionComponent.h"
+#include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
+#include "Physics/PhysicsManipulationComponent.h"
+#include "Sound/SoundBase.h"
+#include "Stage/Core/Data/StageDataAsset.h"
+#include "Stage/Cues/StageCueComponent.h"
+#include "Stage/Environment/StageCurtainRail.h"
+#include "Stage/Environment/StageTurntable.h"
+#include "UObject/Package.h"
+
+namespace
+{
+	const FName CurtainSignal(TEXT("Curtain"));
+	const FName CurtainLateSignal(TEXT("CurtainLate"));
+	constexpr float RehearsalSeconds = 30.f;
+	constexpr float CastWalkTimeout = 8.f;
+	constexpr float MarkRadius = 55.f;
+
+	FVector CastLocation(const AActor& Mark, const AActor* Performer)
+	{
+		const auto* Character = Cast<ACharacter>(Performer);
+		const double Height = Character ? Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 0.;
+		return Mark.GetActorLocation() + FVector(0, 0, Height);
+	}
+}
+
+AActor* AStageManager::ResolveLevelActor(const FSoftObjectPath& Reference) const
+{
+	const UWorld* World = GetWorld();
+	if (!World || Reference.IsNull()) return nullptr;
+	FSoftObjectPath Path = Reference;
+	if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
+	auto* Actor = Cast<AActor>(Path.ResolveObject());
+	return IsValid(Actor) && !Actor->IsActorBeingDestroyed() && Actor->GetWorld() == World ? Actor : nullptr;
+}
+
+bool AStageManager::CanMoveCurtain() const
+{
+	return ActiveProduction && (CurtainPhase == ECurtainPhase::Opening ||
+	    (CurtainPhase == ECurtainPhase::Closing && State == EStageState::Idle));
+}
+
+bool AStageManager::CanUseTurntable() const
+{
+	if (!RuntimeCurtain.IsValid()) return true;
+	const AStageTurntable* Platform = ResolveTurntable();
+	return ActiveProduction && CurtainPhase == ECurtainPhase::Rotating && Platform && Platform->GetCurrentSector() != ExpectedSector;
+}
+
+void AStageManager::BeginCurtainOpening(bool bFirstScene)
+{
+	CurtainPhase = ECurtainPhase::Opening;
+	OpeningDeadline = bFirstScene ? GetWorld()->GetTimeSeconds() + RehearsalSeconds : -1.;
+	NextOpeningPenaltyAt = -1.;
+	if (auto* Curtain = RuntimeCurtain.Get())
+		PlayerCues->ShowActorSignal(CurtainSignal, EStageCueKind::Mechanism, Curtain->GetLever(), bFirstScene ? RehearsalSeconds : 0.f);
+}
+
+void AStageManager::HandleCurtainEnd(bool bOpen)
+{
+	if (!ActiveProduction || !ActiveProduction->Scenes.IsValidIndex(ProductionSceneIndex)) return;
+	if (bOpen && CurtainPhase == ECurtainPhase::Opening)
+	{
+		OpeningDeadline = NextOpeningPenaltyAt = -1.;
+		PlayerCues->DismissCue(CurtainSignal);
+		PlayerCues->DismissCue(CurtainLateSignal);
+	}
+	else if (!bOpen && CurtainPhase == ECurtainPhase::Closing)
+	{
+		PlayerCues->DismissCue(CurtainSignal);
+		MoveCurtainCast(ActiveProduction->Scenes[ProductionSceneIndex], false);
+	}
+}
+
+bool AStageManager::PrepareCurtainCast(const FStageProductionScene& Scene, FText& Error)
+{
+	const auto* Bindings = ProductionBindings.Find(Scene.SceneId);
+	if (!Bindings) return true;
+	for (const auto& [RoleId, Placement] : Bindings->Cast)
+	{
+		if (!Placement.ActorClass) continue;
+		const AActor* Backstage = ResolveLevelActor(Placement.BackstageMark.ToSoftObjectPath());
+		if (!Backstage)
+		{
+			Error = FText::FromString(TEXT("Missing backstage mark for ") + RoleId.ToString());
+			return false;
+		}
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		AActor* Performer = GetWorld()->SpawnActor<AActor>(Placement.ActorClass,
+		    CastLocation(*Backstage, Placement.ActorClass->GetDefaultObject<AActor>()), Backstage->GetActorRotation(), Params);
+		if (!Performer || !Performer->FindComponentByClass<UStageMemberComponent>())
+		{
+			if (Performer) Performer->Destroy();
+			Error = FText::FromString(TEXT("Could not spawn stage member ") + RoleId.ToString());
+			return false;
+		}
+		if (auto* Pawn = Cast<APawn>(Performer); Pawn && !Pawn->GetController()) Pawn->SpawnDefaultController();
+		RuntimeCast.Add(RoleId, Performer);
+	}
+	return true;
+}
+
+void AStageManager::MoveCurtainCast(const FStageProductionScene& Scene, bool bEntering)
+{
+	CurtainPhase = bEntering ? ECurtainPhase::Entering : ECurtainPhase::Exiting;
+	CastMoveDeadline = GetWorld()->GetTimeSeconds() + CastWalkTimeout;
+	CastMoves.Reset();
+	const auto Actual = ResolveProductionBindings(Scene);
+	const auto* Bindings = ProductionBindings.Find(Scene.SceneId);
+	for (FName RoleId : Scene.Scenario->GetRoleOptions())
+	{
+		auto* Actor = Actual.Roles.FindRef(RoleId).Get();
+		if (!IsValid(Actor)) continue;
+		const auto* Placement = Bindings ? Bindings->Cast.Find(RoleId) : nullptr;
+		auto* Mark = Placement ? ResolveLevelActor((bEntering ? Placement->StageMark : Placement->BackstageMark).ToSoftObjectPath()) : nullptr;
+		CastMoves.Add({Actor, Mark});
+		if (!bEntering)
+		{
+			if (auto* Physics = Actor->FindComponentByClass<UPhysicalMontageComponent>()) Physics->EndStageFall();
+			if (auto* Interaction = Actor->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
+			if (auto* Manipulation = Actor->FindComponentByClass<UPhysicsManipulationComponent>()) Manipulation->EndManipulation(0.f, true);
+		}
+	}
+}
+
+void AStageManager::FinishCurtainCastMoves(bool bEntering)
+{
+	for (const auto& Move : CastMoves)
+	{
+		AActor* Actor = Move.Actor.Get();
+		if (!Actor) continue;
+		const auto* Pawn = Cast<APawn>(Actor);
+		if (auto* Controller = Pawn ? Pawn->GetController<AAIController>() : nullptr) Controller->StopMovement();
+		if (bEntering)
+		{
+			if (const AActor* Mark = Move.Mark.Get())
+			{
+				if (FVector::DistSquared2D(Actor->GetActorLocation(), Mark->GetActorLocation()) > FMath::Square(MarkRadius))
+					Actor->SetActorLocation(CastLocation(*Mark, Actor), false, nullptr, ETeleportType::TeleportPhysics);
+				Actor->SetActorRotation(Mark->GetActorRotation());
+			}
+		}
+		else Actor->Destroy();
+	}
+	CastMoves.Reset();
+	if (bEntering)
+	{
+		BeginCurtainOpening(false);
+		return;
+	}
+
+	RuntimeCast.Reset();
+	++ProductionSceneIndex;
+	if (!ActiveProduction->Scenes.IsValidIndex(ProductionSceneIndex))
+	{
+		FinishProduction(true, FText::GetEmpty());
+		return;
+	}
+	const auto* Platform = ResolveTurntable();
+	if (!Platform)
+	{
+		FinishProduction(false, NSLOCTEXT("StageProduction", "MissingTurntable", "Для смены сцены нужна поворотная платформа."));
+		return;
+	}
+	ExpectedSector = (Platform->GetCurrentSector() + 1) % FMath::Max(2, Platform->SectorCount);
+	CurtainPhase = ECurtainPhase::Rotating;
+	AdvanceProduction();
+}
+
+void AStageManager::TickCurtainProduction()
+{
+	auto* Curtain = RuntimeCurtain.Get();
+	const double Now = GetWorld()->GetTimeSeconds();
+	switch (CurtainPhase)
+	{
+	case ECurtainPhase::Opening:
+		if (Curtain->IsOpen())
+		{
+			if (GetPreparationErrors().IsEmpty())
+			{
+				FText Error;
+				ConfirmProductionPreparation(Error);
+			}
+			break;
+		}
+		if (OpeningDeadline >= 0. && Now >= OpeningDeadline)
+		{
+			if (NextOpeningPenaltyAt < 0.)
+			{
+				NextOpeningPenaltyAt = OpeningDeadline;
+				PlayerCues->ShowActorProblem(CurtainLateSignal, NSLOCTEXT("StageProduction", "AudienceWaiting", "Зрители ждут!"), FText(), Curtain->GetLever());
+				if (OpeningOverdueSound) UGameplayStatics::PlaySound2D(this, OpeningOverdueSound);
+				OnOpeningOverdue.Broadcast();
+			}
+			if (Now >= NextOpeningPenaltyAt)
+			{
+				const int32 Seconds = FMath::FloorToInt(Now - NextOpeningPenaltyAt) + 1;
+				NextOpeningPenaltyAt += Seconds;
+				AddScore(-Seconds);
+			}
+		}
+		break;
+	case ECurtainPhase::Rotating:
+		if (const auto* Platform = ResolveTurntable(); Platform && Platform->GetCurrentSector() == ExpectedSector && Platform->IsNavigationReady())
+			MoveCurtainCast(ActiveProduction->Scenes[ProductionSceneIndex], true);
+		break;
+	case ECurtainPhase::Exiting:
+	case ECurtainPhase::Entering:
+		for (FCastMove& Move : CastMoves)
+		{
+			AActor* Actor = Move.Actor.Get();
+			const AActor* Mark = Move.Mark.Get();
+			if (Move.bStarted || !Actor || !Mark) continue;
+			const auto* Physics = Actor->FindComponentByClass<UPhysicalMontageComponent>();
+			if (Physics && Physics->IsPhysicsMontageActive()) continue;
+			const auto* Pawn = Cast<APawn>(Actor);
+			if (auto* Controller = Pawn ? Pawn->GetController<AAIController>() : nullptr)
+				Controller->MoveToLocation(Mark->GetActorLocation(), MarkRadius, false, true, true, false, nullptr, false);
+			Move.bStarted = true;
+		}
+		if (Now >= CastMoveDeadline || !CastMoves.ContainsByPredicate([](const FCastMove& Move)
+		{
+			const AActor* Actor = Move.Actor.Get();
+			const AActor* Mark = Move.Mark.Get();
+			return Actor && Mark && FVector::DistSquared2D(Actor->GetActorLocation(), Mark->GetActorLocation()) > FMath::Square(MarkRadius);
+		}))
+			FinishCurtainCastMoves(CurtainPhase == ECurtainPhase::Entering);
+		break;
+	default:
+		break;
+	}
+}

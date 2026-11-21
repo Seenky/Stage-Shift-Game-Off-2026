@@ -53,7 +53,7 @@ void AStageTurntable::SetStageManager(AStageManager* Manager)
 bool AStageTurntable::CanRotate() const
 {
 	const AStageManager* Manager = StageManager.Get();
-	return !bRotating && (!Manager || Manager->GetState() == EStageState::Idle);
+	return !bRotating && (!Manager || (Manager->GetState() == EStageState::Idle && Manager->CanUseTurntable()));
 }
 
 bool AStageTurntable::IsNavigationReady() const
