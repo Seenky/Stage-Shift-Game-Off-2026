@@ -63,12 +63,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "0.05", Units = "s"))
 	float CatchWindow = 1.25f;
 
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<class USoundBase> ImpactSound;
+
 private:
 	void ConfigureCharacterContact();
 	void CheckCatch();
 	void IgnoreThrowerDuringRelease(const AActor& Source);
 	void RestoreThrowerCollision();
 	bool HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const;
+	UFUNCTION()
+	void HandleImpactSound(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
+	    FVector NormalImpulse, const FHitResult& Hit);
 
 	FTimerHandle CatchTimer;
 	FTimerHandle ThrowerCollisionTimer;
@@ -76,6 +82,7 @@ private:
 	TWeakObjectPtr<AActor> IgnoredCatchActor;
 	FVector PreviousFlightPosition;
 	double CatchDeadline = 0;
+	double LastImpactSoundTime = -1.0;
 	bool bMissedThrow = false;
 
 	UPROPERTY(Transient)

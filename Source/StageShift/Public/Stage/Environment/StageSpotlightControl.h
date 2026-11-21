@@ -44,6 +44,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, Category = "Stage|Audio")
+	TObjectPtr<class USoundBase> ActivationSound;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<UStaticMeshComponent> ControlMesh;
 

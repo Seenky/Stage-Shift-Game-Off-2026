@@ -11,6 +11,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "TimerManager.h"
 
@@ -327,6 +328,10 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 		Mesh->AddImpulseAtLocation(ActiveInput.Impulse, ActiveInput.ImpulseLocation, ActiveInput.ImpulseBone);
 	}
 	bIsSimActive = true;
+	if (FallSound && MontageName != TEXT("Jump"))
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FallSound, Mesh->GetSocketLocation(PelvisBone));
+	}
 
 	if (!bStayDown)
 		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);

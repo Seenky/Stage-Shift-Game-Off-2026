@@ -10,6 +10,7 @@
 class UStaticMeshComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+class USoundBase;
 
 UCLASS()
 
@@ -27,6 +28,12 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Button")
+	void ActivateButton();
+
+	int32 GetNavigationOrder() const { return NavigationOrder; }
+	void SetNavigationFocus(bool bFocused, bool bUsePointer);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> ButtonMesh;
@@ -43,6 +50,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
 	TObjectPtr<UMaterialInterface> ActiveButtonMaterial;
 
+	// Empty keeps the original material slot 0 behavior.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
+	FName FeedbackMaterialSlot;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.001"))
 	float MaterialBlendTime = 0.2f;
 
@@ -52,7 +63,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "Settings|Event")
 	TObjectPtr<UUIClickEventBase> ClickEvent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Event")
+	bool bAllowUnboundClickFeedback = false;
+
+	UPROPERTY(EditInstanceOnly, Category = "Settings|Navigation", meta = (ClampMin = "-1"))
+	int32 NavigationOrder = INDEX_NONE;
+
+	UPROPERTY(EditAnywhere, Category = "Settings|Audio")
+	TObjectPtr<USoundBase> HoverSound;
+
+	UPROPERTY(EditAnywhere, Category = "Settings|Audio")
+	TObjectPtr<USoundBase> PressSound;
+
 private:
+	int32 GetFeedbackMaterialIndex() const;
+
 	UFUNCTION()
 	void OnButtonClicked(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed);
 
@@ -81,6 +106,8 @@ private:
 	float CurrentBlendState = 0.0f;
 
 	bool bIsHovered = false;
+	bool bNavigationFocused = false;
+	bool bUsePointerFeedback = true;
 	bool bIsActive = false;
 
 	FTimerHandle DeactivateTimerHandle;

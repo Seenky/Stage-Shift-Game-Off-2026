@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
 #include "Stage/Core/StageManager.h"
 #include "UObject/ConstructorHelpers.h"
@@ -75,6 +76,7 @@ bool AStageTurntable::RotateToSector(int32 SectorIndex)
 	EndYaw = StartYaw + FMath::FindDeltaAngleDegrees(StartYaw, SectorYaw);
 	RotationElapsed = 0.0f;
 	bRotating = true;
+	if (RotationSound) UGameplayStatics::PlaySoundAtLocation(this, RotationSound, GetActorLocation());
 	SetActorTickEnabled(true);
 	return true;
 }

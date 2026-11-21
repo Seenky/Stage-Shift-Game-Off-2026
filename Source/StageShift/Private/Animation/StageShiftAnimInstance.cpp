@@ -188,10 +188,12 @@ void UStageShiftAnimInstance::UpdateDollMotion(const AStageShiftCharacter* Chara
 	FVector TargetLean = FVector::ZeroVector;
 	if (bGrounded && DollMotion.bWasGrounded)
 	{
-		const bool bNewFootPlant = (Contact.X >= 0.8 && DollMotion.PreviousFootContact.X < 0.8) || (Contact.Y >= 0.8 && DollMotion.PreviousFootContact.Y < 0.8);
-		if (bNewFootPlant && GroundSpeed > 20.0f)
+		const bool bLeftPlant = Contact.X >= 0.8 && DollMotion.PreviousFootContact.X < 0.8;
+		const bool bRightPlant = Contact.Y >= 0.8 && DollMotion.PreviousFootContact.Y < 0.8;
+		if ((bLeftPlant || bRightPlant) && GroundSpeed > 20.0f)
 		{
 			DollMotion.CompressionVelocity += Character->GetStepSquash() * 60.0f * FMath::Clamp(GroundSpeed / 150.0f, 0.6f, 1.5f);
+			Character->PlayFootstep(bLeftPlant);
 		}
 		if (DeltaSeconds > SMALL_NUMBER)
 		{

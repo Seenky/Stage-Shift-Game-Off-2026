@@ -1,0 +1,745 @@
+{
+  "modules": [
+    {
+      "name": "SM_Menu_StageDeck",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "collection": "StageDeck",
+      "parts": 94,
+      "materials": [
+        "MI_Menu_OakGrey",
+        "MI_Menu_OakRed",
+        "MI_Menu_OakHoney",
+        "MI_Menu_Oak",
+        "MI_Menu_EndGrain"
+      ],
+      "vertices": 5264,
+      "faces": 5076
+    },
+    {
+      "name": "SM_Menu_StageApron",
+      "location": [
+        0,
+        0,
+        -60
+      ],
+      "collection": "StageApron",
+      "parts": 46,
+      "materials": [
+        "MI_Menu_OakRed",
+        "MI_Menu_OakDark",
+        "MI_Menu_OakHoney",
+        "MI_Menu_Oak"
+      ],
+      "vertices": 5390,
+      "faces": 5283
+    },
+    {
+      "name": "SM_Menu_BackstageShell",
+      "location": [
+        680,
+        0,
+        0
+      ],
+      "collection": "BackstageShell",
+      "parts": 91,
+      "materials": [
+        "MI_Menu_Beam",
+        "MI_Menu_BackWood",
+        "MI_Menu_OakGrey",
+        "MI_Menu_OakDark",
+        "MI_Menu_Iron"
+      ],
+      "vertices": 3896,
+      "faces": 3594
+    },
+    {
+      "name": "SM_Menu_CurtainLeft",
+      "location": [
+        -216,
+        -354.0,
+        0
+      ],
+      "collection": "CurtainLeft",
+      "parts": 48,
+      "materials": [
+        "MI_Menu_Burgundy",
+        "MI_Menu_Wine",
+        "MI_Menu_VelvetLight",
+        "MI_Menu_GoldThread",
+        "MI_Menu_GoldDark"
+      ],
+      "vertices": 14032,
+      "faces": 13881
+    },
+    {
+      "name": "SM_Menu_CurtainRight",
+      "location": [
+        -145,
+        476.0,
+        0
+      ],
+      "collection": "CurtainRight",
+      "parts": 48,
+      "materials": [
+        "MI_Menu_Burgundy",
+        "MI_Menu_Wine",
+        "MI_Menu_VelvetLight",
+        "MI_Menu_GoldThread",
+        "MI_Menu_GoldDark"
+      ],
+      "vertices": 14032,
+      "faces": 13881
+    },
+    {
+      "name": "SM_Menu_Valance",
+      "location": [
+        -118,
+        0,
+        464
+      ],
+      "collection": "Valance",
+      "parts": 120,
+      "materials": [
+        "MI_Menu_Burgundy",
+        "MI_Menu_GoldThread",
+        "MI_Menu_Wine"
+      ],
+      "vertices": 6265,
+      "faces": 5500
+    },
+    {
+      "name": "SM_Menu_ScenicBackdrop",
+      "location": [
+        366,
+        51,
+        204
+      ],
+      "collection": "ScenicBackdrop",
+      "parts": 17,
+      "materials": [
+        "MI_Menu_ScenicPainting",
+        "MI_Menu_OakHoney",
+        "MI_Menu_GoldDark",
+        "MI_Menu_GoldThread"
+      ],
+      "vertices": 6888,
+      "faces": 6768
+    },
+    {
+      "name": "SM_Menu_MoonAndStars",
+      "location": [
+        175,
+        243,
+        327
+      ],
+      "collection": "MoonAndStars",
+      "parts": 36,
+      "materials": [
+        "MI_Menu_Moon",
+        "MI_Menu_MoonOchre",
+        "MI_Menu_MoonInk",
+        "MI_Menu_MoonRose",
+        "MI_Menu_GoldDark",
+        "MI_Menu_GoldThread",
+        "MI_Menu_Brass",
+        "MI_Menu_Glow"
+      ],
+      "vertices": 7661,
+      "faces": 7575
+    },
+    {
+      "name": "SM_Menu_GardenScenery",
+      "location": [
+        274,
+        -158,
+        0
+      ],
+      "collection": "GardenScenery",
+      "parts": 58,
+      "materials": [
+        "MI_Menu_Sage",
+        "MI_Menu_Cardboard",
+        "MI_Menu_Leaf",
+        "MI_Menu_RoseLight",
+        "MI_Menu_Rose",
+        "MI_Menu_GoldThread",
+        "MI_Menu_OakDark",
+        "MI_Menu_Oak"
+      ],
+      "vertices": 4062,
+      "faces": 4321
+    },
+    {
+      "name": "SM_Menu_GardenWagon",
+      "location": [
+        184,
+        426,
+        0
+      ],
+      "collection": "GardenWagon",
+      "parts": 46,
+      "materials": [
+        "MI_Menu_Sage",
+        "MI_Menu_Cardboard",
+        "MI_Menu_Leaf",
+        "MI_Menu_RoseLight",
+        "MI_Menu_Rose",
+        "MI_Menu_GoldThread",
+        "MI_Menu_OakHoney",
+        "MI_Menu_Iron",
+        "MI_Menu_Brass",
+        "MI_Menu_Oak"
+      ],
+      "vertices": 2852,
+      "faces": 2954
+    },
+    {
+      "name": "SM_Menu_StoneBalustrade",
+      "location": [
+        242,
+        -79,
+        0
+      ],
+      "collection": "StoneBalustrade",
+      "parts": 44,
+      "materials": [
+        "MI_Menu_Stone",
+        "MI_Menu_StoneLight",
+        "MI_Menu_StoneDark"
+      ],
+      "vertices": 1312,
+      "faces": 936
+    },
+    {
+      "name": "SM_Menu_PracticalRostrum",
+      "location": [
+        95,
+        28,
+        0
+      ],
+      "collection": "PracticalRostrum",
+      "parts": 30,
+      "materials": [
+        "MI_Menu_Stone",
+        "MI_Menu_StoneLight",
+        "MI_Menu_StoneDark",
+        "MI_Menu_Moss",
+        "MI_Menu_Sage",
+        "MI_Menu_Leaf"
+      ],
+      "vertices": 1596,
+      "faces": 1746
+    },
+    {
+      "name": "SM_Menu_BackstageScaffold",
+      "location": [
+        460,
+        464,
+        0
+      ],
+      "collection": "BackstageScaffold",
+      "parts": 37,
+      "materials": [
+        "MI_Menu_Beam",
+        "MI_Menu_OakDark",
+        "MI_Menu_OakGrey",
+        "MI_Menu_Oak",
+        "MI_Menu_OakHoney",
+        "MI_Menu_GoldDark",
+        "MI_Menu_GoldThread"
+      ],
+      "vertices": 5226,
+      "faces": 5130
+    },
+    {
+      "name": "SM_Menu_DressingStation",
+      "location": [
+        587,
+        583,
+        0
+      ],
+      "collection": "DressingStation",
+      "parts": 39,
+      "materials": [
+        "MI_Menu_OakHoney",
+        "MI_Menu_OakDark",
+        "MI_Menu_Oak",
+        "MI_Menu_Brass",
+        "MI_Menu_BlueCloth",
+        "MI_Menu_Glow",
+        "MI_Menu_Parchment",
+        "MI_Menu_PaperLight"
+      ],
+      "vertices": 1974,
+      "faces": 1938
+    },
+    {
+      "name": "SM_Menu_ScenicPlans",
+      "location": [
+        614,
+        407,
+        231
+      ],
+      "collection": "ScenicPlans",
+      "parts": 9,
+      "materials": [
+        "MI_Menu_Parchment",
+        "MI_Menu_Cardboard",
+        "MI_Menu_Brass",
+        "MI_Menu_MoonInk",
+        "MI_Menu_GoldDark"
+      ],
+      "vertices": 340,
+      "faces": 324
+    },
+    {
+      "name": "SM_Menu_StageRigging",
+      "location": [
+        231,
+        64,
+        473
+      ],
+      "collection": "StageRigging",
+      "parts": 19,
+      "materials": [
+        "MI_Menu_BackWood",
+        "MI_Menu_Beam",
+        "MI_Menu_GoldDark",
+        "MI_Menu_Iron",
+        "MI_Menu_OakDark",
+        "MI_Menu_Glow"
+      ],
+      "vertices": 1782,
+      "faces": 1630
+    },
+    {
+      "name": "SM_Menu_Footlights",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "collection": "Footlights",
+      "parts": 36,
+      "materials": [
+        "MI_Menu_Brass",
+        "MI_Menu_Glow"
+      ],
+      "vertices": 2568,
+      "faces": 2400
+    },
+    {
+      "name": "SM_Menu_BackstageLantern",
+      "location": [
+        486,
+        552,
+        251
+      ],
+      "collection": "BackstageLantern",
+      "parts": 16,
+      "materials": [
+        "MI_Menu_Iron",
+        "MI_Menu_Brass",
+        "MI_Menu_Glow",
+        "MI_Menu_GoldDark",
+        "MI_Menu_GoldThread"
+      ],
+      "vertices": 2307,
+      "faces": 2220
+    },
+    {
+      "name": "SM_Menu_ForegroundProps",
+      "location": [
+        -150,
+        376,
+        -126
+      ],
+      "collection": "ForegroundProps",
+      "parts": 64,
+      "materials": [
+        "MI_Menu_Leather",
+        "MI_Menu_OakDark",
+        "MI_Menu_Brass",
+        "MI_Menu_GoldThread",
+        "MI_Menu_GoldDark",
+        "MI_Menu_Oak",
+        "MI_Menu_OakHoney",
+        "MI_Menu_Parchment",
+        "MI_Menu_EndGrain",
+        "MI_Menu_Iron",
+        "MI_Menu_Glow"
+      ],
+      "vertices": 2854,
+      "faces": 2772
+    },
+    {
+      "name": "SM_Menu_AudienceSilhouettes",
+      "location": [
+        -500,
+        0,
+        -40
+      ],
+      "collection": "AudienceSilhouettes",
+      "parts": 54,
+      "materials": [
+        "MI_Menu_Wine",
+        "MI_Menu_Burgundy",
+        "MI_Menu_VelvetLight",
+        "MI_Menu_GoldDark"
+      ],
+      "vertices": 3336,
+      "faces": 3612
+    },
+    {
+      "name": "SM_Menu_ButtonPlaque",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "collection": "ButtonPlaque",
+      "parts": 95,
+      "materials": [
+        "MI_Menu_ButtonFace_Base",
+        "MI_Menu_Cardboard",
+        "MI_Menu_OakDark",
+        "MI_Menu_Oak",
+        "MI_Menu_GoldDark",
+        "MI_Menu_Brass",
+        "MI_Menu_GoldThread"
+      ],
+      "vertices": 2340,
+      "faces": 1808,
+      "usage": "menu-control"
+    },
+    {
+      "name": "SM_Menu_TitleSign",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "collection": "TitleSign",
+      "parts": 123,
+      "materials": [
+        "MI_Menu_Wine",
+        "MI_Menu_OakDark",
+        "MI_Menu_Burgundy",
+        "MI_Menu_GoldDark",
+        "MI_Menu_GoldThread",
+        "MI_Menu_PaperLight",
+        "MI_Menu_MoonInk",
+        "MI_Menu_Rose"
+      ],
+      "vertices": 51998,
+      "faces": 47511,
+      "usage": "menu-control"
+    }
+  ],
+  "materials": {
+    "Oak": [
+      0.27,
+      0.119,
+      0.053,
+      0.73,
+      0
+    ],
+    "OakHoney": [
+      0.39,
+      0.203,
+      0.094,
+      0.66,
+      0
+    ],
+    "OakDark": [
+      0.119,
+      0.046,
+      0.024,
+      0.78,
+      0
+    ],
+    "OakRed": [
+      0.21,
+      0.073,
+      0.041,
+      0.7,
+      0
+    ],
+    "OakGrey": [
+      0.18,
+      0.108,
+      0.072,
+      0.8,
+      0
+    ],
+    "EndGrain": [
+      0.1,
+      0.046,
+      0.025,
+      0.79,
+      0
+    ],
+    "BackWood": [
+      0.077,
+      0.052,
+      0.045,
+      0.82,
+      0
+    ],
+    "Beam": [
+      0.12,
+      0.064,
+      0.043,
+      0.8,
+      0
+    ],
+    "Iron": [
+      0.036,
+      0.028,
+      0.021,
+      0.57,
+      0.48
+    ],
+    "Burgundy": [
+      0.198,
+      0.015,
+      0.033,
+      0.92,
+      0
+    ],
+    "Wine": [
+      0.105,
+      0.007,
+      0.021,
+      0.9,
+      0
+    ],
+    "VelvetLight": [
+      0.245,
+      0.024,
+      0.043,
+      0.93,
+      0
+    ],
+    "GoldThread": [
+      0.58,
+      0.294,
+      0.079,
+      0.72,
+      0.13
+    ],
+    "GoldDark": [
+      0.282,
+      0.133,
+      0.032,
+      0.66,
+      0.3
+    ],
+    "Brass": [
+      0.48,
+      0.276,
+      0.093,
+      0.39,
+      0.71
+    ],
+    "Parchment": [
+      0.71,
+      0.483,
+      0.249,
+      0.87,
+      0
+    ],
+    "Cardboard": [
+      0.335,
+      0.206,
+      0.11,
+      0.88,
+      0
+    ],
+    "PaperLight": [
+      0.785,
+      0.608,
+      0.369,
+      0.85,
+      0
+    ],
+    "Moon": [
+      0.82,
+      0.583,
+      0.287,
+      0.76,
+      0
+    ],
+    "MoonOchre": [
+      0.59,
+      0.34,
+      0.147,
+      0.81,
+      0
+    ],
+    "MoonInk": [
+      0.123,
+      0.046,
+      0.028,
+      0.9,
+      0
+    ],
+    "MoonRose": [
+      0.53,
+      0.216,
+      0.132,
+      0.86,
+      0
+    ],
+    "BlueCloth": [
+      0.15,
+      0.24,
+      0.3,
+      0.9,
+      0
+    ],
+    "ScenicPainting": [
+      0.43,
+      0.5,
+      0.53,
+      0.83,
+      0
+    ],
+    "Stone": [
+      0.55,
+      0.409,
+      0.294,
+      0.86,
+      0
+    ],
+    "StoneDark": [
+      0.35,
+      0.259,
+      0.195,
+      0.8,
+      0
+    ],
+    "StoneLight": [
+      0.64,
+      0.493,
+      0.37,
+      0.87,
+      0
+    ],
+    "Sage": [
+      0.13,
+      0.223,
+      0.102,
+      0.87,
+      0
+    ],
+    "Moss": [
+      0.077,
+      0.151,
+      0.065,
+      0.92,
+      0
+    ],
+    "Leaf": [
+      0.28,
+      0.35,
+      0.15,
+      0.87,
+      0
+    ],
+    "Rose": [
+      0.478,
+      0.155,
+      0.13,
+      0.86,
+      0
+    ],
+    "RoseLight": [
+      0.614,
+      0.254,
+      0.181,
+      0.86,
+      0
+    ],
+    "Leather": [
+      0.087,
+      0.039,
+      0.028,
+      0.78,
+      0
+    ],
+    "Lantern": [
+      0.67,
+      0.305,
+      0.086,
+      0.41,
+      0.48
+    ],
+    "Glow": [
+      1,
+      0.61,
+      0.22,
+      0.45,
+      0
+    ],
+    "ButtonFace_Base": [
+      0.77,
+      0.46,
+      0.215,
+      0.8,
+      0
+    ]
+  },
+  "camera": {
+    "location": [
+      -900,
+      -112,
+      226
+    ],
+    "rotation": [
+      -3,
+      8,
+      0
+    ],
+    "fov": 51
+  },
+  "controls": {
+    "logo": [
+      -233.8887939453125,
+      -232.88027954101562,
+      300.9856262207031
+    ],
+    "buttons": {
+      "Play": [
+        -238.6456298828125,
+        -237.508056640625,
+        217.9214630126953
+      ],
+      "Coop": [
+        -240.75372314453125,
+        -237.80435180664062,
+        177.301513671875
+      ],
+      "Settings": [
+        -242.86175537109375,
+        -238.10061645507812,
+        136.68154907226562
+      ],
+      "Exit": [
+        -244.9698486328125,
+        -238.39688110351562,
+        96.06161499023438
+      ]
+    },
+    "rotation": [
+      3,
+      188,
+      0
+    ],
+    "depth_cm": 637
+  }
+}

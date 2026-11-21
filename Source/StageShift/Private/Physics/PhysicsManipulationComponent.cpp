@@ -427,6 +427,7 @@ bool UPhysicsManipulationComponent::AttachCarriedObject(bool bKeepWorldTransform
 		return false;
 	}
 	bCarryAttached = true;
+	if (GrabSound) UGameplayStatics::PlaySoundAtLocation(this, GrabSound, Component->GetComponentLocation());
 	return true;
 }
 
@@ -508,6 +509,10 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 
 	if (IsValid(Component) && bCarry && Component->IsSimulatingPhysics() && IsValid(GetOwner()))
 	{
+		if (USoundBase* Sound = bThrow ? ThrowSound.Get() : (bCancelled ? nullptr : ReleaseSound.Get()))
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, Sound, Component->GetComponentLocation());
+		}
 		Component->SetPhysicsAngularVelocityInRadians(FVector::ZeroVector);
 		Component->SetPhysicsLinearVelocity(FVector::ZeroVector);
 		if (bThrow)

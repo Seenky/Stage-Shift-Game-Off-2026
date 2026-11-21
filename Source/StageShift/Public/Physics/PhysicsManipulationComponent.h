@@ -80,6 +80,15 @@ protected:
 	virtual void OnUnregister() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<class USoundBase> GrabSound;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<class USoundBase> ReleaseSound;
+
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<class USoundBase> ThrowSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))
 	float DragDistance = 100.0f;
 	UPROPERTY(EditAnywhere, Category = "Drag", meta = (ClampMin = "1.0", Units = "cm"))

@@ -3,6 +3,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "TimerManager.h"
@@ -12,9 +13,14 @@
 EDataValidationResult AButton3D::IsDataValid(FDataValidationContext& Context) const
 {
 	const EDataValidationResult Parent = Super::IsDataValid(Context);
-	if (!IsValid(ClickEvent))
+	if (!IsValid(ClickEvent) && !bAllowUnboundClickFeedback)
 	{
 		Context.AddError(FText::FromString(TEXT("Button3D requires ClickEvent.")));
+		return EDataValidationResult::Invalid;
+	}
+	if (!FeedbackMaterialSlot.IsNone() && ButtonMesh->GetStaticMesh() && GetFeedbackMaterialIndex() == INDEX_NONE)
+	{
+		Context.AddError(FText::FromString(TEXT("Button3D feedback material slot is missing from the mesh.")));
 		return EDataValidationResult::Invalid;
 	}
 	return Parent == EDataValidationResult::Invalid ? Parent : EDataValidationResult::Valid;
@@ -38,11 +44,20 @@ AButton3D::AButton3D()
 	ButtonMesh->OnEndCursorOver.AddDynamic(this, &ThisClass::OnButtonEndHover);
 }
 
+int32 AButton3D::GetFeedbackMaterialIndex() const
+{
+	return FeedbackMaterialSlot.IsNone() ? 0 : ButtonMesh->GetMaterialIndex(FeedbackMaterialSlot);
+}
+
 void AButton3D::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	ButtonMesh->SetMaterial(0, InactiveButtonMaterial);
+	const int32 MaterialIndex = GetFeedbackMaterialIndex();
+	if (MaterialIndex != INDEX_NONE)
+	{
+		ButtonMesh->SetMaterial(MaterialIndex, InactiveButtonMaterial);
+	}
 
 	if (!ButtonMesh->GetStaticMesh())
 	{
@@ -63,7 +78,8 @@ void AButton3D::BeginPlay()
 
 	if (IsValid(ClickEvent)) ClickEvent = DuplicateObject(ClickEvent, this);
 
-	if (!InactiveButtonMaterial || !HoveredButtonMaterial || !ActiveButtonMaterial)
+	const int32 MaterialIndex = GetFeedbackMaterialIndex();
+	if (MaterialIndex == INDEX_NONE || !InactiveButtonMaterial || !HoveredButtonMaterial || !ActiveButtonMaterial)
 	{
 		SetActorTickEnabled(false);
 		return;
@@ -77,7 +93,7 @@ void AButton3D::BeginPlay()
 
 	ActiveButtonMaterialDYN = UMaterialInstanceDynamic::Create(ActiveButtonMaterial, this);
 
-	ButtonMesh->SetMaterial(0, CurrentButtonMaterialDYN);
+	ButtonMesh->SetMaterial(MaterialIndex, CurrentButtonMaterialDYN);
 
 	CurrentBlendState = 0.0f;
 
@@ -99,7 +115,8 @@ void AButton3D::UpdateMaterialBlend(float DeltaTime)
 		return;
 	}
 
-	const float TargetState = bIsActive ? 2.0f : bIsHovered ? 1.0f : 0.0f;
+	const bool bHighlighted = bNavigationFocused || (bUsePointerFeedback && bIsHovered);
+	const float TargetState = bIsActive ? 2.0f : bHighlighted ? 1.0f : 0.0f;
 
 	const float BlendSpeed = 1.0f / FMath::Max(MaterialBlendTime, KINDA_SMALL_NUMBER);
 
@@ -131,12 +148,28 @@ void AButton3D::RequestMaterialUpdate()
 
 void AButton3D::OnButtonClicked(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed)
 {
-	if (!IsValid(ClickEvent) || !GetWorld()) return;
+	ActivateButton();
+}
+
+void AButton3D::SetNavigationFocus(bool bFocused, bool bUsePointer)
+{
+	if (bNavigationFocused == bFocused && bUsePointerFeedback == bUsePointer) return;
+
+	bNavigationFocused = bFocused;
+	bUsePointerFeedback = bUsePointer;
+	if (bFocused && HoverSound) UGameplayStatics::PlaySound2D(this, HoverSound);
+	RequestMaterialUpdate();
+}
+
+void AButton3D::ActivateButton()
+{
+	if ((!IsValid(ClickEvent) && !bAllowUnboundClickFeedback) || !GetWorld()) return;
 	if (GetWorld()->GetTimerManager().IsTimerActive(DeactivateTimerHandle)) return;
 
 	bIsActive = true;
 
-	ClickEvent->OnClicked();
+	if (PressSound) UGameplayStatics::SpawnSound2D(this, PressSound, 1.f, 1.f, 0.f, nullptr, true);
+	if (IsValid(ClickEvent)) ClickEvent->OnClicked();
 
 	RequestMaterialUpdate();
 
@@ -158,6 +191,7 @@ void AButton3D::OnButtonStartHover(UPrimitiveComponent* TouchedComponent)
 	}
 
 	bIsHovered = true;
+	if (bUsePointerFeedback && HoverSound) UGameplayStatics::PlaySound2D(this, HoverSound);
 
 	RequestMaterialUpdate();
 }

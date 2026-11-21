@@ -1,5 +1,6 @@
 #include "Stage/Core/StageManager.h"
 
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Button.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
@@ -24,15 +25,13 @@ void AStageManager::RefreshSceneBriefing()
 	if (!Player || !Player->HasActorBegunPlay() || !Player->IsLocalController() || !Player->GetLocalPlayer()) return;
 	auto* Widget = CreateWidget<UStageBriefingWidget>(Player, BriefingWidgetClass.LoadSynchronous());
 	if (!Widget) return;
-	BriefingWidget = Widget;
 	Widget->SetSceneBriefing(this, PendingSceneBriefing);
-	Widget->AddToPlayerScreen(30);
+	if (!Widget->AddToPlayerScreen(30)) return;
+
+	BriefingWidget = Widget;
 	bSavedBriefingCursor = Player->bShowMouseCursor;
 	Player->bShowMouseCursor = true;
-	FInputModeGameAndUI InputMode;
-	InputMode.SetWidgetToFocus(Widget->GetContinueButton()->TakeWidget());
-	InputMode.SetHideCursorDuringCapture(false);
-	Player->SetInputMode(InputMode);
+	UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(Player, Widget->GetContinueButton(), EMouseLockMode::DoNotLock, true);
 }
 
 void AStageManager::CloseSceneBriefing()
@@ -43,7 +42,7 @@ void AStageManager::CloseSceneBriefing()
 		BriefingWidget = nullptr;
 		if (APlayerController* Player = Widget->GetOwningPlayer(); IsValid(Player) && !Player->IsActorBeingDestroyed())
 		{
-			Player->SetInputMode(FInputModeGameOnly());
+			UWidgetBlueprintLibrary::SetInputMode_GameOnly(Player, true);
 			Player->bShowMouseCursor = bSavedBriefingCursor;
 		}
 		Widget->RemoveFromParent();

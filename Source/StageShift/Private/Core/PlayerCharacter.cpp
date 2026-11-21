@@ -10,6 +10,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "StageShift/Public/Components/Interaction/InteractionComponent.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
@@ -45,10 +46,12 @@ void APlayerCharacter::BeginPlay()
 		CarryPoint->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, CarrySocketName);
 	}
 
-	if (!MappingContext) return;
-
-	if (const APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()); PlayerController && PlayerController->IsLocalController())
 	{
+		// Keep the stereo orientation of the stage camera and measure distance from the worker.
+		PlayerController->SetAudioListenerAttenuationOverride(GetRootComponent(), FVector::ZeroVector);
+		if (!MappingContext) return;
+
 		const ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
 		check(IsValid(LocalPlayer));
 
@@ -61,6 +64,10 @@ void APlayerCharacter::BeginPlay()
 
 void APlayerCharacter::UnPossessed()
 {
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()); PlayerController && PlayerController->IsLocalController())
+	{
+		PlayerController->ClearAudioListenerAttenuationOverride();
+	}
 	InteractionComponent->CancelInteraction();
 	ThrowAimComponent->StopAiming();
 	Super::UnPossessed();
