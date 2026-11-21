@@ -1,6 +1,8 @@
 #include "Animation/StageShiftAnimInstance.h"
 
+#include "Components/Dialogue/DialogueComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
 #include "Core/StageShiftCharacter.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/Character.h"
@@ -32,6 +34,7 @@ void UStageShiftAnimInstance::NativeInitializeAnimation()
 	Gait = 0.0f;
 	PlayRate = 1.0f;
 	FootIKAlpha = 0.0f;
+	CheatOutYaw = 0.0f;
 	RecoveryPose.Reset();
 	RecoveryPoseAlpha = 0.0f;
 	RecoveryBlendTime = 0.0f;
@@ -142,6 +145,42 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const bool bGrounded = Character && Character->GetCharacterMovement()->IsMovingOnGround();
 	FootIKAlpha = FMath::FInterpTo(FootIKAlpha, bEnableFootIK && bGrounded && RecoveryPoseAlpha <= 0.0f ? 1.0f : 0.0f, DeltaSeconds, FootIKResponse);
 	UpdateDollMotion(Cast<AStageShiftCharacter>(Pawn), PlanarVelocity, bGrounded, DeltaSeconds);
+	const bool bCanTurn = bGrounded && RecoveryPoseAlpha <= 0.0f && PickupAlpha <= 0.0f && DragPose.Alpha <= 0.0f
+	    && !IsAnyMontagePlaying() && (!StageCharacter || !StageCharacter->IsPhysicsMontageActive());
+	UpdateCheatingOut(Pawn, bCanTurn, DeltaSeconds);
+}
+
+void UStageShiftAnimInstance::UpdateCheatingOut(const APawn* Pawn, bool bCanTurn, float DeltaSeconds)
+{
+	if (!bCanTurn)
+	{
+		CheatOutYaw = 0.0f;
+		return;
+	}
+
+	const auto* Member = Pawn ? Pawn->FindComponentByClass<UStageMemberComponent>() : nullptr;
+	if (Member && !Member->IsMemberFinished() && !Member->IsPhysicallyBlocked() && GroundSpeed < 30.0f)
+	{
+		const auto* Dialogue = Pawn->FindComponentByClass<UDialogueComponent>();
+		const bool bSpeaking = Dialogue && Dialogue->IsPlaying();
+		const bool bInteracting = Member->IsPartnerInteractionPoseActive();
+		const bool bOpen = bSpeaking ? Dialogue->GetPlaybackState().Line.bCheatOut : bInteracting || Member->IsListeningToCheatOutDialogue();
+		const FVector Audience = bOpen ? Member->GetCheatOutAudienceDirection() : FVector::ZeroVector;
+		if (!Audience.IsNearlyZero())
+		{
+			const double Turn = FMath::FindDeltaAngleDegrees(Pawn->GetActorRotation().Yaw, Audience.Rotation().Yaw);
+			const double BackFade = 1.0 - FMath::SmoothStep(130.0, 180.0, FMath::Abs(Turn));
+			const double Limit = bSpeaking || bInteracting ? MaxCheatOutAngle : 0.8 * MaxCheatOutAngle;
+			constexpr double AudienceAngleReserve = 30.0;
+			const double AvailableTurn = FMath::Max(0.0, FMath::Abs(Turn) - AudienceAngleReserve);
+			const double Side = FMath::Sign(Turn);
+			const float TargetYaw = Side * FMath::Min(Limit, AvailableTurn) * BackFade;
+			const float BlendedYaw = FMath::FInterpTo(CheatOutYaw, TargetYaw, DeltaSeconds, 9.0f);
+			CheatOutYaw = Side * FMath::Min(Side * BlendedYaw, AvailableTurn);
+			return;
+		}
+	}
+	CheatOutYaw = FMath::FInterpTo(CheatOutYaw, 0.0f, DeltaSeconds, 9.0f);
 }
 
 void UStageShiftAnimInstance::AddLandingSquash(float Strength)

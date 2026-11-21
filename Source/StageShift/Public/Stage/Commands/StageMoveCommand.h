@@ -49,6 +49,8 @@ private:
 	float AcceptanceRadius = 10.f;
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = "Advanced", meta = (ClampMin = "0.0", Units = "s"))
 	float MoveTimeLimit = 0.0f;
+	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (ClampMin = "0.0", Units = "cm/s", ToolTip = "Zero keeps the participant's normal movement speed."))
+	float MoveSpeedOverride = 0.0f;
 
 	FName SelectedTargetId;
 	float NeedMoveTime = 0.0f;

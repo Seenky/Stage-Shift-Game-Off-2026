@@ -34,6 +34,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Briefing") bool ContinueSceneBriefing(FText& OutError);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Production") TSoftObjectPtr<AStageTurntable> Turntable;
+	UPROPERTY(EditInstanceOnly, Category = "Stage|Cheating Out", meta = (ToolTip = "Place a Target Point on stage and point its forward arrow toward the audience. Only yaw is used."))
+	TSoftObjectPtr<AActor> CheatOutReference;
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Production|Bindings") TMap<FName, FStageSceneBindings> ProductionBindings;
 	UPROPERTY(BlueprintAssignable, Category = "Production") FStageProductionPhaseChanged OnProductionPhaseChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Production") FStageFinishedById OnProductionFinished;
@@ -54,6 +56,7 @@ public:
 	UFUNCTION(CallInEditor, Category = "Production") void ValidateConfiguredProduction();
 	void AddDiagnostic(const FString& Message);
 	FString DescribeCommand(const UStageMemberCommand* Command) const;
+	FVector GetCheatOutAudienceDirection() const;
 
 	const TArray<FStageRootExecution>& GetRootExecutions() const { return RootExecutions; }
 	UFUNCTION(BlueprintPure, Category = "Stage|Debug")

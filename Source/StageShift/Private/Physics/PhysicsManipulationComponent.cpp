@@ -8,6 +8,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "DrawDebugHelpers.h"
@@ -53,6 +54,8 @@ bool UPhysicsManipulationComponent::CanReceiveStageProp() const
 	const AActor* Owner = GetOwner();
 	if (!bAcceptStageProps || bPropPlayEnded || !IsValid(Owner) || Owner->IsActorBeingDestroyed() || !HasBegunPlay() || !CarryPoint.IsValid()
 	    || CarryPoint->GetOwner() != Owner || ManipulatedComponent.IsValid() || GetGrabbedComponent()) return false;
+	const auto* Member = Owner->FindComponentByClass<UStageMemberComponent>();
+	if (Member && !Member->IsWaitingForStageProp()) return false;
 	const auto* Physics = Owner->FindComponentByClass<UPhysicalMontageComponent>();
 	return !Physics || !Physics->IsPhysicsMontageActive();
 }

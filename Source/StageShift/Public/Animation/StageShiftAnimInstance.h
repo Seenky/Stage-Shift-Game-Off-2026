@@ -96,7 +96,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, Transient, Category = "Pickup")
 	float PickupAlpha = 0.0f;
 
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Stage|Cheating Out")
+	float CheatOutYaw = 0.0f;
+
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Stage|Cheating Out", meta = (ClampMin = "0.0", ClampMax = "45.0", Units = "deg"))
+	float MaxCheatOutAngle = 40.0f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Locomotion|Gait Speeds")
 	FStageShiftGaitSpeeds ForwardSpeeds;
 
@@ -124,6 +130,7 @@ protected:
 private:
 	FStageShiftDragPose DragPose;
 	void UpdateDollMotion(const AStageShiftCharacter* Character, const FVector& PlanarVelocity, bool bGrounded, float DeltaSeconds);
+	void UpdateCheatingOut(const APawn* Pawn, bool bCanTurn, float DeltaSeconds);
 
 	struct
 	{

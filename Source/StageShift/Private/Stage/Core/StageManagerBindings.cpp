@@ -1,4 +1,7 @@
 #include "Stage/Core/StageManager.h"
+#include "Camera/CameraComponent.h"
+#include "Core/MainCameraActor.h"
+#include "GameFramework/PlayerController.h"
 #include "Stage/Environment/StageTurntable.h"
 #include "Stage/Core/StageDebugDisplay.h"
 #include "Stage/Core/Data/StageDataAsset.h"
@@ -171,6 +174,24 @@ AStageTurntable* AStageManager::ResolveTurntable() const
 	if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
 	AStageTurntable* Platform = Cast<AStageTurntable>(Path.ResolveObject());
 	return IsValid(Platform) && Platform->GetWorld() == World ? Platform : nullptr;
+}
+
+FVector AStageManager::GetCheatOutAudienceDirection() const
+{
+	const UWorld* World = GetWorld();
+	if (!World) return FVector::ZeroVector;
+	if (!CheatOutReference.IsNull())
+	{
+		FSoftObjectPath Path = CheatOutReference.ToSoftObjectPath();
+		if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
+		const AActor* Reference = Cast<AActor>(Path.ResolveObject());
+		if (IsValid(Reference) && !Reference->IsActorBeingDestroyed() && Reference->GetWorld() == World)
+			return FRotator(0.0, Reference->GetActorRotation().Yaw, 0.0).Vector();
+	}
+
+	const APlayerController* Player = World->GetFirstPlayerController();
+	const auto* TheatreCamera = Player ? Cast<AMainCameraActor>(Player->GetViewTarget()) : nullptr;
+	return TheatreCamera ? -TheatreCamera->GetCameraComponent()->GetForwardVector().GetSafeNormal2D() : FVector::ZeroVector;
 }
 
 void AStageManager::BeginPlay()

@@ -121,7 +121,7 @@ bool UStageDataAsset::ValidateDefinition(TArray<FString>& Errors, const FInstanc
 	for (const FStageCueDefinition& Cue : PlayerCues)
 	{
 		const FString Path = Root + TEXT(" / PlayerCue[") + Cue.CueId.ToString() + TEXT("]");
-		if (Cue.CueId.IsNone() || CueIds.Contains(Cue.CueId) || Cue.Title.IsEmpty()) Error(Path, TEXT("requires a unique local ID and a title"));
+		if (Cue.CueId.IsNone() || CueIds.Contains(Cue.CueId)) Error(Path, TEXT("requires a unique local ID"));
 		CueIds.Add(Cue.CueId);
 		if (!FMath::IsFinite(Cue.TimeLimit) || Cue.TimeLimit < 0.0f) Error(Path, TEXT("TimeLimit must be finite and nonnegative"));
 		for (FName Step : {Cue.ShowAtStepId, Cue.ActivateAtStepId, Cue.HideAtStepId})

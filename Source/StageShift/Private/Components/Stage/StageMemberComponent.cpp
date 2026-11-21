@@ -1,8 +1,10 @@
 #include "Components/Stage/StageMemberComponent.h"
 
+#include "Components/Dialogue/DialogueComponent.h"
 #include "Engine/World.h"
 #include "Misc/ScopeExit.h"
 #include "NativeGameplayTags.h"
+#include "Physics/PhysicsManipulationComponent.h"
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
 #include "Stage/Core/StageAction.h"
 #include "Stage/Core/StageManager.h"
@@ -55,6 +57,56 @@ bool UStageMemberComponent::IsPhysicallyBlocked() const
 	return (PhysicalMontage.IsValid() && PhysicalMontage->IsPhysicsMontageActive()) || (StatusComponent.IsValid() && StatusComponent->GetStatuses().HasTag(TAG_StageMemberFallen));
 }
 
+bool UStageMemberComponent::IsWaitingForStageProp() const
+{
+	return !bMemberFinished && !bClosingMember && Manager.IsValid() && Executions.ContainsByPredicate([this](const FStageCommandExecution& Entry)
+	{
+		const UStageMemberCommand* Command = Entry.Command;
+		return IsValid(Command) && Command->GetState() == EStageExecutionState::Running && Command->ExpectsStageProp() && !IsScenarioPaused(Command);
+	});
+}
+
+void UStageMemberComponent::UpdateStagePropReadiness() const
+{
+	if (AActor* Owner = GetOwner())
+		if (auto* Manipulation = Owner->FindComponentByClass<UPhysicsManipulationComponent>())
+			Manipulation->UpdateStagePropReadiness();
+}
+
+void UStageMemberComponent::ShowPartnerInteractionPose()
+{
+	if (const UWorld* World = GetWorld(); World && !bMemberFinished && !bClosingMember)
+		PartnerInteractionPoseUntil = World->GetTimeSeconds() + 0.6;
+}
+
+bool UStageMemberComponent::IsPartnerInteractionPoseActive() const
+{
+	const UWorld* World = GetWorld();
+	return World && !bMemberFinished && !bClosingMember && World->GetTimeSeconds() < PartnerInteractionPoseUntil;
+}
+
+bool UStageMemberComponent::IsListeningToCheatOutDialogue() const
+{
+	const AStageManager* Stage = Manager.Get();
+	const AActor* Listener = GetOwner();
+	if (!Stage || !Listener) return false;
+	return Stage->BoundMembers.ContainsByPredicate([Stage, Listener](const TWeakObjectPtr<UStageMemberComponent>& Member)
+	{
+		const UStageMemberComponent* Performer = Member.Get();
+		const AActor* Speaker = Performer ? Performer->GetOwner() : nullptr;
+		const auto* Dialogue = Speaker && Speaker != Listener ? Speaker->FindComponentByClass<UDialogueComponent>() : nullptr;
+		if (!Dialogue || !Dialogue->IsPlaying()) return false;
+		const FDialogueLine& Line = Dialogue->GetPlaybackState().Line;
+		return Line.bCheatOut && !Line.CheatOutPartnerRoleId.IsNone() && Stage->GetParticipant(Line.CheatOutPartnerRoleId) == Listener;
+	});
+}
+
+FVector UStageMemberComponent::GetCheatOutAudienceDirection() const
+{
+	const AStageManager* Stage = Manager.Get();
+	return Stage ? Stage->GetCheatOutAudienceDirection() : FVector::ZeroVector;
+}
+
 UStageMemberComponent::UStageMemberComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -72,6 +124,7 @@ bool UStageMemberComponent::BindToStage(AStageManager* InManager)
 	StatusComponent = Statuses;
 	StageLocation = GetOwner()->GetActorLocation();
 	StageYaw = GetOwner()->GetActorRotation().Yaw;
+	PartnerInteractionPoseUntil = 0.0;
 	CachedStatuses = Statuses->GetStatuses();
 	Statuses->OnAddStatuses.AddUniqueDynamic(this, &UStageMemberComponent::HandleStatusesChanged);
 	Statuses->OnRemoveStatuses.AddUniqueDynamic(this, &UStageMemberComponent::HandleStatusesChanged);
@@ -413,6 +466,7 @@ void UStageMemberComponent::UpdateExecutions()
 	FinishingActions.Reset();
 	PumpCommands();
 	TryFinishMember();
+	UpdateStagePropReadiness();
 }
 
 UStageAction* UStageMemberComponent::SelectRecoveryTemplate() const
@@ -695,6 +749,7 @@ void UStageMemberComponent::EndDispatch()
 		FinishingActions.Reset();
 		PumpCommands();
 		TryFinishMember();
+		UpdateStagePropReadiness();
 	}
 	if (BoundManager.IsValid()) BoundManager->EndNotification();
 }

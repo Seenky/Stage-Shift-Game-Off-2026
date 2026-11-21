@@ -13,6 +13,7 @@ public:
 	UPickUpCommand();
 	virtual void PostLoad() override;
 	virtual uint8 GetResourceMask() const override { return 3; }
+	virtual bool ExpectsStageProp() const override { return true; }
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const override;
 

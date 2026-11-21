@@ -20,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing", meta = (MultiLine))
 	FText SceneBriefing;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (TitleProperty = "Title"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (TitleProperty = "CueId"))
 	TArray<FStageCueDefinition> PlayerCues;
 
 	UPROPERTY(EditAnywhere, Category = "Graph Parameters") FInstancedPropertyBag Parameters;

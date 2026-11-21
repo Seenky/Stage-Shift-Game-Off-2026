@@ -1,5 +1,6 @@
 #include "Stage/Actions/InteractAction.h"
 
+#include "Components/Stage/StageMemberComponent.h"
 #include "Physics/PhysicsActor.h"
 #include "Stage/Core/StageManager.h"
 #include "StageInteractionHelpers.h"
@@ -74,6 +75,12 @@ void UInteractAction::OnStart_Implementation()
 		if (bInteractionActive) SendEnd(true);
 		return;
 	}
+	if (InteractionPhase == EInteractionPhase::Start && Result != EInteractionResult::Rejected)
+		if (auto* Partner = Target.IsValid() ? Target->FindComponentByClass<UStageMemberComponent>() : nullptr)
+		{
+			Partner->ShowPartnerInteractionPose();
+			if (auto* Member = Context.MemberComponent.Get()) Member->ShowPartnerInteractionPose();
+		}
 	if (Result == EInteractionResult::Completed)
 	{
 		Finish(EStageActionResult::Succeeded);
