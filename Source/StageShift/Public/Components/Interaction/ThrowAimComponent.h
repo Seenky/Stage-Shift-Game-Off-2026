@@ -74,7 +74,8 @@ private:
 	void UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround = false);
 	void UpdateThrowPreview(bool bShow, float DeltaTime = 0.f);
 	void DrawThrowTrajectory(float DeltaTime);
-	UDecalComponent* CreateThrowDecal(FName Name) const;
+	void UpdateThrowMarkerVisibility() const;
+	UDecalComponent* CreateThrowDecal(FName Name, double ProjectionDepth) const;
 	bool GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const;
 	TWeakObjectPtr<ACharacter> Character;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
