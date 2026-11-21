@@ -1,9 +1,9 @@
 #include "Components/Interaction/ThrowAimComponent.h"
 
-#include "Components/DecalComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/LocalPlayer.h"
@@ -14,6 +14,7 @@
 #include "GameFramework/PlayerInput.h"
 #include "HAL/IConsoleManager.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Physics/PhysicsActor.h"
 #include "Physics/PhysicsManipulationComponent.h"
 #include "SceneView.h"
 #include "UI/ThrowAimWidget.h"
@@ -34,10 +35,12 @@ UThrowAimComponent::UThrowAimComponent()
 	ReticleWidgetClass = UThrowAimWidget::StaticClass();
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Dot(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowTrajectory.M_ThrowTrajectory"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DecalMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowLanding.M_ThrowLanding"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> MarkerPlane(TEXT("/Engine/BasicShapes/Plane.Plane"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MarkerMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowLanding.M_ThrowLanding"));
 	TrajectoryDotMesh = Dot.Object;
 	TrajectoryMaterial = DotMaterial.Object;
-	LandingMaterial = DecalMaterial.Object;
+	LandingMarkerMesh = MarkerPlane.Object;
+	LandingMaterial = MarkerMaterial.Object;
 }
 
 void UThrowAimComponent::BeginPlay()
@@ -116,7 +119,10 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			bSavedControllerYaw = Pawn->bUseControllerRotationYaw;
 			bSavedControllerDesiredRotation = Movement->bUseControllerDesiredRotation;
 		}
-		Reticle = bDraggingAim && ReticleWidgetClass ? CreateWidget<UUserWidget>(PC, ReticleWidgetClass) : nullptr;
+		const auto* DraggedComponent = bDraggingAim ? Manipulation->GetManipulatedComponent() : nullptr;
+		const auto* DraggedProp = DraggedComponent ? Cast<AStagePhysicsActor>(DraggedComponent->GetOwner()) : nullptr;
+		const bool bShowDragReticle = bDraggingAim && !(DraggedProp && DraggedProp->IsCurtainLever());
+		Reticle = bShowDragReticle && ReticleWidgetClass ? CreateWidget<UUserWidget>(PC, ReticleWidgetClass) : nullptr;
 		if (Reticle)
 		{
 			Reticle->SetIsFocusable(false);
@@ -282,20 +288,15 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 		PreviewImpact = {};
 		bPreviewBlocked = false;
 		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
-		if (TargetDecal) TargetDecal->SetVisibility(false);
-		if (ImpactDecal) ImpactDecal->SetVisibility(false);
+		if (LandingMarker) LandingMarker->SetVisibility(false);
 		return;
 	}
-	if (bHasAimTarget && !TargetDecal && LandingMaterial) TargetDecal = CreateThrowDecal(TEXT("ThrowTarget"), 8.0);
-	if (bHasAimTarget && TargetDecal) TargetDecal->SetWorldLocationAndRotation(AimTarget, (-AimSurfaceNormal).Rotation());
-
 	constexpr double PreviewInterval = 1.0 / 20.0;
 	const double Now = GetWorld()->GetTimeSeconds();
 	// Sample the last visible release frames before the timer detaches the prop.
 	if (Now < NextThrowPreviewAt && !(bAimFrozen && Interaction->IsReleaseImminent()))
 	{
 		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
-		UpdateThrowMarkerVisibility();
 		return;
 	}
 	NextThrowPreviewAt += PreviewInterval;
@@ -315,12 +316,28 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 		PreviewBlendRemaining = 0.0;
 		bPreviewBlocked = false;
 		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
-		UpdateThrowMarkerVisibility();
+		if (LandingMarker) LandingMarker->SetVisibility(false);
 		return;
 	}
+	if (Hit.bBlockingHit)
+	{
+		// The sweep follows the prop's center. Ease the preview toward the surface contact it marks.
+		const FVector Contact = Hit.ImpactPoint + Hit.ImpactNormal;
+		const FVector ContactOffset = Contact - Path.Last();
+		const int32 LastIndex = Path.Num() - 1;
+		const int32 ApproachSamples = FMath::Min(LastIndex, 4);
+		for (int32 Sample = 1; Sample <= ApproachSamples; ++Sample)
+		{
+			const double Fraction = static_cast<double>(Sample) / ApproachSamples;
+			Path[LastIndex - ApproachSamples + Sample] += ContactOffset * FMath::Square(Fraction);
+		}
+		if (FVector::DistSquared(Path[LastIndex - 1], Contact) > FMath::Square(45.0))
+			Path.Insert(FMath::Lerp(Path[LastIndex - 1], Contact, 0.5), LastIndex);
+	}
 	// Switching arcs or impact surfaces can put intermediate points inside an obstacle.
-	const bool bSameImpactSurface = !bBlocked || (Hit.GetComponent() == PreviewImpact.GetComponent()
-	    && FVector::DotProduct(Hit.ImpactNormal, PreviewImpact.ImpactNormal) >= 0.95);
+	const bool bSameImpactSurface = Hit.bBlockingHit == PreviewImpact.bBlockingHit &&
+	    (!Hit.bBlockingHit || (Hit.GetComponent() == PreviewImpact.GetComponent()
+	    && FVector::DotProduct(Hit.ImpactNormal, PreviewImpact.ImpactNormal) >= 0.95));
 	const bool bCanBlend = !bAimFrozen && !PreviewPath.IsEmpty() && bBlocked == bPreviewBlocked
 	    && bSameImpactSurface && bUsesHighArc == bPreviewUsesHighArc;
 	PreviewBlendRemaining = bCanBlend ? PreviewInterval : 0.0;
@@ -340,14 +357,27 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 		TrajectoryDots->RegisterComponent();
 	}
 
-	if (bBlocked && !ImpactDecal && LandingMaterial)
+	if (Hit.bBlockingHit && !LandingMarker && LandingMarkerMesh && LandingMaterial)
 	{
-		ImpactDecal = CreateThrowDecal(TEXT("ThrowImpact"), 5.0);
-		if (auto* Material = ImpactDecal->CreateDynamicMaterialInstance())
-			Material->SetVectorParameterValue(TEXT("MarkerColor"), FLinearColor(2.0f, 0.05f, 0.025f));
+		LandingMarker = NewObject<UStaticMeshComponent>(GetOwner(), TEXT("ThrowLandingMarker"));
+		LandingMarker->SetStaticMesh(LandingMarkerMesh);
+		LandingMarker->SetMaterial(0, LandingMaterial);
+		LandingMarker->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		LandingMarker->SetCanEverAffectNavigation(false);
+		LandingMarker->SetCastShadow(false);
+		LandingMarker->SetReceivesDecals(false);
+		LandingMarker->SetWorldScale3D(FVector(0.92));
+		LandingMarker->RegisterComponent();
+		LandingMarker->CreateDynamicMaterialInstance(0);
+	}
+	if (LandingMarker)
+	{
+		if (auto* Material = Cast<UMaterialInstanceDynamic>(LandingMarker->GetMaterial(0)))
+			Material->SetVectorParameterValue(TEXT("MarkerColor"),
+			    bBlocked ? FLinearColor(2.0f, 0.05f, 0.025f) : FLinearColor::White);
+		LandingMarker->SetVisibility(Hit.bBlockingHit);
 	}
 	DrawThrowTrajectory(DeltaTime);
-	UpdateThrowMarkerVisibility();
 }
 
 void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
@@ -382,45 +412,13 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 		}
 		TrajectoryDots->SetVisibility(Count > 0);
 	}
-	if (ImpactDecal && bPreviewBlocked)
+	if (LandingMarker && PreviewImpact.bBlockingHit)
 	{
-		const FVector Location = FMath::Lerp(ImpactDecal->GetComponentLocation(), FVector(PreviewImpact.ImpactPoint), Alpha);
-		const FQuat Rotation = FQuat::Slerp(ImpactDecal->GetComponentQuat(), (-PreviewImpact.ImpactNormal).ToOrientationQuat(), Alpha);
-		ImpactDecal->SetWorldLocationAndRotation(Location, Rotation);
+		const FVector Normal = PreviewImpact.ImpactNormal;
+		const FVector Location = FMath::Lerp(LandingMarker->GetComponentLocation(), PreviewPath.Last(), Alpha);
+		const FQuat Rotation = FQuat::Slerp(LandingMarker->GetComponentQuat(), FRotationMatrix::MakeFromZ(Normal).ToQuat(), Alpha);
+		LandingMarker->SetWorldLocationAndRotation(Location, Rotation);
 	}
-}
-
-void UThrowAimComponent::UpdateThrowMarkerVisibility() const
-{
-	const bool bShowImpact = bPreviewBlocked && ImpactDecal;
-	if (ImpactDecal) ImpactDecal->SetVisibility(bShowImpact);
-	if (!TargetDecal) return;
-
-	bool bShowTarget = bHasAimTarget;
-	if (bShowTarget && bShowImpact)
-	{
-		const APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
-		FVector2D TargetScreen, ImpactScreen, PlayerOrigin;
-		FIntRect Bounds;
-		if (Controller && GetViewportBounds(*Controller, Bounds, PlayerOrigin) && Controller->ProjectWorldLocationToScreen(AimTarget, TargetScreen) &&
-		    Controller->ProjectWorldLocationToScreen(ImpactDecal->GetComponentLocation(), ImpactScreen))
-		{
-			const double Separation = 40.0 * Bounds.Height() / 1080.0;
-			bShowTarget = FVector2D::DistSquared(TargetScreen, ImpactScreen) >= FMath::Square(Separation);
-		}
-	}
-	TargetDecal->SetVisibility(bShowTarget);
-}
-
-UDecalComponent* UThrowAimComponent::CreateThrowDecal(FName Name, double ProjectionDepth) const
-{
-	auto* Decal = NewObject<UDecalComponent>(GetOwner(), Name);
-	Decal->SetDecalMaterial(LandingMaterial);
-	Decal->DecalSize = FVector(ProjectionDepth, 46.0, 46.0);
-	Decal->SortOrder = 20;
-	Decal->SetFadeScreenSize(0.001f);
-	Decal->RegisterComponent();
-	return Decal;
 }
 
 void UThrowAimComponent::FreezeAim()
@@ -460,7 +458,6 @@ void UThrowAimComponent::EndPlay(const EEndPlayReason::Type Reason)
 {
 	StopAiming();
 	if (TrajectoryDots) TrajectoryDots->DestroyComponent();
-	if (TargetDecal) TargetDecal->DestroyComponent();
-	if (ImpactDecal) ImpactDecal->DestroyComponent();
+	if (LandingMarker) LandingMarker->DestroyComponent();
 	Super::EndPlay(Reason);
 }

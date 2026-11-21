@@ -144,7 +144,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
-	enum class ECurtainPhase : uint8 { Idle, Opening, Playing, Closing, Exiting, Rotating, Entering };
+	enum class ECurtainPhase : uint8 { Idle, Briefing, Opening, Playing, Closing, Exiting, Rotating, Entering };
 	struct FCastMove
 	{
 		TWeakObjectPtr<AActor> Actor;
@@ -153,6 +153,7 @@ private:
 	};
 	AActor* ResolveLevelActor(const FSoftObjectPath& Reference) const;
 	void BeginCurtainOpening(bool bFirstScene);
+	void SetCurtainSignal(bool bVisible);
 	void TickCurtainProduction();
 	bool PrepareCurtainCast(const FStageProductionScene& Scene, FText& Error);
 	void MoveCurtainCast(const FStageProductionScene& Scene, bool bEntering);

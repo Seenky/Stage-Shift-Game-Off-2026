@@ -115,7 +115,8 @@ void AStageManager::AdvanceProduction()
 		return;
 	}
 	const auto& Scene = ActiveProduction->Scenes[ProductionSceneIndex];
-	const bool bShowBriefing = ProductionSceneIndex == 0 && Scene.Scenario && !Scene.Scenario->SceneBriefing.IsEmpty();
+	const bool bShowBriefing = Scene.Scenario && !Scene.Scenario->SceneBriefing.IsEmpty() &&
+	    (!RuntimeCurtain.IsValid() || ProductionSceneIndex == 0);
 	if (RuntimeCurtain.IsValid() || Scene.bPrepareBefore || bShowBriefing || !IsStageNavigationReady())
 	{
 		ProductionState = EStageProductionState::Preparing;
@@ -126,10 +127,14 @@ void AStageManager::AdvanceProduction()
 			FinishProduction(false, Error);
 			return;
 		}
-		if (bShowBriefing && !QueueSceneBriefing(Scene.Scenario->SceneBriefing, Error))
+		if (bShowBriefing)
 		{
-			FinishProduction(false, Error);
-			return;
+			if (RuntimeCurtain.IsValid()) CurtainPhase = ECurtainPhase::Briefing;
+			if (!QueueSceneBriefing(Scene.Scenario->SceneBriefing, Error))
+			{
+				FinishProduction(false, Error);
+				return;
+			}
 		}
 		AddDiagnostic(TEXT("Production[") + ActiveProduction->ProductionId.ToString() + TEXT("] / preparing Scene[") + Scene.SceneId.ToString() + TEXT("]"));
 		OnProductionPhaseChanged.Broadcast(ProductionState, Scene.SceneId, ProductionSceneIndex);
@@ -183,7 +188,7 @@ void AStageManager::HandleProductionSceneFinished(FName StageKey, bool bSucceede
 	{
 		ProductionState = EStageProductionState::Preparing;
 		CurtainPhase = ECurtainPhase::Closing;
-		PlayerCues->ShowActorSignal(FName(TEXT("Curtain")), EStageCueKind::Mechanism, RuntimeCurtain->GetLever(), 0.f);
+		SetCurtainSignal(true);
 		return;
 	}
 	// Never recursively start another zero-length scene from completion callbacks.
@@ -328,6 +333,7 @@ void AStageManager::FinishProduction(bool bSucceeded, const FText& Reason)
 	RuntimeCast.Reset();
 	CastMoves.Reset();
 	CurtainPhase = ECurtainPhase::Idle;
+	if (RuntimeCurtain.IsValid()) SetCurtainSignal(false);
 	OpeningDeadline = NextOpeningPenaltyAt = -1.;
 	bProductionAdvancePending = false;
 	ProductionSceneIndex = FMath::Min(ProductionSceneIndex, ProductionSceneCount - 1);
