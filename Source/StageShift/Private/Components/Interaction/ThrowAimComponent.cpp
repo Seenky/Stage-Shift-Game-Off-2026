@@ -280,17 +280,14 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 		PreviewPath.Reset();
 		DisplayedDots.Reset();
 		PreviewImpact = {};
+		bPreviewBlocked = false;
 		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
 		if (TargetDecal) TargetDecal->SetVisibility(false);
 		if (ImpactDecal) ImpactDecal->SetVisibility(false);
 		return;
 	}
-	if (bHasAimTarget && !TargetDecal && LandingMaterial) TargetDecal = CreateThrowDecal(TEXT("ThrowTarget"));
-	if (TargetDecal)
-	{
-		TargetDecal->SetVisibility(bHasAimTarget);
-		if (bHasAimTarget) TargetDecal->SetWorldLocationAndRotation(AimTarget, (-AimSurfaceNormal).Rotation());
-	}
+	if (bHasAimTarget && !TargetDecal && LandingMaterial) TargetDecal = CreateThrowDecal(TEXT("ThrowTarget"), 8.0);
+	if (bHasAimTarget && TargetDecal) TargetDecal->SetWorldLocationAndRotation(AimTarget, (-AimSurfaceNormal).Rotation());
 
 	constexpr double PreviewInterval = 1.0 / 20.0;
 	const double Now = GetWorld()->GetTimeSeconds();
@@ -298,6 +295,7 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	if (Now < NextThrowPreviewAt && !(bAimFrozen && Interaction->IsReleaseImminent()))
 	{
 		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
+		UpdateThrowMarkerVisibility();
 		return;
 	}
 	NextThrowPreviewAt += PreviewInterval;
@@ -315,8 +313,9 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	{
 		PreviewPath.Reset();
 		PreviewBlendRemaining = 0.0;
+		bPreviewBlocked = false;
 		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
-		if (ImpactDecal) ImpactDecal->SetVisibility(false);
+		UpdateThrowMarkerVisibility();
 		return;
 	}
 	// Switching arcs or impact surfaces can put intermediate points inside an obstacle.
@@ -343,12 +342,12 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 
 	if (bBlocked && !ImpactDecal && LandingMaterial)
 	{
-		ImpactDecal = CreateThrowDecal(TEXT("ThrowImpact"));
+		ImpactDecal = CreateThrowDecal(TEXT("ThrowImpact"), 5.0);
 		if (auto* Material = ImpactDecal->CreateDynamicMaterialInstance())
 			Material->SetVectorParameterValue(TEXT("MarkerColor"), FLinearColor(2.0f, 0.05f, 0.025f));
 	}
-	if (ImpactDecal) ImpactDecal->SetVisibility(bBlocked);
 	DrawThrowTrajectory(DeltaTime);
+	UpdateThrowMarkerVisibility();
 }
 
 void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
@@ -391,11 +390,33 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 	}
 }
 
-UDecalComponent* UThrowAimComponent::CreateThrowDecal(FName Name) const
+void UThrowAimComponent::UpdateThrowMarkerVisibility() const
+{
+	const bool bShowImpact = bPreviewBlocked && ImpactDecal;
+	if (ImpactDecal) ImpactDecal->SetVisibility(bShowImpact);
+	if (!TargetDecal) return;
+
+	bool bShowTarget = bHasAimTarget;
+	if (bShowTarget && bShowImpact)
+	{
+		const APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
+		FVector2D TargetScreen, ImpactScreen, PlayerOrigin;
+		FIntRect Bounds;
+		if (Controller && GetViewportBounds(*Controller, Bounds, PlayerOrigin) && Controller->ProjectWorldLocationToScreen(AimTarget, TargetScreen) &&
+		    Controller->ProjectWorldLocationToScreen(ImpactDecal->GetComponentLocation(), ImpactScreen))
+		{
+			const double Separation = 40.0 * Bounds.Height() / 1080.0;
+			bShowTarget = FVector2D::DistSquared(TargetScreen, ImpactScreen) >= FMath::Square(Separation);
+		}
+	}
+	TargetDecal->SetVisibility(bShowTarget);
+}
+
+UDecalComponent* UThrowAimComponent::CreateThrowDecal(FName Name, double ProjectionDepth) const
 {
 	auto* Decal = NewObject<UDecalComponent>(GetOwner(), Name);
 	Decal->SetDecalMaterial(LandingMaterial);
-	Decal->DecalSize = FVector(18.0, 46.0, 46.0);
+	Decal->DecalSize = FVector(ProjectionDepth, 46.0, 46.0);
 	Decal->SortOrder = 20;
 	Decal->SetFadeScreenSize(0.001f);
 	Decal->RegisterComponent();
