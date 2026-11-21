@@ -97,8 +97,9 @@ void AStageCurtainRail::Tick(float DeltaSeconds)
 		const float Key = Rail->FindInputKeyClosestToWorldLocation(Actor->GetActorLocation());
 		const float Position = Rail->GetDistanceAlongSplineAtSplineInputKey(Key);
 		Progress = FMath::Clamp(Position / Length, 0.f, 1.f);
-		if (Progress < .01f) Progress = 0.f;
-		if (Progress > .99f) Progress = 1.f;
+		// Snap on arrival only, so even a small step away from an end is kept.
+		if (Progress < .01f && Progress < Previous) Progress = 0.f;
+		else if (Progress > .99f && Progress > Previous) Progress = 1.f;
 	}
 	const FVector Location = Rail->GetLocationAtDistanceAlongSpline(Progress * Length, ESplineCoordinateSpace::World);
 	const FVector Tangent = Rail->GetDirectionAtDistanceAlongSpline(Progress * Length, ESplineCoordinateSpace::World);

@@ -19,7 +19,6 @@
 namespace
 {
 	const FName CurtainSignal(TEXT("Curtain"));
-	const FName CurtainLateSignal(TEXT("CurtainLate"));
 	constexpr float RehearsalSeconds = 30.f;
 	constexpr float CastWalkTimeout = 8.f;
 	constexpr float MarkRadius = 55.f;
@@ -60,8 +59,14 @@ void AStageManager::BeginCurtainOpening(bool bFirstScene)
 	CurtainPhase = ECurtainPhase::Opening;
 	OpeningDeadline = bFirstScene ? GetWorld()->GetTimeSeconds() + RehearsalSeconds : -1.;
 	NextOpeningPenaltyAt = -1.;
-	if (auto* Curtain = RuntimeCurtain.Get())
-		PlayerCues->ShowActorSignal(CurtainSignal, EStageCueKind::Mechanism, Curtain->GetLever(), bFirstScene ? RehearsalSeconds : 0.f);
+	SetCurtainSignal(true);
+}
+
+void AStageManager::SetCurtainSignal(bool bVisible)
+{
+	if (!bVisible) PlayerCues->DismissCue(CurtainSignal);
+	else if (const auto* Curtain = RuntimeCurtain.Get())
+		PlayerCues->ShowActorSignal(CurtainSignal, EStageCueKind::Mechanism, Curtain->GetLever());
 }
 
 void AStageManager::HandleCurtainEnd(bool bOpen)
@@ -70,12 +75,11 @@ void AStageManager::HandleCurtainEnd(bool bOpen)
 	if (bOpen && CurtainPhase == ECurtainPhase::Opening)
 	{
 		OpeningDeadline = NextOpeningPenaltyAt = -1.;
-		PlayerCues->DismissCue(CurtainSignal);
-		PlayerCues->DismissCue(CurtainLateSignal);
+		SetCurtainSignal(false);
 	}
 	else if (!bOpen && CurtainPhase == ECurtainPhase::Closing)
 	{
-		PlayerCues->DismissCue(CurtainSignal);
+		SetCurtainSignal(false);
 		MoveCurtainCast(ActiveProduction->Scenes[ProductionSceneIndex], false);
 	}
 }
@@ -154,7 +158,14 @@ void AStageManager::FinishCurtainCastMoves(bool bEntering)
 	CastMoves.Reset();
 	if (bEntering)
 	{
-		BeginCurtainOpening(false);
+		const UStageDataAsset* Scenario = ActiveProduction->Scenes[ProductionSceneIndex].Scenario;
+		if (Scenario && !Scenario->SceneBriefing.IsEmpty())
+		{
+			CurtainPhase = ECurtainPhase::Briefing;
+			FText Error;
+			if (!QueueSceneBriefing(Scenario->SceneBriefing, Error)) FinishProduction(false, Error);
+		}
+		else BeginCurtainOpening(false);
 		return;
 	}
 
@@ -197,7 +208,7 @@ void AStageManager::TickCurtainProduction()
 			if (NextOpeningPenaltyAt < 0.)
 			{
 				NextOpeningPenaltyAt = OpeningDeadline;
-				PlayerCues->ShowActorProblem(CurtainLateSignal, NSLOCTEXT("StageProduction", "AudienceWaiting", "Зрители ждут!"), FText(), Curtain->GetLever());
+				PlayerCues->ReportProblem(CurtainSignal, NSLOCTEXT("StageProduction", "AudienceWaiting", "Зрители ждут!"));
 				if (OpeningOverdueSound) UGameplayStatics::PlaySound2D(this, OpeningOverdueSound);
 				OnOpeningOverdue.Broadcast();
 			}

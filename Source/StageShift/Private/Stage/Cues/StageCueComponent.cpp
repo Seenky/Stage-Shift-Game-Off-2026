@@ -172,6 +172,7 @@ bool UStageCueComponent::ShowCue(const FStageCueDefinition& Definition)
 	Cue->SoundEarliestAt = Cue->SoundLatestAt = Cue->SoundFeedbackUntil = 0.0;
 	Cue->SoundFeedback = FText::GetEmpty();
 	Cue->bSoundWindowClosed = false;
+	Cue->bKeepSignalVisible = false;
 	SetCueTimeRemaining(Definition.CueId, Definition.TimeLimit);
 	Refresh();
 	return true;
@@ -286,17 +287,19 @@ void UStageCueComponent::ShowActorProblem(FName CueId, const FText& Title, const
 	}
 }
 
-void UStageCueComponent::ShowActorSignal(FName CueId, EStageCueKind Kind, AActor* Actor, float TimeLimit)
+void UStageCueComponent::ShowActorSignal(FName CueId, EStageCueKind Kind, AActor* Actor)
 {
 	if (!IsValid(Actor)) return;
 	FStageCueDefinition Definition;
 	Definition.CueId = CueId;
 	Definition.Kind = Kind;
-	Definition.TimeLimit = TimeLimit;
 	Definition.Targets.AddDefaulted_GetRef().Type = EStageCueMarkerType::Event;
 	if (!ShowCue(Definition)) return;
 	if (auto* Cue = Cues.FindByPredicate([CueId](const auto& Entry) { return Entry.View.CueId == CueId; }))
+	{
 		Cue->ActorOverride = Actor;
+		Cue->bKeepSignalVisible = true;
+	}
 	UpdatePresentation();
 }
 
@@ -373,7 +376,8 @@ TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly) const
 			if (!bPreparingProp)
 			{
 				if (View.State != EStageCueState::Active && View.State != EStageCueState::Problem) continue;
-				if (Now >= Cue.SoundFeedbackUntil && (View.bHasDeadline ? Now >= Cue.Deadline : Now - Cue.SignalStartedAt >= UntimedSignalDuration)) continue;
+				if (!Cue.bKeepSignalVisible && Now >= Cue.SoundFeedbackUntil
+				    && (View.bHasDeadline ? Now >= Cue.Deadline : Now - Cue.SignalStartedAt >= UntimedSignalDuration)) continue;
 			}
 		}
 		Indices.Add(Index);

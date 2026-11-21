@@ -651,7 +651,7 @@ FVector UPhysicsManipulationComponent::ResolveThrowVelocity(UPrimitiveComponent&
 		}
 	}
 	if (OutHit) *OutHit = Hit;
-	if (bOutBlocked) *bOutBlocked = Hit.bBlockingHit && !LandedAtGoal(Hit);
+	if (bOutBlocked) *bOutBlocked = Hit.bBlockingHit && Hit.ImpactNormal.Z < 0.7;
 	return Velocity;
 }
 

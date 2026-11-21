@@ -67,7 +67,7 @@ bool AStageManager::ContinueSceneBriefing(FText& OutError)
 	if (RuntimeCurtain.IsValid() && IsProductionActive())
 	{
 		CloseSceneBriefing();
-		BeginCurtainOpening(true);
+		BeginCurtainOpening(ProductionSceneIndex == 0);
 		OutError = FText::GetEmpty();
 		return true;
 	}

@@ -47,7 +47,7 @@ public:
 	// Gameplay systems can reschedule their own windows without resetting the cue.
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") void SetCueTimeRemaining(FName CueId, float Seconds);
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") void ShowActorProblem(FName CueId, const FText& Title, const FText& Details, AActor* Actor, float TimeLimit = 0.0f);
-	void ShowActorSignal(FName CueId, EStageCueKind Kind, AActor* Actor, float TimeLimit);
+	void ShowActorSignal(FName CueId, EStageCueKind Kind, AActor* Actor);
 	UFUNCTION(BlueprintPure, Category = "Stage|Cues") TArray<FStageCueView> GetVisibleCues() const;
 	UFUNCTION(BlueprintPure, Category = "Stage|Cues") TArray<AStageCueWorldMarker*> GetVisibleMarkers() const;
 	FStageCuesChanged OnCuesChanged;

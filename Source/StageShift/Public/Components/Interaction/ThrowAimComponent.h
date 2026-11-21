@@ -5,12 +5,12 @@
 
 class ACharacter;
 class APlayerController;
-class UDecalComponent;
 class UInstancedStaticMeshComponent;
 class UInteractionComponent;
 class UMaterialInterface;
 class UPhysicsManipulationComponent;
 class UStaticMesh;
+class UStaticMeshComponent;
 class UUserWidget;
 
 UCLASS(ClassGroup = (Interaction), meta = (BlueprintSpawnableComponent))
@@ -74,8 +74,6 @@ private:
 	void UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround = false);
 	void UpdateThrowPreview(bool bShow, float DeltaTime = 0.f);
 	void DrawThrowTrajectory(float DeltaTime);
-	void UpdateThrowMarkerVisibility() const;
-	UDecalComponent* CreateThrowDecal(FName Name, double ProjectionDepth) const;
 	bool GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const;
 	TWeakObjectPtr<ACharacter> Character;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
@@ -83,13 +81,13 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> Reticle;
 	UPROPERTY(Transient)
-	TObjectPtr<UDecalComponent> TargetDecal;
-	UPROPERTY(Transient)
-	TObjectPtr<UDecalComponent> ImpactDecal;
+	TObjectPtr<UStaticMeshComponent> LandingMarker;
 	UPROPERTY(Transient)
 	TObjectPtr<UInstancedStaticMeshComponent> TrajectoryDots;
 	UPROPERTY()
 	TObjectPtr<UStaticMesh> TrajectoryDotMesh;
+	UPROPERTY()
+	TObjectPtr<UStaticMesh> LandingMarkerMesh;
 	FVector2D StickInput = FVector2D::ZeroVector;
 	FVector2D StickDeviceSample = FVector2D::ZeroVector;
 	FVector2D ScreenPosition = FVector2D::ZeroVector;
