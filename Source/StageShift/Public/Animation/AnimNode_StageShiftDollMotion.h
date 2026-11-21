@@ -12,6 +12,10 @@ struct STAGESHIFT_API FAnimNode_StageShiftDollMotion : public FAnimNode_Skeletal
 	virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 
+	// Place this pass after the other Control Rigs so feet and pickup cannot overwrite the grip.
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	bool bInteractionHandsOnly = false;
+
 private:
 	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones) override;
 

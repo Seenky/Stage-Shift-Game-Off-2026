@@ -9,6 +9,7 @@
 #include "Animation/AnimMontage.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
@@ -79,6 +80,8 @@ void UInteractionComponent::OnCandidateEndPlay(AActor* Actor, EEndPlayReason::Ty
 void UInteractionComponent::Deactivate()
 {
 	Super::Deactivate();
+	HandMotion = EInteractionHandMotion::None;
+	HandAnchor.Reset();
 	SetInteractionCandidate(FHitResult());
 }
 
@@ -195,6 +198,89 @@ const FInteractionAnimation* UInteractionComponent::FindAnimationForTarget(AActo
 	if (!IsValid(Target) || !Target->Implements<UInteractionInterface>()) return nullptr;
 
 	return Animations.Find(IInteractionInterface::Execute_GetInteractionAnimationId(Target));
+}
+
+FVector UInteractionComponent::GetControlGripLocation(const UStaticMeshComponent& Mesh, FName SocketName)
+{
+	if (Mesh.DoesSocketExist(SocketName)) return Mesh.GetSocketLocation(SocketName);
+	FVector Min, Max;
+	Mesh.GetLocalBounds(Min, Max);
+	FVector Top = (Min + Max) * 0.5;
+	Top.Z = Max.Z;
+	return Mesh.GetComponentTransform().TransformPosition(Top);
+}
+
+void UInteractionComponent::PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor)
+{
+	if (!IsActive() || !GetWorld() || !IsValid(GetOwner())) return;
+	HandMotion = Motion;
+	HandAnchor = Anchor;
+	HandContact = Anchor ? Anchor->GetComponentTransform().InverseTransformPosition(GripLocation) : GripLocation;
+	HandMotionStartedAt = GetWorld()->GetTimeSeconds();
+}
+
+void UInteractionComponent::ReleaseHandGrip(const USceneComponent& Anchor)
+{
+	if (HandMotion == EInteractionHandMotion::Hold && HandAnchor.Get() == &Anchor)
+	{
+		HandMotion = EInteractionHandMotion::None;
+		HandAnchor.Reset();
+	}
+}
+
+bool UInteractionComponent::SampleHandMotion(FInteractionHandPose& OutPose) const
+{
+	const UWorld* World = GetWorld();
+	const AActor* Owner = GetOwner();
+	if (!World || !IsValid(Owner) || !IsActive() || HandMotion == EInteractionHandMotion::None || HandAnchor.IsStale()) return false;
+	const USceneComponent* Anchor = HandAnchor.Get();
+	const FVector Contact = Anchor ? Anchor->GetComponentTransform().TransformPosition(HandContact) : HandContact;
+	const float Elapsed = static_cast<float>(World->GetTimeSeconds() - HandMotionStartedAt);
+	const FVector ToGrip = (Contact - Owner->GetActorLocation()).GetSafeNormal2D();
+	const FVector Facing = ToGrip.IsNearlyZero() ? Owner->GetActorForwardVector().GetSafeNormal2D() : ToGrip;
+	const FVector Right = FVector::CrossProduct(FVector::UpVector, Facing);
+	const auto FadeAfter = [Elapsed](float Start, float End) { return 1.0f - FMath::SmoothStep(Start, End, Elapsed); };
+	const FVector AboveConsole = Contact - Facing * 32.0 + FVector::UpVector * 27.0;
+	OutPose = {};
+	OutPose.Facing = Facing;
+	OutPose.Hands[1] = Contact;
+	switch (HandMotion)
+	{
+	case EInteractionHandMotion::Catch:
+		OutPose.Weights[1] = FadeAfter(0.09f, 0.42f);
+		OutPose.Weights[0] = 0.9f * FadeAfter(0.10f, 0.37f);
+		OutPose.Hands[0] = Contact - Right * 19.0;
+		OutPose.Lean = -Facing * (0.13f * FadeAfter(0.05f, 0.28f));
+		OutPose.Compression = 0.024f * OutPose.Weights[1];
+		break;
+	case EInteractionHandMotion::Receive:
+	case EInteractionHandMotion::Give:
+		OutPose.Weights[1] = FadeAfter(0.09f, 0.36f);
+		OutPose.Lean = Facing * (0.045f * OutPose.Weights[1]);
+		break;
+	case EInteractionHandMotion::Press:
+		OutPose.Weights[1] = FMath::SmoothStep(0.0f, 0.08f, Elapsed) * FadeAfter(0.24f, 0.46f);
+		OutPose.Hands[1] = FMath::Lerp(AboveConsole, Contact + FVector::UpVector * 6.0, FMath::SmoothStep(0.06f, 0.20f, Elapsed));
+		OutPose.Lean = Facing * (0.09f * OutPose.Weights[1]);
+		OutPose.Reach = Facing * (22.0f * OutPose.Weights[1]);
+		break;
+	case EInteractionHandMotion::Pull:
+		OutPose.Weights[1] = FMath::SmoothStep(0.0f, 0.10f, Elapsed) * FadeAfter(0.48f, 0.73f);
+		OutPose.Hands[1] = FMath::Lerp(AboveConsole, Contact, FMath::SmoothStep(0.09f, 0.24f, Elapsed));
+		OutPose.Lean = -Facing * (0.12f * FMath::SmoothStep(0.24f, 0.44f, Elapsed) * FadeAfter(0.48f, 0.73f));
+		OutPose.Reach = Facing * (15.0f * OutPose.Weights[1]);
+		break;
+	case EInteractionHandMotion::Hold:
+		OutPose.Weights[0] = OutPose.Weights[1] = FMath::SmoothStep(0.0f, 0.12f, Elapsed);
+		OutPose.Hands[1] = FMath::Lerp(AboveConsole, Contact, FMath::SmoothStep(0.10f, 0.32f, Elapsed)) + Right * 8.0;
+		OutPose.Hands[0] = OutPose.Hands[1] - Right * 16.0;
+		OutPose.Lean = Facing * (0.07f * OutPose.Weights[1]);
+		OutPose.Reach = Facing * (15.0f * OutPose.Weights[1]);
+		break;
+	default:
+		break;
+	}
+	return OutPose.IsActive();
 }
 
 bool UInteractionComponent::PlaySection(const FInteractionAnimation& Animation, FName Section)

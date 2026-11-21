@@ -2,6 +2,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Components/Dialogue/DialogueComponent.h"
+#include "Components/Interaction/InteractionComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetComponent.h"
@@ -66,7 +67,16 @@ EInteractionResult AStageSoundControl::OnInteraction_Implementation(const FInter
 	if (Player && Window.bActive) bApplied = PlaySignal();
 	else if (Player && !SoundOptions.IsEmpty()) bApplied = PreviewSelectedSound(*Player);
 	else bApplied = OpenWindow();
+	if (bApplied && Player)
+		if (auto* Interaction = Pawn->FindComponentByClass<UInteractionComponent>())
+			Interaction->PlayHandMotion(EInteractionHandMotion::Press, UInteractionComponent::GetControlGripLocation(*ControlMesh, ButtonSocket), ControlMesh);
 	return bApplied ? EInteractionResult::Completed : EInteractionResult::Rejected;
+}
+
+FName AStageSoundControl::GetInteractionAnimationId_Implementation() const
+{
+	static const FName Id(TEXT("StageSoundButton"));
+	return Id;
 }
 
 bool AStageSoundControl::PreviewSelectedSound(APlayerController& Player)

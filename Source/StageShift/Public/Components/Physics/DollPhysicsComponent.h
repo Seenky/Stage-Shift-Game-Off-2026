@@ -131,6 +131,7 @@ private:
 	{
 		FName Bone;
 		FName Control;
+		FName Modifier;
 		int32 JointIndex = INDEX_NONE;
 		bool bLimitsWidened = false;
 		FTransform PreviousTarget = FTransform::Identity;
@@ -139,6 +140,7 @@ private:
 		bool bWasCCD = false;
 		bool bWasNotifying = false;
 		float BlendWeight = 0.0f;
+		float HandPoseWeight = 0.0f;
 	};
 
 	TWeakObjectPtr<AStageShiftCharacter> Character;

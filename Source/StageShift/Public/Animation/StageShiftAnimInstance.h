@@ -2,6 +2,7 @@
 
 #include "Animation/AnimInstance.h"
 #include "Animation/PoseSnapshot.h"
+#include "Components/Interaction/InteractionTypes.h"
 #include "StageShiftAnimInstance.generated.h"
 
 class AStageShiftCharacter;
@@ -57,6 +58,7 @@ public:
 	const FStageShiftDollPose& GetDollPose() const { return DollMotion.Pose; }
 
 	const FStageShiftDragPose& GetDragPose() const { return DragPose; }
+	const FInteractionHandPose& GetInteractionHandPose() const { return InteractionHandPose; }
 
 	bool IsDollPhysicsActive() const { return bDollPhysicsActive; }
 
@@ -129,6 +131,7 @@ protected:
 
 private:
 	FStageShiftDragPose DragPose;
+	FInteractionHandPose InteractionHandPose;
 	void UpdateDollMotion(const AStageShiftCharacter* Character, const FVector& PlanarVelocity, bool bGrounded, float DeltaSeconds);
 	void UpdateCheatingOut(const APawn* Pawn, bool bCanTurn, float DeltaSeconds);
 

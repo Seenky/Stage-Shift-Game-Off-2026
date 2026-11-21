@@ -72,6 +72,7 @@ public:
 	virtual const UMeshComponent* GetInteractionMesh() const override;
 	virtual bool CanInteract_Implementation(const FInteractionContext& Context) const override;
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& Context) override;
+	virtual FName GetInteractionAnimationId_Implementation() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "Stage|Sound")
 	bool OpenWindow();
@@ -98,6 +99,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<UStaticMeshComponent> ControlMesh;
+	UPROPERTY(EditAnywhere, Category = "Interaction|Animation")
+	FName ButtonSocket = TEXT("InteractionGrip");
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<UWidgetComponent> SoundSelector;
 	UPROPERTY(EditAnywhere, Category = "Stage|Sound", meta = (TitleProperty = "SoundId"))

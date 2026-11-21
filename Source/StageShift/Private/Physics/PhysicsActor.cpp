@@ -4,6 +4,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/Interaction/InteractionComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Chaos/ChaosEngineInterface.h"
 #include "Engine/OverlapResult.h"
@@ -105,6 +106,7 @@ bool AStagePhysicsActor::TryHandOff(AActor* From, AActor* To)
 	if (!CanHandOff(From, To)) return false;
 	auto* Sender = From->FindComponentByClass<UPhysicsManipulationComponent>();
 	auto* Receiver = To->FindComponentByClass<UPhysicsManipulationComponent>();
+	const FVector Contact = Sender->GetCarryPoint()->GetComponentLocation();
 	ActiveManipulator = Receiver;
 	if (!Sender->TransferCarriedPropTo(*Receiver))
 	{
@@ -113,6 +115,10 @@ bool AStagePhysicsActor::TryHandOff(AActor* From, AActor* To)
 	}
 	if (auto* Member = IsValid(From) ? From->FindComponentByClass<UStageMemberComponent>() : nullptr) Member->ShowPartnerInteractionPose();
 	if (auto* Member = IsValid(To) ? To->FindComponentByClass<UStageMemberComponent>() : nullptr) Member->ShowPartnerInteractionPose();
+	if (auto* Interaction = From->FindComponentByClass<UInteractionComponent>())
+		Interaction->PlayHandMotion(EInteractionHandMotion::Give, Contact, From->GetRootComponent());
+	if (auto* Interaction = To->FindComponentByClass<UInteractionComponent>())
+		Interaction->PlayHandMotion(EInteractionHandMotion::Receive, Contact, To->GetRootComponent());
 	Receiver->OnItemPickedUp.Broadcast(this);
 	OnPropTransfer.Broadcast(this, From, To, EStagePropTransferResult::HandedOff, 0.f);
 	return true;
@@ -199,6 +205,7 @@ void AStagePhysicsActor::CheckCatch()
 
 	UPhysicsManipulationComponent* BestReceiver = nullptr;
 	double BestDistance = FMath::Square(CatchRadius);
+	FVector CatchContact = FVector::ZeroVector;
 	for (const FOverlapResult& Overlap : Overlaps)
 	{
 		AActor* Candidate = Overlap.GetActor();
@@ -212,6 +219,8 @@ void AStagePhysicsActor::CheckCatch()
 		if (Distance >= BestDistance || !HasClearReach(Intercept, Hand, Source, Candidate) || !HasClearReach(Current, Hand, Source, Candidate)) continue;
 		BestReceiver = Receiver;
 		BestDistance = Distance;
+		static const FName GripSocket(TEXT("Grip"));
+		CatchContact = Body->DoesSocketExist(GripSocket) ? Body->GetSocketLocation(GripSocket) + (Intercept - Current) : Intercept;
 	}
 	if (!BestReceiver) return;
 
@@ -230,6 +239,9 @@ void AStagePhysicsActor::CheckCatch()
 		World->GetTimerManager().ClearTimer(CatchTimer);
 		Thrower.Reset();
 	}
+	if (IsValid(ReceiverActor) && BestReceiver->GetManipulatedComponent() == Body)
+		if (auto* Interaction = ReceiverActor->FindComponentByClass<UInteractionComponent>())
+			Interaction->PlayHandMotion(EInteractionHandMotion::Catch, CatchContact, ReceiverActor->GetRootComponent());
 	OnPropTransfer.Broadcast(this, Source, ReceiverActor, EStagePropTransferResult::Caught, CatchWindow);
 }
 

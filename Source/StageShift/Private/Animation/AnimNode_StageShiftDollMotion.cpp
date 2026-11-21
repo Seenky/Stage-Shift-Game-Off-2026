@@ -45,9 +45,11 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 
 	FStageShiftDollPose Motion = Animation->GetDollPose();
 	const FStageShiftDragPose& Drag = Animation->GetDragPose();
+	const FInteractionHandPose& Interaction = Animation->GetInteractionHandPose();
+	if (bInteractionHandsOnly && (!Interaction.IsActive() || Drag.Alpha > 0.0f)) return;
 	const float CheatOutYaw = Animation->CheatOutYaw;
-	Motion.ChestLean += Drag.Lean * Drag.Alpha;
-	Motion.Compression += Drag.Alpha * (0.008f + 0.01f * Drag.Effort);
+	Motion.ChestLean += Drag.Lean * Drag.Alpha + Interaction.Lean;
+	Motion.Compression += Drag.Alpha * (0.008f + 0.01f * Drag.Effort) + Interaction.Compression;
 	if (Animation->IsDollPhysicsActive())
 	{
 		// Lean and compression shape the motor targets; contacts are resolved by the simulated bodies.
@@ -55,7 +57,7 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 		Motion.ContactOffset = 0.0f;
 	}
 	if (FMath::IsNearlyZero(Motion.Compression) && FMath::IsNearlyZero(Motion.HeadCompression) && FMath::IsNearlyZero(Motion.ContactOffset) && Motion.ChestLean.IsNearlyZero()
-	    && Motion.HeadLean.IsNearlyZero() && Drag.Alpha <= 0.0f && FMath::IsNearlyZero(CheatOutYaw))
+	    && Motion.HeadLean.IsNearlyZero() && Drag.Alpha <= 0.0f && !Interaction.IsActive() && FMath::IsNearlyZero(CheatOutYaw))
 		return;
 
 	const FBoneContainer& Bones = Output.Pose.GetPose().GetBoneContainer();
@@ -72,6 +74,32 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 		OutBoneTransforms.Emplace(IndexOf(Bone), Transform);
 	};
 	const FTransform& Component = Output.AnimInstanceProxy->GetComponentTransform();
+	const auto SolveArm = [&](int32 Side, const FTransform& Shoulder, const FVector& HandLocation, const FVector& Facing, float Weight, bool bStretch)
+	{
+		if (Weight <= 0.0f || !UpperArms[Side].IsValidToEvaluate(Bones) || !LowerArms[Side].IsValidToEvaluate(Bones) || !Hands[Side].IsValidToEvaluate(Bones))
+			return;
+		const FTransform InputShoulder = ReadBone(Clavicles[Side]);
+		FTransform Upper = ReadBone(UpperArms[Side]).GetRelativeTransform(InputShoulder) * Shoulder;
+		FTransform Lower = ReadBone(LowerArms[Side]).GetRelativeTransform(InputShoulder) * Shoulder;
+		FTransform Hand = ReadBone(Hands[Side]).GetRelativeTransform(InputShoulder) * Shoulder;
+		const FVector Target = FMath::Lerp(Hand.GetLocation(), Component.InverseTransformPosition(HandLocation), Weight);
+		const FVector Right = Component.InverseTransformVectorNoScale(FVector::CrossProduct(FVector::UpVector, Facing));
+		const FVector Down = Component.InverseTransformVectorNoScale(FVector::DownVector);
+		const FVector Pole = Upper.GetLocation() + Right * (Side == 0 ? -35.0f : 35.0f) + Down * 20.0f;
+		AnimationCore::SolveTwoBoneIK(Upper, Lower, Hand, Pole, Target, bStretch, 0.98, 1.08);
+		WriteBone(UpperArms[Side], Upper);
+		WriteBone(LowerArms[Side], Lower);
+		WriteBone(Hands[Side], Hand);
+	};
+	if (bInteractionHandsOnly)
+	{
+		for (int32 Side = 0; Side < 2; ++Side)
+			if (Clavicles[Side].IsValidToEvaluate(Bones))
+				SolveArm(Side, ReadBone(Clavicles[Side]), Interaction.Hands[Side], Interaction.Facing, Interaction.Weights[Side], true);
+		OutBoneTransforms.Sort(FCompareBoneTransformIndex());
+		return;
+	}
+
 	FVector PelvisShift = FVector::ZeroVector;
 	const bool bHasLegs = Thighs[0].IsValidToEvaluate(Bones) && Calves[0].IsValidToEvaluate(Bones) && Feet[0].IsValidToEvaluate(Bones) && Thighs[1].IsValidToEvaluate(Bones)
 	    && Calves[1].IsValidToEvaluate(Bones) && Feet[1].IsValidToEvaluate(Bones);
@@ -119,6 +147,7 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 	const FTransform InputChest = ReadBone(Chest);
 	FTransform UpperBody = InputChest;
 	UpperBody.AddToTranslation(PelvisShift + Away * (Motion.ContactOffset * 0.55) + FVector::DownVector * (Motion.Compression * 42.0));
+	UpperBody.AddToTranslation(Component.InverseTransformVector(Interaction.Reach));
 	UpperBody.SetRotation(ChestYaw * ChestLean * UpperBody.GetRotation());
 	WriteBone(Chest, UpperBody);
 
@@ -131,21 +160,7 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 		const double NearSide = FMath::Max(-FVector::DotProduct(Outward, Away), 0.0);
 		Shoulder.AddToTranslation(Outward * (Motion.Compression * 22.0) + Away * (Motion.ContactOffset * NearSide * 0.20));
 		WriteBone(Bone, Shoulder);
-		if (Drag.Alpha > 0.0f && UpperArms[Side].IsValidToEvaluate(Bones) && LowerArms[Side].IsValidToEvaluate(Bones) && Hands[Side].IsValidToEvaluate(Bones))
-		{
-			const FTransform InputShoulder = ReadBone(Bone);
-			FTransform Upper = ReadBone(UpperArms[Side]).GetRelativeTransform(InputShoulder) * Shoulder;
-			FTransform Lower = ReadBone(LowerArms[Side]).GetRelativeTransform(InputShoulder) * Shoulder;
-			FTransform Hand = ReadBone(Hands[Side]).GetRelativeTransform(InputShoulder) * Shoulder;
-			const FVector Target = FMath::Lerp(Hand.GetLocation(), Component.InverseTransformPosition(Drag.Hands[Side]), Drag.Alpha);
-			const FVector Right = Component.InverseTransformVectorNoScale(FVector::CrossProduct(FVector::UpVector, Drag.Facing));
-			const FVector Down = Component.InverseTransformVectorNoScale(FVector::DownVector);
-			const FVector Pole = Upper.GetLocation() + Right * (Side == 0 ? -35.0f : 35.0f) + Down * 20.0f;
-			AnimationCore::SolveTwoBoneIK(Upper, Lower, Hand, Pole, Target, false, 1.0, 1.0);
-			WriteBone(UpperArms[Side], Upper);
-			WriteBone(LowerArms[Side], Lower);
-			WriteBone(Hands[Side], Hand);
-		}
+		SolveArm(Side, Shoulder, Drag.Hands[Side], Drag.Facing, Drag.Alpha, false);
 	}
 
 	FTransform HeadTransform = ReadBone(Head).GetRelativeTransform(InputChest) * UpperBody;

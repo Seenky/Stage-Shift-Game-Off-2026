@@ -5,6 +5,7 @@
 #include "StageSpotlightControl.generated.h"
 
 class USpotLightComponent;
+class UStageControlLeverComponent;
 class UStaticMeshComponent;
 
 UENUM(BlueprintType)
@@ -25,6 +26,7 @@ public:
 	virtual const UMeshComponent* GetInteractionMesh() const override;
 	virtual bool CanInteract_Implementation(const FInteractionContext& Context) const override;
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& Context) override;
+	virtual FName GetInteractionAnimationId_Implementation() const override;
 	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Stage|Light")
@@ -49,6 +51,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<UStaticMeshComponent> ControlMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	TObjectPtr<UStageControlLeverComponent> ControlLever;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage|Light")
 	TObjectPtr<USpotLightComponent> Spotlight;

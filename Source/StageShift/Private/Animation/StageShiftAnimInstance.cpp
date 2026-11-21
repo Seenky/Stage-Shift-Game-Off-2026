@@ -1,6 +1,7 @@
 #include "Animation/StageShiftAnimInstance.h"
 
 #include "Components/Dialogue/DialogueComponent.h"
+#include "Components/Interaction/InteractionComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Core/StageShiftCharacter.h"
@@ -41,6 +42,7 @@ void UStageShiftAnimInstance::NativeInitializeAnimation()
 	RecoveryBlendElapsed = 0.0f;
 	DollMotion = {};
 	DragPose = {};
+	InteractionHandPose = {};
 }
 
 bool UStageShiftAnimInstance::BlendFromRagdollPose(FPoseSnapshot&& Pose, const FTransform& PreviousMeshTransform, float BlendTime)
@@ -106,6 +108,28 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	PickupAlpha = TargetPickupAlpha >= PickupAlpha ? TargetPickupAlpha : FMath::FInterpTo(PickupAlpha, TargetPickupAlpha, DeltaSeconds, 10.0f);
 	if (!Manipulation || !Manipulation->GetManipulatedComponent() || (StageCharacter && StageCharacter->IsPhysicsMontageActive())) PickupAlpha = 0.0f;
 	if (PickupAlpha < KINDA_SMALL_NUMBER) PickupAlpha = 0.0f;
+	const auto* Interaction = Pawn ? Pawn->FindComponentByClass<UInteractionComponent>() : nullptr;
+	if (!Pawn || (StageCharacter && StageCharacter->IsPhysicsMontageActive()) || RecoveryPoseAlpha > 0.0f || bDragging)
+	{
+		InteractionHandPose = {};
+	}
+	else
+	{
+		FInteractionHandPose Sample;
+		if (Interaction && Interaction->SampleHandMotion(Sample))
+		{
+			InteractionHandPose = Sample;
+		}
+		else if (InteractionHandPose.IsActive())
+		{
+			const float Fade = FMath::Max(0.0f, 1.0f - 18.0f * DeltaSeconds);
+			for (float& Weight : InteractionHandPose.Weights) Weight = Weight > 0.01f ? Weight * Fade : 0.0f;
+			InteractionHandPose.Lean *= Fade;
+			InteractionHandPose.Reach *= Fade;
+			InteractionHandPose.Compression *= Fade;
+			if (!InteractionHandPose.IsActive()) InteractionHandPose = {};
+		}
+	}
 	const FVector Velocity = Pawn ? Pawn->GetVelocity() : FVector::ZeroVector;
 	GroundSpeed = Velocity.Size2D();
 
@@ -146,7 +170,7 @@ void UStageShiftAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	FootIKAlpha = FMath::FInterpTo(FootIKAlpha, bEnableFootIK && bGrounded && RecoveryPoseAlpha <= 0.0f ? 1.0f : 0.0f, DeltaSeconds, FootIKResponse);
 	UpdateDollMotion(Cast<AStageShiftCharacter>(Pawn), PlanarVelocity, bGrounded, DeltaSeconds);
 	const bool bCanTurn = bGrounded && RecoveryPoseAlpha <= 0.0f && PickupAlpha <= 0.0f && DragPose.Alpha <= 0.0f
-	    && !IsAnyMontagePlaying() && (!StageCharacter || !StageCharacter->IsPhysicsMontageActive());
+	    && !InteractionHandPose.IsActive() && !IsAnyMontagePlaying() && (!StageCharacter || !StageCharacter->IsPhysicsMontageActive());
 	UpdateCheatingOut(Pawn, bCanTurn, DeltaSeconds);
 }
 

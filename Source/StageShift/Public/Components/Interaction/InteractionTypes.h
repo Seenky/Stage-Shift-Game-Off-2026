@@ -9,6 +9,29 @@
 
 class UAnimMontage;
 
+enum class EInteractionHandMotion : uint8
+{
+	None,
+	Catch,
+	Receive,
+	Give,
+	Press,
+	Pull,
+	Hold
+};
+
+struct FInteractionHandPose
+{
+	FVector Hands[2] = {};
+	float Weights[2] = {};
+	FVector Facing = FVector::ForwardVector;
+	FVector Lean = FVector::ZeroVector;
+	FVector Reach = FVector::ZeroVector;
+	float Compression = 0.0f;
+
+	bool IsActive() const { return Weights[0] > 0.0f || Weights[1] > 0.0f; }
+};
+
 UENUM(BlueprintType)
 enum class EInteractionPhase : uint8
 {

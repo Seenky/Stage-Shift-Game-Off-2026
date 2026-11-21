@@ -139,9 +139,9 @@ bool UDollPhysicsComponent::StartDriving()
 	Modifier.CollisionType = ECollisionEnabled::QueryAndPhysics;
 	Modifier.PhysicsBlendWeight = 1.0f;
 	Modifier.bEnableCCD = true;
-	for (const FDrivenBody& Driven : DrivenBodies)
+	for (FDrivenBody& Driven : DrivenBodies)
 	{
-		CreateBodyModifier(BodyMesh, Driven.Bone, DollSet, Modifier);
+		Driven.Modifier = CreateBodyModifier(BodyMesh, Driven.Bone, DollSet, Modifier);
 	}
 	bDriving = true;
 	SetDragging(bDragging);
@@ -391,17 +391,28 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 	// total mass, including the diagonal worst case for the two horizontal axes.
 	const float PassiveAcceleration = FMath::Max(MaxPassivePushForce, 1.0f) * 100.0f / (FMath::Max(TotalDrivenMass, 0.1f) * FMath::Sqrt(2.0f));
 	const float PassiveTorqueScale = FMath::Min(1.0f, PassiveAcceleration / FMath::Max(MaxInteractionAcceleration, 100.0f));
+	const UStageShiftAnimInstance* Animation = Cast<UStageShiftAnimInstance>(Mesh->GetAnimInstance());
+	const FInteractionHandPose* Hands = Animation ? &Animation->GetInteractionHandPose() : nullptr;
+	static const FName LeftArm(TEXT("upperarm_l"));
 	for (FDrivenBody& Driven : DrivenBodies)
 	{
 		const FBodyInstance* Body = Mesh->GetBodyInstance(Driven.Bone);
 		if (!Body) continue;
 		const FStageShiftDollDrive& Settings = GetDrive(Driven.Bone);
-		const bool bLimb = &Settings == &ArmDrive || &Settings == &LegDrive;
-		const UStageShiftAnimInstance* Animation = Cast<UStageShiftAnimInstance>(Mesh->GetAnimInstance());
-		const float Reach = &Settings == &ArmDrive && Animation ? Animation->PickupAlpha : 0.0f;
+		const bool bArm = &Settings == &ArmDrive;
+		const bool bLimb = bArm || &Settings == &LegDrive;
+		const float HandReach = bArm && Hands && Hands->IsActive()
+		    ? Hands->Weights[Driven.Bone == LeftArm || Mesh->BoneIsChildOf(Driven.Bone, LeftArm) ? 0 : 1] : 0.0f;
+		const float Reach = bArm && Animation ? FMath::Max(Animation->PickupAlpha, HandReach) : 0.0f;
+		if (!Driven.Modifier.IsNone() && !FMath::IsNearlyEqual(HandReach, Driven.HandPoseWeight))
+		{
+			// Keep the arm bodies simulated while the visible hand follows its contact target.
+			SetBodyModifierPhysicsBlendWeight(Driven.Modifier, 1.0f - HandReach, true, false);
+			Driven.HandPoseWeight = HandReach;
+		}
 		FPhysicsControlMultiplier Multiplier;
-		Multiplier.LinearStrengthMultiplier = FVector(FMath::Lerp(1.0f, 1.7f, Reach));
-		Multiplier.AngularStrengthMultiplier = FMath::Lerp(1.0f, 1.4f, Reach);
+		Multiplier.LinearStrengthMultiplier = FVector(FMath::Lerp(1.0f, 1.7f, Reach) + 1.5f * HandReach);
+		Multiplier.AngularStrengthMultiplier = FMath::Lerp(1.0f, 1.4f, Reach) + 0.7f * HandReach;
 		if (InteractionWeight > 0.0f)
 		{
 			// Yield into movable objects while retaining vertical support and tangent motion.
@@ -426,7 +437,8 @@ void UDollPhysicsComponent::UpdateDriveTargets(float DeltaTime)
 		Driven.AnimationTarget = Desired;
 		FPhysicsControlTarget Target;
 		Target.bApplyControlPointToTarget = true;
-		Target.TargetPosition = Actual.GetLocation() + (Desired.GetLocation() - Actual.GetLocation()).GetClampedToMaxSize(MaxTargetError);
+		const float TargetError = FMath::Lerp(MaxTargetError, FMath::Max(MaxTargetError, 55.0f), HandReach);
+		Target.TargetPosition = Actual.GetLocation() + (Desired.GetLocation() - Actual.GetLocation()).GetClampedToMaxSize(TargetError);
 		const FQuat Difference = Desired.GetRotation() * Actual.GetRotation().Inverse();
 		const double Angle = Difference.AngularDistance(FQuat::Identity);
 		const double RotationAlpha = FMath::Min(1.0, FMath::DegreesToRadians(65.0) / FMath::Max(Angle, UE_SMALL_NUMBER));

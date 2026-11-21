@@ -11,6 +11,7 @@
 class UAnimInstance;
 class UEnhancedInputComponent;
 class UInputAction;
+class UStaticMeshComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInteractionCandidateChanged, AActor*);
 
@@ -50,6 +51,10 @@ public:
 	bool IsReleaseImminent() const;
 
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
+	static FVector GetControlGripLocation(const UStaticMeshComponent& Mesh, FName SocketName);
+	void PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor = nullptr);
+	void ReleaseHandGrip(const USceneComponent& Anchor);
+	bool SampleHandMotion(FInteractionHandPose& OutPose) const;
 
 	// Shared by the preview and BeginInteraction; never dispatches OnInteraction.
 	void RefreshInteractionCandidate(FGameplayTag ActionTag = FGameplayTag());
@@ -113,6 +118,11 @@ private:
 	float ReleasedHoldDuration = 0.0f;
 	FTimerHandle ReleaseTimer;
 	FName ReleaseSectionName;
+
+	EInteractionHandMotion HandMotion = EInteractionHandMotion::None;
+	TWeakObjectPtr<const USceneComponent> HandAnchor;
+	FVector HandContact = FVector::ZeroVector;
+	double HandMotionStartedAt = 0.0;
 
 	void OnInputStarted();
 	void OnInputReleased();

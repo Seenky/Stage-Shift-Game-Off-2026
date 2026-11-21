@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
+#include "Stage/Environment/StageControlLeverComponent.h"
 
 AStageSpotlightControl::AStageSpotlightControl()
 {
@@ -19,6 +20,8 @@ AStageSpotlightControl::AStageSpotlightControl()
 	ControlMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControlMesh"));
 	ControlMesh->SetupAttachment(Root);
 	ControlMesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	ControlLever = CreateDefaultSubobject<UStageControlLeverComponent>(TEXT("ControlLever"));
+	ControlLever->SetupAttachment(ControlMesh);
 	Spotlight = CreateDefaultSubobject<USpotLightComponent>(TEXT("Spotlight"));
 	Spotlight->SetupAttachment(Root);
 	Spotlight->SetMobility(EComponentMobility::Movable);
@@ -57,9 +60,17 @@ EInteractionResult AStageSpotlightControl::OnInteraction_Implementation(const FI
 		AimOperator = Context.Interactor;
 		LastCursorPosition.Reset();
 		SetState(EStageSpotlightState::Aiming);
+		if (auto* Interaction = Context.Interactor->FindComponentByClass<UInteractionComponent>())
+			Interaction->PlayHandMotion(EInteractionHandMotion::Hold, ControlLever->GetGripLocation(), ControlLever);
 	}
 	if (ActivationSound) UGameplayStatics::PlaySoundAtLocation(this, ActivationSound, ControlMesh->GetComponentLocation());
 	return EInteractionResult::Completed;
+}
+
+FName AStageSpotlightControl::GetInteractionAnimationId_Implementation() const
+{
+	static const FName Id(TEXT("StageSpotlightLever"));
+	return Id;
 }
 
 void AStageSpotlightControl::SetCueTarget(FName InCueId, AActor* InTarget)
@@ -94,6 +105,9 @@ void AStageSpotlightControl::ApplyCueTarget(FName InCueId, AActor* InTarget)
 void AStageSpotlightControl::CommitAim()
 {
 	if (State != EStageSpotlightState::Aiming) return;
+	if (const AActor* Operator = AimOperator.Get())
+		if (auto* Interaction = Operator->FindComponentByClass<UInteractionComponent>())
+			Interaction->ReleaseHandGrip(*ControlLever);
 	AimOperator.Reset();
 	SetState(EStageSpotlightState::Ready);
 	CheckTarget();
@@ -150,6 +164,9 @@ void AStageSpotlightControl::Tick(float DeltaSeconds)
 		AimOffset.X = FMath::Clamp(AimOffset.X, FMath::Min(YawLimits.X, YawLimits.Y), FMath::Max(YawLimits.X, YawLimits.Y));
 		AimOffset.Y = FMath::Clamp(AimOffset.Y, FMath::Min(PitchLimits.X, PitchLimits.Y), FMath::Max(PitchLimits.X, PitchLimits.Y));
 		Spotlight->SetRelativeRotation(BaseRotation + FRotator(AimOffset.Y, AimOffset.X, 0));
+		const double TiltForward = FMath::Clamp(AimOffset.Y * 0.75, -32.0, 32.0);
+		const double TiltSide = FMath::Clamp(AimOffset.X * 0.5, -32.0, 32.0);
+		ControlLever->SetTilt(FRotator(TiltForward, 0.0, TiltSide).Quaternion());
 		return;
 	}
 	CheckTarget();
