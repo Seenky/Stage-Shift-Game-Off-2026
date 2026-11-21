@@ -15,6 +15,7 @@ class STAGESHIFT_API UWaitForItemCommand : public UStageMemberCommand
 
 public:
 
+	virtual bool ExpectsStageProp() const override { return true; }
 	virtual void ValidateDefinition(const class UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;

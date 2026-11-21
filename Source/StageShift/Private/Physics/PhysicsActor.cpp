@@ -4,6 +4,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
 #include "Chaos/ChaosEngineInterface.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
@@ -96,6 +97,8 @@ bool AStagePhysicsActor::TryHandOff(AActor* From, AActor* To)
 		ActiveManipulator = Sender;
 		return false;
 	}
+	if (auto* Member = IsValid(From) ? From->FindComponentByClass<UStageMemberComponent>() : nullptr) Member->ShowPartnerInteractionPose();
+	if (auto* Member = IsValid(To) ? To->FindComponentByClass<UStageMemberComponent>() : nullptr) Member->ShowPartnerInteractionPose();
 	Receiver->OnItemPickedUp.Broadcast(this);
 	OnPropTransfer.Broadcast(this, From, To, EStagePropTransferResult::HandedOff, 0.f);
 	return true;

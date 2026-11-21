@@ -77,7 +77,7 @@ void UStageCueComponent::BeginPlay()
 
 bool UStageCueComponent::ShowCue(const FStageCueDefinition& Definition)
 {
-	if (bEndingPlay || !GetWorld() || Definition.CueId.IsNone() || Definition.Title.IsEmpty() || !FMath::IsFinite(Definition.TimeLimit) || Definition.TimeLimit < 0.0f)
+	if (bEndingPlay || !GetWorld() || Definition.CueId.IsNone() || !FMath::IsFinite(Definition.TimeLimit) || Definition.TimeLimit < 0.0f)
 		return false;
 	FStageCueRuntime* Cue = Cues.FindByPredicate([&](const auto& Entry) { return Entry.View.CueId == Definition.CueId; });
 	if (!Cue)
@@ -439,7 +439,8 @@ void UStageCueComponent::UpdateWorldSignals()
 	{
 		const FStageCueRuntime& Cue = Cues[Indices[Slot]];
 		const EStageCueKind Kind = Cue.Definition.Kind;
-		UTexture2D* Icon = SignalIcons.FindRef(Kind);
+		UTexture2D* Icon = Cue.Definition.Icon.Get();
+		if (!Icon) Icon = SignalIcons.FindRef(Kind);
 		if (!Icon) Icon = SignalIcons.FindRef(EStageCueKind::General);
 		if (!Icon) continue;
 

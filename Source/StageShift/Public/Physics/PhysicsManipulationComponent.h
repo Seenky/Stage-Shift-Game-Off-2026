@@ -147,6 +147,7 @@ protected:
 
 private:
 	friend class AStagePhysicsActor;
+	friend class UStageMemberComponent;
 	bool BeginManipulationInternal(const FHitResult& Hit, EPhysicsInteractionType Type, bool bPlayPickupAnimation);
 	bool TransferCarriedPropTo(UPhysicsManipulationComponent& Receiver);
 	UFUNCTION()

@@ -5,6 +5,7 @@
 #include "StageCueTypes.generated.h"
 
 class UStageCondition;
+class UTexture2D;
 
 UENUM(BlueprintType)
 enum class EStageCueState : uint8
@@ -54,9 +55,12 @@ struct STAGESHIFT_API FStageCueDefinition
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue") FName CueId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue") EStageCueKind Kind = EStageCueKind::General;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "Cue") FText Title = NSLOCTEXT("StageCues", "Signal", "Сигнал");
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue", meta = (MultiLine)) FText Details;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue", meta = (MultiLine)) FText OverdueDetails;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue", meta = (ToolTip = "Uses the default icon for this Kind when left empty."))
+	TObjectPtr<UTexture2D> Icon;
+	// Used by the card presentation and existing Blueprint callers.
+	UPROPERTY(BlueprintReadWrite, Category = "Cue") FText Title = NSLOCTEXT("StageCues", "Signal", "Сигнал");
+	UPROPERTY(BlueprintReadWrite, Category = "Cue") FText Details;
+	UPROPERTY(BlueprintReadWrite, Category = "Cue") FText OverdueDetails;
 	// These triggers follow actual scenario execution, including branches and delays.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (GetOptions = "GetStepOptions")) FName ShowAtStepId;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scenario", meta = (GetOptions = "GetStepOptions")) FName ActivateAtStepId;

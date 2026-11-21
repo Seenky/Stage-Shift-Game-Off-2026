@@ -27,6 +27,11 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 	bool IsPhysicallyBlocked() const;
+	bool IsWaitingForStageProp() const;
+	void ShowPartnerInteractionPose();
+	bool IsPartnerInteractionPoseActive() const;
+	bool IsListeningToCheatOutDialogue() const;
+	FVector GetCheatOutAudienceDirection() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage")
 	TObjectPtr<UStageRecoveryRulesDataAsset> RecoveryRulesAsset;
@@ -112,6 +117,7 @@ private:
 	bool IsScenarioPaused(const UStageMemberCommand* Command) const;
 	bool CanRememberStageMark(const UStageMemberCommand* SourceCommand) const;
 	void UpdateStageMarkStatus();
+	void UpdateStagePropReadiness() const;
 	void PumpCommands();
 	void UpdateExecutions();
 	void AdvanceExecution(UStageMemberCommand* Command);
@@ -158,6 +164,7 @@ private:
 
 	FVector StageLocation = FVector::ZeroVector;
 	float StageYaw = 0.0f;
+	double PartnerInteractionPoseUntil = 0.0;
 	FGameplayTagContainer CachedStatuses;
 	int32 DispatchDepth = 0;
 	bool bUpdatingExecutions = false;

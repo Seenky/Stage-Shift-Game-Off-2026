@@ -41,6 +41,7 @@ public:
 	TArray<FName> GetTargetOptions() const;
 	virtual uint8 GetResourceMask() const;
 	virtual bool CanRunWhileFallen() const { return false; }
+	virtual bool ExpectsStageProp() const { return false; }
 	virtual void ValidateDefinition(const class UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const;
 	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const;
 #if WITH_EDITORONLY_DATA

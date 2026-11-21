@@ -57,7 +57,7 @@ UStageAction* UStageMoveCommand::CreateMainAction_Implementation(const FStageExe
 	Request.SetAllowPartialPath(false); // Reaching the end of a partial path does not reach the target.
 
 	UStageMoveAction* MoveAction = NewObject<UStageMoveAction>(Member);
-	MoveAction->MoveToRequest(Request, MoveTimeLimit);
+	MoveAction->MoveToRequest(Request, MoveTimeLimit, MoveSpeedOverride);
 
 	return MoveAction;
 }
@@ -98,7 +98,7 @@ void UStageMoveCommand::OnPreStart_Implementation(const FStageExecutionContext& 
 		Speed = MovementComp->GetMaxSpeedForNavMovement();
 	}
 
-	Speed = FMath::Max(Speed, 1.f);
+	Speed = FMath::Max(MoveSpeedOverride > 0.0f ? MoveSpeedOverride : Speed, 1.0f);
 
 	const float AllDistance = FVector::Distance(Owner->GetActorLocation(), Target->GetActorLocation());
 	const float StopDistance = AcceptanceRadius + Owner->GetSimpleCollisionRadius();
@@ -141,6 +141,7 @@ void UStageMoveCommand::ValidateDefinition(const UStageDataAsset* Data, const FS
 		if (Id.IsNone() || !Data || !Data->TargetIds.Contains(Id)) Errors.Add(Path + TEXT(" / undeclared Move target: ") + Id.ToString());
 	if (!FMath::IsFinite(AcceptanceRadius) || AcceptanceRadius < 0) Errors.Add(Path + TEXT(" / AcceptanceRadius must be finite and nonnegative"));
 	if (!FMath::IsFinite(MoveTimeLimit) || MoveTimeLimit < 0.0f) Errors.Add(Path + TEXT(" / Move Time Limit must be finite and nonnegative"));
+	if (!FMath::IsFinite(MoveSpeedOverride) || MoveSpeedOverride < 0.0f) Errors.Add(Path + TEXT(" / Move Speed Override must be finite and nonnegative"));
 }
 
 void UStageMoveCommand::ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const

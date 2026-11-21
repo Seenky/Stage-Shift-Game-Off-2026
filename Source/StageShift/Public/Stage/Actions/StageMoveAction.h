@@ -9,6 +9,7 @@
 #include "StageMoveAction.generated.h"
 
 class AAIController;
+class UCharacterMovementComponent;
 
 UCLASS()
 
@@ -17,7 +18,7 @@ class STAGESHIFT_API UStageMoveAction : public UStageAction
 	GENERATED_BODY()
 
 public:
-	void MoveToRequest(const FAIMoveRequest& InRequest, float InTimeLimit = 0.0f);
+	void MoveToRequest(const FAIMoveRequest& InRequest, float InTimeLimit = 0.0f, float InSpeedOverride = 0.0f);
 
 protected:
 	virtual void OnStart_Implementation() override;
@@ -34,6 +35,9 @@ private:
 	FAIRequestID CurrentRequestID;
 	FAIMoveRequest MoveRequest;
 	float TimeLimit = 0.0f;
+	float SpeedOverride = 0.0f;
+	float SavedWalkSpeed = 0.0f;
+	TWeakObjectPtr<UCharacterMovementComponent> SpeedComponent;
 	TWeakObjectPtr<AAIController> AIController;
 	FTimerHandle TargetAvailabilityTimer;
 	FTimerHandle MoveTimeoutTimer;

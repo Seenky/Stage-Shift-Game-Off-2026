@@ -47,6 +47,7 @@ public:
 	float GetInteractionHoldDuration() const;
 
 	bool IsPlayingReleaseAnimation() const;
+	bool IsReleaseImminent() const;
 
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
 

@@ -3,18 +3,20 @@
 #include "Stage/Actions/StageMoveAction.h"
 #include "AIController.h"
 #include "Components/Stage/StageMemberComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "Physics/PhysicsActor.h"
 #include "StageInteractionHelpers.h"
 #include "Stage/Core/StageManager.h"
 #include "TimerManager.h"
 
-void UStageMoveAction::MoveToRequest(const FAIMoveRequest& InRequest, float InTimeLimit)
+void UStageMoveAction::MoveToRequest(const FAIMoveRequest& InRequest, float InTimeLimit, float InSpeedOverride)
 {
 	// A previous attempt's request is never owned by this working Action.
 	CurrentRequestID = FAIRequestID::InvalidRequest;
 	MoveRequest = InRequest;
 	TimeLimit = InTimeLimit;
+	SpeedOverride = InSpeedOverride;
 }
 
 void UStageMoveAction::LogMove(const FString& Details) const
@@ -75,6 +77,13 @@ void UStageMoveAction::OnStart_Implementation()
 	const FAIMoveRequest CurrentRequest = MoveRequest;
 
 	LogMove(TEXT("Move requested"));
+	if (SpeedOverride > 0.0f)
+		if (auto* Movement = Cast<UCharacterMovementComponent>(PawnOwner->GetMovementComponent()))
+		{
+			SpeedComponent = Movement;
+			SavedWalkSpeed = Movement->MaxWalkSpeed;
+			Movement->MaxWalkSpeed = SpeedOverride;
+		}
 	AIController->ReceiveMoveCompleted.AddUniqueDynamic(this, &ThisClass::HandleReceiveMoveCompleted);
 	bStartingRequest = true;
 	const FPathFollowingRequestResult Result = AIController->MoveTo(CurrentRequest);
@@ -146,6 +155,9 @@ void UStageMoveAction::Cleanup_Implementation()
 		World->GetTimerManager().ClearTimer(MoveTimeoutTimer);
 	}
 	LogMove(FString::Printf(TEXT("Action finished: Result=%s"), *UEnum::GetValueAsString(GetResult())));
+	if (auto* Movement = SpeedComponent.Get(); Movement && Movement->MaxWalkSpeed == SpeedOverride)
+		Movement->MaxWalkSpeed = SavedWalkSpeed;
+	SpeedComponent.Reset();
 	if (AIController.IsValid())
 	{
 		AIController->ReceiveMoveCompleted.RemoveDynamic(this, &ThisClass::HandleReceiveMoveCompleted);

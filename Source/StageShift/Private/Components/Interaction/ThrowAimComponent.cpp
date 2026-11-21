@@ -137,7 +137,6 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (!bPreparing && bWasPreparing) bAimFrozen = true;
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
-	UpdateThrowPreview(bPreparing && !bAimFrozen, DeltaTime);
 	if (Reticle)
 	{
 		Reticle->SetVisibility(bInteractive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -153,6 +152,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 	const FRotator Target(0, AimDirection.Rotation().Yaw, 0);
 	Pawn->SetActorRotation(FMath::RInterpTo(Pawn->GetActorRotation(), Target, DeltaTime, TurnSpeed));
+	UpdateThrowPreview(Manipulation->IsCarrying() && (bPreparing || bFollowingThrough), DeltaTime);
 }
 
 bool UThrowAimComponent::GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const
@@ -294,7 +294,8 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 
 	constexpr double PreviewInterval = 1.0 / 20.0;
 	const double Now = GetWorld()->GetTimeSeconds();
-	if (Now < NextThrowPreviewAt)
+	// Sample the last visible release frames before the timer detaches the prop.
+	if (Now < NextThrowPreviewAt && !(bAimFrozen && Interaction->IsReleaseImminent()))
 	{
 		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
 		return;
@@ -321,7 +322,8 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	// Switching arcs or impact surfaces can put intermediate points inside an obstacle.
 	const bool bSameImpactSurface = !bBlocked || (Hit.GetComponent() == PreviewImpact.GetComponent()
 	    && FVector::DotProduct(Hit.ImpactNormal, PreviewImpact.ImpactNormal) >= 0.95);
-	const bool bCanBlend = !PreviewPath.IsEmpty() && bBlocked == bPreviewBlocked && bSameImpactSurface && bUsesHighArc == bPreviewUsesHighArc;
+	const bool bCanBlend = !bAimFrozen && !PreviewPath.IsEmpty() && bBlocked == bPreviewBlocked
+	    && bSameImpactSurface && bUsesHighArc == bPreviewUsesHighArc;
 	PreviewBlendRemaining = bCanBlend ? PreviewInterval : 0.0;
 	PreviewPath = MoveTemp(Path);
 	PreviewImpact = Hit;
@@ -406,6 +408,8 @@ void UThrowAimComponent::FreezeAim()
 	APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
 	if (Controller && Controller->IsLocalController()) UpdateAim(*Controller, GetWorld()->GetDeltaSeconds(), true);
 	bAimFrozen = true;
+	// The release animation can still move the prop before it leaves the hand.
+	NextThrowPreviewAt = 0.0;
 }
 
 bool UThrowAimComponent::GetAimTarget(FVector& WorldLocation) const

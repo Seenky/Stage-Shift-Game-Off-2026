@@ -65,6 +65,12 @@ struct FDialogueLine
 	// RevealAllWords dispatches remaining cues. Interrupted lines discard unreached cues.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FDialogueCue> Cues;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Cheating Out", ToolTip = "Let a stage performer open their upper body toward the audience while speaking. Disable for lines delivered into a prop or away from the audience."))
+	bool bCheatOut = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetRoleOptions", EditCondition = "bCheatOut", ToolTip = "Stage role that shares the open pose while this line plays. Leave empty for a solo line."))
+	FName CheatOutPartnerRoleId;
 };
 
 UENUM(BlueprintType)

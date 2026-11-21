@@ -14,6 +14,8 @@
 #include "TimerManager.h"
 #include "UObject/Package.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogStageSound, Log, All);
+
 float FStageSoundTiming::GetDuration() const
 {
 	return FMath::Max(0.f, ExpectedDelay) + FMath::Max(0.f, LateTolerance) + FMath::Max(0.01f, LateGrace);
@@ -183,7 +185,9 @@ void AStageSoundControl::SetTiming(float OpenedAt)
 bool AStageSoundControl::PlaySignal()
 {
 	if (!Window.bActive || !GetWorld()) return false;
-	const FStageSoundOption* Selected = Window.SoundId.IsNone() || !SoundOptions.IsValidIndex(SelectedSoundIndex) ? nullptr : &SoundOptions[SelectedSoundIndex];
+	const bool bUseSelector = !Window.SoundId.IsNone();
+	if (bUseSelector && !SoundOptions.IsValidIndex(SelectedSoundIndex)) return false;
+	const FStageSoundOption* Selected = bUseSelector ? &SoundOptions[SelectedSoundIndex] : nullptr;
 	USoundBase* Playback = Selected ? Selected->Sound.Get() : Sound.Get();
 	if (!IsValid(Playback)) return false;
 	const float Now = GetWorld()->GetTimeSeconds();
@@ -221,6 +225,13 @@ void AStageSoundControl::BroadcastResult(EStageSoundResult Result)
 	LastResult = Result;
 	const uint8 Bit = 1u << static_cast<uint8>(Result);
 	const FStageSoundWindow Snapshot = Window;
+	const bool bPlayed = Result == EStageSoundResult::Early || Result == EStageSoundResult::OnTime
+	    || Result == EStageSoundResult::Late || Result == EStageSoundResult::WrongSound;
+	const FName PlayedSound = bPlayed ? (Snapshot.SoundId.IsNone() ? Snapshot.CueId : GetSelectedSoundId()) : NAME_None;
+	UE_LOG(LogStageSound, Log, TEXT("%s / Window[%u] / Cue[%s] / Expected[%s] / Played[%s] / Result=%s / Attempt=%d / Elapsed=%.2fs / OnTime=%.2f-%.2fs"),
+	    *GetName(), Snapshot.Id, *Snapshot.CueId.ToString(), *Snapshot.SoundId.ToString(), *PlayedSound.ToString(),
+	    *UEnum::GetValueAsString(Result), Snapshot.Attempt, GetWorld()->GetTimeSeconds() - Snapshot.OpenedAt,
+	    Snapshot.EarliestAt - Snapshot.OpenedAt, Snapshot.LatestAt - Snapshot.OpenedAt);
 	if (!(ReportedResults & Bit))
 	{
 		ReportedResults |= Bit;

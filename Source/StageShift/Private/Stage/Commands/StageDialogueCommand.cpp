@@ -5,6 +5,7 @@
 #include "Components/Stage/StageMemberComponent.h"
 #include "Components/Dialogue/DialogueComponent.h"
 #include "Stage/Actions/StageDialogueAction.h"
+#include "Stage/Core/Data/StageDataAsset.h"
 
 void UStageDialogueCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
@@ -15,6 +16,8 @@ void UStageDialogueCommand::ValidateDefinition(const UStageDataAsset* Data, cons
 	if (!FMath::IsFinite(CurrentLine.HoldDuration) || CurrentLine.HoldDuration < 0 || !FMath::IsFinite(CurrentLine.WordInterval) || CurrentLine.WordInterval < 0
 	    || !FMath::IsFinite(CurrentLine.LetterInterval) || CurrentLine.LetterInterval < 0)
 		Errors.Add(Path + TEXT(" / dialogue timing must be finite and nonnegative"));
+	if (CurrentLine.bCheatOut && !CurrentLine.CheatOutPartnerRoleId.IsNone() && Data && !Data->GetRoleOptions().Contains(CurrentLine.CheatOutPartnerRoleId))
+		Errors.Add(Path + TEXT(" / unknown Cheating Out partner role: ") + CurrentLine.CheatOutPartnerRoleId.ToString());
 	for (const auto& Cue : CurrentLine.Cues)
 		if (Cue.WordIndex < 0 || Cue.WordIndex >= Words.Num() || !FMath::IsFinite(Cue.BlendTime) || Cue.BlendTime < 0 || !FMath::IsFinite(Cue.Value) || Cue.Value < 0
 		    || Cue.Value > 1)

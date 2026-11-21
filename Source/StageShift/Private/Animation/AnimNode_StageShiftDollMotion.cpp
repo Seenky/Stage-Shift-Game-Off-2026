@@ -45,6 +45,7 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 
 	FStageShiftDollPose Motion = Animation->GetDollPose();
 	const FStageShiftDragPose& Drag = Animation->GetDragPose();
+	const float CheatOutYaw = Animation->CheatOutYaw;
 	Motion.ChestLean += Drag.Lean * Drag.Alpha;
 	Motion.Compression += Drag.Alpha * (0.008f + 0.01f * Drag.Effort);
 	if (Animation->IsDollPhysicsActive())
@@ -54,7 +55,7 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 		Motion.ContactOffset = 0.0f;
 	}
 	if (FMath::IsNearlyZero(Motion.Compression) && FMath::IsNearlyZero(Motion.HeadCompression) && FMath::IsNearlyZero(Motion.ContactOffset) && Motion.ChestLean.IsNearlyZero()
-	    && Motion.HeadLean.IsNearlyZero() && Drag.Alpha <= 0.0f)
+	    && Motion.HeadLean.IsNearlyZero() && Drag.Alpha <= 0.0f && FMath::IsNearlyZero(CheatOutYaw))
 		return;
 
 	const FBoneContainer& Bones = Output.Pose.GetPose().GetBoneContainer();
@@ -114,10 +115,11 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 
 	const FVector Away = Component.InverseTransformVectorNoScale(Motion.ContactNormal).GetSafeNormal2D();
 	const FQuat ChestLean = MakeDollLean(Component.InverseTransformVectorNoScale(Motion.ChestLean));
+	const FQuat ChestYaw(Component.InverseTransformVectorNoScale(FVector::UpVector), FMath::DegreesToRadians(CheatOutYaw));
 	const FTransform InputChest = ReadBone(Chest);
 	FTransform UpperBody = InputChest;
 	UpperBody.AddToTranslation(PelvisShift + Away * (Motion.ContactOffset * 0.55) + FVector::DownVector * (Motion.Compression * 42.0));
-	UpperBody.SetRotation(ChestLean * UpperBody.GetRotation());
+	UpperBody.SetRotation(ChestYaw * ChestLean * UpperBody.GetRotation());
 	WriteBone(Chest, UpperBody);
 
 	for (int32 Side = 0; Side < 2; ++Side)
@@ -149,7 +151,9 @@ void FAnimNode_StageShiftDollMotion::EvaluateSkeletalControl_AnyThread(FComponen
 	FTransform HeadTransform = ReadBone(Head).GetRelativeTransform(InputChest) * UpperBody;
 	const FQuat HeadLean = MakeDollLean(Component.InverseTransformVectorNoScale(Motion.HeadLean));
 	HeadTransform.AddToTranslation(FVector::DownVector * (Motion.HeadCompression * 15.0));
-	HeadTransform.SetRotation(HeadLean * ChestLean.Inverse() * HeadTransform.GetRotation());
+	// Let the face open with the shoulders, with a small counter-turn toward the partner.
+	const FQuat HeadCounterYaw = FQuat::Slerp(FQuat::Identity, ChestYaw.Inverse(), 0.2);
+	HeadTransform.SetRotation(HeadLean * ChestLean.Inverse() * HeadCounterYaw * HeadTransform.GetRotation());
 	WriteBone(Head, HeadTransform);
 	OutBoneTransforms.Sort(FCompareBoneTransformIndex());
 }

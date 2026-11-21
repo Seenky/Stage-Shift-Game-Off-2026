@@ -231,6 +231,14 @@ bool UInteractionComponent::IsPlayingReleaseAnimation() const
 	    && Instance->Montage_GetCurrentSection(PlayingMontage.Get()) == ReleaseSectionName;
 }
 
+bool UInteractionComponent::IsReleaseImminent() const
+{
+	const UWorld* World = GetWorld();
+	if (!World || ReleaseMontageId == INDEX_NONE) return false;
+	const float Remaining = World->GetTimerManager().GetTimerRemaining(ReleaseTimer);
+	return Remaining >= 0.0f && Remaining <= 2.0f * World->GetDeltaSeconds();
+}
+
 void UInteractionComponent::CommitRelease()
 {
 	if (ReleaseMontageId == INDEX_NONE) return;
