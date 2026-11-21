@@ -1,0 +1,10 @@
+Built-in ImageGen; flat tile sources, with seams and tone range finished separately.
+
+Knit: square edge-to-edge hand-painted albedo tile; tightly packed hand-knit stockinette in warm toasted oatmeal; eight vertical wales and eight courses; rounded twisted strands interlocked at overlapping ends, amber lift and warm brown contact shadows, individual fibers, narrow crevices; orthographic, no cast shadow, vignette, severe black lines or flat chevrons.
+
+Yarn: square edge-to-edge hand-painted albedo swatch; six adjoining vertical cocoa-oatmeal three-ply spun wool cords; diagonally wrapped plies, fine matte fibers, warm amber on plush crests and muted darker troughs; orthographic, repeatable, no overall cast shadow or backdrop.
+Fibre overlay: top-down square PBR source; pale, isolated cream wool filaments on pure black; sparse, mostly vertical or slightly diagonal and bent, thin tapered ends, softly varying brightness and length, occasional groups of two or three; no backdrop detail, fabric pattern, bundles, borders or typography.
+
+Visible fiber version: square seamless grayscale mask, solid black background with roughly 90 to 120 readable silver or white wool hairs, curled tapered ends, distinct lengths and intensities, small secondary filaments, widely scattered with mostly vertical orientation. At least 80 percent of the image pure black, with no underlying fabric or background detail.
+
+Final Knit_ImageGen and Twisted_ImageGen: edit the current square swatch in place, retaining its stitch or cord layout, stitch count, scale and soft matte dye. Generate short pale and darker flyaway fibers anchored into the bends and twist grooves at one-eighth to one-third of a stitch. Preserve overlapping rounded V-knit or parallel twisted cords as appropriate. Generate the complete texture, with no separate flyaway overlay.
