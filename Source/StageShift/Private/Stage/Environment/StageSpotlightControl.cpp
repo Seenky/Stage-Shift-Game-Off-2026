@@ -100,6 +100,7 @@ void AStageSpotlightControl::CommitAim()
 void AStageSpotlightControl::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	UpdateAimingIntensity(DeltaSeconds);
 	if (State == EStageSpotlightState::Aiming)
 	{
 		const auto* Pawn = Cast<APawn>(AimOperator.Get());
@@ -152,6 +153,20 @@ void AStageSpotlightControl::Tick(float DeltaSeconds)
 	CheckTarget();
 }
 
+void AStageSpotlightControl::UpdateAimingIntensity(float DeltaSeconds)
+{
+	if (!IntensityBeforeAiming.IsSet()) return;
+	const float TargetAlpha = State == EStageSpotlightState::Aiming ? 1.f : 0.f;
+	if (AimingIntensityAlpha != TargetAlpha)
+	{
+		constexpr float FadeDuration = 0.25f;
+		AimingIntensityAlpha = FMath::FInterpConstantTo(AimingIntensityAlpha, TargetAlpha, DeltaSeconds, 1.f / FadeDuration);
+		const float Multiplier = FMath::Lerp(1.f, AimingIntensityMultiplier, FMath::SmoothStep(0.f, 1.f, AimingIntensityAlpha));
+		Spotlight->SetIntensity(IntensityBeforeAiming.GetValue() * Multiplier);
+	}
+	if (TargetAlpha == 0.f && AimingIntensityAlpha == 0.f) IntensityBeforeAiming.Reset();
+}
+
 void AStageSpotlightControl::CheckTarget()
 {
 	if (State == EStageSpotlightState::Idle || State == EStageSpotlightState::Aiming) return;
@@ -177,6 +192,10 @@ void AStageSpotlightControl::CheckTarget()
 void AStageSpotlightControl::SetState(EStageSpotlightState Value)
 {
 	if (State == Value) return;
+	if (Value == EStageSpotlightState::Aiming && !IntensityBeforeAiming.IsSet())
+	{
+		IntensityBeforeAiming = Spotlight->Intensity;
+	}
 	State = Value;
 	OnStateChanged.Broadcast(CueId, Target.Get(), State);
 }

@@ -40,7 +40,7 @@ void UStageScenarioGraphSchema::SetNodePosition(UEdGraphNode* Node, const FVecto
 	// Q / native alignment use the schema directly, bypassing SGraphNode::MoveTo.
 	// Capture the owning asset in that same alignment transaction before updating its layout.
 	Graph->GetAsset()->Modify();
-	Super::SetNodePosition(Node, Position);
+	Super::SetNodePosition(Node, FVector2f(FMath::RoundToFloat(Position.X), FMath::RoundToFloat(Position.Y)));
 	Graph->Positions().Add(Node->NodeGuid, FVector2D(Node->NodePosX, Node->NodePosY));
 	Graph->GetAsset()->MarkPackageDirty();
 }

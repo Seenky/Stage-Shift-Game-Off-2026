@@ -3,6 +3,7 @@
 
 class UStageScenarioEdGraph;
 class UStageScenarioEdNode;
+class SGraphPanel;
 
 class FStageGraphOrganization
 {
@@ -13,5 +14,5 @@ public:
 	static bool Expand(UStageScenarioEdGraph* Graph, FGuid GroupId);
 	static bool Rename(UStageScenarioEdGraph* Graph, UStageScenarioEdNode* Node, const FString& Name);
 	static bool Delete(UStageScenarioEdGraph* Graph, const TArray<UStageScenarioEdNode*>& Nodes);
-	static void Layout(UStageScenarioEdGraph* Graph);
+	static bool Layout(UStageScenarioEdGraph* Graph, const SGraphPanel* Panel);
 };

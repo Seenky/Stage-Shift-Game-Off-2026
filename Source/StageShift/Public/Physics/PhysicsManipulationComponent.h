@@ -64,7 +64,8 @@ public:
 
 	void ClearThrowTarget() { ThrowAim.bHasTarget = false; }
 
-	bool PredictThrow(float HoldDuration, TArray<FVector>& Path, FHitResult& Hit) const;
+	bool PredictThrow(float HoldDuration, TArray<FVector>& Path, FHitResult& Hit, bool bDrawDebug = false,
+	    bool* bOutBlocked = nullptr, bool* bOutUsesHighArc = nullptr) const;
 
 	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
 
@@ -120,6 +121,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm/s"))
 	float MaxThrowSpeed = 1400.0f;
+	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm", ToolTip = "Maximum rise above the release point for an assisted lob. Zero disables assisted lobs."))
+	float MaxThrowLobHeight = 120.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw")
 	bool bAssistTargetRange = true;
 	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm"))
@@ -196,7 +199,13 @@ private:
 	FTransform GetDragFrame() const;
 	void ClearPickupPlayback();
 	FVector CalculateThrowVelocity(
-	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration) const;
+	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
+	    FVector& OutTarget, float& OutAimSpeed) const;
+	FVector ResolveThrowVelocity(UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
+	    TArray<FVector>* Path = nullptr, FHitResult* OutHit = nullptr, bool bDrawDebug = false, bool* bOutBlocked = nullptr,
+	    bool* bOutUsesHighArc = nullptr) const;
+	void TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start, const FVector& Velocity,
+	    TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const;
 	FVector GetThrowReleaseAdjustment(const UPrimitiveComponent& Component, const FVector& Start) const;
 
 	UFUNCTION()

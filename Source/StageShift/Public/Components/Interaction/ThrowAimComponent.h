@@ -71,8 +71,10 @@ protected:
 	float TurnSpeed = 12.0f;
 
 private:
-	void UpdateAim(APlayerController& Controller, float DeltaTime);
-	void UpdateThrowPreview(bool bShow);
+	void UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround = false);
+	void UpdateThrowPreview(bool bShow, float DeltaTime = 0.f);
+	void DrawThrowTrajectory(float DeltaTime);
+	UDecalComponent* CreateThrowDecal(FName Name) const;
 	bool GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const;
 	TWeakObjectPtr<ACharacter> Character;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
@@ -80,7 +82,9 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> Reticle;
 	UPROPERTY(Transient)
-	TObjectPtr<UDecalComponent> LandingDecal;
+	TObjectPtr<UDecalComponent> TargetDecal;
+	UPROPERTY(Transient)
+	TObjectPtr<UDecalComponent> ImpactDecal;
 	UPROPERTY(Transient)
 	TObjectPtr<UInstancedStaticMeshComponent> TrajectoryDots;
 	UPROPERTY()
@@ -90,8 +94,17 @@ private:
 	FVector2D ScreenPosition = FVector2D::ZeroVector;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
 	FVector AimTarget = FVector::ZeroVector;
+	FVector AimSurfaceNormal = FVector::UpVector;
 	FVector AimDirection = FVector::ForwardVector;
+	TArray<FVector> PreviewPath;
+	TArray<FTransform> DisplayedDots;
+	FHitResult PreviewImpact;
 	uint64 LastCursorUpdateFrame = MAX_uint64;
+	double NextThrowPreviewAt = 0.0;
+	double PreviewBlendRemaining = 0.0;
+	double AimGroundHeightOffset = 0.0;
+	bool bPreviewBlocked = false;
+	bool bPreviewUsesHighArc = false;
 	bool bAiming = false;
 	bool bDraggingAim = false;
 	bool bWasPreparing = false;
