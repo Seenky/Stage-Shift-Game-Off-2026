@@ -13,6 +13,7 @@ class UFacialAnimationComponent;
 class UWidgetComponent;
 class UCharacterHairComponent;
 class UStageShiftAnimInstance;
+class USoundBase;
 
 UCLASS()
 
@@ -29,6 +30,7 @@ public:
 	bool IsDollPhysicsActive() const;
 
 	UDollPhysicsComponent* GetDollPhysics() const { return DollPhysicsComponent; }
+	void PlayFootstep(bool bLeftFoot) const;
 
 protected:
 	virtual void PostRegisterAllComponents() override;
@@ -73,6 +75,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Visual|Squash", meta = (ClampMin = "0.0", ClampMax = "0.05"))
 	float LandingSquash = 0.025f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character|Audio")
+	TObjectPtr<USoundBase> FootstepSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character|Audio")
+	TObjectPtr<USoundBase> LandSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Physics Hit")
 	bool bEnablePhysicsHitKnockdown = true;

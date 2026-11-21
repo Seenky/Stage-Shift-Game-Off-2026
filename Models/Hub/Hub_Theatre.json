@@ -1,0 +1,504 @@
+{
+  "modules": [
+    {
+      "name": "SM_Hub_PlankFloor",
+      "collection": "PlankFloor",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "group": "01 Architecture",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_TimberShell",
+      "collection": "TimberShell",
+      "location": [
+        485,
+        0,
+        0
+      ],
+      "group": "01 Architecture",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_PortalValance",
+      "collection": "PortalValance",
+      "location": [
+        456,
+        0,
+        385
+      ],
+      "group": "02 Drapery",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_ForegroundDrapes",
+      "collection": "ForegroundDrapes",
+      "location": [
+        -492,
+        0,
+        0
+      ],
+      "group": "02 Drapery",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_BalconyRail",
+      "collection": "BalconyRail",
+      "location": [
+        -493,
+        -240,
+        0
+      ],
+      "group": "01 Architecture",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_EntrySteps",
+      "collection": "EntrySteps",
+      "location": [
+        -532,
+        420,
+        0
+      ],
+      "group": "01 Architecture",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_CompanyRug",
+      "collection": "CompanyRug",
+      "location": [
+        -124,
+        0,
+        0
+      ],
+      "group": "03 Floor",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_SelectionStand",
+      "collection": "SelectionStand",
+      "location": [
+        310,
+        0,
+        0
+      ],
+      "group": "04 Dioramas",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_ScenicGreens",
+      "collection": "ScenicGreens",
+      "location": [
+        260,
+        0,
+        0
+      ],
+      "group": "04 Dioramas",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_Wardrobe",
+      "collection": "Wardrobe",
+      "location": [
+        162,
+        -500,
+        0
+      ],
+      "group": "05 Wardrobe",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_DressingCorner",
+      "collection": "DressingCorner",
+      "location": [
+        65,
+        -495,
+        0
+      ],
+      "group": "05 Wardrobe",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_CraftBench",
+      "collection": "CraftBench",
+      "location": [
+        -283,
+        -435,
+        0
+      ],
+      "group": "06 Props",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_SoundDesk",
+      "collection": "SoundDesk",
+      "location": [
+        159,
+        493,
+        0
+      ],
+      "group": "07 Sound",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_MusicCorner",
+      "collection": "MusicCorner",
+      "location": [
+        -220,
+        439,
+        0
+      ],
+      "group": "07 Sound",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_FlyRig",
+      "collection": "FlyRig",
+      "location": [
+        442,
+        0,
+        355
+      ],
+      "group": "08 Rigging",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_CrimePreview",
+      "collection": "CrimePreview",
+      "location": [
+        310,
+        0,
+        0
+      ],
+      "group": "04 Dioramas",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_WinterPreview",
+      "collection": "WinterPreview",
+      "location": [
+        310,
+        0,
+        0
+      ],
+      "group": "04 Dioramas",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_SeaPreview",
+      "collection": "SeaPreview",
+      "location": [
+        310,
+        0,
+        0
+      ],
+      "group": "04 Dioramas",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_SceneryRails",
+      "collection": "SceneryRails",
+      "location": [
+        355,
+        0,
+        0
+      ],
+      "group": "04 Dioramas",
+      "collision": null
+    },
+    {
+      "name": "SM_Hub_WardrobeRiser",
+      "collection": "WardrobeRiser",
+      "location": [
+        131,
+        -516,
+        0
+      ],
+      "group": "05 Wardrobe",
+      "collision": null
+    }
+  ],
+  "palette": {
+    "OakAmber": [
+      0.31,
+      0.14,
+      0.066
+    ],
+    "OakAged": [
+      0.21,
+      0.083,
+      0.039
+    ],
+    "OakCopper": [
+      0.39,
+      0.17,
+      0.074
+    ],
+    "OakBrown": [
+      0.26,
+      0.105,
+      0.044
+    ],
+    "OakHoney": [
+      0.45,
+      0.235,
+      0.093
+    ],
+    "OakDark": [
+      0.105,
+      0.044,
+      0.027
+    ],
+    "Walnut": [
+      0.155,
+      0.059,
+      0.033
+    ],
+    "Beam": [
+      0.16,
+      0.066,
+      0.042
+    ],
+    "BackWood": [
+      0.077,
+      0.033,
+      0.026
+    ],
+    "Wine": [
+      0.185,
+      0.018,
+      0.027
+    ],
+    "Velvet": [
+      0.34,
+      0.025,
+      0.043
+    ],
+    "VelvetDark": [
+      0.094,
+      0.011,
+      0.025
+    ],
+    "PinkFabric": [
+      0.54,
+      0.16,
+      0.232
+    ],
+    "BlueFabric": [
+      0.048,
+      0.103,
+      0.2
+    ],
+    "Canvas": [
+      0.59,
+      0.38,
+      0.19
+    ],
+    "GoldenBraid": [
+      0.6,
+      0.3,
+      0.082
+    ],
+    "Bronze": [
+      0.39,
+      0.166,
+      0.05
+    ],
+    "Brass": [
+      0.61,
+      0.341,
+      0.102
+    ],
+    "Paper": [
+      0.71,
+      0.529,
+      0.28
+    ],
+    "PaperLight": [
+      0.81,
+      0.69,
+      0.48
+    ],
+    "Ink": [
+      0.14,
+      0.057,
+      0.042
+    ],
+    "Plaster": [
+      0.49,
+      0.345,
+      0.22
+    ],
+    "WindowLight": [
+      0.81,
+      0.42,
+      0.16
+    ],
+    "Forest": [
+      0.1,
+      0.204,
+      0.107
+    ],
+    "Leaf": [
+      0.22,
+      0.318,
+      0.128
+    ],
+    "LeafLight": [
+      0.37,
+      0.445,
+      0.171
+    ],
+    "Rose": [
+      0.54,
+      0.1,
+      0.13
+    ],
+    "RoseLight": [
+      0.71,
+      0.22,
+      0.24
+    ],
+    "Slate": [
+      0.102,
+      0.125,
+      0.194
+    ],
+    "Indigo": [
+      0.072,
+      0.069,
+      0.129
+    ],
+    "Storm": [
+      0.152,
+      0.16,
+      0.26
+    ],
+    "Snow": [
+      0.37,
+      0.437,
+      0.53
+    ],
+    "Silver": [
+      0.38,
+      0.4,
+      0.46
+    ],
+    "RugRed": [
+      0.36,
+      0.065,
+      0.078
+    ],
+    "RugDye": [
+      0.21,
+      0.031,
+      0.057
+    ],
+    "RugPurple": [
+      0.164,
+      0.074,
+      0.2
+    ],
+    "LanternGlow": [
+      1,
+      0.46,
+      0.12
+    ],
+    "RimGlow": [
+      1,
+      0.55,
+      0.17
+    ]
+  },
+  "camera": {
+    "location": [
+      -1285,
+      0,
+      1039
+    ],
+    "rotation": [
+      -38.25,
+      0,
+      0
+    ],
+    "fov": 60
+  },
+  "focus_camera": {
+    "location": [
+      -233,
+      -17,
+      358
+    ],
+    "rotation": [
+      -23,
+      10.5,
+      0
+    ],
+    "fov": 56
+  },
+  "placements": {
+    "DressingCorner": {
+      "location": [
+        41,
+        -531,
+        12
+      ],
+      "rotation": [
+        0,
+        -22,
+        0
+      ]
+    },
+    "Wardrobe": {
+      "location": [
+        183,
+        -407,
+        12
+      ],
+      "rotation": [
+        0,
+        -18,
+        0
+      ]
+    },
+    "CraftBench": {
+      "location": [
+        -325,
+        -469,
+        0
+      ],
+      "rotation": [
+        0,
+        -10,
+        0
+      ]
+    },
+    "MusicCorner": {
+      "location": [
+        -199,
+        455,
+        0
+      ],
+      "rotation": [
+        0,
+        13,
+        0
+      ]
+    },
+    "SoundDesk": {
+      "location": [
+        164,
+        508,
+        0
+      ],
+      "rotation": [
+        0,
+        22,
+        0
+      ]
+    }
+  }
+}

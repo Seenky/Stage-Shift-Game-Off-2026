@@ -9,6 +9,7 @@
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/BodyInstance.h"
 #include "TimerManager.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
@@ -27,6 +28,25 @@ void AStagePhysicsActor::BeginPlay()
 {
 	ConfigureCharacterContact();
 	Super::BeginPlay();
+	if (ImpactSound)
+	{
+		GetStaticMeshComponent()->SetNotifyRigidBodyCollision(true);
+		GetStaticMeshComponent()->OnComponentHit.AddUniqueDynamic(this, &ThisClass::HandleImpactSound);
+	}
+}
+
+void AStagePhysicsActor::HandleImpactSound(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
+    FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!ImpactSound || !HitComponent || !HitComponent->IsSimulatingPhysics() || !GetWorld() || GetGameTimeSinceCreation() < .16f) return;
+
+	const double ImpactSpeed = NormalImpulse.Size() / FMath::Max(HitComponent->GetMass(), .1f);
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (ImpactSpeed < 83.0 || Now - LastImpactSoundTime < .16) return;
+
+	LastImpactSoundTime = Now;
+	const float Volume = FMath::Clamp(static_cast<float>(ImpactSpeed / 520.0), .25f, .92f);
+	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, Hit.ImpactPoint, Volume, FMath::FRandRange(.91f, 1.12f));
 }
 
 void AStagePhysicsActor::ConfigureCharacterContact()

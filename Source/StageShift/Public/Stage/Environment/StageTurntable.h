@@ -54,6 +54,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, Category = "Turntable|Audio")
+	TObjectPtr<class USoundBase> RotationSound;
+
 private:
 	TWeakObjectPtr<AStageManager> StageManager;
 	FRotator InitialRotation;

@@ -132,6 +132,9 @@ public:
 	FOnRecoveryEnded OnPhysAnimStarted;
 
 protected:
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<class USoundBase> FallSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TMap<FName, FPhysicalMontageSettings> MontageSettings;
 

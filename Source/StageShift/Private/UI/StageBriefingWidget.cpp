@@ -2,6 +2,7 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 #include "Stage/Core/StageManager.h"
 
 void UStageBriefingWidget::SetSceneBriefing(AStageManager* InManager, const FText& Text)
@@ -28,7 +29,11 @@ void UStageBriefingWidget::HandleContinue()
 	if (auto* Stage = Manager.Get())
 	{
 		FText Error;
-		if (Stage->ContinueSceneBriefing(Error)) return;
+		if (Stage->ContinueSceneBriefing(Error))
+		{
+			if (ContinueSound) UGameplayStatics::PlaySound2D(Stage, ContinueSound);
+			return;
+		}
 		ErrorText->SetText(Error);
 		ErrorText->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}

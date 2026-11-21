@@ -17,6 +17,7 @@
 #include "Engine/SkeletalMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "OptimusDeformerInstance.h"
 #include "PhysicsEngine/BodyInstance.h"
 #include "PhysicsEngine/PhysicsAsset.h"
@@ -203,10 +204,23 @@ void AStageShiftCharacter::Tick(float DeltaSeconds)
 	}
 }
 
+void AStageShiftCharacter::PlayFootstep(bool bLeftFoot) const
+{
+	if (!FootstepSound || !GetWorld() || !GetWorld()->IsGameWorld()) return;
+
+	const FName Bone = bLeftFoot ? TEXT("foot_l") : TEXT("foot_r");
+	const FVector Location = GetMesh()->GetSocketLocation(Bone);
+	UGameplayStatics::PlaySoundAtLocation(this, FootstepSound, Location, .8f, FMath::FRandRange(.92f, 1.08f));
+}
+
 void AStageShiftCharacter::Landed(const FHitResult& Hit)
 {
 	const float ImpactSpeed = FMath::Max(-GetVelocity().Z, 0.0);
 	Super::Landed(Hit);
+	if (LandSound && ImpactSpeed > 150.f)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, LandSound, Hit.ImpactPoint, FMath::Clamp(ImpactSpeed / 550.f, .32f, 1.f));
+	}
 	if (!PhysicalMontageComponent->IsPhysicsMontageActive())
 	{
 		if (UStageShiftAnimInstance* Animation = Cast<UStageShiftAnimInstance>(GetMesh()->GetAnimInstance()))

@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
+#include "Kismet/GameplayStatics.h"
 
 AStageSpotlightControl::AStageSpotlightControl()
 {
@@ -57,6 +58,7 @@ EInteractionResult AStageSpotlightControl::OnInteraction_Implementation(const FI
 		LastCursorPosition.Reset();
 		SetState(EStageSpotlightState::Aiming);
 	}
+	if (ActivationSound) UGameplayStatics::PlaySoundAtLocation(this, ActivationSound, ControlMesh->GetComponentLocation());
 	return EInteractionResult::Completed;
 }
 

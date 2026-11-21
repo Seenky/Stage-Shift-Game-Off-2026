@@ -1,10 +1,13 @@
 {
   "meshes": [
-    "FBX\\Modules\\SK_Character001_Body.fbx",
-    "FBX\\Modules\\SK_Character001_Hat.fbx",
-    "FBX\\Modules\\SK_Character001_Outfit.fbx",
-    "FBX\\SK_Character001_FullBody.fbx",
-    "FBX\\Modules\\SK_Character001_Hair.fbx"
+    "FBX\\Modules\\SK_Base_Body.fbx",
+    "..\\Hair\\Hair001\\FBX\\SK_Hair001.fbx",
+    "..\\Hair\\Hair002\\FBX\\SK_Hair002.fbx",
+    "..\\Hat\\Hat001\\FBX\\SK_Hat001.fbx",
+    "..\\Outfit\\Outfit001\\FBX\\SK_Outfit001.fbx",
+    "..\\Outfit\\Outfit002\\FBX\\SK_Outfit002.fbx",
+    "FBX\\SK_Base_Outfit001.fbx",
+    "FBX\\SK_Base_Outfit002.fbx"
   ],
   "animations": [
     "FBX\\Animations\\AN_Character001_WalkFwd.fbx",
@@ -40,5 +43,13 @@
   "ue_scale": 0.5,
   "native_actions_preserved_in": "Base.blend",
   "painter_mesh": "FBX/Base_Painter.fbx",
-  "full_painter_mesh": "FBX/Character001_Painter_TPose.fbx"
+  "full_painter_mesh": "FBX/Character001_Painter_TPose.fbx",
+  "modular_rig": {
+    "shared_skeleton": "SK_Character",
+    "separate_hair_skeletons": {
+      "Hair001": 25,
+      "Hair002": 4
+    },
+    "assembled_previews_bind_hair_to": "head"
+  }
 }

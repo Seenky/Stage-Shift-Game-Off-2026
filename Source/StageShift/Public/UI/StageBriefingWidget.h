@@ -5,6 +5,7 @@
 
 class AStageManager;
 class UButton;
+class USoundBase;
 class UTextBlock;
 
 UCLASS(Abstract, Blueprintable)
@@ -23,6 +24,9 @@ protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> BriefingText;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UButton> ContinueButton;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ErrorText;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TObjectPtr<USoundBase> ContinueSound;
 
 private:
 	UFUNCTION() void HandleContinue();
