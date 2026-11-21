@@ -1,4 +1,5 @@
 #include "Stage/Core/StageManager.h"
+#include "Stage/Environment/StageCurtainRail.h"
 #include "Camera/CameraComponent.h"
 #include "Core/MainCameraActor.h"
 #include "GameFramework/PlayerController.h"
@@ -197,6 +198,8 @@ FVector AStageManager::GetCheatOutAudienceDirection() const
 void AStageManager::BeginPlay()
 {
 	RecentEvents.Reset();
+	RuntimeCurtain = Cast<AStageCurtainRail>(ResolveLevelActor(CurtainRail.ToSoftObjectPath()));
+	if (RuntimeCurtain.IsValid()) RuntimeCurtain->SetStageManager(this);
 	if (AStageTurntable* Platform = ResolveTurntable()) Platform->SetStageManager(this);
 #if WITH_EDITOR
 	StageDebugDisplay::ClearEditorContent();

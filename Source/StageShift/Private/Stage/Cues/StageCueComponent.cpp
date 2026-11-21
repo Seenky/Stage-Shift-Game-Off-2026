@@ -286,6 +286,20 @@ void UStageCueComponent::ShowActorProblem(FName CueId, const FText& Title, const
 	}
 }
 
+void UStageCueComponent::ShowActorSignal(FName CueId, EStageCueKind Kind, AActor* Actor, float TimeLimit)
+{
+	if (!IsValid(Actor)) return;
+	FStageCueDefinition Definition;
+	Definition.CueId = CueId;
+	Definition.Kind = Kind;
+	Definition.TimeLimit = TimeLimit;
+	Definition.Targets.AddDefaulted_GetRef().Type = EStageCueMarkerType::Event;
+	if (!ShowCue(Definition)) return;
+	if (auto* Cue = Cues.FindByPredicate([CueId](const auto& Entry) { return Entry.View.CueId == CueId; }))
+		Cue->ActorOverride = Actor;
+	UpdatePresentation();
+}
+
 void UStageCueComponent::StartStage(UStageDataAsset* Data)
 {
 	ResetCues();

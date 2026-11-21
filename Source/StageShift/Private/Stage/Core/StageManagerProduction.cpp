@@ -4,19 +4,12 @@
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "StatusesComponent.h"
+#include "Stage/Environment/StageCurtainRail.h"
+#include "Stage/Cues/StageCueComponent.h"
 #include "UObject/Package.h"
 
 AStageManager::FResolvedSceneBindings AStageManager::ResolveProductionBindings(const FStageProductionScene& Scene) const
 {
-	const auto ResolveActor = [this](const TSoftObjectPtr<AActor>& Reference) -> AActor*
-	{
-		UWorld* World = GetWorld();
-		if (!World) return nullptr;
-		FSoftObjectPath Path = Reference.ToSoftObjectPath();
-		if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
-		AActor* Actor = Cast<AActor>(Path.ResolveObject());
-		return IsValid(Actor) && !Actor->IsActorBeingDestroyed() && Actor->GetWorld() == World ? Actor : nullptr;
-	};
 	FResolvedSceneBindings Result;
 	Result.Roles = RoleBindings;
 	Result.Targets = TargetBindings;
@@ -25,10 +18,12 @@ AStageManager::FResolvedSceneBindings AStageManager::ResolveProductionBindings(c
 	if (const auto* Overrides = ProductionBindings.Find(Scene.SceneId))
 	{
 		for (const auto& Pair : Overrides->Roles)
-			Result.Roles.Add(Pair.Key, ResolveActor(Pair.Value));
+			Result.Roles.Add(Pair.Key, ResolveLevelActor(Pair.Value.ToSoftObjectPath()));
 		for (const auto& Pair : Overrides->Targets)
-			Result.Targets.Add(Pair.Key, ResolveActor(Pair.Value));
+			Result.Targets.Add(Pair.Key, ResolveLevelActor(Pair.Value.ToSoftObjectPath()));
 	}
+	if (ActiveProduction && ActiveProduction->Scenes.IsValidIndex(ProductionSceneIndex) && &ActiveProduction->Scenes[ProductionSceneIndex] == &Scene)
+		for (const auto& Pair : RuntimeCast) Result.Roles.Add(Pair.Key, Pair.Value.Get());
 	return Result;
 }
 
@@ -50,7 +45,18 @@ bool AStageManager::ValidateProduction(UStageProductionDataAsset* Production, TA
 		TGuardValue<bool> Flag(bUseValidationTargets, true);
 		TGuardValue<TMap<FName, TObjectPtr<AActor>>> TargetGuard(ValidationTargets, Bindings.Targets);
 		TArray<FString> Local;
-		CollectValidationErrors(Scene.Scenario, Roles, Local, true);
+		bool bSpawnsCast = false;
+		if (!CurtainRail.IsNull())
+			if (const auto* LevelBindings = ProductionBindings.Find(Scene.SceneId))
+				for (const auto& [RoleId, Placement] : LevelBindings->Cast)
+				{
+					bSpawnsCast |= Placement.ActorClass != nullptr;
+					if (!Roles.Contains(RoleId) || !ResolveLevelActor(Placement.BackstageMark.ToSoftObjectPath())
+					    || (Placement.ActorClass && !ResolveLevelActor(Placement.StageMark.ToSoftObjectPath())))
+						Local.Add(TEXT("Invalid cast marks for role ") + RoleId.ToString());
+				}
+		// Spawned actors go through normal scene validation at their actual start.
+		if (!bSpawnsCast) CollectValidationErrors(Scene.Scenario, Roles, Local, true);
 		for (const auto& Error : Local)
 			Errors.Add(TEXT("Scene[") + Scene.SceneId.ToString() + TEXT("] / ") + Error);
 		if (Scene.bPrepareBefore)
@@ -90,6 +96,7 @@ bool AStageManager::StartProduction(UStageProductionDataAsset* Production, FText
 	ProductionSceneIndex = 0;
 	ProductionRunId = FGuid::NewGuid();
 	bProductionAdvancePending = false;
+	RuntimeCast.Reset();
 	AdvanceProduction();
 	if (ProductionState == EStageProductionState::Failed)
 	{
@@ -109,11 +116,16 @@ void AStageManager::AdvanceProduction()
 	}
 	const auto& Scene = ActiveProduction->Scenes[ProductionSceneIndex];
 	const bool bShowBriefing = ProductionSceneIndex == 0 && Scene.Scenario && !Scene.Scenario->SceneBriefing.IsEmpty();
-	if (Scene.bPrepareBefore || bShowBriefing || !IsStageNavigationReady())
+	if (RuntimeCurtain.IsValid() || Scene.bPrepareBefore || bShowBriefing || !IsStageNavigationReady())
 	{
 		ProductionState = EStageProductionState::Preparing;
 		PreparationStartedAt = GetWorld()->GetTimeSeconds();
 		FText Error;
+		if (RuntimeCurtain.IsValid() && !PrepareCurtainCast(Scene, Error))
+		{
+			FinishProduction(false, Error);
+			return;
+		}
 		if (bShowBriefing && !QueueSceneBriefing(Scene.Scenario->SceneBriefing, Error))
 		{
 			FinishProduction(false, Error);
@@ -121,6 +133,7 @@ void AStageManager::AdvanceProduction()
 		}
 		AddDiagnostic(TEXT("Production[") + ActiveProduction->ProductionId.ToString() + TEXT("] / preparing Scene[") + Scene.SceneId.ToString() + TEXT("]"));
 		OnProductionPhaseChanged.Broadcast(ProductionState, Scene.SceneId, ProductionSceneIndex);
+		if (RuntimeCurtain.IsValid() && ProductionSceneIndex == 0 && !bShowBriefing) BeginCurtainOpening(true);
 	}
 	else
 	{
@@ -151,6 +164,7 @@ bool AStageManager::StartProductionScene(FText& Error)
 	const FGuid StartingRun = ProductionRunId;
 	ProductionState = EStageProductionState::Playing;
 	if (!StartStageWithBindings(Scene.Scenario, Roles, Bindings.Targets, Error, true)) return false;
+	if (RuntimeCurtain.IsValid()) CurtainPhase = ECurtainPhase::Playing;
 	if (ActiveProduction && ProductionRunId == StartingRun) OnProductionPhaseChanged.Broadcast(ProductionState, SceneId, ProductionSceneIndex);
 	return true;
 }
@@ -163,6 +177,13 @@ void AStageManager::HandleProductionSceneFinished(FName StageKey, bool bSucceede
 	if (!bSucceeded)
 	{
 		FinishProduction(false, Reason);
+		return;
+	}
+	if (RuntimeCurtain.IsValid())
+	{
+		ProductionState = EStageProductionState::Preparing;
+		CurtainPhase = ECurtainPhase::Closing;
+		PlayerCues->ShowActorSignal(FName(TEXT("Curtain")), EStageCueKind::Mechanism, RuntimeCurtain->GetLever(), 0.f);
 		return;
 	}
 	// Never recursively start another zero-length scene from completion callbacks.
@@ -228,6 +249,11 @@ TArray<FString> AStageManager::GetPreparationErrors() const
 
 bool AStageManager::ConfirmProductionPreparation(FText& Error)
 {
+	if (const auto* Curtain = RuntimeCurtain.Get(); Curtain && (CurtainPhase != ECurtainPhase::Opening || !Curtain->IsOpen()))
+	{
+		Error = NSLOCTEXT("StageProduction", "CurtainClosed", "Сначала открой занавес.");
+		return false;
+	}
 	if (!PendingSceneBriefing.IsEmpty() && !bConfirmingSceneBriefing)
 	{
 		Error = NSLOCTEXT("StageBriefing", "WaitingForContinue", "Нажми «Продолжить», чтобы начать сцену.");
@@ -257,6 +283,11 @@ FText AStageManager::GetPreparationPrompt() const
 
 void AStageManager::TickProduction()
 {
+	if (RuntimeCurtain.IsValid() && ActiveProduction)
+	{
+		TickCurtainProduction();
+		return;
+	}
 	if (bProductionAdvancePending && ActiveProduction && State == EStageState::Idle)
 	{
 		bProductionAdvancePending = false;
@@ -291,11 +322,19 @@ void AStageManager::FinishProduction(bool bSucceeded, const FText& Reason)
 	ProductionState = bSucceeded ? EStageProductionState::Completed : EStageProductionState::Failed;
 	FailureReason = Reason;
 	ActiveProduction = nullptr;
+	if (!bSucceeded)
+		for (const auto& Pair : RuntimeCast)
+			if (auto* Actor = Pair.Value.Get()) Actor->Destroy();
+	RuntimeCast.Reset();
+	CastMoves.Reset();
+	CurtainPhase = ECurtainPhase::Idle;
+	OpeningDeadline = NextOpeningPenaltyAt = -1.;
 	bProductionAdvancePending = false;
 	ProductionSceneIndex = FMath::Min(ProductionSceneIndex, ProductionSceneCount - 1);
 	AddDiagnostic(TEXT("Production[") + Key.ToString() + TEXT("] / ") + (bSucceeded ? TEXT("Completed") : Reason.ToString()));
 	OnProductionPhaseChanged.Broadcast(ProductionState, NAME_None, ProductionSceneIndex);
 	OnProductionFinished.Broadcast(Key, bSucceeded, Reason);
+	if (bSucceeded && RuntimeCurtain.IsValid()) ShowProductionResult();
 }
 
 void AStageManager::AbortProduction(const FText& Reason)

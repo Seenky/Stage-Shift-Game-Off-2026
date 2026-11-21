@@ -59,6 +59,17 @@ struct FStageProductionScene
 // Lives on the level-local manager, never on the reusable production asset.
 USTRUCT(BlueprintType)
 
+struct FStageCastPlacement
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TSubclassOf<AActor> ActorClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TSoftObjectPtr<AActor> BackstageMark;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TSoftObjectPtr<AActor> StageMark;
+};
+
+USTRUCT(BlueprintType)
+
 struct FStageSceneBindings
 {
 	GENERATED_BODY()
@@ -66,6 +77,7 @@ struct FStageSceneBindings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, TSoftObjectPtr<AActor>> Roles;
 	// Includes scenario targets and preparation prop/mark IDs.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, TSoftObjectPtr<AActor>> Targets;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bindings") TMap<FName, FStageCastPlacement> Cast;
 };
 
 USTRUCT()

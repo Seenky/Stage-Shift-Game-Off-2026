@@ -11,6 +11,7 @@
 
 class UPhysicsManipulationComponent;
 class AStagePhysicsActor;
+class AStageCurtainRail;
 
 UENUM(BlueprintType)
 enum class EStagePropTransferResult : uint8
@@ -46,6 +47,8 @@ public:
 	void WatchThrownProp(AActor* Thrower);
 	void IgnoreCatchFor(AActor* Actor) { IgnoredCatchActor = Actor; }
 	void NotifyPropCarried(AActor* Carrier);
+	void SetCurtainRail(AStageCurtainRail* Rail);
+	bool IsBeingDragged() const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Props")
 	FStagePropTransferEvent OnPropTransfer;
@@ -87,4 +90,5 @@ private:
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;
+	TWeakObjectPtr<AStageCurtainRail> CurtainRail;
 };

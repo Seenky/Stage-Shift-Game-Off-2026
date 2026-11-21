@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/BodyInstance.h"
 #include "TimerManager.h"
+#include "Stage/Environment/StageCurtainRail.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 
 AStagePhysicsActor::AStagePhysicsActor()
@@ -58,6 +59,7 @@ void AStagePhysicsActor::ConfigureCharacterContact()
 
 bool AStagePhysicsActor::CanInteract_Implementation(const FInteractionContext& InteractionContext) const
 {
+	if (const auto* Rail = CurtainRail.Get(); Rail && !Rail->CanDragLever()) return false;
 	if (!InteractionContext.Interactor || InteractionContext.Hit.GetComponent() != GetStaticMeshComponent()
 	    || (ActiveManipulator.IsValid() && ActiveManipulator->GetManipulatedComponent() == GetStaticMeshComponent()))
 	{
@@ -65,6 +67,18 @@ bool AStagePhysicsActor::CanInteract_Implementation(const FInteractionContext& I
 	}
 	const UPhysicsManipulationComponent* Manipulator = InteractionContext.Interactor->FindComponentByClass<UPhysicsManipulationComponent>();
 	return Manipulator && Manipulator->CanManipulate(InteractionContext.Hit, InteractionType);
+}
+
+void AStagePhysicsActor::SetCurtainRail(AStageCurtainRail* Rail)
+{
+	CurtainRail = Rail;
+	InteractionType = EPhysicsInteractionType::Drag;
+}
+
+bool AStagePhysicsActor::IsBeingDragged() const
+{
+	const auto* Manipulator = ActiveManipulator.Get();
+	return Manipulator && Manipulator->IsDragging() && Manipulator->GetManipulatedComponent() == GetStaticMeshComponent();
 }
 
 bool AStagePhysicsActor::HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const
