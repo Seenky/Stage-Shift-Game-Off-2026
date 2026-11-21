@@ -63,6 +63,8 @@ protected:
 	float MouseDegreesPerUnit = 0.18f;
 	UPROPERTY(EditAnywhere, Category = "Stage|Light", meta = (ClampMin = "0.0"))
 	float StickDegreesPerSecond = 70.f;
+	UPROPERTY(EditAnywhere, Category = "Stage|Light", meta = (ClampMin = "1.0"))
+	float AimingIntensityMultiplier = 1.75f;
 	UPROPERTY(EditAnywhere, Category = "Stage|Light", meta = (ClampMin = "0.0", Units = "deg"))
 	float TargetGraceAngle = 5.f;
 	UPROPERTY(EditAnywhere, Category = "Stage|Light", meta = (ClampMin = "1.0", Units = "cm"))
@@ -73,8 +75,11 @@ protected:
 private:
 	void ApplyCueTarget(FName InCueId, AActor* InTarget);
 	void SetState(EStageSpotlightState Value);
+	void UpdateAimingIntensity(float DeltaSeconds);
 	void CheckTarget();
 	FRotator BaseRotation;
+	TOptional<float> IntensityBeforeAiming;
+	float AimingIntensityAlpha = 0.f;
 	FVector2D AimOffset = FVector2D::ZeroVector;
 	TOptional<FVector2D> LastCursorPosition;
 	TWeakObjectPtr<AActor> AimOperator;

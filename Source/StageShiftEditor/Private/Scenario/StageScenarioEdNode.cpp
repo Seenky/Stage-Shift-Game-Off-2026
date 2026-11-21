@@ -7,6 +7,7 @@
 #include "Stage/Core/Data/StageProductionDataAsset.h"
 #include "Stage/Core/StageMemberCommand.h"
 #include "SGraphNode.h"
+#include "SGraphPin.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Widgets/Input/SComboButton.h"
 #include "Widgets/Layout/SBox.h"
@@ -15,6 +16,11 @@
 const FName UStageScenarioEdNode::FailedPin(TEXT("On Failed"));
 const FName UStageScenarioEdNode::TruePin(TEXT("True"));
 const FName UStageScenarioEdNode::FalsePin(TEXT("False"));
+
+class SStageScenarioPin : public SGraphPin
+{
+	virtual bool UseLowDetailPinNames() const override { return false; }
+};
 
 class SStageScenarioNode : public SGraphNode
 {
@@ -25,8 +31,23 @@ public:
 	void Construct(const FArguments&, UStageScenarioEdNode* Node)
 	{
 		GraphNode = Node;
+		bHasCustomPrepass = true;
 		SetCursor(EMouseCursor::CardinalCross);
 		UpdateGraphNode();
+	}
+
+	virtual bool CustomPrepass(float) override
+	{
+		// Measure in graph units so zoom cannot change the alignment of execution pins.
+		GetChildren()->ForEachWidget([](SWidget& Child) { Child.SlatePrepass(1.f); });
+		return false;
+	}
+
+	virtual bool UseLowDetailNodeTitles() const override { return false; }
+
+	virtual TSharedPtr<SGraphPin> CreatePinWidget(UEdGraphPin* Pin) const override
+	{
+		return SNew(SStageScenarioPin, Pin);
 	}
 
 	virtual void MoveTo(const FVector2f& Position, FNodeSet& Filter, bool bMarkDirty = true) override
@@ -57,7 +78,7 @@ public:
 				[
 					SNew(STextBlock)
 					.Text(FText::FromString(Node->Summary))
-					.AutoWrapText(true)
+					.WrapTextAt(260.f)
 				]
 			];
 		if (Graph->Scenario && (Node->Command || Node->Kind == EStageScenarioNodeKind::Reaction))

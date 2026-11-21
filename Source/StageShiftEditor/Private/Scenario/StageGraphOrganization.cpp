@@ -8,6 +8,8 @@
 #include "Stage/Core/SequenceStageMemberCommand.h"
 #include "Stage/Core/ParallelStageMemberCommand.h"
 #include "ScopedTransaction.h"
+#include "SGraphNode.h"
+#include "SGraphPanel.h"
 
 void FStageGraphOrganization::Project(UStageScenarioEdGraph* Graph, const TArray<UStageScenarioEdNode*>& Logical)
 {
@@ -307,17 +309,96 @@ bool FStageGraphOrganization::Rename(UStageScenarioEdGraph* Graph, UStageScenari
 	return true;
 }
 
-void FStageGraphOrganization::Layout(UStageScenarioEdGraph* Graph)
+bool FStageGraphOrganization::Layout(UStageScenarioEdGraph* Graph, const SGraphPanel* Panel)
 {
-	if (!FStageScenarioGraphAdapter::Backup(Graph->GetAsset())) return;
+	if (!Graph || Graph->bReadOnly || Graph->Nodes.IsEmpty()) return false;
+
+	TMap<const UEdGraphNode*, FIntPoint> Cells;
+	TArray<TPair<const UEdGraphNode*, FIntPoint>> Branches;
+	TArray<int32> NextRowByColumn;
+	int32 NextSectionRow = 0;
+	const auto PlaceChain = [&](const UEdGraphNode* Node, FIntPoint Cell, bool bVertical)
+	{
+		while (Node && !Cells.Contains(Node))
+		{
+			Cells.Add(Node, Cell);
+			if (!NextRowByColumn.IsValidIndex(Cell.X)) NextRowByColumn.SetNumZeroed(Cell.X + 1);
+			NextRowByColumn[Cell.X] = FMath::Max(NextRowByColumn[Cell.X], Cell.Y + 1);
+			NextSectionRow = FMath::Max(NextSectionRow, Cell.Y + 1);
+
+			const UEdGraphNode* Next = nullptr;
+			for (const UEdGraphPin* Pin : Node->Pins)
+			{
+				if (Pin->Direction != EGPD_Output) continue;
+				const bool bAlternate = UStageScenarioEdNode::IsAlternateExit(Pin->PinName);
+				for (const UEdGraphPin* Linked : Pin->LinkedTo)
+				{
+					const UEdGraphNode* Target = Linked->GetOwningNode();
+					if (bAlternate || Next) Branches.Emplace(Target, FIntPoint(Cell.X + (bAlternate ? 0 : 1), Cell.Y + 1));
+					else Next = Target;
+				}
+			}
+			Node = Next;
+			if (bVertical) ++Cell.Y;
+			else ++Cell.X;
+		}
+	};
+	const auto PlaceSection = [&](const UEdGraphNode* Root)
+	{
+		PlaceChain(Root, FIntPoint(0, NextSectionRow), false);
+		// Lay out the main chain first so branches can join it without moving shared nodes.
+		for (int32 Index = 0; Index < Branches.Num(); ++Index)
+		{
+			const auto [Target, Start] = Branches[Index];
+			const int32 FreeRow = NextRowByColumn.IsValidIndex(Start.X) ? NextRowByColumn[Start.X] : 0;
+			PlaceChain(Target, FIntPoint(Start.X, FMath::Max(Start.Y, FreeRow)), true);
+		}
+		Branches.Reset();
+	};
+	for (const UEdGraphNode* Node : Graph->Nodes)
+		if (!Node->Pins.ContainsByPredicate([](const UEdGraphPin* Pin) { return Pin->Direction == EGPD_Input && !Pin->LinkedTo.IsEmpty(); }))
+			PlaceSection(Node);
+	for (const UEdGraphNode* Node : Graph->Nodes)
+		if (!Cells.Contains(Node)) PlaceSection(Node);
+
+	TArray<int32> ColumnWidths, RowHeights;
+	ColumnWidths.Init(330, NextRowByColumn.Num());
+	RowHeights.Init(150, NextSectionRow);
+	if (Panel)
+		for (const auto& [Node, Cell] : Cells)
+			if (const auto Widget = Panel->GetNodeWidgetFromGuid(Node->NodeGuid))
+			{
+				const FVector2D Size = Widget->GetDesiredSize();
+				ColumnWidths[Cell.X] = FMath::Max(ColumnWidths[Cell.X], FMath::CeilToInt(Size.X) + 96);
+				RowHeights[Cell.Y] = FMath::Max(RowHeights[Cell.Y], FMath::CeilToInt(Size.Y) + 56);
+			}
+	const auto Offsets = [](TArrayView<const int32> Sizes, int32 Start)
+	{
+		TArray<int32> Result;
+		Result.Reserve(Sizes.Num());
+		for (const int32 Size : Sizes)
+		{
+			Result.Add(Start);
+			Start += Size;
+		}
+		return Result;
+	};
+	const auto Columns = Offsets(ColumnWidths, -330);
+	const auto Rows = Offsets(RowHeights, 0);
+	auto& Current = Graph->Positions();
+	TMap<FGuid, FVector2D> Changes;
+	for (const auto& [Node, Cell] : Cells)
+	{
+		const FVector2D Position(Columns[Cell.X], Rows[Cell.Y]);
+		const auto* Previous = Current.Find(Node->NodeGuid);
+		if (!Previous || *Previous != Position) Changes.Add(Node->NodeGuid, Position);
+	}
+	if (Changes.IsEmpty() || !FStageScenarioGraphAdapter::Backup(Graph->GetAsset())) return false;
 	const FScopedTransaction Transaction(NSLOCTEXT("StageScenario", "Layout", "Layout visible graph"));
 	Graph->GetAsset()->Modify();
-	int32 Index = 0;
-	for (UEdGraphNode* Node : Graph->Nodes)
-	{
-		Graph->Positions().Add(Node->NodeGuid, FVector2D(Index++ * 330 - 330, 0));
-	}
+	Current.Append(MoveTemp(Changes));
 	Graph->GetAsset()->MarkPackageDirty();
+	return true;
 }
 
 bool FStageGraphOrganization::Delete(UStageScenarioEdGraph* Graph, const TArray<UStageScenarioEdNode*>& Nodes)

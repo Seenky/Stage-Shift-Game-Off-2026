@@ -467,6 +467,20 @@ void FStageScenarioEditorToolkit::Build(bool bReaction, bool bFrame)
 	Crumb(bReaction ? TEXT("Reactions") : Production ? TEXT("Production") : TEXT("Story"), 0);
 	for (int32 I = 0; I < Stack.Num(); ++I)
 		Crumb(TEXT("› ") + Stack[I].Name, I + 1);
+	Crumbs->AddSlot()
+	.AutoWidth()
+	.Padding(12, 2, 2, 2)
+	[
+		SNew(SButton)
+		.Text(NSLOCTEXT("StageScenario", "AutoArrange", "Auto Arrange"))
+		.ToolTipText(NSLOCTEXT("StageScenario", "AutoArrangeTip", "Arrange this graph in execution order, with failed and false paths below."))
+		.IsEnabled(bEditable)
+		.OnClicked_Lambda([Raw]
+		{
+			if (Raw->OnAction) Raw->OnAction(EStageGraphAction::Layout, nullptr, nullptr, FVector2D::ZeroVector);
+			return FReply::Handled();
+		})
+	];
 	Host->SetContent
 	(
 		SNew(SVerticalBox)
@@ -618,6 +632,12 @@ void FStageScenarioEditorToolkit::Action(UStageScenarioEdGraph* Graph, EStageGra
 		View(Graph)->ZoomToFit(false);
 		return;
 	}
+	if (Op == EStageGraphAction::Layout)
+	{
+		const auto Editor = View(Graph);
+		if (FStageGraphOrganization::Layout(Graph, Editor ? Editor->GetGraphPanel() : nullptr)) QueueRefresh();
+		return;
+	}
 	if (Op == EStageGraphAction::Enter)
 	{
 		Enter(Node);
@@ -701,11 +721,6 @@ void FStageScenarioEditorToolkit::Action(UStageScenarioEdGraph* Graph, EStageGra
 	}
 	else if (Op == EStageGraphAction::Expand && Node)
 		Done = FStageGraphOrganization::Expand(Graph, Node->GroupId);
-	else if (Op == EStageGraphAction::Layout)
-	{
-		FStageGraphOrganization::Layout(Graph);
-		Done = true;
-	}
 	else if (Production)
 	{
 		FStageProductionGraphAdapter P(Production);
