@@ -41,6 +41,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction|Stage Props")
 	bool CanReceiveStageProp() const;
+	bool CanReceiveStagePropAt(double AcceptedAt) const;
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Stage Props")
 	void SetAcceptStageProps(bool bAccept);
 	UPROPERTY(BlueprintAssignable, Category = "Physics Interaction|Stage Props")

@@ -22,6 +22,7 @@ class STAGESHIFT_API UStageCueSignalWidget : public UUserWidget
 public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Cue")
 	void UpdateSignal(UTexture2D* Icon, float TimeFraction, bool bTimed, float SecondsRemaining);
+	void SetSignalWindow(float StartFraction, float EndFraction, EStageCueWindowPhase Phase);
 	void SetSignalCaption(const FText& Caption);
 
 protected:

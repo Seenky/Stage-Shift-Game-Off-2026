@@ -35,6 +35,14 @@ enum class EStageCueMarkerType : uint8
 	Recipient
 };
 
+enum class EStageCueWindowPhase : uint8
+{
+	Hidden = 0,
+	Waiting = 1,
+	Open = 2,
+	Closed = 3
+};
+
 USTRUCT(BlueprintType)
 struct STAGESHIFT_API FStageCueTarget
 {
@@ -102,6 +110,7 @@ struct FStageCueRuntime
 	double CompletedAt = 0.0;
 	double SignalStartedAt = 0.0;
 	float TimerDuration = 0.0f;
+	TOptional<TRange<double>> PropThrowWindow;
 	double SoundEarliestAt = 0.0;
 	double SoundLatestAt = 0.0;
 	double SoundFeedbackUntil = 0.0;
