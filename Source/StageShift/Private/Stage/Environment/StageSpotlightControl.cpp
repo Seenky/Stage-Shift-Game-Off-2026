@@ -43,6 +43,8 @@ void AStageSpotlightControl::BeginPlay()
 	Super::BeginPlay();
 	ControlLever->BindVisual(*ControlVisual, TEXT("light_lever"), false);
 	BaseRotation = Spotlight->GetRelativeRotation();
+	BaseIntensity = Spotlight->Intensity;
+	Spotlight->SetIntensity(0.f);
 	SetCueTarget(InitialCueId, InitialTarget.Get());
 }
 
@@ -50,7 +52,7 @@ bool AStageSpotlightControl::CanInteract_Implementation(const FInteractionContex
 {
 	if (const auto* Component = Context.Hit.GetComponent(); Component && Component != ControlMesh.Get()) return false;
 	const auto* Pawn = Cast<APawn>(Context.Interactor);
-	return Pawn && Pawn->IsPlayerControlled()
+	return Target.IsValid() && Pawn && Pawn->IsPlayerControlled()
 	    && FVector::DistSquared2D(Pawn->GetActorLocation(), ControlMesh->GetComponentLocation()) <= FMath::Square(OperatorRange)
 	    && (!AimOperator.IsValid() || AimOperator.Get() == Pawn);
 }
@@ -79,7 +81,9 @@ FName AStageSpotlightControl::GetInteractionAnimationId_Implementation() const
 
 void AStageSpotlightControl::SetCueTarget(FName InCueId, AActor* InTarget)
 {
-	if (!CueOwner.IsValid()) ApplyCueTarget(InCueId, InTarget);
+	if (CueOwner.IsValid()) return;
+	KeepLightUntil = 0.0;
+	ApplyCueTarget(InCueId, InTarget);
 }
 
 bool AStageSpotlightControl::ClaimCue(UObject& Requester, FName InCueId, AActor* InTarget)
@@ -87,22 +91,30 @@ bool AStageSpotlightControl::ClaimCue(UObject& Requester, FName InCueId, AActor*
 	if (CueOwner.IsValid() || IsActorBeingDestroyed() || !IsValid(InTarget) || InTarget->IsActorBeingDestroyed() ||
 	    InTarget->GetWorld() != GetWorld()) return false;
 	CueOwner = &Requester;
+	KeepLightUntil = 0.0;
 	ApplyCueTarget(InCueId, InTarget);
 	return true;
 }
 
-void AStageSpotlightControl::ReleaseCue(const UObject& Requester, bool bKeepTarget)
+void AStageSpotlightControl::ReleaseCue(const UObject& Requester, bool bSucceeded)
 {
 	if (CueOwner.Get() != &Requester) return;
 	CueOwner.Reset();
-	if (!bKeepTarget) ApplyCueTarget(NAME_None, nullptr);
+	constexpr double ConfirmationHoldDuration = 0.6;
+	KeepLightUntil = bSucceeded ? GetWorld()->GetTimeSeconds() + ConfirmationHoldDuration : 0.0;
+	ApplyCueTarget(NAME_None, nullptr);
 }
 
 void AStageSpotlightControl::ApplyCueTarget(FName InCueId, AActor* InTarget)
 {
 	Target = InTarget;
 	CueId = InCueId;
-	if (State == EStageSpotlightState::TargetLost || State == EStageSpotlightState::TargetLit) SetState(EStageSpotlightState::Ready);
+	if (State == EStageSpotlightState::Aiming)
+	{
+		if (!Target.IsValid()) CommitAim();
+		return;
+	}
+	SetState(Target.IsValid() ? EStageSpotlightState::Ready : EStageSpotlightState::Idle);
 	CheckTarget();
 }
 
@@ -113,14 +125,15 @@ void AStageSpotlightControl::CommitAim()
 		if (auto* Interaction = Operator->FindComponentByClass<UInteractionComponent>())
 			ControlLever->ReleaseHandGrip(*Interaction);
 	AimOperator.Reset();
-	SetState(EStageSpotlightState::Ready);
+	bHasCommittedAim |= Target.IsValid();
+	SetState(Target.IsValid() ? EStageSpotlightState::Ready : EStageSpotlightState::Idle);
 	CheckTarget();
 }
 
 void AStageSpotlightControl::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	UpdateAimingIntensity(DeltaSeconds);
+	UpdateLightIntensity(DeltaSeconds);
 	if (State == EStageSpotlightState::Aiming)
 	{
 		const auto* Pawn = Cast<APawn>(AimOperator.Get());
@@ -176,23 +189,25 @@ void AStageSpotlightControl::Tick(float DeltaSeconds)
 	CheckTarget();
 }
 
-void AStageSpotlightControl::UpdateAimingIntensity(float DeltaSeconds)
+void AStageSpotlightControl::UpdateLightIntensity(float DeltaSeconds)
 {
-	if (!IntensityBeforeAiming.IsSet()) return;
+	constexpr float FadeInDuration = 0.25f;
+	constexpr float FadeOutDuration = 0.45f;
+	constexpr float AimingFadeDuration = 0.25f;
+	const bool bShouldLight = Target.IsValid() || GetWorld()->GetTimeSeconds() < KeepLightUntil;
+	LightAlpha = FMath::FInterpConstantTo(LightAlpha, bShouldLight ? 1.f : 0.f, DeltaSeconds,
+	    1.f / (bShouldLight ? FadeInDuration : FadeOutDuration));
+
 	const float TargetAlpha = State == EStageSpotlightState::Aiming ? 1.f : 0.f;
-	if (AimingIntensityAlpha != TargetAlpha)
-	{
-		constexpr float FadeDuration = 0.25f;
-		AimingIntensityAlpha = FMath::FInterpConstantTo(AimingIntensityAlpha, TargetAlpha, DeltaSeconds, 1.f / FadeDuration);
-		const float Multiplier = FMath::Lerp(1.f, AimingIntensityMultiplier, FMath::SmoothStep(0.f, 1.f, AimingIntensityAlpha));
-		Spotlight->SetIntensity(IntensityBeforeAiming.GetValue() * Multiplier);
-	}
-	if (TargetAlpha == 0.f && AimingIntensityAlpha == 0.f) IntensityBeforeAiming.Reset();
+	AimingIntensityAlpha = FMath::FInterpConstantTo(AimingIntensityAlpha, TargetAlpha, DeltaSeconds, 1.f / AimingFadeDuration);
+	const float Multiplier = FMath::Lerp(1.f, AimingIntensityMultiplier, FMath::SmoothStep(0.f, 1.f, AimingIntensityAlpha));
+	const float Intensity = BaseIntensity * FMath::SmoothStep(0.f, 1.f, LightAlpha) * Multiplier;
+	if (Spotlight->Intensity != Intensity) Spotlight->SetIntensity(Intensity);
 }
 
 void AStageSpotlightControl::CheckTarget()
 {
-	if (State == EStageSpotlightState::Idle || State == EStageSpotlightState::Aiming) return;
+	if (!bHasCommittedAim || State == EStageSpotlightState::Idle || State == EStageSpotlightState::Aiming) return;
 	const AActor* Focus = Target.Get();
 	bool bLit = false;
 	if (Focus && Spotlight->IsVisible() && Spotlight->Intensity > 0.f)
@@ -215,10 +230,6 @@ void AStageSpotlightControl::CheckTarget()
 void AStageSpotlightControl::SetState(EStageSpotlightState Value)
 {
 	if (State == Value) return;
-	if (Value == EStageSpotlightState::Aiming && !IntensityBeforeAiming.IsSet())
-	{
-		IntensityBeforeAiming = Spotlight->Intensity;
-	}
 	State = Value;
 	OnStateChanged.Broadcast(CueId, Target.Get(), State);
 }

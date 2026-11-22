@@ -34,7 +34,7 @@ public:
 	void SetCueTarget(FName InCueId, AActor* InTarget);
 
 	bool ClaimCue(UObject& Requester, FName InCueId, AActor* InTarget);
-	void ReleaseCue(const UObject& Requester, bool bKeepTarget);
+	void ReleaseCue(const UObject& Requester, bool bSucceeded);
 
 	UFUNCTION(BlueprintCallable, Category = "Stage|Light")
 	void CommitAim();
@@ -85,11 +85,14 @@ protected:
 private:
 	void ApplyCueTarget(FName InCueId, AActor* InTarget);
 	void SetState(EStageSpotlightState Value);
-	void UpdateAimingIntensity(float DeltaSeconds);
+	void UpdateLightIntensity(float DeltaSeconds);
 	void CheckTarget();
 	FRotator BaseRotation;
-	TOptional<float> IntensityBeforeAiming;
+	float BaseIntensity = 0.f;
+	float LightAlpha = 0.f;
 	float AimingIntensityAlpha = 0.f;
+	double KeepLightUntil = 0.0;
+	bool bHasCommittedAim = false;
 	FVector2D AimOffset = FVector2D::ZeroVector;
 	TOptional<FVector2D> LastCursorPosition;
 	TWeakObjectPtr<AActor> AimOperator;

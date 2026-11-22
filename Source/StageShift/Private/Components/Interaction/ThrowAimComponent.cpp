@@ -335,7 +335,10 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 			Hit.ImpactPoint = SurfaceHit.ImpactPoint;
 			Hit.ImpactNormal = SurfaceHit.ImpactNormal;
 		}
-		// The sweep follows the prop's center. Ease the preview toward the surface contact it marks.
+	}
+	if (Hit.bBlockingHit)
+	{
+		// Ease the preview from the prop's center toward the first contact returned by the sweep.
 		const FVector Contact = Hit.ImpactPoint + Hit.ImpactNormal;
 		const FVector ContactOffset = Contact - Path.Last();
 		const int32 LastIndex = Path.Num() - 1;
@@ -367,7 +370,7 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 {
 	const double Alpha = PreviewBlendRemaining > DeltaTime ? DeltaTime / PreviewBlendRemaining : 1.0;
 	PreviewBlendRemaining = FMath::Max(PreviewBlendRemaining - DeltaTime, 0.0);
-	if (bPreviewBlocked || !ThrowTapeSystem)
+	if (!ThrowTapeSystem)
 	{
 		HideThrowTape();
 		return;
@@ -394,7 +397,9 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 	constexpr int32 MaxArcStrips = 30;
 	constexpr double TargetStripSpacing = 80.0;
 	const int32 ArcStrips = FMath::Clamp(FMath::RoundToInt(PathLength / TargetStripSpacing), 1, MaxArcStrips);
-	const double Spacing = PathLength / (ArcStrips + 1);
+	// On a blocked throw, bring the last strip close to the obstacle.
+	const double EndGap = bPreviewBlocked && PreviewImpact.bBlockingHit ? 0.35 : 1.0;
+	const double Spacing = PathLength / (ArcStrips + EndGap);
 	TArray<FVector> Positions;
 	TArray<FQuat> Rotations;
 	TArray<FVector> Scales;
@@ -428,7 +433,7 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 		Distance += SegmentLength;
 	}
 
-	if (PreviewImpact.bBlockingHit)
+	if (PreviewImpact.bBlockingHit && !bPreviewBlocked)
 	{
 		const FVector Center = DisplayedPath.Last();
 		const FVector Normal = PreviewImpact.ImpactNormal;
