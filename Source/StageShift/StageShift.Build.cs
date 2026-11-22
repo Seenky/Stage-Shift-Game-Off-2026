@@ -37,6 +37,7 @@ public class StageShift : ModuleRules
 			"PBIK",
 			"Slate",
 			"NavigationSystem",
+			"Niagara",
 
 		});
 

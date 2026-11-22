@@ -24,9 +24,10 @@ int32 UThrowAimWidget::NativePaint(
 	}
 	FSlateDrawElement::MakeLines(DrawElements, Layer + 1, Geometry.ToPaintGeometry(), Ring, ESlateDrawEffect::None, FLinearColor(0.05f, 0.025f, 0.01f, 0.85f), true, 4.0f);
 	FSlateDrawElement::MakeLines(DrawElements, Layer + 2, Geometry.ToPaintGeometry(), Ring, ESlateDrawEffect::None, FLinearColor(1.0f, 0.88f, 0.58f), true, 1.5f);
-	for (const FVector2f Axis : {FVector2f(1, 0), FVector2f(0, 1)})
+	const FVector2f Mark = bBlocked ? FVector2f(3.5f, 3.5f) : FVector2f(3.0f, 0.0f);
+	for (const FVector2f Axis : {Mark, FVector2f(-Mark.Y, Mark.X)})
 	{
-		FSlateDrawElement::MakeLines(DrawElements, Layer + 2, Geometry.ToPaintGeometry(), TArray<FVector2f>{Center - Axis * 3.0f, Center + Axis * 3.0f}, ESlateDrawEffect::None,
+		FSlateDrawElement::MakeLines(DrawElements, Layer + 2, Geometry.ToPaintGeometry(), TArray<FVector2f>{Center - Axis, Center + Axis}, ESlateDrawEffect::None,
 		    FLinearColor(1.0f, 0.95f, 0.8f), true, 1.5f);
 	}
 	return Layer + 2;
