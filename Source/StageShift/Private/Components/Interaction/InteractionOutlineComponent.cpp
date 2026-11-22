@@ -96,9 +96,12 @@ void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
 	}
 	const auto* Interactable = Cast<IInteractionInterface>(Target);
 	const UMeshComponent* InteractionMesh = Interactable ? Interactable->GetInteractionMesh() : nullptr;
-	for (UMeshComponent* Primitive : TInlineComponentArray<UMeshComponent*>(Target))
+	TInlineComponentArray<UMeshComponent*> Meshes;
+	if (InteractionMesh) Meshes.Add(const_cast<UMeshComponent*>(InteractionMesh));
+	else Target->GetComponents(Meshes);
+	for (UMeshComponent* Primitive : Meshes)
 	{
-		if (!IsValid(Primitive) || !Primitive->IsRegistered() || (InteractionMesh && Primitive != InteractionMesh)) continue;
+		if (!IsValid(Primitive) || !Primitive->IsRegistered()) continue;
 		if ((Primitive->CustomDepthStencilValue & StencilBit) != 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Outline: %s already owns reserved stencil bit 128; skipped"), *Primitive->GetPathName());

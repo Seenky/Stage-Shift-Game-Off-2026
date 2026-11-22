@@ -7,13 +7,18 @@
 #include "Components/Dialogue/DialogueTextWidget.h"
 #include "Components/Dialogue/DialogueViewModel.h"
 
-bool UDialogueBubbleWidget::GetScreenBounds(FBox2D& Bounds) const
+bool UDialogueBubbleWidget::GetScreenBounds(FBox2D& Bounds, bool bAbsolute) const
 {
 	if (!DialogueBorder || !DialogueBorder->IsVisible() || DialogueBorder->GetBrushColor().A <= 0.01f) return false;
 	const FGeometry& Geometry = DialogueBorder->GetCachedGeometry();
-	FVector2D Min, Max, ViewportPosition;
-	USlateBlueprintLibrary::AbsoluteToViewport(this, Geometry.GetAbsolutePosition(), Min, ViewportPosition);
-	USlateBlueprintLibrary::AbsoluteToViewport(this, Geometry.LocalToAbsolute(Geometry.GetLocalSize()), Max, ViewportPosition);
+	FVector2D Min = Geometry.GetAbsolutePosition();
+	FVector2D Max = Geometry.LocalToAbsolute(Geometry.GetLocalSize());
+	if (!bAbsolute)
+	{
+		FVector2D ViewportPosition;
+		USlateBlueprintLibrary::AbsoluteToViewport(this, Geometry.GetAbsolutePosition(), Min, ViewportPosition);
+		USlateBlueprintLibrary::AbsoluteToViewport(this, Geometry.LocalToAbsolute(Geometry.GetLocalSize()), Max, ViewportPosition);
+	}
 	if (!FMath::IsFinite(Min.X) || !FMath::IsFinite(Min.Y) || !FMath::IsFinite(Max.X) || !FMath::IsFinite(Max.Y) ||
 	    Max.X <= Min.X || Max.Y <= Min.Y) return false;
 	Bounds = FBox2D(Min, Max);
@@ -48,6 +53,7 @@ void UDialogueBubbleWidget::SetDialogueViewModel(UDialogueViewModel* ViewModel)
 	{
 		SpeakersName->SetShowRevealDots(false);
 		SpeakersName->ResetPlayback();
+		if (!bShowSpeakerName) SpeakersName->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	BoundViewModel = ViewModel;
@@ -61,7 +67,7 @@ void UDialogueBubbleWidget::SetDialogueViewModel(UDialogueViewModel* ViewModel)
 
 void UDialogueBubbleWidget::UpdateBubble(const FDialoguePlaybackState& State)
 {
-	if (SpeakersName)
+	if (SpeakersName && bShowSpeakerName)
 	{
 		FDialoguePlaybackState NameState = State;
 		NameState.Line.Text = State.Line.SpeakersName;

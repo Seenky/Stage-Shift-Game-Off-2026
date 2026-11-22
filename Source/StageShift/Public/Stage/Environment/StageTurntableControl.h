@@ -7,6 +7,7 @@
 
 class AStageTurntable;
 class UStageControlLeverComponent;
+class UStageControlMeshComponent;
 class UStaticMeshComponent;
 
 /** A stationary control using the same interaction path as other stage props. */
@@ -17,6 +18,7 @@ class STAGESHIFT_API AStageTurntableControl : public AActor, public IInteraction
 
 public:
 	AStageTurntableControl();
+	virtual const UMeshComponent* GetInteractionMesh() const override;
 	virtual bool CanInteract_Implementation(const FInteractionContext& Context) const override;
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& Context) override;
 	virtual FName GetInteractionAnimationId_Implementation() const override;
@@ -27,6 +29,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turntable")
 	TObjectPtr<UStageControlLeverComponent> ControlLever;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turntable")
+	TObjectPtr<UStageControlMeshComponent> ControlVisual;
+
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Turntable")
 	TObjectPtr<AStageTurntable> Turntable;
+
+protected:
+	virtual void BeginPlay() override;
 };

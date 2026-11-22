@@ -12,10 +12,17 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
+#include "Stage/Environment/StageControlMeshComponent.h"
 #include "TimerManager.h"
 #include "UObject/Package.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogStageSound, Log, All);
+
+namespace
+{
+	const FName PlayButtonBone(TEXT("play_button"));
+	const FName SelectorBone(TEXT("sound_selector"));
+}
 
 float FStageSoundTiming::GetDuration() const
 {
@@ -24,12 +31,16 @@ float FStageSoundTiming::GetDuration() const
 
 AStageSoundControl::AStageSoundControl()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 	auto* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Interaction"));
 	SetRootComponent(Root);
 
 	ControlMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControlMesh"));
 	ControlMesh->SetupAttachment(Root);
 	ControlMesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	ControlVisual = CreateDefaultSubobject<UStageControlMeshComponent>(TEXT("ControlVisual"));
+	ControlVisual->SetupAttachment(Root);
 
 	SoundSelector = CreateDefaultSubobject<UWidgetComponent>(TEXT("SoundSelector"));
 	SoundSelector->SetupAttachment(Root);
@@ -43,7 +54,7 @@ AStageSoundControl::AStageSoundControl()
 
 const UMeshComponent* AStageSoundControl::GetInteractionMesh() const
 {
-	return ControlMesh.Get();
+	return ControlVisual->GetSkinnedAsset() ? static_cast<const UMeshComponent*>(ControlVisual.Get()) : ControlMesh.Get();
 }
 
 bool AStageSoundControl::CanInteract_Implementation(const FInteractionContext& Context) const
@@ -68,9 +79,38 @@ EInteractionResult AStageSoundControl::OnInteraction_Implementation(const FInter
 	else if (Player && !SoundOptions.IsEmpty()) bApplied = PreviewSelectedSound(*Player);
 	else bApplied = OpenWindow();
 	if (bApplied && Player)
+	{
+		const bool bHasButton = ControlVisual->GetBoneIndex(PlayButtonBone) != INDEX_NONE;
+		if (bHasButton)
+		{
+			ButtonPressTime = 0.f;
+			SetActorTickEnabled(true);
+		}
 		if (auto* Interaction = Pawn->FindComponentByClass<UInteractionComponent>())
-			Interaction->PlayHandMotion(EInteractionHandMotion::Press, UInteractionComponent::GetControlGripLocation(*ControlMesh, ButtonSocket), ControlMesh);
+		{
+			if (bHasButton)
+			{
+				const FName Socket = ControlVisual->DoesSocketExist(ButtonSocket) ? ButtonSocket : PlayButtonBone;
+				Interaction->PlayHandMotion(EInteractionHandMotion::Press, ControlVisual->GetSocketLocation(Socket), ControlVisual, Socket);
+			}
+			else Interaction->PlayHandMotion(EInteractionHandMotion::Press, UInteractionComponent::GetControlGripLocation(*ControlMesh, ButtonSocket), ControlMesh);
+		}
+	}
 	return bApplied ? EInteractionResult::Completed : EInteractionResult::Rejected;
+}
+
+void AStageSoundControl::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	ButtonPressTime += DeltaSeconds;
+	const int32 Index = ControlVisual->GetBoneIndex(PlayButtonBone);
+	if (Index != INDEX_NONE)
+	{
+		const float Amount = FMath::SmoothStep(0.12f, 0.20f, ButtonPressTime) * (1.f - FMath::SmoothStep(0.22f, 0.34f, ButtonPressTime));
+		const FVector Down = -ControlVisual->GetRefPoseTransform(Index).GetRotation().GetUpVector();
+		ControlVisual->SetControlPose(PlayButtonBone, FQuat::Identity, Down * (3.0 * Amount));
+	}
+	if (Index == INDEX_NONE || ButtonPressTime >= 0.34f) SetActorTickEnabled(false);
 }
 
 FName AStageSoundControl::GetInteractionAnimationId_Implementation() const
@@ -160,6 +200,13 @@ void AStageSoundControl::CycleSound(int32 Direction)
 {
 	if (SoundOptions.Num() <= 1 || Direction == 0) return;
 	SelectedSoundIndex = (SelectedSoundIndex + FMath::Sign(Direction) + SoundOptions.Num()) % SoundOptions.Num();
+	const int32 BoneIndex = ControlVisual->GetBoneIndex(SelectorBone);
+	if (BoneIndex != INDEX_NONE)
+	{
+		const FVector Axis = ControlVisual->GetRefPoseTransform(BoneIndex).GetRotation().GetUpVector();
+		const float Angle = -90.f * SelectedSoundIndex / (SoundOptions.Num() - 1);
+		ControlVisual->SetControlPose(SelectorBone, FQuat(Axis, FMath::DegreesToRadians(Angle)));
+	}
 	RefreshSelector();
 }
 

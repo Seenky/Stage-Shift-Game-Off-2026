@@ -6,7 +6,9 @@
 class AStageManager;
 class AStagePhysicsActor;
 class ASkeletalMeshActor;
+class UMeshComponent;
 class USkeletalMeshComponent;
+class UStageControlMeshComponent;
 class USplineComponent;
 class UStaticMeshComponent;
 
@@ -24,6 +26,7 @@ public:
 	void SetStageManager(AStageManager* Manager);
 	bool CanDragLever() const;
 	AActor* GetLever() const;
+	const UMeshComponent* GetControlVisual() const;
 	bool IsOpen() const { return Progress >= 1.f; }
 	UFUNCTION(BlueprintPure, Category = "Curtain")
 	float GetOpenProgress() const { return Progress; }
@@ -33,6 +36,8 @@ protected:
 	TObjectPtr<USplineComponent> Rail;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Curtain")
 	TObjectPtr<UStaticMeshComponent> Track;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Curtain")
+	TObjectPtr<UStageControlMeshComponent> ControlVisual;
 	UPROPERTY(EditInstanceOnly, Category = "Curtain")
 	TSoftObjectPtr<AStagePhysicsActor> Lever;
 	UPROPERTY(EditInstanceOnly, Category = "Curtain")
@@ -41,6 +46,7 @@ protected:
 private:
 	AActor* Resolve(const FSoftObjectPath& Reference) const;
 	void ApplyCurtain() const;
+	void UpdateSliderVisual() const;
 
 	TWeakObjectPtr<AStageManager> StageManager;
 	TWeakObjectPtr<AStagePhysicsActor> RuntimeLever;

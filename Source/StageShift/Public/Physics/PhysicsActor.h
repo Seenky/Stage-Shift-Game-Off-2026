@@ -48,6 +48,7 @@ public:
 	void IgnoreCatchFor(AActor* Actor) { IgnoredCatchActor = Actor; }
 	void NotifyPropCarried(AActor* Carrier);
 	void SetCurtainRail(AStageCurtainRail* Rail);
+	virtual const UMeshComponent* GetInteractionMesh() const override;
 	bool IsCurtainLever() const { return CurtainRail.IsValid(); }
 	bool IsBeingDragged() const;
 

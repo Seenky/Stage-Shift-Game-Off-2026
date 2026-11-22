@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "Physics/PhysicsActor.h"
 #include "Stage/Core/StageManager.h"
+#include "Stage/Environment/StageControlMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/Package.h"
 
@@ -26,6 +27,8 @@ AStageCurtainRail::AStageCurtainRail()
 	Track->SetupAttachment(Rail);
 	Track->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Track->SetCanEverAffectNavigation(false);
+	ControlVisual = CreateDefaultSubobject<UStageControlMeshComponent>(TEXT("ControlVisual"));
+	ControlVisual->SetupAttachment(Rail);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cube(TEXT("/Engine/BasicShapes/Cube"));
 	if (Cube.Succeeded()) Track->SetStaticMesh(Cube.Object);
 }
@@ -33,6 +36,11 @@ AStageCurtainRail::AStageCurtainRail()
 void AStageCurtainRail::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
+	if (GetControlVisual())
+	{
+		UpdateSliderVisual();
+		return;
+	}
 	const FVector Start = Rail->GetLocationAtDistanceAlongSpline(0.f, ESplineCoordinateSpace::Local);
 	const FVector End = Rail->GetLocationAtDistanceAlongSpline(Rail->GetSplineLength(), ESplineCoordinateSpace::Local);
 	Track->SetRelativeLocation((Start + End) * .5 - FVector(0, 0, 31));
@@ -83,6 +91,11 @@ AActor* AStageCurtainRail::GetLever() const
 	return RuntimeLever.Get();
 }
 
+const UMeshComponent* AStageCurtainRail::GetControlVisual() const
+{
+	return ControlVisual->GetSkinnedAsset() ? ControlVisual.Get() : nullptr;
+}
+
 void AStageCurtainRail::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -120,4 +133,14 @@ void AStageCurtainRail::Tick(float DeltaSeconds)
 void AStageCurtainRail::ApplyCurtain() const
 {
 	if (auto* Mesh = CurtainMesh.Get()) Mesh->SetMorphTarget(TEXT("Open"), Progress);
+	UpdateSliderVisual();
+}
+
+void AStageCurtainRail::UpdateSliderVisual() const
+{
+	if (!ControlVisual->GetSkinnedAsset()) return;
+	const float Length = Rail->GetSplineLength();
+	const FVector Center = Rail->GetLocationAtDistanceAlongSpline(0.5f * Length, ESplineCoordinateSpace::World);
+	const FVector Position = Rail->GetLocationAtDistanceAlongSpline(Progress * Length, ESplineCoordinateSpace::World);
+	ControlVisual->SetControlPose(TEXT("curtain_slider"), FQuat::Identity, ControlVisual->GetComponentTransform().InverseTransformVector(Position - Center));
 }

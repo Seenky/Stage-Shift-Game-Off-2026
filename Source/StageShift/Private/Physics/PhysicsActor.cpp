@@ -76,6 +76,12 @@ void AStagePhysicsActor::SetCurtainRail(AStageCurtainRail* Rail)
 	InteractionType = EPhysicsInteractionType::Drag;
 }
 
+const UMeshComponent* AStagePhysicsActor::GetInteractionMesh() const
+{
+	const AStageCurtainRail* Rail = CurtainRail.Get();
+	return Rail ? Rail->GetControlVisual() : nullptr;
+}
+
 bool AStagePhysicsActor::IsBeingDragged() const
 {
 	const auto* Manipulator = ActiveManipulator.Get();

@@ -3,6 +3,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "StageControlLeverComponent.generated.h"
 
+class UStageControlMeshComponent;
+class UInteractionComponent;
+enum class EInteractionHandMotion : uint8;
+
 UCLASS(ClassGroup = (Stage), meta = (BlueprintSpawnableComponent))
 class STAGESHIFT_API UStageControlLeverComponent : public UStaticMeshComponent
 {
@@ -11,7 +15,9 @@ class STAGESHIFT_API UStageControlLeverComponent : public UStaticMeshComponent
 public:
 	UStageControlLeverComponent();
 
-	FVector GetGripLocation() const;
+	void BindVisual(UStageControlMeshComponent& Mesh, FName Bone, bool bTwist);
+	void PlayHandMotion(UInteractionComponent& Interaction, EInteractionHandMotion Motion) const;
+	void ReleaseHandGrip(UInteractionComponent& Interaction) const;
 	void SetTilt(const FQuat& Tilt);
 	void PullToward(const FVector& WorldLocation);
 
@@ -34,6 +40,10 @@ protected:
 	FName GripSocket = TEXT("InteractionGrip");
 
 private:
+	TWeakObjectPtr<UStageControlMeshComponent> Visual;
+	FName VisualBone;
+	FVector TwistAxis = FVector::UpVector;
+	bool bTwistVisual = false;
 	FQuat RestRotation = FQuat::Identity;
 	FVector PivotInParent = FVector::ZeroVector;
 	FVector PivotInMesh = FVector::ZeroVector;

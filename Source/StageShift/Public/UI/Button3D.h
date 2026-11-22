@@ -32,7 +32,7 @@ public:
 	void ActivateButton();
 
 	int32 GetNavigationOrder() const { return NavigationOrder; }
-	void SetNavigationFocus(bool bFocused, bool bUsePointer);
+	void SetNavigationFocus(bool bFocused, bool bUsePointer, bool bPlaySound = true);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -54,8 +54,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Materials")
 	FName FeedbackMaterialSlot;
 
+	UPROPERTY(EditAnywhere, Category = "Settings|Materials")
+	bool bTintLabelWithMaterial = false;
+
+	UPROPERTY(EditAnywhere, Category = "Settings|Materials", meta = (EditCondition = "bTintLabelWithMaterial"))
+	FLinearColor IdleLabelTint = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, Category = "Settings|Materials", meta = (EditCondition = "bTintLabelWithMaterial"))
+	FLinearColor FocusedLabelTint = FLinearColor::White;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.001"))
 	float MaterialBlendTime = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = "Settings|Animation", meta = (ClampMin = "0.0"))
+	float FocusDepthOffset = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings|Animation", meta = (ClampMin = "0.01"))
 	float ActiveHoldTime = 0.25f;
@@ -104,6 +116,7 @@ private:
 	TObjectPtr<UMaterialInstanceDynamic> ActiveButtonMaterialDYN;
 
 	float CurrentBlendState = 0.0f;
+	FVector RestLocation = FVector::ZeroVector;
 
 	bool bIsHovered = false;
 	bool bNavigationFocused = false;

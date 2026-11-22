@@ -7,6 +7,7 @@
 
 class APlayerController;
 class USoundBase;
+class UStageControlMeshComponent;
 class UStaticMeshComponent;
 class UUserWidget;
 class UWidgetComponent;
@@ -95,10 +96,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Sound") FStageSoundResultEvent OnCueResult;
 
 protected:
+	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<UStaticMeshComponent> ControlMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	TObjectPtr<UStageControlMeshComponent> ControlVisual;
 	UPROPERTY(EditAnywhere, Category = "Interaction|Animation")
 	FName ButtonSocket = TEXT("InteractionGrip");
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
@@ -133,6 +137,7 @@ private:
 	uint32 LastWindowId = 0;
 	FTimerHandle WindowTimer;
 	int32 SelectedSoundIndex = 0;
+	float ButtonPressTime = 0.0f;
 	float NextAttemptAt = 0;
 	float NextPreviewAt = 0;
 	uint8 ReportedResults = 0;

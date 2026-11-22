@@ -210,12 +210,13 @@ FVector UInteractionComponent::GetControlGripLocation(const UStaticMeshComponent
 	return Mesh.GetComponentTransform().TransformPosition(Top);
 }
 
-void UInteractionComponent::PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor)
+void UInteractionComponent::PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor, FName Socket)
 {
 	if (!IsActive() || !GetWorld() || !IsValid(GetOwner())) return;
 	HandMotion = Motion;
 	HandAnchor = Anchor;
-	HandContact = Anchor ? Anchor->GetComponentTransform().InverseTransformPosition(GripLocation) : GripLocation;
+	HandAnchorSocket = Socket;
+	HandContact = Anchor ? Anchor->GetSocketTransform(Socket).InverseTransformPosition(GripLocation) : GripLocation;
 	HandMotionStartedAt = GetWorld()->GetTimeSeconds();
 }
 
@@ -234,7 +235,7 @@ bool UInteractionComponent::SampleHandMotion(FInteractionHandPose& OutPose) cons
 	const AActor* Owner = GetOwner();
 	if (!World || !IsValid(Owner) || !IsActive() || HandMotion == EInteractionHandMotion::None || HandAnchor.IsStale()) return false;
 	const USceneComponent* Anchor = HandAnchor.Get();
-	const FVector Contact = Anchor ? Anchor->GetComponentTransform().TransformPosition(HandContact) : HandContact;
+	const FVector Contact = Anchor ? Anchor->GetSocketTransform(HandAnchorSocket).TransformPosition(HandContact) : HandContact;
 	const float Elapsed = static_cast<float>(World->GetTimeSeconds() - HandMotionStartedAt);
 	const FVector ToGrip = (Contact - Owner->GetActorLocation()).GetSafeNormal2D();
 	const FVector Facing = ToGrip.IsNearlyZero() ? Owner->GetActorForwardVector().GetSafeNormal2D() : ToGrip;

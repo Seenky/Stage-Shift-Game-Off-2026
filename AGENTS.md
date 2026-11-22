@@ -32,3 +32,66 @@
 - **Обязательная визуальная проверка.** После изменений проверяй уровень в игровом разрешении, с игровой камеры, при реальном освещении и во время движения персонажей. Исправляй проблемы читаемости, композиции и навигации.
 
 **Главный принцип:** каждый уровень должен быть визуально привлекательным, атмосферным и одновременно максимально понятным для игрока. Красота не должна достигаться ценой удобства геймплея, а функциональность — превращать уровень в пустое техническое пространство.
+
+## Unreal Engine Material Graph — Structure & Readability Requirements
+
+When creating, modifying, or extending any Unreal Engine Material or Material Function, maintain a clean, readable, and logically organized node graph from the very beginning.
+
+**Graph readability and structure are mandatory requirements, not optional cleanup tasks.**
+
+### 1. Graph Layout & Data Flow
+- Organize all nodes consistently from left to right: **Inputs / Parameters → Calculations → Processing → Material Outputs**.
+- Keep the primary data flow on a clear horizontal spine.
+- Position supporting calculations, masks, and secondary branches above or below the main flow.
+- Arrange nodes in logical execution order with consistent spacing and alignment.
+- Avoid backward connections, excessive wire lengths, overlapping nodes, and unnecessary wire crossings.
+- Ensure the graph remains readable at normal zoom levels.
+
+### 2. Logical Grouping & Comments
+- Group related nodes into clearly labeled comment boxes based on their responsibilities.
+- Use concise, meaningful section names such as `UV Processing`, `Mask Generation`, `Surface Detail`, `Color Blending`, or `Final Output`.
+- Each comment box should represent a cohesive operation or logical subsystem.
+- Keep comment boxes aligned and visually separated.
+- Avoid oversized comment boxes containing unrelated operations.
+- Do not create comment boxes for trivial operations unless they improve understanding.
+
+### 3. Named Reroutes
+- Use **Named Reroute Declaration / Usage** nodes for values shared across multiple sections or referenced over long distances.
+- Give named reroutes descriptive, unambiguous names reflecting their actual purpose, such as `BaseUV`, `WorldMask`, `BlendFactor`, or `SurfaceNormal`.
+- Place declarations close to where values are produced.
+- Place usage nodes close to their consumers.
+- Prefer named reroutes over long wires crossing unrelated sections.
+- Avoid excessive named reroutes for short, local connections.
+
+### 4. Parameters & Inputs
+- Group related parameters together near the beginning of their corresponding processing sections.
+- Use consistent, descriptive parameter names.
+- Organize exposed parameters into meaningful parameter groups where supported.
+- Keep default values, ranges, types, and parameter semantics intentional and consistent.
+- Avoid scattering related parameters throughout the graph.
+
+### 5. Graph Consistency & Maintainability
+- Apply the same organizational conventions across all Materials and Material Functions.
+- Maintain visual consistency in node spacing, alignment, comment placement, and data-flow direction.
+- Keep independent subsystems visually separated.
+- When extending an existing graph, integrate new nodes into its logical structure rather than attaching disconnected clusters.
+- Reorganize affected sections whenever necessary to preserve readability.
+- Do not allow temporary, experimental, or disconnected nodes to accumulate in finalized graphs.
+
+### 6. Behavior Preservation
+- Graph organization must never change material behavior unless a functional modification is explicitly requested.
+- When reorganizing an existing graph, preserve all calculations, parameters, constants, default values, material properties, and output connections.
+- Do not introduce optimizations, redesigns, or functional changes as part of a layout-only operation.
+
+### 7. Final Validation
+Before considering any Material or Material Function complete:
+
+- Verify that the graph follows a clear left-to-right structure.
+- Ensure related operations are properly grouped and labeled.
+- Check for overlapping nodes, unnecessary crossings, excessive wire lengths, and backward connections.
+- Verify that shared values use named reroutes where appropriate.
+- Confirm that all required nodes and output connections remain intact.
+- Ensure the graph is understandable without manually tracing wires across the entire material.
+- Validate that the Material compiles and retains its intended behavior.
+
+**Important:** These requirements apply continuously throughout material creation and modification. Do not postpone graph organization until the end. Every newly created section must already follow these conventions.

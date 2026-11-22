@@ -17,6 +17,7 @@
 #include "Stage/Cues/StageCueWorldMarker.h"
 #include "Stage/Environment/StageSoundControl.h"
 #include "UI/StageCueWidget.h"
+#include "UI/StagePerformanceHUDWidget.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -361,7 +362,7 @@ void UStageCueComponent::Refresh()
 	UpdatePresentation();
 }
 
-TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly) const
+TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly, bool bDeduplicateKinds) const
 {
 	TArray<int32> Indices;
 	const double Now = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0;
@@ -392,7 +393,7 @@ TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly) const
 		if (Left.bHasDeadline && Left.SecondsRemaining != Right.SecondsRemaining) return Left.SecondsRemaining < Right.SecondsRemaining;
 		return Left.Number < Right.Number;
 	});
-	if (bSignalsOnly)
+	if (bSignalsOnly && bDeduplicateKinds)
 	{
 		TSet<EStageCueKind> Seen;
 		Indices.RemoveAll([&](int32 Index)
@@ -402,7 +403,7 @@ TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly) const
 			return bAlreadySeen;
 		});
 	}
-	Indices.SetNum(FMath::Min(Indices.Num(), FMath::Clamp(MaxCards, 1, 5)));
+	if (bDeduplicateKinds) Indices.SetNum(FMath::Min(Indices.Num(), FMath::Clamp(MaxCards, 1, 5)));
 	return Indices;
 }
 
@@ -427,6 +428,12 @@ AActor* UStageCueComponent::ResolveTarget(const FStageCueTarget& Target, const F
 void UStageCueComponent::UpdatePresentation()
 {
 	if (bEndingPlay || !GetWorld() || GetNetMode() == NM_DedicatedServer) return;
+	if (PerformanceHUDClass && Manager.IsValid())
+	{
+		UpdatePerformanceHUD(*Manager.Get());
+		OnCuesChanged.Broadcast();
+		return;
+	}
 	if (bUseWorldSignals)
 	{
 		UpdateWorldSignals();
@@ -496,6 +503,77 @@ void UStageCueComponent::UpdatePresentation()
 		if (Marker) Marker->Configure(DesiredMarker.Actor, *DesiredMarker.Target, *DesiredMarker.View);
 	}
 	OnCuesChanged.Broadcast();
+}
+
+void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
+{
+	TArray<FName> CastOrder;
+	if (const UStageProductionDataAsset* Production = Stage.GetActiveProduction())
+	{
+		for (const FStageProductionScene& Scene : Production->Scenes)
+			if (Scene.Scenario)
+				for (FName Role : Scene.Scenario->GetRoleOptions()) CastOrder.AddUnique(Role);
+	}
+	else if (const UStageDataAsset* ActiveStage = Stage.GetActiveStage()) CastOrder = ActiveStage->GetRoleOptions();
+
+	TArray<FStagePerformanceCue, TInlineAllocator<5>> Tags;
+	const double Now = GetWorld()->GetTimeSeconds();
+	const int32 Limit = FMath::Clamp(MaxCards, 1, 5);
+	for (int32 Index : GetVisibleIndices(true, false))
+	{
+		const auto& Cue = Cues[Index];
+		const EStageCueKind Kind = Cue.Definition.Kind;
+		UTexture2D* Icon = SignalIcons.FindRef(Kind);
+		if (!Icon) Icon = SignalIcons.FindRef(EStageCueKind::General);
+		if (!Icon) continue;
+
+		AActor* Actor = nullptr;
+		if (const FStageCueTarget* Recipient = Cue.Definition.Targets.FindByPredicate([](const FStageCueTarget& Target)
+		    { return Target.Type == EStageCueMarkerType::Recipient; })) Actor = Stage.GetParticipant(Recipient->BindingId);
+		if (!Actor && !Cue.Definition.SubjectRoleId.IsNone()) Actor = Stage.GetParticipant(Cue.Definition.SubjectRoleId);
+		if (!Actor) Actor = Cue.ActorOverride.Get();
+
+		int32 Number = 0;
+		if (IsValid(Actor))
+		{
+			const int32 CastIndex = CastOrder.IndexOfByPredicate([&](FName Role) { return Stage.GetParticipant(Role) == Actor; });
+			if (CastIndex != INDEX_NONE) Number = CastIndex + 1;
+		}
+		if (Tags.ContainsByPredicate([&](const FStagePerformanceCue& Tag) { return Tag.Icon == Icon && Tag.Number == Number; })) continue;
+
+		EStageCueWindowPhase Phase = EStageCueWindowPhase::Hidden;
+		if (Cue.View.State == EStageCueState::Problem || Cue.bSoundWindowClosed || (Cue.SoundLatestAt > 0.0 && Now > Cue.SoundLatestAt))
+			Phase = EStageCueWindowPhase::Closed;
+		else if (Cue.SoundLatestAt > 0.0)
+			Phase = Now < Cue.SoundEarliestAt ? EStageCueWindowPhase::Waiting : EStageCueWindowPhase::Open;
+		else if (Kind == EStageCueKind::Props && Number > 0)
+		{
+			const auto* Manipulation = Actor->FindComponentByClass<UPhysicsManipulationComponent>();
+			Phase = Cue.View.State != EStageCueState::Upcoming && Manipulation && Manipulation->CanReceiveStageProp()
+			    ? EStageCueWindowPhase::Open : EStageCueWindowPhase::Waiting;
+		}
+		Tags.Add({Icon, Number > 0 ? Actor : nullptr, Number, Phase});
+		if (Tags.Num() == Limit) break;
+	}
+
+	PerformanceWidgets.RemoveAll([](const TObjectPtr<UStagePerformanceHUDWidget>& Widget)
+	{
+		if (IsValid(Widget) && IsValid(Widget->GetOwningPlayer())) return false;
+		if (IsValid(Widget)) Widget->RemoveFromParent();
+		return true;
+	});
+	for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* Player = It->Get();
+		if (!Player || !Player->GetLocalPlayer() || !Player->IsLocalController()) continue;
+		if (PerformanceWidgets.ContainsByPredicate([&](const auto& Widget) { return Widget->GetOwningPlayer() == Player; })) continue;
+		if (auto* Widget = CreateWidget<UStagePerformanceHUDWidget>(Player, PerformanceHUDClass); Widget && Widget->AddToPlayerScreen(5))
+		{
+			Widget->SetSource(Stage);
+			PerformanceWidgets.Add(Widget);
+		}
+	}
+	for (UStagePerformanceHUDWidget* Widget : PerformanceWidgets) Widget->Refresh(Stage, Tags, CastOrder);
 }
 
 void UStageCueComponent::UpdateWorldSignals()
@@ -665,5 +743,7 @@ void UStageCueComponent::EndPlay(const EEndPlayReason::Type Reason)
 	ResetCues();
 	for (UStageCueHUDWidget* Widget : Widgets) if (IsValid(Widget)) { Widget->SetSource(nullptr); Widget->RemoveFromParent(); }
 	Widgets.Reset();
+	for (UStagePerformanceHUDWidget* Widget : PerformanceWidgets) if (IsValid(Widget)) Widget->RemoveFromParent();
+	PerformanceWidgets.Reset();
 	Super::EndPlay(Reason);
 }

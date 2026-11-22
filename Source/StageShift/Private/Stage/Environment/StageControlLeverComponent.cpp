@@ -3,6 +3,7 @@
 #include "Components/Interaction/InteractionComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
+#include "Stage/Environment/StageControlMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 UStageControlLeverComponent::UStageControlLeverComponent()
@@ -40,25 +41,59 @@ void UStageControlLeverComponent::BeginPlay()
 	}
 }
 
-FVector UStageControlLeverComponent::GetGripLocation() const
+void UStageControlLeverComponent::BindVisual(UStageControlMeshComponent& Mesh, FName Bone, bool bTwist)
 {
-	return UInteractionComponent::GetControlGripLocation(*this, GripSocket);
+	const int32 BoneIndex = Mesh.GetBoneIndex(Bone);
+	if (BoneIndex == INDEX_NONE) return;
+	Visual = &Mesh;
+	VisualBone = Bone;
+	bTwistVisual = bTwist;
+	TwistAxis = Mesh.GetRefPoseTransform(BoneIndex).GetRotation().GetUpVector();
+}
+
+void UStageControlLeverComponent::PlayHandMotion(UInteractionComponent& Interaction, EInteractionHandMotion Motion) const
+{
+	if (const auto* Mesh = Visual.Get())
+	{
+		const FName Socket = Mesh->DoesSocketExist(GripSocket) ? GripSocket : VisualBone;
+		Interaction.PlayHandMotion(Motion, Mesh->GetSocketLocation(Socket), Mesh, Socket);
+		return;
+	}
+	Interaction.PlayHandMotion(Motion, UInteractionComponent::GetControlGripLocation(*this, GripSocket), this);
+}
+
+void UStageControlLeverComponent::ReleaseHandGrip(UInteractionComponent& Interaction) const
+{
+	const USceneComponent* Anchor = Visual.IsValid() ? static_cast<const USceneComponent*>(Visual.Get()) : this;
+	Interaction.ReleaseHandGrip(*Anchor);
 }
 
 void UStageControlLeverComponent::SetTilt(const FQuat& Tilt)
 {
+	if (auto* Mesh = Visual.Get())
+	{
+		Mesh->SetControlPose(VisualBone, Tilt);
+		return;
+	}
 	const FQuat Rotation = RestRotation * Tilt;
 	SetRelativeLocationAndRotation(PivotInParent - Rotation.RotateVector(PivotInMesh), Rotation);
 }
 
 void UStageControlLeverComponent::PullToward(const FVector& WorldLocation)
 {
-	const USceneComponent* Parent = GetAttachParent();
-	if (!Parent) return;
-	const FVector Toward = Parent->GetComponentTransform().InverseTransformPosition(WorldLocation) - PivotInParent;
-	const FVector LocalToward = RestRotation.UnrotateVector(Toward).GetSafeNormal2D();
-	if (LocalToward.IsNearlyZero()) return;
-	PullAxis = FVector::CrossProduct(FVector::UpVector, LocalToward);
+	if (bTwistVisual && Visual.IsValid())
+	{
+		PullAxis = TwistAxis;
+	}
+	else
+	{
+		const USceneComponent* Parent = GetAttachParent();
+		if (!Parent) return;
+		const FVector Toward = Parent->GetComponentTransform().InverseTransformPosition(WorldLocation) - PivotInParent;
+		const FVector LocalToward = RestRotation.UnrotateVector(Toward).GetSafeNormal2D();
+		if (LocalToward.IsNearlyZero()) return;
+		PullAxis = FVector::CrossProduct(FVector::UpVector, LocalToward);
+	}
 	PullTime = 0.0f;
 	SetComponentTickEnabled(true);
 }

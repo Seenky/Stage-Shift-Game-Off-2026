@@ -52,7 +52,7 @@ public:
 
 	const FInteractionAnimation* FindAnimationForTarget(AActor* Target) const;
 	static FVector GetControlGripLocation(const UStaticMeshComponent& Mesh, FName SocketName);
-	void PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor = nullptr);
+	void PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor = nullptr, FName Socket = NAME_None);
 	void ReleaseHandGrip(const USceneComponent& Anchor);
 	bool SampleHandMotion(FInteractionHandPose& OutPose) const;
 
@@ -121,6 +121,7 @@ private:
 
 	EInteractionHandMotion HandMotion = EInteractionHandMotion::None;
 	TWeakObjectPtr<const USceneComponent> HandAnchor;
+	FName HandAnchorSocket;
 	FVector HandContact = FVector::ZeroVector;
 	double HandMotionStartedAt = 0.0;
 

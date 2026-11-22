@@ -247,7 +247,9 @@ float AStageManager::GetStageElapsedTime() const
 
 void AStageManager::AddScore(int32 Amount)
 {
+	const int64 Previous = Score;
 	Score = static_cast<int32>(FMath::Clamp<int64>(static_cast<int64>(Score) + Amount, MIN_int32, MAX_int32));
+	if (Score != Previous) OnScoreChanged.Broadcast(static_cast<int32>(Score - Previous));
 }
 
 int32 AStageManager::GetStarCount() const

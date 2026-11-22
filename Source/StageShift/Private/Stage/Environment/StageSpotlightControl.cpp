@@ -10,6 +10,7 @@
 #include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "Stage/Environment/StageControlLeverComponent.h"
+#include "Stage/Environment/StageControlMeshComponent.h"
 
 AStageSpotlightControl::AStageSpotlightControl()
 {
@@ -22,6 +23,8 @@ AStageSpotlightControl::AStageSpotlightControl()
 	ControlMesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	ControlLever = CreateDefaultSubobject<UStageControlLeverComponent>(TEXT("ControlLever"));
 	ControlLever->SetupAttachment(ControlMesh);
+	ControlVisual = CreateDefaultSubobject<UStageControlMeshComponent>(TEXT("ControlVisual"));
+	ControlVisual->SetupAttachment(Root);
 	Spotlight = CreateDefaultSubobject<USpotLightComponent>(TEXT("Spotlight"));
 	Spotlight->SetupAttachment(Root);
 	Spotlight->SetMobility(EComponentMobility::Movable);
@@ -32,12 +35,13 @@ AStageSpotlightControl::AStageSpotlightControl()
 
 const UMeshComponent* AStageSpotlightControl::GetInteractionMesh() const
 {
-	return ControlMesh.Get();
+	return ControlVisual->GetSkinnedAsset() ? static_cast<const UMeshComponent*>(ControlVisual.Get()) : ControlMesh.Get();
 }
 
 void AStageSpotlightControl::BeginPlay()
 {
 	Super::BeginPlay();
+	ControlLever->BindVisual(*ControlVisual, TEXT("light_lever"), false);
 	BaseRotation = Spotlight->GetRelativeRotation();
 	SetCueTarget(InitialCueId, InitialTarget.Get());
 }
@@ -61,7 +65,7 @@ EInteractionResult AStageSpotlightControl::OnInteraction_Implementation(const FI
 		LastCursorPosition.Reset();
 		SetState(EStageSpotlightState::Aiming);
 		if (auto* Interaction = Context.Interactor->FindComponentByClass<UInteractionComponent>())
-			Interaction->PlayHandMotion(EInteractionHandMotion::Hold, ControlLever->GetGripLocation(), ControlLever);
+			ControlLever->PlayHandMotion(*Interaction, EInteractionHandMotion::Hold);
 	}
 	if (ActivationSound) UGameplayStatics::PlaySoundAtLocation(this, ActivationSound, ControlMesh->GetComponentLocation());
 	return EInteractionResult::Completed;
@@ -107,7 +111,7 @@ void AStageSpotlightControl::CommitAim()
 	if (State != EStageSpotlightState::Aiming) return;
 	if (const AActor* Operator = AimOperator.Get())
 		if (auto* Interaction = Operator->FindComponentByClass<UInteractionComponent>())
-			Interaction->ReleaseHandGrip(*ControlLever);
+			ControlLever->ReleaseHandGrip(*Interaction);
 	AimOperator.Reset();
 	SetState(EStageSpotlightState::Ready);
 	CheckTarget();

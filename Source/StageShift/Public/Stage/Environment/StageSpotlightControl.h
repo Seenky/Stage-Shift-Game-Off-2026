@@ -6,6 +6,7 @@
 
 class USpotLightComponent;
 class UStageControlLeverComponent;
+class UStageControlMeshComponent;
 class UStaticMeshComponent;
 
 UENUM(BlueprintType)
@@ -53,6 +54,8 @@ protected:
 	TObjectPtr<UStaticMeshComponent> ControlMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TObjectPtr<UStageControlLeverComponent> ControlLever;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	TObjectPtr<UStageControlMeshComponent> ControlVisual;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage|Light")
 	TObjectPtr<USpotLightComponent> Spotlight;

@@ -1,6 +1,7 @@
 
 #include "UI/Button3D.h"
 
+#include "Blueprint/UserWidget.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
@@ -96,8 +97,13 @@ void AButton3D::BeginPlay()
 	ButtonMesh->SetMaterial(MaterialIndex, CurrentButtonMaterialDYN);
 
 	CurrentBlendState = 0.0f;
-
-	SetActorTickEnabled(false);
+	RestLocation = GetActorLocation();
+	if (bTintLabelWithMaterial)
+	{
+		ButtonRepresentationWidget->InitWidget();
+		if (auto* Label = ButtonRepresentationWidget->GetUserWidgetObject()) Label->SetColorAndOpacity(IdleLabelTint);
+	}
+	SetActorTickEnabled(bNavigationFocused || bIsHovered);
 }
 
 void AButton3D::Tick(float DeltaTime)
@@ -130,6 +136,18 @@ void AButton3D::UpdateMaterialBlend(float DeltaTime)
 	{
 		CurrentButtonMaterialDYN->K2_InterpolateMaterialInstanceParams(HoveredButtonMaterialDYN, ActiveButtonMaterialDYN, CurrentBlendState - 1.0f);
 	}
+	const float FocusAmount = FMath::Min(CurrentBlendState, 1.f);
+	if (bTintLabelWithMaterial)
+	{
+		if (auto* Label = ButtonRepresentationWidget->GetUserWidgetObject())
+		{
+			Label->SetColorAndOpacity(FMath::Lerp(IdleLabelTint, FocusedLabelTint, FocusAmount));
+		}
+	}
+	if (FocusDepthOffset > 0.f)
+	{
+		SetActorLocation(RestLocation + GetActorForwardVector() * (FocusDepthOffset * FocusAmount));
+	}
 
 	if (FMath::IsNearlyEqual(CurrentBlendState, TargetState, KINDA_SMALL_NUMBER))
 	{
@@ -151,13 +169,13 @@ void AButton3D::OnButtonClicked(UPrimitiveComponent* TouchedComponent, FKey Butt
 	ActivateButton();
 }
 
-void AButton3D::SetNavigationFocus(bool bFocused, bool bUsePointer)
+void AButton3D::SetNavigationFocus(bool bFocused, bool bUsePointer, bool bPlaySound)
 {
 	if (bNavigationFocused == bFocused && bUsePointerFeedback == bUsePointer) return;
 
 	bNavigationFocused = bFocused;
 	bUsePointerFeedback = bUsePointer;
-	if (bFocused && HoverSound) UGameplayStatics::PlaySound2D(this, HoverSound);
+	if (bFocused && bPlaySound && HoverSound) UGameplayStatics::PlaySound2D(this, HoverSound);
 	RequestMaterialUpdate();
 }
 

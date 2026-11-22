@@ -19,12 +19,15 @@ class STAGESHIFT_API UDialogueBubbleWidget : public UUserWidget
 
 public:
 	void SetDialogueViewModel(UDialogueViewModel* ViewModel);
-	bool GetScreenBounds(FBox2D& Bounds) const;
+	bool GetScreenBounds(FBox2D& Bounds, bool bAbsolute = false) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Events")
 	void OnDialogueViewModelSet(UDialogueViewModel* ViewModel);
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+	bool bShowSpeakerName = true;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UDialogueTextWidget> DialogueText;
 

@@ -21,6 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageCompleted, FGameplayTag, Stage
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStageFailed, FGameplayTag, StageId, FText, Reason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageManagerEvent, FStageEvent, Event);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStageOpeningOverdue);
+DECLARE_MULTICAST_DELEGATE_OneParam(FStageScoreChanged, int32);
 
 UCLASS(BlueprintType, Blueprintable)
 
@@ -58,6 +59,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Production") int32 GetProductionSceneIndex() const { return ProductionSceneIndex; }
 
 	UFUNCTION(BlueprintPure, Category = "Production") int32 GetProductionSceneCount() const { return ProductionSceneCount; }
+	const UStageProductionDataAsset* GetActiveProduction() const { return ActiveProduction; }
 
 	UFUNCTION(BlueprintPure, Category = "Production") FText GetPreparationPrompt() const;
 	UFUNCTION(BlueprintPure, Category = "Production") TArray<FString> GetPreparationErrors() const;
@@ -137,6 +139,7 @@ public:
 	int32 GetScore() const { return Score; }
 	UFUNCTION(BlueprintPure, Category = "Stage|Score")
 	int32 GetStarCount() const;
+	FStageScoreChanged OnScoreChanged;
 	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void ReceiveStageEvent(const FStageEvent& Event);
 	UFUNCTION(CallInEditor, Category = "Stage|Score")
