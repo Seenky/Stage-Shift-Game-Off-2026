@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 #include "PhysicsTypes.h"
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/Actor.h"
@@ -72,6 +73,11 @@ protected:
 	TObjectPtr<class USoundBase> ImpactSound;
 
 private:
+	friend class UInteractionOutlineComponent;
+	friend class UPhysicsManipulationComponent;
+
+	void RefreshPickupOutline();
+	bool SetPickupOutlineFocused(bool bFocused);
 	void ConfigureCharacterContact();
 	void CheckCatch();
 	void IgnoreThrowerDuringRelease(const AActor& Source);
@@ -89,6 +95,7 @@ private:
 	double CatchDeadline = 0;
 	double LastImpactSoundTime = -1.0;
 	bool bMissedThrow = false;
+	FInteractionOutlineStencil PickupOutline;
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;

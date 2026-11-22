@@ -436,6 +436,7 @@ bool UPhysicsManipulationComponent::AttachCarriedObject(bool bKeepWorldTransform
 		return false;
 	}
 	bCarryAttached = true;
+	if (auto* Prop = Cast<AStagePhysicsActor>(ManipulatedActor.Get())) Prop->RefreshPickupOutline();
 	if (GrabSound) UGameplayStatics::PlaySoundAtLocation(this, GrabSound, Component->GetComponentLocation());
 	return true;
 }
@@ -793,6 +794,7 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 			Component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 			Component->SetCollisionEnabled(PreviousCollision);
 			Component->SetSimulatePhysics(bWasSimulatingPhysics);
+			if (auto* Prop = Cast<AStagePhysicsActor>(ManipulatedActor.Get())) Prop->RefreshPickupOutline();
 		}
 	}
 	ManipulatedComponent.Reset();

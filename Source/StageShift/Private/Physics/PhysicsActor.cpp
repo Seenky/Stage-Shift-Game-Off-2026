@@ -30,11 +30,30 @@ void AStagePhysicsActor::BeginPlay()
 {
 	ConfigureCharacterContact();
 	Super::BeginPlay();
+	RefreshPickupOutline();
 	if (ImpactSound)
 	{
 		GetStaticMeshComponent()->SetNotifyRigidBodyCollision(true);
 		GetStaticMeshComponent()->OnComponentHit.AddUniqueDynamic(this, &ThisClass::HandleImpactSound);
 	}
+}
+
+void AStagePhysicsActor::RefreshPickupOutline()
+{
+	UStaticMeshComponent* Mesh = GetStaticMeshComponent();
+	if (InteractionType != EPhysicsInteractionType::Carry || IsActorBeingDestroyed() || GetNetMode() == NM_DedicatedServer
+	    || !Mesh->IsSimulatingPhysics() || !Mesh->IsQueryCollisionEnabled())
+	{
+		PickupOutline.Reset();
+		return;
+	}
+
+	PickupOutline.Apply(*Mesh, FInteractionOutlineStencil::Available);
+}
+
+bool AStagePhysicsActor::SetPickupOutlineFocused(bool bFocused)
+{
+	return PickupOutline.Update(FInteractionOutlineStencil::Available | (bFocused ? FInteractionOutlineStencil::Focused : 0));
 }
 
 void AStagePhysicsActor::HandleImpactSound(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
@@ -74,6 +93,7 @@ void AStagePhysicsActor::SetCurtainRail(AStageCurtainRail* Rail)
 {
 	CurtainRail = Rail;
 	InteractionType = EPhysicsInteractionType::Drag;
+	PickupOutline.Reset();
 }
 
 const UMeshComponent* AStagePhysicsActor::GetInteractionMesh() const
@@ -316,5 +336,6 @@ void AStagePhysicsActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		if (Manipulator->GetManipulatedComponent() == GetStaticMeshComponent()) Manipulator->ReleaseComponent();
 	}
 	ActiveManipulator.Reset();
+	PickupOutline.Reset();
 	Super::EndPlay(EndPlayReason);
 }

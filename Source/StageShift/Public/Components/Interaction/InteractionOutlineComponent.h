@@ -2,9 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Components/PrimitiveComponent.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 #include "InteractionOutlineComponent.generated.h"
 
+class AStagePhysicsActor;
 class UInteractionComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
@@ -51,19 +52,9 @@ protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* Tick) override;
 
 private:
-	// Reserved project-wide. Lower seven stencil bits are preserved while borrowed.
-	static constexpr int32 StencilBit = 128;
-
-	struct FPrimitiveState
-	{
-		TWeakObjectPtr<UPrimitiveComponent> Component;
-		bool bCustomDepth;
-		int32 Stencil;
-		ERendererStencilMask WriteMask;
-	};
-
-	TArray<FPrimitiveState> PrimitiveStates;
+	TArray<FInteractionOutlineStencil> PrimitiveStates;
 	TWeakObjectPtr<AActor> VisualTarget;
+	TWeakObjectPtr<AStagePhysicsActor> FocusedProp;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
 	FDelegateHandle CandidateChangedHandle;
 	UPROPERTY(Transient)
@@ -76,9 +67,12 @@ private:
 	float SelectionTime = 0.0f;
 	bool bFadingOut = false;
 	void OnCandidateChanged(AActor* Target);
+	void UpdatePostProcess();
 	void RestorePrimitives();
 	void ClearVisual();
 	void UpdateMaterial(float Thickness);
+	UFUNCTION()
+	void OnControllerChanged(APawn* Pawn, AController* OldController, AController* NewController);
 	UFUNCTION()
 	void OnVisualTargetEndPlay(AActor* Actor, EEndPlayReason::Type Reason);
 	UFUNCTION()

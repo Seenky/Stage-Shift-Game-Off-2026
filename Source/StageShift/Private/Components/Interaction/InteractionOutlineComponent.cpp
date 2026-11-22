@@ -6,7 +6,54 @@
 #include "Components/PostProcessComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Physics/PhysicsActor.h"
 #include "UObject/ConstructorHelpers.h"
+
+bool FInteractionOutlineStencil::Apply(UPrimitiveComponent& Primitive, int32 Mask)
+{
+	if (Component.Get() == &Primitive) return Update(Mask);
+	if ((Primitive.CustomDepthStencilValue & Mask) != 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Interaction outline: %s already uses reserved stencil mask %d"), *Primitive.GetPathName(), Mask);
+		return false;
+	}
+
+	Component = &Primitive;
+	OriginalStencil = Primitive.CustomDepthStencilValue;
+	OriginalWriteMask = Primitive.CustomDepthStencilWriteMask;
+	bOriginalCustomDepth = Primitive.bRenderCustomDepth;
+	Update(Mask);
+	if (OriginalWriteMask != ERendererStencilMask::ERSM_Default) Primitive.SetCustomDepthStencilWriteMask(ERendererStencilMask::ERSM_Default);
+	if (!bOriginalCustomDepth) Primitive.SetRenderCustomDepth(true);
+	return true;
+}
+
+bool FInteractionOutlineStencil::Update(int32 Mask)
+{
+	UPrimitiveComponent* Primitive = Component.Get();
+	if (!Primitive || (OriginalStencil & Mask) != 0) return false;
+	const int32 Stencil = (Primitive->CustomDepthStencilValue & ~AppliedMask) | Mask;
+	if (Stencil != Primitive->CustomDepthStencilValue) Primitive->SetCustomDepthStencilValue(Stencil);
+	AppliedMask = Mask;
+	return true;
+}
+
+void FInteractionOutlineStencil::Reset()
+{
+	if (UPrimitiveComponent* Primitive = Component.Get())
+	{
+		const bool bUnchanged = Primitive->CustomDepthStencilValue == (OriginalStencil | AppliedMask)
+		    && Primitive->CustomDepthStencilWriteMask == ERendererStencilMask::ERSM_Default && Primitive->bRenderCustomDepth;
+		Update(0);
+		if (bUnchanged)
+		{
+			if (OriginalWriteMask != ERendererStencilMask::ERSM_Default) Primitive->SetCustomDepthStencilWriteMask(OriginalWriteMask);
+			if (!bOriginalCustomDepth) Primitive->SetRenderCustomDepth(false);
+		}
+	}
+	Component.Reset();
+	AppliedMask = 0;
+}
 
 UInteractionOutlineComponent::UInteractionOutlineComponent()
 {
@@ -23,6 +70,9 @@ void UInteractionOutlineComponent::BeginPlay()
 	Super::BeginPlay();
 	SetComponentTickEnabled(false);
 	Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>();
+	if (APawn* Pawn = Cast<APawn>(GetOwner()))
+		Pawn->ReceiveControllerChangedDelegate.AddUniqueDynamic(this, &ThisClass::OnControllerChanged);
+	UpdatePostProcess();
 	if (Interaction.IsValid())
 	{
 		CandidateChangedHandle = Interaction->OnInteractionCandidateChanged.AddUObject(this, &ThisClass::OnCandidateChanged);
@@ -36,13 +86,40 @@ void UInteractionOutlineComponent::Activate(bool bReset)
 	if (IsActive() && !bReset) return;
 	Super::Activate(bReset);
 	SetComponentTickEnabled(false);
-	if (HasBegunPlay() && Interaction.IsValid()) OnCandidateChanged(Interaction->GetInteractionCandidate());
+	if (!HasBegunPlay()) return;
+	UpdatePostProcess();
+	if (Interaction.IsValid()) OnCandidateChanged(Interaction->GetInteractionCandidate());
 }
 
 void UInteractionOutlineComponent::Deactivate()
 {
 	Super::Deactivate();
 	ClearVisual();
+	UpdatePostProcess();
+}
+
+void UInteractionOutlineComponent::UpdatePostProcess()
+{
+	const APawn* Pawn = Cast<APawn>(GetOwner());
+	const bool bEnabled = IsActive() && Interaction.IsValid() && OutlineMaterial && Pawn && Pawn->IsLocallyControlled();
+	if (bEnabled && !PostProcess)
+	{
+		MaterialInstance = UMaterialInstanceDynamic::Create(OutlineMaterial, this);
+		PostProcess = NewObject<UPostProcessComponent>(GetOwner());
+		PostProcess->bUnbound = true;
+		PostProcess->Priority = 10.0f;
+		PostProcess->Settings.AddBlendable(MaterialInstance, 1.0f);
+		PostProcess->RegisterComponent();
+		UpdateMaterial(OutlineThickness);
+	}
+	if (PostProcess) PostProcess->bEnabled = bEnabled;
+}
+
+void UInteractionOutlineComponent::OnControllerChanged(APawn* Pawn, AController* OldController, AController* NewController)
+{
+	ClearVisual();
+	UpdatePostProcess();
+	if (Interaction.IsValid()) OnCandidateChanged(Interaction->GetInteractionCandidate());
 }
 
 void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
@@ -65,7 +142,7 @@ void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
 	}
 	if (!Target)
 	{
-		if (!VisualTarget.IsValid())
+		if (!VisualTarget.IsValid() || FocusedProp.IsValid())
 		{
 			ClearVisual();
 			return;
@@ -83,77 +160,50 @@ void UInteractionOutlineComponent::OnCandidateChanged(AActor* Target)
 
 	// One stencil owner at a time, including a new candidate arriving during fade-out.
 	ClearVisual();
-	if (!IsValid(Target) || !OutlineMaterial) return;
-	if (!MaterialInstance)
+	if (!IsValid(Target) || !PostProcess) return;
+	if (AStagePhysicsActor* Prop = Cast<AStagePhysicsActor>(Target); Prop && Prop->SetPickupOutlineFocused(true))
 	{
-		MaterialInstance = UMaterialInstanceDynamic::Create(OutlineMaterial, this);
-		PostProcess = NewObject<UPostProcessComponent>(GetOwner());
-		PostProcess->bUnbound = true;
-		PostProcess->bEnabled = false;
-		PostProcess->Priority = 10.0f;
-		PostProcess->Settings.AddBlendable(MaterialInstance, 1.0f);
-		PostProcess->RegisterComponent();
+		FocusedProp = Prop;
 	}
-	const auto* Interactable = Cast<IInteractionInterface>(Target);
-	const UMeshComponent* InteractionMesh = Interactable ? Interactable->GetInteractionMesh() : nullptr;
-	TInlineComponentArray<UMeshComponent*> Meshes;
-	if (InteractionMesh) Meshes.Add(const_cast<UMeshComponent*>(InteractionMesh));
-	else Target->GetComponents(Meshes);
-	for (UMeshComponent* Primitive : Meshes)
+	else
 	{
-		if (!IsValid(Primitive) || !Primitive->IsRegistered()) continue;
-		if ((Primitive->CustomDepthStencilValue & StencilBit) != 0)
+		const auto* Interactable = Cast<IInteractionInterface>(Target);
+		const UMeshComponent* InteractionMesh = Interactable ? Interactable->GetInteractionMesh() : nullptr;
+		TInlineComponentArray<UMeshComponent*> Meshes;
+		if (InteractionMesh) Meshes.Add(const_cast<UMeshComponent*>(InteractionMesh));
+		else Target->GetComponents(Meshes);
+		for (UMeshComponent* Primitive : Meshes)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Outline: %s already owns reserved stencil bit 128; skipped"), *Primitive->GetPathName());
-			continue;
+			if (!IsValid(Primitive) || !Primitive->IsRegistered()) continue;
+			FInteractionOutlineStencil State;
+			if (State.Apply(*Primitive, FInteractionOutlineStencil::Focused)) PrimitiveStates.Add(MoveTemp(State));
 		}
-		PrimitiveStates.Add({Primitive, !!Primitive->bRenderCustomDepth, Primitive->CustomDepthStencilValue, Primitive->CustomDepthStencilWriteMask});
-		Primitive->SetCustomDepthStencilValue(Primitive->CustomDepthStencilValue | StencilBit);
-		if (Primitive->CustomDepthStencilWriteMask != ERendererStencilMask::ERSM_Default) Primitive->SetCustomDepthStencilWriteMask(ERendererStencilMask::ERSM_Default);
-		if (!Primitive->bRenderCustomDepth) Primitive->SetRenderCustomDepth(true);
+		if (PrimitiveStates.IsEmpty()) return;
 	}
-	if (PrimitiveStates.IsEmpty()) return;
 	VisualTarget = Target;
 	Target->OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnVisualTargetEndPlay);
 	bFadingOut = false;
 	TransitionTime = SelectionTime = TransitionStartAlpha = 0.0f;
 	Alpha = FadeInDuration <= 0.0f ? 1.0f : 0.0f;
 	UpdateMaterial(OutlineThickness);
-	PostProcess->bEnabled = true;
 	SetComponentTickEnabled(Alpha < 1.0f || (bEnableAppearPulse && AppearPulseDuration > 0.0f));
 }
 
 void UInteractionOutlineComponent::RestorePrimitives()
 {
 	if (AActor* Target = VisualTarget.Get()) Target->OnEndPlay.RemoveDynamic(this, &ThisClass::OnVisualTargetEndPlay);
-	for (const FPrimitiveState& State : PrimitiveStates)
-	{
-		if (UPrimitiveComponent* Primitive = State.Component.Get())
-		{
-			const bool bStillOwned = Primitive->CustomDepthStencilValue == (State.Stencil | StencilBit)
-			    && Primitive->CustomDepthStencilWriteMask == ERendererStencilMask::ERSM_Default && Primitive->bRenderCustomDepth;
-			if (bStillOwned)
-			{
-				Primitive->SetCustomDepthStencilValue(State.Stencil);
-				if (Primitive->CustomDepthStencilWriteMask != State.WriteMask) Primitive->SetCustomDepthStencilWriteMask(State.WriteMask);
-				if (!State.bCustomDepth) Primitive->SetRenderCustomDepth(false);
-			}
-			else if ((Primitive->CustomDepthStencilValue & StencilBit) != 0)
-			{
-				// Another feature changed the shared state. Release only our bit, keep its latest settings.
-				Primitive->SetCustomDepthStencilValue(Primitive->CustomDepthStencilValue & ~StencilBit);
-			}
-		}
-	}
+	if (AStagePhysicsActor* Prop = FocusedProp.Get()) Prop->SetPickupOutlineFocused(false);
+	FocusedProp.Reset();
+	for (FInteractionOutlineStencil& State : PrimitiveStates) State.Reset();
 	PrimitiveStates.Reset();
 	VisualTarget.Reset();
 }
 
 void UInteractionOutlineComponent::ClearVisual()
 {
-	if (PostProcess) PostProcess->bEnabled = false;
 	RestorePrimitives();
 	Alpha = 0.0f;
+	if (MaterialInstance) MaterialInstance->SetScalarParameterValue(TEXT("OutlineOpacity"), 0.0f);
 	SetComponentTickEnabled(false);
 }
 
@@ -198,6 +248,8 @@ void UInteractionOutlineComponent::OnVisualTargetEndPlay(AActor* Actor, EEndPlay
 
 void UInteractionOutlineComponent::EndPlay(const EEndPlayReason::Type Reason)
 {
+	if (APawn* Pawn = Cast<APawn>(GetOwner()))
+		Pawn->ReceiveControllerChangedDelegate.RemoveDynamic(this, &ThisClass::OnControllerChanged);
 	if (Interaction.IsValid())
 	{
 		Interaction->OnInteractionCandidateChanged.Remove(CandidateChangedHandle);
@@ -211,6 +263,7 @@ void UInteractionOutlineComponent::EndPlay(const EEndPlayReason::Type Reason)
 
 void UInteractionOutlineComponent::OnUnregister()
 {
+	if (PostProcess) PostProcess->bEnabled = false;
 	ClearVisual();
 	Super::OnUnregister();
 }
