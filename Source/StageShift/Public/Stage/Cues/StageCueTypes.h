@@ -5,6 +5,7 @@
 #include "StageCueTypes.generated.h"
 
 class UStageCondition;
+class UStageMemberComponent;
 class UTexture2D;
 
 UENUM(BlueprintType)
@@ -106,6 +107,7 @@ struct FStageCueRuntime
 	UPROPERTY() FStageCueDefinition Definition;
 	UPROPERTY() FStageCueView View;
 	UPROPERTY() TWeakObjectPtr<AActor> ActorOverride;
+	UPROPERTY() TWeakObjectPtr<UStageMemberComponent> Performer;
 	double Deadline = 0.0;
 	double CompletedAt = 0.0;
 	double SignalStartedAt = 0.0;
@@ -118,4 +120,7 @@ struct FStageCueRuntime
 	bool bSoundWindowClosed = false;
 	bool bSoundSucceeded = false;
 	bool bKeepSignalVisible = false;
+	bool bDisplayPaused = false;
+	bool bKeepUntilStepEnds = false;
+	bool bActionEnded = false;
 };

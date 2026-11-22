@@ -42,6 +42,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Presentation", meta = (ClampMin = "0", Units = "s")) float CompletedDisplayTime = 1.5f;
 
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") bool ShowCue(const FStageCueDefinition& Definition);
+	bool ShowActionCue(const FStageCueDefinition& Definition, UStageMemberComponent& Performer);
+	void FinishActionCue(FName CueId, bool bSucceeded);
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") void ActivateCue(FName CueId);
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") void ResolveCue(FName CueId);
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") void ReportProblem(FName CueId, const FText& Details);
@@ -59,12 +61,15 @@ public:
 	void ResetCues();
 	void SetSoundWindow(FName CueId, const FStageSoundWindow& Window);
 	void ReportSoundResult(FName CueId, EStageSoundResult Result, bool bWindowActive);
+	void DismissLightingPreparation(FName RoleId);
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 private:
+	bool ShowCueInternal(const FStageCueDefinition& Definition, UStageMemberComponent* Performer);
+	void UpdateRecoveryPresentation(FStageCueRuntime& Cue) const;
 	void Refresh();
 	void UpdatePresentation();
 	void UpdateWorldSignals();

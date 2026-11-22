@@ -5,6 +5,7 @@
 #include "Stage/Actions/StageInteractionHelpers.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/StageManager.h"
+#include "Stage/Environment/StageSoundControl.h"
 
 AActor* UStageImpactCommand::ResolvePerformingTarget(const FStageExecutionContext& InContext) const
 {
@@ -31,9 +32,15 @@ UStageAction* UStageImpactCommand::CreateMainAction_Implementation(const FStageE
 	AActor* Target = ResolvePerformingTarget(InContext);
 	if (!Member || !IsValid(Target) || !Target->FindComponentByClass<UPhysicalMontageComponent>()) return nullptr;
 	if (Mode != EStageImpactMode::Collapse && Target == Member->GetOwner()) return nullptr;
+	AStageSoundControl* SoundControl = nullptr;
+	if (Mode != EStageImpactMode::Collapse && !SyncWithSoundControlId.IsNone())
+	{
+		SoundControl = Cast<AStageSoundControl>(ResolveTarget(InContext, SyncWithSoundControlId));
+		if (!SoundControl) return nullptr;
+	}
 	auto* Action = NewObject<UStageImpactAction>(Member);
 	Action->Setup(Mode, Target, Cast<AStagePhysicsActor>(ResolveTarget(InContext, PropId)),
-	    ImpactDelay, StageTimeRequired, WindupAnimation, FallMontage);
+	    ImpactDelay, StageTimeRequired, WindupAnimation, FallMontage, SoundControl);
 	Action->SetExecutionBudget(GetNeededTime() + 2.0f);
 	return Action;
 }
@@ -43,6 +50,8 @@ void UStageImpactCommand::ValidateDefinition(const UStageDataAsset* Data, const 
 	Super::ValidateDefinition(Data, Path, Errors);
 	if (Mode != EStageImpactMode::Collapse && (!Data || !Data->GetRoleOptions().Contains(TargetRoleId) || !Data->TargetIds.Contains(PropId)))
 		Errors.Add(Path + TEXT(" / Stage Impact needs a declared target role and prop"));
+	if (Mode != EStageImpactMode::Collapse && !SyncWithSoundControlId.IsNone() && (!Data || !Data->TargetIds.Contains(SyncWithSoundControlId)))
+		Errors.Add(Path + TEXT(" / Sync with Sound Control Id must be a declared target"));
 	if (!FMath::IsFinite(ImpactDelay) || ImpactDelay < 0.0f || !FMath::IsFinite(StageTimeRequired) || StageTimeRequired < 0.0f)
 		Errors.Add(Path + TEXT(" / Stage Impact timings must be finite and nonnegative"));
 }
@@ -58,4 +67,7 @@ void UStageImpactCommand::ValidateContext(const FStageExecutionContext& InContex
 	}
 	else if (!Cast<AStagePhysicsActor>(ResolveTarget(InContext, PropId)))
 		Errors.Add(Path + TEXT(" / Stage Impact prop must be a StagePhysicsActor"));
+	if (Mode != EStageImpactMode::Collapse && !SyncWithSoundControlId.IsNone()
+	    && !Cast<AStageSoundControl>(ResolveTarget(InContext, SyncWithSoundControlId)))
+		Errors.Add(Path + TEXT(" / Sync with Sound Control Id must point to a StageSoundControl"));
 }

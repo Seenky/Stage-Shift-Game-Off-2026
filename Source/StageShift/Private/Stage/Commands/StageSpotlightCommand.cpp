@@ -38,7 +38,8 @@ UStageAction* UStageSpotlightCommand::CreateMainAction_Implementation(const FSta
 	    !FMath::IsFinite(TimeLimit) || TimeLimit < 0.1f) return nullptr;
 
 	auto* Action = NewObject<UStageSpotlightAction>(Member);
-	Action->Setup(Spotlight, FocusActor, TargetRoleId, TargetDisplayName.IsEmpty() ? FText::FromName(TargetRoleId) : TargetDisplayName, TimeLimit);
+	Action->Setup(Spotlight, FocusActor, TargetRoleId, TargetDisplayName.IsEmpty() ? FText::FromName(TargetRoleId) : TargetDisplayName, TimeLimit,
+	    FName(TEXT("StageSpotlightCommand"), GetUniqueID()));
 	Action->SetExecutionBudget(TimeLimit + 1.0f);
 	return Action;
 }

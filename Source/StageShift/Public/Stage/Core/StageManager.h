@@ -43,6 +43,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Production|Curtain") FStageOpeningOverdue OnOpeningOverdue;
 	bool CanMoveCurtain() const;
 	bool CanUseTurntable() const;
+	void NotifyTurntableRotationStarted();
 	void HandleCurtainEnd(bool bOpen);
 	UPROPERTY(EditInstanceOnly, Category = "Stage|Cheating Out", meta = (ToolTip = "Place a Target Point on stage and point its forward arrow toward the audience. Only yaw is used."))
 	TSoftObjectPtr<AActor> CheatOutReference;
@@ -152,14 +153,18 @@ private:
 	{
 		TWeakObjectPtr<AActor> Actor;
 		TWeakObjectPtr<AActor> Mark;
+		TArray<TWeakObjectPtr<AActor>> AddedMoveIgnores;
+		bool bRestoreDollPhysics = false;
 		bool bStarted = false;
 	};
 	AActor* ResolveLevelActor(const FSoftObjectPath& Reference) const;
 	void BeginCurtainOpening(bool bFirstScene);
 	void SetCurtainSignal(bool bVisible);
+	void SetTurntableSignal(bool bVisible);
 	void TickCurtainProduction();
 	bool PrepareCurtainCast(const FStageProductionScene& Scene, FText& Error);
 	void MoveCurtainCast(const FStageProductionScene& Scene, bool bEntering);
+	void ClearCurtainCastMoves();
 	void FinishCurtainCastMoves(bool bEntering);
 	void ShowProductionResult();
 	TWeakObjectPtr<AStageCurtainRail> RuntimeCurtain;

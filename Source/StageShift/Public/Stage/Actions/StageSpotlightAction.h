@@ -10,7 +10,8 @@ class STAGESHIFT_API UStageSpotlightAction : public UStageAction
 	GENERATED_BODY()
 
 public:
-	void Setup(AStageSpotlightControl* InSpotlight, AActor* InFocusActor, FName InTargetRoleId, const FText& InTargetName, float InTimeLimit);
+	void Setup(AStageSpotlightControl* InSpotlight, AActor* InFocusActor, FName InTargetRoleId, const FText& InTargetName, float InTimeLimit,
+	    FName InCueId);
 
 protected:
 	virtual void OnStart_Implementation() override;

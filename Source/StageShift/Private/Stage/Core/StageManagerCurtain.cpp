@@ -3,9 +3,12 @@
 #include "AIController.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
+#include "Components/Physics/DollPhysicsComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
+#include "Core/StageShiftCharacterMovementComponent.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Physics/PhysicsManipulationComponent.h"
@@ -14,11 +17,13 @@
 #include "Stage/Cues/StageCueComponent.h"
 #include "Stage/Environment/StageCurtainRail.h"
 #include "Stage/Environment/StageTurntable.h"
+#include "Stage/Environment/StageTurntableControl.h"
 #include "UObject/Package.h"
 
 namespace
 {
 	const FName CurtainSignal(TEXT("Curtain"));
+	const FName TurntableSignal(TEXT("Turntable"));
 	constexpr float RehearsalSeconds = 30.f;
 	constexpr float CastWalkTimeout = 8.f;
 	constexpr float MarkRadius = 55.f;
@@ -69,6 +74,28 @@ void AStageManager::SetCurtainSignal(bool bVisible)
 		PlayerCues->ShowActorSignal(CurtainSignal, EStageCueKind::Mechanism, Curtain->GetLever());
 }
 
+void AStageManager::SetTurntableSignal(bool bVisible)
+{
+	if (!bVisible)
+	{
+		PlayerCues->DismissCue(TurntableSignal);
+		return;
+	}
+	const AStageTurntable* Platform = ResolveTurntable();
+	if (!Platform) return;
+	for (TActorIterator<AStageTurntableControl> Control(GetWorld()); Control; ++Control)
+		if (Control->Turntable == Platform)
+		{
+			PlayerCues->ShowActorSignal(TurntableSignal, EStageCueKind::Mechanism, *Control);
+			break;
+		}
+}
+
+void AStageManager::NotifyTurntableRotationStarted()
+{
+	if (CurtainPhase == ECurtainPhase::Rotating) SetTurntableSignal(false);
+}
+
 void AStageManager::HandleCurtainEnd(bool bOpen)
 {
 	if (!ActiveProduction || !ActiveProduction->Scenes.IsValidIndex(ProductionSceneIndex)) return;
@@ -117,7 +144,7 @@ void AStageManager::MoveCurtainCast(const FStageProductionScene& Scene, bool bEn
 {
 	CurtainPhase = bEntering ? ECurtainPhase::Entering : ECurtainPhase::Exiting;
 	CastMoveDeadline = GetWorld()->GetTimeSeconds() + CastWalkTimeout;
-	CastMoves.Reset();
+	ClearCurtainCastMoves();
 	const auto Actual = ResolveProductionBindings(Scene);
 	const auto* Bindings = ProductionBindings.Find(Scene.SceneId);
 	for (FName RoleId : Scene.Scenario->GetRoleOptions())
@@ -134,6 +161,46 @@ void AStageManager::MoveCurtainCast(const FStageProductionScene& Scene, bool bEn
 			if (auto* Manipulation = Actor->FindComponentByClass<UPhysicsManipulationComponent>()) Manipulation->EndManipulation(0.f, true);
 		}
 	}
+
+	for (FCastMove& Move : CastMoves)
+	{
+		const auto* Character = Cast<ACharacter>(Move.Actor.Get());
+		if (!Character) continue;
+		// Match the navigation agent's capsule while walking through the scenery.
+		if (auto* Movement = Cast<UStageShiftCharacterMovementComponent>(Character->GetCharacterMovement()))
+			Movement->SetStageTransitionMovement(true);
+		auto* Capsule = Character->GetCapsuleComponent();
+		for (const FCastMove& Other : CastMoves)
+		{
+			AActor* OtherActor = Other.Actor.Get();
+			if (!OtherActor || OtherActor == Character || Capsule->GetMoveIgnoreActors().Contains(OtherActor)) continue;
+			Capsule->IgnoreActorWhenMoving(OtherActor, true);
+			Move.AddedMoveIgnores.Add(OtherActor);
+		}
+		// Capsule ignores do not affect the simulated bodies that drive the doll mesh.
+		if (auto* Doll = Character->FindComponentByClass<UDollPhysicsComponent>(); Doll && Doll->bEnabled)
+		{
+			Move.bRestoreDollPhysics = true;
+			Doll->bEnabled = false;
+		}
+	}
+}
+
+void AStageManager::ClearCurtainCastMoves()
+{
+	for (const FCastMove& Move : CastMoves)
+	{
+		const auto* Character = Cast<ACharacter>(Move.Actor.Get());
+		if (!Character) continue;
+		if (auto* Controller = Character->GetController<AAIController>()) Controller->StopMovement();
+		if (auto* Movement = Cast<UStageShiftCharacterMovementComponent>(Character->GetCharacterMovement()))
+			Movement->SetStageTransitionMovement(false);
+		for (const auto& Ignored : Move.AddedMoveIgnores)
+			if (AActor* Actor = Ignored.Get()) Character->GetCapsuleComponent()->IgnoreActorWhenMoving(Actor, false);
+		if (Move.bRestoreDollPhysics)
+			if (auto* Doll = Character->FindComponentByClass<UDollPhysicsComponent>()) Doll->bEnabled = true;
+	}
+	CastMoves.Reset();
 }
 
 void AStageManager::FinishCurtainCastMoves(bool bEntering)
@@ -155,7 +222,7 @@ void AStageManager::FinishCurtainCastMoves(bool bEntering)
 		}
 		else Actor->Destroy();
 	}
-	CastMoves.Reset();
+	ClearCurtainCastMoves();
 	if (bEntering)
 	{
 		const UStageDataAsset* Scenario = ActiveProduction->Scenes[ProductionSceneIndex].Scenario;
@@ -185,6 +252,7 @@ void AStageManager::FinishCurtainCastMoves(bool bEntering)
 	ExpectedSector = (Platform->GetCurrentSector() + 1) % FMath::Max(2, Platform->SectorCount);
 	CurtainPhase = ECurtainPhase::Rotating;
 	AdvanceProduction();
+	if (CanUseTurntable()) SetTurntableSignal(true);
 }
 
 void AStageManager::TickCurtainProduction()

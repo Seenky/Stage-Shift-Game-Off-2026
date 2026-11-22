@@ -51,6 +51,12 @@ struct FDialogueLine
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText Text = {};
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text Style")
+	bool bItalic = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text Style")
+	bool bShakeLetters = false;
+
 	// Additional pause when the next letter follows whitespace.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.0f, UIMin = 0.0f))
 	float WordInterval = 0.25f;

@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing", meta = (MultiLine))
 	FText SceneBriefing;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (ToolTip = "Show advance world signals that say GET READY. Active prompts and their timers are still shown."))
+	bool bShowPreparationCues = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (TitleProperty = "CueId"))
 	TArray<FStageCueDefinition> PlayerCues;
 

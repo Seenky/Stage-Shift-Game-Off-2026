@@ -10,12 +10,12 @@
 class UDialogueBubbleWidget;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-
 class STAGESHIFT_API UDialogueComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
+
 	UDialogueComponent();
 	bool PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop = false);
 	bool CaptureResumeData(FGuid PlaybackId, FDialogueResumeData& OutData) const;

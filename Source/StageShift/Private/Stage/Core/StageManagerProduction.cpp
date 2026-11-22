@@ -327,13 +327,17 @@ void AStageManager::FinishProduction(bool bSucceeded, const FText& Reason)
 	ProductionState = bSucceeded ? EStageProductionState::Completed : EStageProductionState::Failed;
 	FailureReason = Reason;
 	ActiveProduction = nullptr;
+	ClearCurtainCastMoves();
 	if (!bSucceeded)
 		for (const auto& Pair : RuntimeCast)
 			if (auto* Actor = Pair.Value.Get()) Actor->Destroy();
 	RuntimeCast.Reset();
-	CastMoves.Reset();
 	CurtainPhase = ECurtainPhase::Idle;
-	if (RuntimeCurtain.IsValid()) SetCurtainSignal(false);
+	if (RuntimeCurtain.IsValid())
+	{
+		SetCurtainSignal(false);
+		SetTurntableSignal(false);
+	}
 	OpeningDeadline = NextOpeningPenaltyAt = -1.;
 	bProductionAdvancePending = false;
 	ProductionSceneIndex = FMath::Min(ProductionSceneIndex, ProductionSceneCount - 1);

@@ -12,6 +12,7 @@ class STAGESHIFT_API UStageShiftCharacterMovementComponent : public UCharacterMo
 public:
 	virtual float GetMaxSpeed() const override;
 	virtual float GetMaxAcceleration() const override;
+	void SetStageTransitionMovement(bool bEnabled) { bStageTransitionMovement = bEnabled; }
 
 protected:
 	virtual void InitializeComponent() override;
@@ -19,5 +20,6 @@ protected:
 
 private:
 	TWeakObjectPtr<class UPhysicsManipulationComponent> Manipulation;
+	bool bStageTransitionMovement = false;
 	bool SweepCharacterBody(const FVector& Delta, FHitResult& OutHit) const;
 };

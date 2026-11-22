@@ -14,7 +14,8 @@ class STAGESHIFT_API UStageSoundCueAction : public UStageAction
 	GENERATED_BODY()
 
 public:
-	void Setup(AStageSoundControl* InControl, UAnimSequenceBase* InWindupAnimation, FName InAnimationSlot, FName InCueAnchorId, bool bInRequireOnTime);
+	void Setup(AStageSoundControl* InControl, UAnimSequenceBase* InWindupAnimation, FName InAnimationSlot, FName InCueAnchorId, bool bInRequireOnTime,
+	    FName InCueId);
 	void SetupSound(FName InSoundId, AActor* InSoundTarget, const FStageSoundTiming& InTiming);
 
 protected:
@@ -39,7 +40,7 @@ private:
 	FName CueId;
 	uint32 WindowId = 0;
 	float WindupDuration = 0.0f;
-	bool bRetainCueFeedback = false;
+	bool bCueShown = false;
 	bool bRequireOnTime = false;
 	FTimerHandle WindupTimer;
 	FTimerHandle EndTimer;
