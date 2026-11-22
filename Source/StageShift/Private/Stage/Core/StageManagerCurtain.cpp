@@ -34,6 +34,12 @@ namespace
 		const double Height = Character ? Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 0.;
 		return Mark.GetActorLocation() + FVector(0, 0, Height);
 	}
+
+	FRotator CastRotation(const AActor& Mark, const AActor* Performer)
+	{
+		const FRotator Rotation = Mark.GetActorRotation();
+		return Cast<ACharacter>(Performer) ? FRotator(0.0, Rotation.Yaw, 0.0) : Rotation;
+	}
 }
 
 AActor* AStageManager::ResolveLevelActor(const FSoftObjectPath& Reference) const
@@ -126,8 +132,9 @@ bool AStageManager::PrepareCurtainCast(const FStageProductionScene& Scene, FText
 		}
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		const AActor* DefaultPerformer = Placement.ActorClass->GetDefaultObject<AActor>();
 		AActor* Performer = GetWorld()->SpawnActor<AActor>(Placement.ActorClass,
-		    CastLocation(*Backstage, Placement.ActorClass->GetDefaultObject<AActor>()), Backstage->GetActorRotation(), Params);
+		    CastLocation(*Backstage, DefaultPerformer), CastRotation(*Backstage, DefaultPerformer), Params);
 		if (!Performer || !Performer->FindComponentByClass<UStageMemberComponent>())
 		{
 			if (Performer) Performer->Destroy();
@@ -217,7 +224,7 @@ void AStageManager::FinishCurtainCastMoves(bool bEntering)
 			{
 				if (FVector::DistSquared2D(Actor->GetActorLocation(), Mark->GetActorLocation()) > FMath::Square(MarkRadius))
 					Actor->SetActorLocation(CastLocation(*Mark, Actor), false, nullptr, ETeleportType::TeleportPhysics);
-				Actor->SetActorRotation(Mark->GetActorRotation());
+				Actor->SetActorRotation(CastRotation(*Mark, Actor));
 			}
 		}
 		else Actor->Destroy();

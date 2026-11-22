@@ -51,6 +51,7 @@ public:
 	void SetCurtainRail(AStageCurtainRail* Rail);
 	virtual const UMeshComponent* GetInteractionMesh() const override;
 	bool IsCurtainLever() const { return CurtainRail.IsValid(); }
+	bool IsBeingManipulated() const;
 	bool IsBeingDragged() const;
 
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Props")

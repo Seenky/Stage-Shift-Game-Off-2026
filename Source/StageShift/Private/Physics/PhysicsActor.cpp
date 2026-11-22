@@ -81,7 +81,7 @@ bool AStagePhysicsActor::CanInteract_Implementation(const FInteractionContext& I
 {
 	if (const auto* Rail = CurtainRail.Get(); Rail && !Rail->CanDragLever()) return false;
 	if (!InteractionContext.Interactor || InteractionContext.Hit.GetComponent() != GetStaticMeshComponent()
-	    || (ActiveManipulator.IsValid() && ActiveManipulator->GetManipulatedComponent() == GetStaticMeshComponent()))
+	    || IsBeingManipulated())
 	{
 		return false;
 	}
@@ -106,6 +106,12 @@ bool AStagePhysicsActor::IsBeingDragged() const
 {
 	const auto* Manipulator = ActiveManipulator.Get();
 	return Manipulator && Manipulator->IsDragging() && Manipulator->GetManipulatedComponent() == GetStaticMeshComponent();
+}
+
+bool AStagePhysicsActor::IsBeingManipulated() const
+{
+	const auto* Manipulator = ActiveManipulator.Get();
+	return Manipulator && Manipulator->GetManipulatedComponent() == GetStaticMeshComponent();
 }
 
 bool AStagePhysicsActor::HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const

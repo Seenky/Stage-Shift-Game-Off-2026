@@ -1,7 +1,7 @@
 """Export theatre modules from the open Blender file without changing its objects.
 
-Usage: blender -b Menu_Theatre.blend --python Export_FBX.py -- MoonAndStars
-Omit the argument after -- to export every module in the matching JSON manifest.
+Usage: blender -b Menu_Theatre.blend --python Export_FBX.py -- ScenicMoon
+Omit the argument after -- to export every module in the asset library.
 """
 
 import json
@@ -18,8 +18,12 @@ def export_module(module, source_root):
     if not sources:
         raise RuntimeError(f"{collection.name} has no mesh objects")
 
-    x, y, z = module["location"]
-    center_at_origin = Matrix.Translation(-Vector((x, -y, z)))
+    if "Export Name" in collection:
+        pivot = collection.instance_offset.copy()
+    else:
+        x, y, z = module["location"]
+        pivot = Vector((x, -y, z))
+    center_at_origin = Matrix.Translation(-pivot)
     temporary = bpy.data.collections.new("Temporary FBX export")
     bpy.context.scene.collection.children.link(temporary)
     copies = []
@@ -28,6 +32,7 @@ def export_module(module, source_root):
         for source in sources:
             copy = source.copy()
             temporary.objects.link(copy)
+            copy.parent = None
             copy.matrix_world = center_at_origin @ source.matrix_world
             copies.append(copy)
 
@@ -73,14 +78,30 @@ def export_module(module, source_root):
 def main():
     source_path = Path(bpy.data.filepath)
     source_root = source_path.parent
-    manifest = json.loads(source_path.with_suffix(".json").read_text(encoding="utf-8"))
+    library_scene = bpy.data.scenes.get("Asset Library")
+    if library_scene is not None:
+        entries = [
+            {"name": collection["Export Name"], "collection": collection.name}
+            for collection in library_scene.collection.children_recursive
+            if "Export Name" in collection
+        ]
+    else:
+        manifest = json.loads(source_path.with_suffix(".json").read_text(encoding="utf-8"))
+        entries = manifest["modules"]
     module_names = set(sys.argv[sys.argv.index("--") + 1 :]) if "--" in sys.argv else set()
-    modules = [entry for entry in manifest["modules"] if not module_names or entry["collection"] in module_names]
+    modules = [entry for entry in entries if not module_names or entry["collection"] in module_names]
     if module_names - {entry["collection"] for entry in modules}:
         raise RuntimeError(f"Unknown module selection: {module_names}")
     (source_root / "FBX").mkdir(exist_ok=True)
-    for module in modules:
-        export_module(module, source_root)
+    original_scene = bpy.context.window.scene
+    try:
+        if library_scene is not None:
+            bpy.context.window.scene = library_scene
+            bpy.context.view_layer.update()
+        for module in modules:
+            export_module(module, source_root)
+    finally:
+        bpy.context.window.scene = original_scene
 
 
 if __name__ == "__main__":

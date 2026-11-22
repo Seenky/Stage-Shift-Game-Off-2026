@@ -130,6 +130,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Stage")
 
 	UStageDataAsset* GetActiveStage() const { return ActiveStage; }
+	int32 GetCurrentStepIndex() const { return CurrentStepIndex; }
 	UFUNCTION(BlueprintPure, Category = "Stage")
 
 	EStageLatenessLevel GetCurrentLatenessLevel() const { return CurrentLatenessLevel; }
