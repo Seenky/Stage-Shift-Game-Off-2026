@@ -51,12 +51,9 @@ private:
 		ETextJustify::Type VisualJustification = ETextJustify::Left;
 	};
 
-
 	TSharedRef<class FSlateTextLayout> CreateTextLayout(const FString& Source);
 	void Layout(FLine& Line, const FString& Source, int32 SourceOffset);
 	void BuildPages();
-
-	void Layout(FLine& Line, const FDialogueLine& Dialogue);
 
 	void PaintLine(const FLine& Line, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 TextLayer, FLinearColor Tint, bool bExiting) const;
 	void PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale,
@@ -64,6 +61,7 @@ private:
 	void UpdateOpacity() const;
 
 	FSlateFontInfo Font;
+	FSlateFontInfo PlaybackFont;
 	FLinearColor TextColor = {};
 	ETextJustify::Type Justification = ETextJustify::Left;
 	float WrapWidth = 360.0f;

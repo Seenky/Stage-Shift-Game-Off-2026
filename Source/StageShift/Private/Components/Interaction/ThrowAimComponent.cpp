@@ -98,11 +98,11 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		bAiming = true;
 		bDraggingAim = bDragging;
 		bAimFrozen = false;
-		LastCursorUpdateFrame = bDraggingAim ? MAX_uint64 : GFrameCounter;
+		LastCursorUpdateFrame = MAX_uint64;
 		bGamepad = StickInput.SizeSquared() > FMath::Square(StickDeadZone);
 		AimDirection = Pawn->GetActorForwardVector().GetSafeNormal2D();
 		const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
-		if ((!bDraggingAim || !bHasScreenPosition) && !PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition))
+		if (!bHasScreenPosition && !PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition))
 		{
 			ScreenPosition = FVector2D(Bounds.Min + Bounds.Size() / 2);
 		}
@@ -110,17 +110,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		if (PC->GetMousePosition(Mouse.X, Mouse.Y))
 		{
 			LastMousePosition = Mouse;
-			if (!bGamepad && (PC->bShowMouseCursor || !PC->GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture()))
-			{
-				if (bDraggingAim) ScreenPosition = Mouse;
-				else
-				{
-					const FIntPoint Pixel(FMath::Clamp(FMath::RoundToInt(ScreenPosition.X), Bounds.Min.X, Bounds.Max.X - 1),
-					    FMath::Clamp(FMath::RoundToInt(ScreenPosition.Y), Bounds.Min.Y, Bounds.Max.Y - 1));
-					PC->SetMouseLocation(Pixel.X, Pixel.Y);
-					LastMousePosition = FVector2D(Pixel);
-				}
-			}
+			if (!bGamepad && (PC->bShowMouseCursor || !PC->GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture())) ScreenPosition = Mouse;
 		}
 		bHasScreenPosition = true;
 		if (!bDraggingAim)
@@ -218,6 +208,10 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 			ScreenPosition += MouseDelta * (MouseSensitivity * Bounds.Height() / 1080.0);
 		LastCursorUpdateFrame = GFrameCounter;
 		bStickMoved = false;
+	}
+	else if (!bGamepad && bAbsoluteMouse && bHasMouse)
+	{
+		ScreenPosition = Mouse;
 	}
 	const double Margin = FMath::Min3(24.0, Bounds.Width() * 0.25, Bounds.Height() * 0.25);
 	ScreenPosition.X = FMath::Clamp(ScreenPosition.X, Bounds.Min.X + Margin, Bounds.Max.X - Margin);

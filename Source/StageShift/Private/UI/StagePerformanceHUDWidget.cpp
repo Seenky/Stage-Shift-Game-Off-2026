@@ -49,6 +49,7 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 	if (CueIcon) SetSymbol(*CueIcon, static_cast<float>(Cue.Kind));
 	StartsAt = Cue.StartsAt;
 	EndsAt = Cue.EndsAt;
+	PausedProgress = Cue.PausedProgress;
 	if (Timing)
 	{
 		Timing->SetVisibility(Cue.Phase == EStageCueWindowPhase::Hidden ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
@@ -81,7 +82,8 @@ void UStagePerformanceTagWidget::NativeTick(const FGeometry& Geometry, float Del
 	{
 		const bool bTimed = EndsAt > StartsAt;
 		const double Progress = bTimed ? (GetWorld()->GetTimeSeconds() - StartsAt) / (EndsAt - StartsAt) : 0.0;
-		Material->SetScalarParameterValue(ProgressParameter, bTimed ? FMath::Clamp(static_cast<float>(Progress), 0.0f, 1.0f) : -1.0f);
+		const float DisplayProgress = PausedProgress.Get(FMath::Clamp(static_cast<float>(Progress), 0.0f, 1.0f));
+		Material->SetScalarParameterValue(ProgressParameter, bTimed ? DisplayProgress : -1.0f);
 	}
 }
 

@@ -21,6 +21,7 @@ struct FStagePerformanceCue
 	double EndsAt = 0.0;
 	float WindowStart = 0.0f;
 	float WindowEnd = 0.0f;
+	TOptional<float> PausedProgress;
 };
 
 UCLASS(Abstract)
@@ -48,6 +49,7 @@ private:
 	EStageCueWindowPhase LastPhase = EStageCueWindowPhase::Hidden;
 	double StartsAt = 0.0;
 	double EndsAt = 0.0;
+	TOptional<float> PausedProgress;
 };
 
 UCLASS(Abstract)

@@ -57,23 +57,9 @@ void SDialogueText::SetAppearance(const FSlateFontInfo& InFont, FLinearColor InT
 	Reset();
 }
 
-
 TSharedRef<FSlateTextLayout> SDialogueText::CreateTextLayout(const FString& Source)
 {
-	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(Font));
-}
-
-void SDialogueText::Layout(FLine& Line, const FDialogueLine& Dialogue)
-{
-	const FString Source = NormalizeLineEndings(Dialogue.Text);
-	FSlateFontInfo LineFont = Font;
-	if (Dialogue.bItalic)
-	{
-		LineFont.SkewAmount += 0.22f;
-	}
-	Line.bShakeLetters = Dialogue.bShakeLetters;
-	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(LineFont));
-
+	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(PlaybackFont));
 	TextLayout->SetJustification(Justification);
 	if (LinesPerPage > 0) TextLayout->SetWrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping);
 	TextLayout->SetWrappingWidth(WrapWidth - (bShowRevealDots ? DotSpace : 0.0f));
@@ -163,7 +149,7 @@ void SDialogueText::Layout(FLine& Line, const FString& Source, int32 SourceOffse
 			const FLayoutBlockTextContext Context = Block->GetTextContext();
 
 			const FShapedGlyphSequenceRef Shaped = ShapedTextCacheUtil::GetShapedTextSubSequence(
-			    Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, LineFont), Block->GetTextRange(), *ModelText, Context.TextDirection);
+			    Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, PlaybackFont), Block->GetTextRange(), *ModelText, Context.TextDirection);
 
 			const TArray<FShapedGlyphEntry>& Entries = Shaped->GetGlyphsToRender();
 			// Slate blocks already include their line's offset and justification.
@@ -239,11 +225,11 @@ void SDialogueText::Update(const FDialoguePlaybackState& State)
 	{
 		Active = {};
 		Active.Id = State.PlaybackId;
-
+		Active.bShakeLetters = State.Line.bShakeLetters;
+		PlaybackFont = Font;
+		if (State.Line.bItalic) PlaybackFont.SkewAmount += 0.22f;
 		PlaybackText = NormalizeLineEndings(State.Line.Text);
 		BuildPages();
-		
-		Layout(Active, State.Line);
 
 		if (ExitReason == EDialogueEndReason::Completed)
 		{
