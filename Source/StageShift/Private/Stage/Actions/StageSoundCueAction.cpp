@@ -4,6 +4,7 @@
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "Stage/Core/StageManager.h"
@@ -13,13 +14,15 @@
 #include "TimerManager.h"
 
 void UStageSoundCueAction::Setup(
-    AStageSoundControl* InControl, UAnimSequenceBase* InWindupAnimation, FName InAnimationSlot, FName InCueAnchorId, bool bInRequireOnTime)
+    AStageSoundControl* InControl, UAnimSequenceBase* InWindupAnimation, FName InAnimationSlot, FName InCueAnchorId, bool bInRequireOnTime,
+    FName InCueId)
 {
 	Control = InControl;
 	WindupAnimation = InWindupAnimation;
 	AnimationSlot = InAnimationSlot;
 	CueAnchorId = InCueAnchorId;
 	bRequireOnTime = bInRequireOnTime;
+	CueId = InCueId;
 }
 
 void UStageSoundCueAction::SetupSound(FName InSoundId, AActor* InSoundTarget, const FStageSoundTiming& InTiming)
@@ -52,7 +55,7 @@ void UStageSoundCueAction::OnStart_Implementation()
 	if (AStageManager* Manager = Context.Manager.Get(); Manager && Manager->PlayerCues)
 	{
 		FStageCueDefinition Cue;
-		Cue.CueId = FName(TEXT("StageSoundCue"), GetUniqueID());
+		Cue.CueId = CueId;
 		Cue.Kind = EStageCueKind::Sound;
 		if (!CueAnchorId.IsNone())
 		{
@@ -68,9 +71,9 @@ void UStageSoundCueAction::OnStart_Implementation()
 					break;
 				}
 		Cue.TimeLimit = Duration;
-		if (Manager->PlayerCues->ShowCue(Cue))
+		if (auto* Member = Context.MemberComponent.Get(); Member && Manager->PlayerCues->ShowActionCue(Cue, *Member))
 		{
-			CueId = Cue.CueId;
+			bCueShown = true;
 			Manager->PlayerCues->SetSoundWindow(CueId, Window);
 		}
 	}
@@ -96,12 +99,11 @@ void UStageSoundCueAction::PlayWindup()
 void UStageSoundCueAction::HandleSoundResult(const FStageSoundWindow& Window, EStageSoundResult Result)
 {
 	if (Window.Id != WindowId) return;
-	if (const auto* Manager = Context.Manager.Get(); !CueId.IsNone() && Manager && Manager->PlayerCues)
+	if (const auto* Manager = Context.Manager.Get(); bCueShown && Manager && Manager->PlayerCues)
 	{
 		if (Result == EStageSoundResult::Ready) Manager->PlayerCues->SetSoundWindow(CueId, Window);
 		else if (Result != EStageSoundResult::Cancelled)
 		{
-			bRetainCueFeedback = !Window.bActive;
 			Manager->PlayerCues->ReportSoundResult(CueId, Result, Window.bActive);
 		}
 	}
@@ -131,6 +133,6 @@ void UStageSoundCueAction::Cleanup_Implementation()
 		const FStageSoundWindow Window = Console->GetSoundWindow();
 		if (Window.bActive && Window.Id == WindowId) Console->CancelWindow();
 	}
-	if (const auto* Manager = Context.Manager.Get(); !bRetainCueFeedback && !CueId.IsNone() && Manager && Manager->PlayerCues)
-		Manager->PlayerCues->DismissCue(CueId);
+	if (const auto* Manager = Context.Manager.Get(); bCueShown && Manager && Manager->PlayerCues)
+		Manager->PlayerCues->FinishActionCue(CueId, GetResult() == EStageActionResult::Succeeded);
 }

@@ -11,11 +11,12 @@
 #include "PhysicsEngine/BodyInstance.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "Stage/Core/StageManager.h"
+#include "Stage/Environment/StageSoundControl.h"
 #include "StageInteractionHelpers.h"
 #include "TimerManager.h"
 
 void UStageImpactAction::Setup(EStageImpactMode InMode, AActor* InTarget, AStagePhysicsActor* InProp, float InDelay,
-    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimMontage* InFall)
+    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimMontage* InFall, AStageSoundControl* InSoundControl)
 {
 	Mode = InMode;
 	Target = InTarget;
@@ -24,6 +25,7 @@ void UStageImpactAction::Setup(EStageImpactMode InMode, AActor* InTarget, AStage
 	StageTimeRequired = InStageTimeRequired;
 	Windup = InWindup;
 	Fall = InFall;
+	SoundControl = InSoundControl;
 }
 
 void UStageImpactAction::OnStart_Implementation()
@@ -38,6 +40,13 @@ void UStageImpactAction::OnStart_Implementation()
 	{
 		const FVector Heading = (Target->GetActorLocation() - Owner->GetActorLocation()).GetSafeNormal2D();
 		if (!Heading.IsNearlyZero()) Owner->SetActorRotation(Heading.Rotation());
+		if (auto* Console = SoundControl.Get())
+		{
+			Console->OnCueResult.AddUniqueDynamic(this, &ThisClass::HandleSoundResult);
+			const FStageSoundWindow Window = Console->GetSoundWindow();
+			if (Window.bActive) HandleSoundResult(Window, EStageSoundResult::Ready);
+			if (Mode == EStageImpactMode::Strike) return;
+		}
 		const auto* Character = Cast<ACharacter>(Owner);
 		auto* Instance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
 		if (Instance && Windup && Delay > 0.0f)
@@ -47,8 +56,34 @@ void UStageImpactAction::OnStart_Implementation()
 			    FMath::Max(0.1f, Windup->GetPlayLength() / Delay));
 		}
 	}
+	if (SoundControl.IsValid()) return;
 	if (Delay > 0.0f) GetWorld()->GetTimerManager().SetTimer(ImpactTimer, this, &ThisClass::PerformImpact, Delay, false);
 	else PerformImpact();
+}
+
+void UStageImpactAction::HandleSoundResult(const FStageSoundWindow& Window, EStageSoundResult Result)
+{
+	if (GetState() != EStageExecutionState::Running || Window.Target != Target.Get()) return;
+	if (Result == EStageSoundResult::Ready && (SoundWindowId == 0 || Window.Id == SoundWindowId))
+	{
+		UWorld* World = GetWorld();
+		if (!World) return;
+		SoundWindowId = Window.Id;
+		const float Remaining = FMath::Max(0.02f, Window.ExpiresAt - static_cast<float>(World->GetTimeSeconds()) + 0.01f);
+		SetExecutionBudget(Remaining + 2.0f);
+		World->GetTimerManager().SetTimer(ImpactTimer, FTimerDelegate::CreateWeakLambda(this, [this]
+		{
+			if (Mode == EStageImpactMode::Throw) Fail(TEXT("Throw skipped because the sound cue was missed"));
+			else PerformImpact();
+		}), Remaining, false);
+	}
+	else if (Window.Id == SoundWindowId && Result == EStageSoundResult::OnTime)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(ImpactTimer);
+		PerformImpact();
+	}
+	else if (Window.Id == SoundWindowId && Result == EStageSoundResult::Cancelled)
+		Fail(TEXT("Sound cue was cancelled"));
 }
 
 void UStageImpactAction::PerformImpact()
@@ -119,6 +154,12 @@ void UStageImpactAction::FinishHit()
 	const FVector Push = Mode != EStageImpactMode::Collapse && IsValid(Victim) && IsValid(Owner)
 	    ? Victim->GetActorLocation() - Owner->GetActorLocation() : FVector::ZeroVector;
 	if (!Physics || !Physics->StayDown(Fall, Push)) return Fail(TEXT("Target could not fall"));
+	if (Mode == EStageImpactMode::Strike && SoundControl.IsValid() && Windup)
+	{
+		const auto* Character = Cast<ACharacter>(Owner);
+		if (auto* Instance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr)
+			Instance->PlaySlotAnimationAsDynamicMontage(Windup, TEXT("RightHand"), 0.01f, 0.06f);
+	}
 	if (auto* Manager = Context.Manager.Get())
 		Manager->AddDiagnostic(FString::Printf(TEXT("StageImpact / %s / target[%s]"), *UEnum::GetValueAsString(Mode), *Victim->GetActorNameOrLabel()));
 	Finish(EStageActionResult::Succeeded);
@@ -132,6 +173,8 @@ void UStageImpactAction::Fail(const TCHAR* Reason)
 
 void UStageImpactAction::Cleanup_Implementation()
 {
+	if (auto* Console = SoundControl.Get())
+		Console->OnCueResult.RemoveDynamic(this, &ThisClass::HandleSoundResult);
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(ImpactTimer);

@@ -56,7 +56,7 @@ UStageAction* UStageSoundCueCommand::CreateMainAction_Implementation(const FStag
 	auto* Control = Cast<AStageSoundControl>(ResolveTarget(InContext, SoundControlId));
 	if (!Member || !Control) return nullptr;
 	auto* Action = NewObject<UStageSoundCueAction>(Member);
-	Action->Setup(Control, WindupAnimation, AnimationSlot, CueAnchorId, bRequireOnTime);
+	Action->Setup(Control, WindupAnimation, AnimationSlot, CueAnchorId, bRequireOnTime, FName(TEXT("StageSoundCue"), GetUniqueID()));
 	if (!SoundId.IsNone()) Action->SetupSound(SoundId, ResolveTarget(InContext, SoundTargetId), Timing);
 	Action->SetExecutionBudget(NeededTime + 1.0f);
 	return Action;

@@ -489,6 +489,7 @@ void AStageManager::BeginFinale()
 	UpdateTiming();
 	State = EStageState::Finalizing;
 	FinalizingStartedAt = GetWorld()->GetTimeSeconds();
+	PlayerCues->NotifyStepStarted(NAME_None);
 	AddDiagnostic(TEXT("Finale started"));
 	bIssuingCommands = true;
 	const auto Prepared = PrepareCommands(ActiveStage->Finale, EStageCommandType::Finale, INDEX_NONE);

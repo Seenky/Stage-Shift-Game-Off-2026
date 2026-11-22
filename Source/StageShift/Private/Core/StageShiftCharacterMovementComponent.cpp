@@ -29,6 +29,7 @@ bool UStageShiftCharacterMovementComponent::MoveUpdatedComponentImpl(
     const FVector& RequestedDelta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit, ETeleportType Teleport)
 {
 	const FVector Delta = bSweep && Teleport == ETeleportType::None && Manipulation.IsValid() ? Manipulation->ConstrainDragMovement(RequestedDelta) : RequestedDelta;
+	if (bStageTransitionMovement) return Super::MoveUpdatedComponentImpl(Delta, NewRotation, bSweep, OutHit, Teleport);
 	if (const auto* Character = Cast<AStageShiftCharacter>(CharacterOwner); Character && Character->IsDollPhysicsActive())
 	{
 		if (Teleport != ETeleportType::None) Character->GetDollPhysics()->ResetAfterTeleport();

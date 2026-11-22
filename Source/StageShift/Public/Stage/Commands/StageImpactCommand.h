@@ -28,6 +28,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (GetOptions = "GetTargetOptions", EditCondition = "Mode != EStageImpactMode::Collapse", EditConditionHides)) FName PropId;
 	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (ClampMin = "0.0", Units = "s")) float ImpactDelay = 2.0f;
 	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (ClampMin = "0.0", Units = "s", EditCondition = "Mode != EStageImpactMode::Collapse", EditConditionHides)) float StageTimeRequired = 0.0f;
+	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (GetOptions = "GetTargetOptions", EditCondition = "Mode != EStageImpactMode::Collapse", EditConditionHides,
+	    ToolTip = "Optional console used by a parallel Sound Cue targeting the same actor. An on-time signal triggers the action immediately. A missed cue skips a throw."))
+	FName SyncWithSoundControlId;
 	UPROPERTY(EditAnywhere, Category = "Animation", meta = (EditCondition = "Mode != EStageImpactMode::Collapse", EditConditionHides)) TObjectPtr<UAnimSequenceBase> WindupAnimation;
 	UPROPERTY(EditAnywhere, Category = "Animation") TObjectPtr<UAnimMontage> FallMontage;
 };

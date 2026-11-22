@@ -76,6 +76,7 @@ bool AStageTurntable::RotateToSector(int32 SectorIndex)
 	EndYaw = StartYaw + FMath::FindDeltaAngleDegrees(StartYaw, SectorYaw);
 	RotationElapsed = 0.0f;
 	bRotating = true;
+	if (AStageManager* Manager = StageManager.Get()) Manager->NotifyTurntableRotationStarted();
 	if (RotationSound) UGameplayStatics::PlaySoundAtLocation(this, RotationSound, GetActorLocation());
 	SetActorTickEnabled(true);
 	return true;

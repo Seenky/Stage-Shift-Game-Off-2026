@@ -4,10 +4,13 @@
 #include "StageImpactAction.generated.h"
 
 class AStagePhysicsActor;
+class AStageSoundControl;
 class UAnimInstance;
 class UAnimMontage;
 class UAnimSequenceBase;
 class UPrimitiveComponent;
+struct FStageSoundWindow;
+enum class EStageSoundResult : uint8;
 
 UENUM(BlueprintType)
 enum class EStageImpactMode : uint8
@@ -24,7 +27,7 @@ class STAGESHIFT_API UStageImpactAction : public UStageAction
 
 public:
 	void Setup(EStageImpactMode InMode, AActor* InTarget, AStagePhysicsActor* InProp, float InDelay,
-	    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimMontage* InFall);
+	    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimMontage* InFall, AStageSoundControl* InSoundControl);
 
 protected:
 	virtual void OnStart_Implementation() override;
@@ -35,12 +38,14 @@ private:
 	void PerformImpact();
 	void FinishHit();
 	void Fail(const TCHAR* Reason);
+	UFUNCTION() void HandleSoundResult(const FStageSoundWindow& Window, EStageSoundResult Result);
 	UFUNCTION() void HandlePropHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
 	    FVector NormalImpulse, const FHitResult& Hit);
 
 	EStageImpactMode Mode = EStageImpactMode::Collapse;
 	TWeakObjectPtr<AActor> Target;
 	TWeakObjectPtr<AStagePhysicsActor> Prop;
+	TWeakObjectPtr<AStageSoundControl> SoundControl;
 	TWeakObjectPtr<UPrimitiveComponent> FlightBody;
 	TWeakObjectPtr<UAnimInstance> AnimInstance;
 	TWeakObjectPtr<UAnimMontage> PlayingWindup;
@@ -48,6 +53,7 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UAnimMontage> Fall;
 	float Delay = 0.0f;
 	float StageTimeRequired = 0.0f;
+	uint32 SoundWindowId = 0;
 	bool bRestoreHitNotifications = false;
 	bool bRestoreCCD = false;
 	FTimerHandle ImpactTimer;

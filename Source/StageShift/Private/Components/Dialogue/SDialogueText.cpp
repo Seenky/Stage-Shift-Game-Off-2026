@@ -55,10 +55,16 @@ void SDialogueText::SetAppearance(const FSlateFontInfo& InFont, FLinearColor InT
 	Reset();
 }
 
-void SDialogueText::Layout(FLine& Line, const FText& Text)
+void SDialogueText::Layout(FLine& Line, const FDialogueLine& Dialogue)
 {
-	const FString Source = NormalizeLineEndings(Text);
-	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(Font));
+	const FString Source = NormalizeLineEndings(Dialogue.Text);
+	FSlateFontInfo LineFont = Font;
+	if (Dialogue.bItalic)
+	{
+		LineFont.SkewAmount += 0.22f;
+	}
+	Line.bShakeLetters = Dialogue.bShakeLetters;
+	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(LineFont));
 
 	TextLayout->SetJustification(Justification);
 	const float RevealSpace = bShowRevealDots ? DotSpace : 0.0f;
@@ -82,7 +88,7 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 			const FLayoutBlockTextContext Context = Block->GetTextContext();
 
 			const FShapedGlyphSequenceRef Shaped = ShapedTextCacheUtil::GetShapedTextSubSequence(
-			    Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, Font), Block->GetTextRange(), *ModelText, Context.TextDirection);
+			    Context.ShapedTextCache, FCachedShapedTextKey(View.Range, 1.0f, Context, LineFont), Block->GetTextRange(), *ModelText, Context.TextDirection);
 
 			const TArray<FShapedGlyphEntry>& Entries = Shaped->GetGlyphsToRender();
 			// Slate blocks already include their line's offset and justification.
@@ -157,7 +163,7 @@ void SDialogueText::Update(const FDialoguePlaybackState& State)
 	{
 		Active = {};
 		Active.Id = State.PlaybackId;
-		Layout(Active, State.Line.Text);
+		Layout(Active, State.Line);
 		if (ExitReason == EDialogueEndReason::Completed)
 		{
 			Exiting = {};
@@ -224,7 +230,8 @@ void SDialogueText::Tick(const FGeometry& Geometry, double CurrentTime, float De
 			Invalidate(EInvalidateWidgetReason::Layout);
 		}
 	}
-	const bool bAnimating = Active.Id.IsValid() && (!Active.bHolding || Active.Age - Active.LastReveal < SpringTime || Active.HoldAge < 0.32f);
+	const bool bAnimating = Active.Id.IsValid() &&
+	    (Active.bShakeLetters || !Active.bHolding || Active.Age - Active.LastReveal < SpringTime || Active.HoldAge < 0.32f);
 	SetCanTick(bAnimating || Exiting.Id.IsValid());
 	UpdateOpacity();
 	Invalidate(EInvalidateWidgetReason::Paint);
@@ -295,7 +302,13 @@ void SDialogueText::PaintLine(const FLine& Line, const FGeometry& Geometry, FSla
 		Ink.A *= Ease(Age / 0.068f);
 		const float Delay = 0.014f + (Index % 5) * 0.012f;
 		const float Fracture = bFracture ? FMath::Clamp((ExitAge - Delay) / 0.32f, 0.0f, 1.0f) : 0.0f;
-		PaintGlyph(Glyph, TextGeometry, Elements, TextLayer, Glyph.Position + FVector2f(0.0f, (1.0f - Spring) * 8.0f), Ink, 0.56f + 0.44f * Spring, Fracture, Index);
+		FVector2f Position = Glyph.Position + FVector2f(0.0f, (1.0f - Spring) * 8.0f);
+		if (Line.bShakeLetters)
+		{
+			const float Phase = Index * 2.37f;
+			Position += FVector2f(FMath::Sin(Line.Age * 22.0f + Phase) * 0.45f, FMath::Cos(Line.Age * 26.0f - Phase) * 0.65f);
+		}
+		PaintGlyph(Glyph, TextGeometry, Elements, TextLayer, Position, Ink, 0.56f + 0.44f * Spring, Fracture, Index);
 	}
 	if (!bShowRevealDots || !Last || bExiting || Line.HoldAge >= 0.32f)
 	{

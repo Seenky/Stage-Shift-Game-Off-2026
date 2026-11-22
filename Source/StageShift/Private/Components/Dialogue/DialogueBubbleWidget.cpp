@@ -65,6 +65,8 @@ void UDialogueBubbleWidget::UpdateBubble(const FDialoguePlaybackState& State)
 	{
 		FDialoguePlaybackState NameState = State;
 		NameState.Line.Text = State.Line.SpeakersName;
+		NameState.Line.bItalic = false;
+		NameState.Line.bShakeLetters = false;
 		NameState.VisibleText = State.Line.SpeakersName;
 		NameState.Phase = EDialoguePlaybackPhase::Holding;
 
