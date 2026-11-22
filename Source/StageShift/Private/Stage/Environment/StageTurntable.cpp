@@ -3,8 +3,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
+#include "Physics/PhysicsActor.h"
 #include "Stage/Core/StageManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/Package.h"
@@ -34,15 +36,86 @@ void AStageTurntable::BeginPlay()
 {
 	Super::BeginPlay();
 	InitialRotation = GetActorRotation();
+	AttachScenery();
+}
+
+void AStageTurntable::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::RemovedFromWorld) ReleaseProps();
+	Super::EndPlay(EndPlayReason);
+}
+
+void AStageTurntable::AttachScenery()
+{
 	const UWorld* World = GetWorld();
 	for (const TSoftObjectPtr<AActor>& Reference : SceneryToRotate)
 	{
 		FSoftObjectPath Path = Reference.ToSoftObjectPath();
 		if (World->WorldType == EWorldType::PIE) Path.FixupForPIE(World->GetPackage()->GetPIEInstanceID());
 		AActor* Scenery = Cast<AActor>(Path.ResolveObject());
-		if (IsValid(Scenery) && Scenery != this && Scenery->GetWorld() == World)
+		if (IsValid(Scenery) && Scenery != this && Scenery->GetWorld() == World && Scenery->GetAttachParentActor() != this)
 			Scenery->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 	}
+}
+
+void AStageTurntable::SecureProps()
+{
+	constexpr double SupportGap = 12.0;
+	TMap<AStagePhysicsActor*, AActor*> Supports;
+	for (TActorIterator<AStagePhysicsActor> It(GetWorld()); It; ++It)
+	{
+		AStagePhysicsActor* Prop = *It;
+		const auto* Mesh = Prop->GetStaticMeshComponent();
+		if (!Mesh->IsSimulatingPhysics() || Prop->GetAttachParentActor() || Prop->IsCurtainLever() || Prop->IsBeingManipulated()) continue;
+
+		const FVector Start = Mesh->Bounds.Origin;
+		const FVector End = Start - FVector(0.0, 0.0, Mesh->Bounds.BoxExtent.Z + SupportGap);
+		const FCollisionQueryParams Query(SCENE_QUERY_STAT(TurntablePropSupport), false, Prop);
+		FHitResult Hit;
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, Mesh->GetCollisionObjectType(), Query))
+			if (const auto* Surface = Hit.GetComponent(); Surface && Surface->IsPhysicsCollisionEnabled() && Hit.ImpactNormal.Z > 0.5)
+				Supports.Add(Prop, Hit.GetActor());
+	}
+
+	// Trace before changing physics, then secure the bottom of each stack first.
+	bool bSecured;
+	do
+	{
+		bSecured = false;
+		for (auto It = Supports.CreateIterator(); It; ++It)
+		{
+			const AActor* Support = It.Value();
+			if (!Support || (Support != this && !Support->IsAttachedTo(this))) continue;
+
+			AStagePhysicsActor* Prop = It.Key();
+			auto* Mesh = Prop->GetStaticMeshComponent();
+			Mesh->SetSimulatePhysics(false);
+			if (Prop->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform))
+			{
+				SecuredProps.Add({Prop, Mesh->GetCollisionEnabled()});
+				Mesh->SetCollisionEnabled(Mesh->IsQueryCollisionEnabled() ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+				bSecured = true;
+			}
+			else Mesh->SetSimulatePhysics(true);
+			It.RemoveCurrent();
+		}
+	} while (bSecured && !Supports.IsEmpty());
+}
+
+void AStageTurntable::ReleaseProps()
+{
+	for (const FSecuredProp& Entry : SecuredProps)
+	{
+		auto* Prop = Entry.Prop.Get();
+		if (!IsValid(Prop) || Prop->GetAttachParentActor() != this) continue;
+		Prop->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		auto* Mesh = Prop->GetStaticMeshComponent();
+		Mesh->SetCollisionEnabled(Entry.Collision);
+		Mesh->SetSimulatePhysics(true);
+		Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		Mesh->SetPhysicsAngularVelocityInRadians(FVector::ZeroVector);
+	}
+	SecuredProps.Reset();
 }
 
 void AStageTurntable::SetStageManager(AStageManager* Manager)
@@ -76,6 +149,8 @@ bool AStageTurntable::RotateToSector(int32 SectorIndex)
 	EndYaw = StartYaw + FMath::FindDeltaAngleDegrees(StartYaw, SectorYaw);
 	RotationElapsed = 0.0f;
 	bRotating = true;
+	AttachScenery();
+	SecureProps();
 	if (AStageManager* Manager = StageManager.Get()) Manager->NotifyTurntableRotationStarted();
 	if (RotationSound) UGameplayStatics::PlaySoundAtLocation(this, RotationSound, GetActorLocation());
 	SetActorTickEnabled(true);
@@ -96,5 +171,6 @@ void AStageTurntable::Tick(float DeltaSeconds)
 	CurrentSector = TargetSector;
 	bRotating = false;
 	SetActorTickEnabled(false);
+	ReleaseProps();
 	OnArrived.Broadcast(CurrentSector);
 }

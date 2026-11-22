@@ -22,6 +22,7 @@ struct FStagePerformanceCue
 	float WindowStart = 0.0f;
 	float WindowEnd = 0.0f;
 	TOptional<float> PausedProgress;
+	bool bPreparation = false;
 };
 
 UCLASS(Abstract)
@@ -41,12 +42,14 @@ protected:
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> Timing;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> ActionStatus;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> ActionPrompt;
+	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor PreparationColor = FLinearColor(0.98f, 0.78f, 0.45f);
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor OpenColor = FLinearColor(0.12f, 0.46f, 0.32f);
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor ClosedColor = FLinearColor(0.62f, 0.09f, 0.07f);
 
 private:
 	int32 LastNumber = INDEX_NONE;
 	EStageCueWindowPhase LastPhase = EStageCueWindowPhase::Hidden;
+	bool bLastPreparation = false;
 	double StartsAt = 0.0;
 	double EndsAt = 0.0;
 	TOptional<float> PausedProgress;

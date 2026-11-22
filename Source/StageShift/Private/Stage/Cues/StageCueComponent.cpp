@@ -477,24 +477,21 @@ TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly, bool bDed
 		const auto* RecipientMarker = Cue.Definition.Kind == EStageCueKind::Props
 		    ? Cue.Definition.Targets.FindByPredicate([](const FStageCueTarget& Target) { return Target.Type == EStageCueMarkerType::Recipient; })
 		    : nullptr;
-		const bool bPreparingProp = View.State == EStageCueState::Upcoming && RecipientMarker;
-		const bool bPreparingLight = View.State == EStageCueState::Upcoming && Cue.Definition.Kind == EStageCueKind::Lighting;
+		const bool bPreparing = View.State == EStageCueState::Upcoming
+		    && (!bDeduplicateKinds || RecipientMarker || Cue.Definition.Kind == EStageCueKind::Lighting);
 		if (!bShowPreparation && !Cue.bKeepUntilStepEnds)
 		{
-			if (bPreparingLight || bPreparingProp) continue;
+			if (bPreparing) continue;
 			if (RecipientMarker && Manager.IsValid())
 				if (const auto* Recipient = Manager->GetParticipant(RecipientMarker->BindingId); IsValid(Recipient)
 				    && GetPropSignalPhase(Cue, *Recipient, GetActiveThrowWindow(*Recipient), Now) == EStageCueWindowPhase::Waiting) continue;
 		}
-		if (bSignalsOnly && !Cue.bKeepUntilStepEnds)
+		if (bSignalsOnly && !Cue.bKeepUntilStepEnds && !bPreparing)
 		{
-			if (!bPreparingProp && !bPreparingLight)
-			{
-				if (View.State != EStageCueState::Active && View.State != EStageCueState::Problem) continue;
-				const bool bShowExpired = !bDeduplicateKinds && View.bOverdue && Now < Cue.Deadline + 0.65;
-				if (!Cue.bKeepSignalVisible && !bShowExpired && Now >= Cue.SoundFeedbackUntil
-				    && (View.bHasDeadline ? Now >= Cue.Deadline : Now - Cue.SignalStartedAt >= UntimedSignalDuration)) continue;
-			}
+			if (View.State != EStageCueState::Active && View.State != EStageCueState::Problem) continue;
+			const bool bShowExpired = !bDeduplicateKinds && View.bOverdue && Now < Cue.Deadline + 0.65;
+			if (!Cue.bKeepSignalVisible && !bShowExpired && Now >= Cue.SoundFeedbackUntil
+			    && (View.bHasDeadline ? Now >= Cue.Deadline : Now - Cue.SignalStartedAt >= UntimedSignalDuration)) continue;
 		}
 		Indices.Add(Index);
 	}
@@ -632,6 +629,7 @@ void UStageCueComponent::UpdatePresentation()
 
 void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 {
+	const UStageDataAsset* ActiveStage = Stage.GetActiveStage();
 	TArray<FName> CastOrder;
 	if (const UStageProductionDataAsset* Production = Stage.GetActiveProduction())
 	{
@@ -639,11 +637,23 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 			if (Scene.Scenario)
 				for (FName Role : Scene.Scenario->GetRoleOptions()) CastOrder.AddUnique(Role);
 	}
-	else if (const UStageDataAsset* ActiveStage = Stage.GetActiveStage()) CastOrder = ActiveStage->GetRoleOptions();
+	else if (ActiveStage) CastOrder = ActiveStage->GetRoleOptions();
 
-	TArray<FStagePerformanceCue, TInlineAllocator<5>> Tags;
+	struct FPreparationCue
+	{
+		FStagePerformanceCue Tag;
+		int32 StepsUntilActivation;
+	};
+	TArray<FStagePerformanceCue, TInlineAllocator<6>> Tags;
+	TArray<FPreparationCue, TInlineAllocator<3>> Preparations;
+	const int32 CurrentStep = Stage.GetCurrentStepIndex();
+	const bool bCanPreview = Stage.GetState() == EStageState::Running && ActiveStage && ActiveStage->bShowPreparationCues;
 	const double Now = GetWorld()->GetTimeSeconds();
 	const int32 Limit = FMath::Clamp(MaxCards, 1, 5);
+	const auto HasActiveCard = [&Tags](const FStagePerformanceCue& Cue)
+	{
+		return Tags.ContainsByPredicate([&Cue](const FStagePerformanceCue& Tag) { return Tag.Kind == Cue.Kind && Tag.Number == Cue.Number; });
+	};
 	for (int32 Index : GetVisibleIndices(true, false))
 	{
 		auto& Cue = Cues[Index];
@@ -655,6 +665,8 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 		if (const FStageCueTarget* Recipient = Cue.Definition.Targets.FindByPredicate([](const FStageCueTarget& Target)
 		    { return Target.Type == EStageCueMarkerType::Recipient; })) Actor = Stage.GetParticipant(Recipient->BindingId);
 		if (!Actor && !Cue.Definition.SubjectRoleId.IsNone()) Actor = Stage.GetParticipant(Cue.Definition.SubjectRoleId);
+		if (!Actor)
+			if (const UStageMemberComponent* Performer = Cue.Performer.Get()) Actor = Performer->GetOwner();
 		if (!Actor) Actor = Cue.ActorOverride.Get();
 
 		int32 Number = 0;
@@ -663,8 +675,6 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 			const int32 CastIndex = CastOrder.IndexOfByPredicate([&](FName Role) { return Stage.GetParticipant(Role) == Actor; });
 			if (CastIndex != INDEX_NONE) Number = CastIndex + 1;
 		}
-		if (Tags.ContainsByPredicate([&](const FStagePerformanceCue& Tag) { return Tag.Kind == Kind && Tag.Number == Number; })) continue;
-
 		EStageCueWindowPhase Phase = Cue.View.State == EStageCueState::Upcoming ? EStageCueWindowPhase::Waiting : EStageCueWindowPhase::Open;
 		float WindowStart = 0.0f;
 		float WindowEnd = 0.0f;
@@ -695,9 +705,22 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 		const double EndsAt = Cue.View.bHasDeadline ? Cue.Deadline : 0.0;
 		const double StartsAt = Cue.View.bHasDeadline ? Cue.Deadline - Cue.TimerDuration : 0.0;
 		const TOptional<float> PausedProgress = Cue.bDisplayPaused ? TOptional<float>(1.0f - Cue.View.TimeFraction) : TOptional<float>();
-		Tags.Add({Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress});
-		if (Tags.Num() == Limit) break;
+		const bool bPreparation = Cue.View.State == EStageCueState::Upcoming;
+		const FStagePerformanceCue Tag{Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress, bPreparation};
+		if (!bPreparation)
+		{
+			if (Tags.Num() < Limit && !HasActiveCard(Tag)) Tags.Add(Tag);
+			continue;
+		}
+		if (!bCanPreview || !ActiveStage->Steps.IsValidIndex(CurrentStep)) continue;
+		TSet<FName> StepsToActivation;
+		if (ActiveStage->GetStepRange(ActiveStage->Steps[CurrentStep].StepId, Cue.Definition.ActivateAtStepId, StepsToActivation))
+			Preparations.Add({Tag, StepsToActivation.Num()});
 	}
+	const FPreparationCue* Next = nullptr;
+	for (const FPreparationCue& Preparation : Preparations)
+		if (!Next || Preparation.StepsUntilActivation < Next->StepsUntilActivation) Next = &Preparation;
+	if (Next) Tags.Add(Next->Tag);
 
 	PerformanceWidgets.RemoveAll([](const TObjectPtr<UStagePerformanceHUDWidget>& Widget)
 	{

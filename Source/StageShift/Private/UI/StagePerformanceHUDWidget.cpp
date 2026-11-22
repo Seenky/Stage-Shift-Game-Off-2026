@@ -60,17 +60,19 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 			Material->SetScalarParameterValue(PhaseParameter, static_cast<float>(Cue.Phase));
 		}
 	}
-	if (ActionPrompt && LastPhase != Cue.Phase)
+	if (ActionPrompt && (LastPhase != Cue.Phase || bLastPreparation != Cue.bPreparation))
 	{
 		LastPhase = Cue.Phase;
+		bLastPreparation = Cue.bPreparation;
 		const bool bOpen = Cue.Phase == EStageCueWindowPhase::Open;
 		const bool bClosed = Cue.Phase == EStageCueWindowPhase::Closed;
 		UWidget* Status = ActionStatus ? ActionStatus.Get() : ActionPrompt.Get();
-		Status->SetVisibility(bOpen || bClosed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		if (bOpen) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueNow", "Сейчас"));
+		Status->SetVisibility(Cue.bPreparation || bOpen || bClosed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (Cue.bPreparation) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CuePrepare", "Подготовьтесь"));
+		else if (bOpen) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueNow", "Сейчас"));
 		else if (bClosed) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueLate", "Поздно"));
 		else ActionPrompt->SetText(FText::GetEmpty());
-		ActionPrompt->SetColorAndOpacity(bOpen ? OpenColor : ClosedColor);
+		ActionPrompt->SetColorAndOpacity(Cue.bPreparation ? PreparationColor : bOpen ? OpenColor : ClosedColor);
 	}
 }
 
@@ -146,7 +148,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 			Tag->Present(Cue);
 			Tag->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
-		if (!IsValid(Cue.Actor) || TaggedActors.Contains(Cue.Actor)) continue;
+		if (Cue.bPreparation || !IsValid(Cue.Actor) || TaggedActors.Contains(Cue.Actor)) continue;
 		if (auto* Tag = GetTag(*ActorLayer, ActorTagClass, TaggedActors.Num()))
 		{
 			Tag->Present(Cue);
@@ -223,6 +225,7 @@ void UStagePerformanceHUDWidget::PositionActorTags(const FGeometry& Geometry)
 		}
 	}
 	const FVector2D ViewSize = Geometry.GetLocalSize();
+	const FBox2D Viewport(FVector2D::ZeroVector, ViewSize);
 	const FBox2D SafeArea(FVector2D(12.0, 80.0), ViewSize - FVector2D(12.0, 72.0));
 	for (int32 Index = 0; Index < TaggedActors.Num(); ++Index)
 	{
@@ -242,7 +245,8 @@ void UStagePerformanceHUDWidget::PositionActorTags(const FGeometry& Geometry)
 			}
 			else Actor->GetActorBounds(true, Center, Extent);
 			const FVector Head = Center + FVector(0, 0, Extent.Z);
-			if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(GetOwningPlayer(), Head, ActorPosition, true))
+			if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(GetOwningPlayer(), Head, ActorPosition, true)
+			    && Viewport.IsInsideOrOn(ActorPosition))
 			{
 				const FVector2D HalfSize = (Tag->GetDesiredSize() * 0.5).ComponentMax(FVector2D(13.0));
 				const double Side = HalfSize.X + 17.0;
@@ -251,13 +255,23 @@ void UStagePerformanceHUDWidget::PositionActorTags(const FGeometry& Geometry)
 				    {Side, 8.0}, {-Side, 8.0},
 				    {Side, 28.0}, {-Side, 28.0},
 				    {Side, 46.0}, {-Side, 46.0},
+				    {0.0, -HalfSize.Y - 8.0},
+				    {Side, -HalfSize.Y - 24.0}, {-Side, -HalfSize.Y - 24.0},
 				    {Side + 22.0, 8.0}, {-Side - 22.0, 8.0}
 				};
+				const FVector2D Min = SafeArea.Min + HalfSize;
+				const FVector2D Max = SafeArea.Max - HalfSize;
+				if (Min.X > Max.X || Min.Y > Max.Y)
+				{
+					Tag->SetVisibility(ESlateVisibility::Collapsed);
+					continue;
+				}
 				for (const FVector2D& Offset : Offsets)
 				{
-					const FVector2D Position = ActorPosition + Offset;
+					const FVector2D Position = (ActorPosition + Offset).ComponentMax(Min).ComponentMin(Max);
+					const double DistanceSquared = FVector2D::DistSquared(Position, ActorPosition);
+					if (DistanceSquared < FMath::Square(HalfSize.GetMax() + 5.0) || DistanceSquared > FMath::Square(75.0)) continue;
 					const FBox2D Bounds(Position - HalfSize, Position + HalfSize);
-					if (!SafeArea.IsInsideOrOn(Bounds.Min) || !SafeArea.IsInsideOrOn(Bounds.Max)) continue;
 					if (Occupied.ContainsByPredicate([&](const FBox2D& Other) { return Other.ExpandBy(4.0).Intersect(Bounds); })) continue;
 					CanvasSlot->SetPosition(Position);
 					Occupied.Add(Bounds);

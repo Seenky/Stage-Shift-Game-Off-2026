@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "StageTurntable.generated.h"
 
+class AStagePhysicsActor;
 class UStaticMeshComponent;
 class AStageManager;
 
@@ -53,12 +54,24 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditAnywhere, Category = "Turntable|Audio")
 	TObjectPtr<class USoundBase> RotationSound;
 
 private:
+	struct FSecuredProp
+	{
+		TWeakObjectPtr<AStagePhysicsActor> Prop;
+		ECollisionEnabled::Type Collision;
+	};
+
+	void AttachScenery();
+	void SecureProps();
+	void ReleaseProps();
+
 	TWeakObjectPtr<AStageManager> StageManager;
+	TArray<FSecuredProp> SecuredProps;
 	FRotator InitialRotation;
 	float RotationElapsed = 0.0f;
 	float StartYaw = 0.0f;
