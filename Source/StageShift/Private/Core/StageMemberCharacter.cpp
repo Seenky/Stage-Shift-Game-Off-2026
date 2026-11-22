@@ -27,7 +27,7 @@ AStageMemberCharacter::AStageMemberCharacter()
 	DialogueWidgetComponent->SetupAttachment(GetMesh());
 	DialogueWidgetComponent->SetRelativeLocation(FVector(0.0, 0.0, 250.0));
 	DialogueWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	DialogueWidgetComponent->SetPivot(FVector2D(0.82, 0.5));
+	DialogueWidgetComponent->SetPivot(FVector2D(0.5, 1.0));
 	DialogueWidgetComponent->SetDrawAtDesiredSize(true);
 	DialogueWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 

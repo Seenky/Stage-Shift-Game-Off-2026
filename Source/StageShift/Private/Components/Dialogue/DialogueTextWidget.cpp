@@ -24,7 +24,7 @@ void UDialogueTextWidget::SynchronizeProperties()
 		return;
 	}
 	Text->SetShowRevealDots(bShowRevealDots);
-	Text->SetAppearance(Font, TextColor, TextWrapWidth, Justification.GetValue());
+	Text->SetAppearance(Font, TextColor, TextWrapWidth, Justification.GetValue(), LinesPerPage);
 	if (IsDesignTime())
 	{
 		Text->Preview(PreviewText);

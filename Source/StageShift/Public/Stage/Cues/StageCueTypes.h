@@ -116,5 +116,6 @@ struct FStageCueRuntime
 	double SoundFeedbackUntil = 0.0;
 	FText SoundFeedback;
 	bool bSoundWindowClosed = false;
+	bool bSoundSucceeded = false;
 	bool bKeepSignalVisible = false;
 };

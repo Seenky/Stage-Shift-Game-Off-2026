@@ -46,28 +46,95 @@ void SDialogueText::Construct(const FArguments& Args)
 	DotBrush = FSlateRoundedBoxBrush(FLinearColor::White);
 }
 
-void SDialogueText::SetAppearance(const FSlateFontInfo& InFont, FLinearColor InTextColor, float InWrapWidth, ETextJustify::Type InJustification)
+void SDialogueText::SetAppearance(const FSlateFontInfo& InFont, FLinearColor InTextColor, float InWrapWidth, ETextJustify::Type InJustification,
+    int32 InLinesPerPage)
 {
 	Font = InFont;
 	TextColor = InTextColor;
 	WrapWidth = FMath::Max(InWrapWidth, 100.0f);
 	Justification = InJustification;
+	LinesPerPage = InLinesPerPage;
 	Reset();
 }
 
-void SDialogueText::Layout(FLine& Line, const FText& Text)
+TSharedRef<FSlateTextLayout> SDialogueText::CreateTextLayout(const FString& Source)
 {
-	const FString Source = NormalizeLineEndings(Text);
 	const TSharedRef<FSlateTextLayout> TextLayout = FSlateTextLayout::Create(this, FTextBlockStyle().SetFont(Font));
-
 	TextLayout->SetJustification(Justification);
-	const float RevealSpace = bShowRevealDots ? DotSpace : 0.0f;
-	TextLayout->SetWrappingWidth(WrapWidth - RevealSpace);
-
+	if (LinesPerPage > 0) TextLayout->SetWrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping);
+	TextLayout->SetWrappingWidth(WrapWidth - (bShowRevealDots ? DotSpace : 0.0f));
 	FPlainTextLayoutMarshaller::Create()->SetText(Source, *TextLayout);
-
 	TextLayout->UpdateIfNeeded();
+	return TextLayout;
+}
 
+void SDialogueText::BuildPages()
+{
+	Pages.Reset();
+	CurrentPage = INDEX_NONE;
+	const int32 Length = PlaybackText.Len();
+	if (LinesPerPage == 0)
+	{
+		Pages.Emplace(0, Length);
+		return;
+	}
+
+	const auto AddSentence = [this](int32 Begin, int32 End)
+	{
+		while (Begin < End && FChar::IsWhitespace(PlaybackText[Begin])) ++Begin;
+		while (End > Begin && FChar::IsWhitespace(PlaybackText[End - 1])) --End;
+		if (Begin == End) return;
+		const FString Sentence = PlaybackText.Mid(Begin, End - Begin);
+		const TSharedRef<FSlateTextLayout> Layout = CreateTextLayout(Sentence);
+		const auto& Lines = Layout->GetLineViews();
+		int32 PageStart = Begin;
+		for (int32 NextLine = LinesPerPage; NextLine < Lines.Num(); NextLine += LinesPerPage)
+		{
+			// Sentences are separated before layout, so ranges are relative to this sentence.
+			const int32 NextStart = Begin + Lines[NextLine].Range.BeginIndex;
+			int32 PageEnd = NextStart;
+			while (PageEnd > PageStart && FChar::IsWhitespace(PlaybackText[PageEnd - 1])) --PageEnd;
+			Pages.Emplace(PageStart, PageEnd);
+			PageStart = NextStart;
+			while (PageStart < End && FChar::IsWhitespace(PlaybackText[PageStart])) ++PageStart;
+		}
+		if (PageStart < End) Pages.Emplace(PageStart, End);
+	};
+
+	int32 Start = 0;
+	for (int32 Index = 0; Index < Length; ++Index)
+	{
+		const TCHAR Character = PlaybackText[Index];
+		if (Character == TEXT('\n'))
+		{
+			AddSentence(Start, Index);
+			Start = Index + 1;
+			continue;
+		}
+		if (Character != TEXT('.') && Character != TEXT('?') && Character != TEXT('!') && Character != TEXT('…')) continue;
+		int32 End = Index + 1;
+		while (End < Length && FCString::Strchr(TEXT("\"'»”’.!?…"), PlaybackText[End])) ++End;
+		if (End < Length && !FChar::IsWhitespace(PlaybackText[End])) continue;
+		const bool bEllipsis = Character == TEXT('…') || PlaybackText.Mid(Index, End - Index).StartsWith(TEXT("..."));
+		if (bEllipsis && End - Start <= 7)
+		{
+			Index = End - 1;
+			continue;
+		}
+		if (Character == TEXT('.') && End == Index + 1 && Index > Start && FChar::IsAlpha(PlaybackText[Index - 1])
+		    && (Index == Start + 1 || FChar::IsWhitespace(PlaybackText[Index - 2]))) continue;
+		AddSentence(Start, End);
+		Start = End;
+		Index = End - 1;
+	}
+	AddSentence(Start, Length);
+	if (Pages.IsEmpty()) Pages.Emplace(0, Length);
+}
+
+void SDialogueText::Layout(FLine& Line, const FString& Source, int32 SourceOffset)
+{
+	const TSharedRef<FSlateTextLayout> TextLayout = CreateTextLayout(Source);
+	const float RevealSpace = bShowRevealDots ? DotSpace : 0.0f;
 	Line.VisualJustification = TextLayout->GetVisualJustification();
 
 	TArray<FTextRange> SourceLineRanges;
@@ -110,7 +177,7 @@ void SDialogueText::Layout(FLine& Line, const FText& Text)
 					FGlyph& Glyph = Line.Glyphs.AddDefaulted_GetRef();
 					Glyph.Position = Position;
 					Glyph.Width = FMath::Max(1.0f, Advance.X);
-					Glyph.TextEnd = ModelStart + Start + Count;
+					Glyph.TextEnd = SourceOffset + ModelStart + Start + Count;
 					Glyph.bRightToLeft = First.TextDirection == TextBiDi::ETextDirection::RightToLeft;
 					Glyph.Shape = MakeShared<FShapedGlyphSequence>(MoveTemp(Cluster), Shaped->GetTextBaseline(), Shaped->GetMaxTextHeight(), Shaped->GetFontMaterial(),
 					    Shaped->IsMaterialStencil(), Shaped->GetFontOutlineSettings(), FShapedGlyphSequence::FSourceTextRange(Start, Count));
@@ -153,18 +220,31 @@ void SDialogueText::Preview(const FText& Text)
 
 void SDialogueText::Update(const FDialoguePlaybackState& State)
 {
+	const int32 VisibleEnd = NormalizeLineEndings(State.VisibleText).Len();
 	if (Active.Id != State.PlaybackId)
 	{
 		Active = {};
 		Active.Id = State.PlaybackId;
-		Layout(Active, State.Line.Text);
+		PlaybackText = NormalizeLineEndings(State.Line.Text);
+		BuildPages();
 		if (ExitReason == EDialogueEndReason::Completed)
 		{
 			Exiting = {};
 		}
+	}
+	int32 Page = FMath::Max(CurrentPage, 0);
+	while (Pages.IsValidIndex(Page + 1) && VisibleEnd > Pages[Page + 1].BeginIndex) ++Page;
+	while (Page > 0 && VisibleEnd <= Pages[Page].BeginIndex) --Page;
+	if (CurrentPage != Page)
+	{
+		if (CurrentPage != INDEX_NONE) Exiting = {};
+		CurrentPage = Page;
+		Active.Glyphs.Reset();
+		Active.HoldAge = 0.0f;
+		const FTextRange& Range = Pages[Page];
+		Layout(Active, PlaybackText.Mid(Range.BeginIndex, Range.Len()), Range.BeginIndex);
 		Invalidate(EInvalidateWidgetReason::Layout);
 	}
-	const int32 VisibleEnd = NormalizeLineEndings(State.VisibleText).Len();
 	for (FGlyph& Glyph : Active.Glyphs)
 	{
 		if (Glyph.TextEnd > VisibleEnd)
@@ -202,6 +282,9 @@ void SDialogueText::Reset()
 {
 	Active = {};
 	Exiting = {};
+	PlaybackText.Reset();
+	Pages.Reset();
+	CurrentPage = INDEX_NONE;
 	UpdateOpacity();
 	SetCanTick(false);
 	Invalidate(EInvalidateWidgetReason::Layout);

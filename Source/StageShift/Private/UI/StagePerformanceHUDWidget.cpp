@@ -8,15 +8,27 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetComponent.h"
-#include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Stage/Core/StageManager.h"
 
 namespace
 {
 constexpr float FeedbackFadeTime = 0.25f;
+const FName SymbolParameter(TEXT("Symbol"));
+const FName ProgressParameter(TEXT("Progress"));
+const FName WindowStartParameter(TEXT("WindowStart"));
+const FName WindowEndParameter(TEXT("WindowEnd"));
+const FName PhaseParameter(TEXT("Phase"));
+
+enum class EPerformanceSymbol : uint8 { FilledStar = 5, EmptyStar, Applause, Murmur };
+
+void SetSymbol(UImage& Image, float Symbol)
+{
+	if (auto* Material = Image.GetDynamicMaterial()) Material->SetScalarParameterValue(SymbolParameter, Symbol);
+}
 
 void UpdateFeedback(UWidget& Widget, double Now, double Until)
 {
@@ -34,12 +46,43 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 		ActorNumber->SetVisibility(Cue.Number > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		if (NumberBadge) NumberBadge->SetVisibility(ActorNumber->GetVisibility());
 	}
-	if (CueIcon && CueIcon->GetBrush().GetResourceObject() != Cue.Icon) CueIcon->SetBrushFromTexture(Cue.Icon);
-	if (!CueState) return;
-	CueState->SetVisibility(Cue.Phase == EStageCueWindowPhase::Hidden ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-	if (Cue.Phase == EStageCueWindowPhase::Open) CueState->SetColorAndOpacity(OpenColor);
-	else if (Cue.Phase == EStageCueWindowPhase::Closed) CueState->SetColorAndOpacity(ClosedColor);
-	else CueState->SetColorAndOpacity(WaitingColor);
+	if (CueIcon) SetSymbol(*CueIcon, static_cast<float>(Cue.Kind));
+	StartsAt = Cue.StartsAt;
+	EndsAt = Cue.EndsAt;
+	if (Timing)
+	{
+		Timing->SetVisibility(Cue.Phase == EStageCueWindowPhase::Hidden ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		if (auto* Material = Timing->GetDynamicMaterial())
+		{
+			Material->SetScalarParameterValue(WindowStartParameter, Cue.WindowStart);
+			Material->SetScalarParameterValue(WindowEndParameter, Cue.WindowEnd);
+			Material->SetScalarParameterValue(PhaseParameter, static_cast<float>(Cue.Phase));
+		}
+	}
+	if (ActionPrompt && LastPhase != Cue.Phase)
+	{
+		LastPhase = Cue.Phase;
+		const bool bOpen = Cue.Phase == EStageCueWindowPhase::Open;
+		const bool bClosed = Cue.Phase == EStageCueWindowPhase::Closed;
+		UWidget* Status = ActionStatus ? ActionStatus.Get() : ActionPrompt.Get();
+		Status->SetVisibility(bOpen || bClosed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bOpen) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueNow", "Сейчас"));
+		else if (bClosed) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueLate", "Поздно"));
+		else ActionPrompt->SetText(FText::GetEmpty());
+		ActionPrompt->SetColorAndOpacity(bOpen ? OpenColor : ClosedColor);
+	}
+}
+
+void UStagePerformanceTagWidget::NativeTick(const FGeometry& Geometry, float DeltaSeconds)
+{
+	Super::NativeTick(Geometry, DeltaSeconds);
+	if (!Timing || !Timing->IsVisible()) return;
+	if (auto* Material = Timing->GetDynamicMaterial())
+	{
+		const bool bTimed = EndsAt > StartsAt;
+		const double Progress = bTimed ? (GetWorld()->GetTimeSeconds() - StartsAt) / (EndsAt - StartsAt) : 0.0;
+		Material->SetScalarParameterValue(ProgressParameter, bTimed ? FMath::Clamp(static_cast<float>(Progress), 0.0f, 1.0f) : -1.0f);
+	}
 }
 
 void UStagePerformanceHUDWidget::SetSource(AStageManager& Stage)
@@ -83,7 +126,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 		LastStars = Stars;
 		UImage* StarImages[] = {StarOne, StarTwo, StarThree};
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(StarImages); ++Index)
-			StarImages[Index]->SetBrushFromTexture(Index < Stars ? StarFilled.Get() : StarEmpty.Get());
+			SetSymbol(*StarImages[Index], static_cast<float>(Index < Stars ? EPerformanceSymbol::FilledStar : EPerformanceSymbol::EmptyStar));
 	}
 
 	TaggedActors.Reset();
@@ -158,7 +201,7 @@ void UStagePerformanceHUDWidget::ShowAudienceReaction(bool bPositive)
 	AudienceText->SetText(bPositive ? NSLOCTEXT("StagePerformance", "AudienceApplause", "Аплодисменты")
 	    : NSLOCTEXT("StagePerformance", "AudienceMurmur", "Ропот"));
 	AudienceText->SetColorAndOpacity(bPositive ? PositiveColor : NegativeColor);
-	AudienceIcon->SetBrushFromTexture(bPositive ? ApplauseIcon.Get() : MurmurIcon.Get());
+	SetSymbol(*AudienceIcon, static_cast<float>(bPositive ? EPerformanceSymbol::Applause : EPerformanceSymbol::Murmur));
 	AudienceIcon->SetColorAndOpacity(bPositive ? PositiveColor : NegativeColor);
 }
 
@@ -202,6 +245,7 @@ void UStagePerformanceHUDWidget::PositionActorTags(const FGeometry& Geometry)
 				const FVector2D HalfSize = (Tag->GetDesiredSize() * 0.5).ComponentMax(FVector2D(13.0));
 				const double Side = HalfSize.X + 17.0;
 				const FVector2D Offsets[] = {
+				    {Side, -HalfSize.Y}, {-Side, -HalfSize.Y},
 				    {Side, 8.0}, {-Side, 8.0},
 				    {Side, 28.0}, {-Side, 28.0},
 				    {Side, 46.0}, {-Side, 46.0},

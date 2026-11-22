@@ -40,6 +40,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Appearance", meta = (ClampMin = "100", UIMin = "100"))
 	float TextWrapWidth = 360.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Appearance", meta = (ClampMin = "0", ClampMax = "4"))
+	int32 LinesPerPage = 0;
+
 	UPROPERTY(EditAnywhere, Category = "Appearance")
 	FText PreviewText;
 

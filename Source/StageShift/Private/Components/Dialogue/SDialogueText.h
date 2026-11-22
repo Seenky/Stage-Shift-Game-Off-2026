@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Components/Dialogue/StageDialogueTypes.h"
+#include "Containers/UnrealString.h"
 #include "Fonts/FontCache.h"
 #include "Widgets/SLeafWidget.h"
 
@@ -14,7 +15,7 @@ public:
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& Args);
-	void SetAppearance(const FSlateFontInfo& InFont, FLinearColor InTextColor, float InWrapWidth, ETextJustify::Type InJustification);
+	void SetAppearance(const FSlateFontInfo& InFont, FLinearColor InTextColor, float InWrapWidth, ETextJustify::Type InJustification, int32 InLinesPerPage);
 	void Preview(const FText& Text);
 	void Update(const FDialoguePlaybackState& State);
 	void End(EDialogueEndReason Reason);
@@ -49,7 +50,9 @@ private:
 		ETextJustify::Type VisualJustification = ETextJustify::Left;
 	};
 
-	void Layout(FLine& Line, const FText& Text);
+	TSharedRef<class FSlateTextLayout> CreateTextLayout(const FString& Source);
+	void Layout(FLine& Line, const FString& Source, int32 SourceOffset);
+	void BuildPages();
 	void PaintLine(const FLine& Line, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 TextLayer, FLinearColor Tint, bool bExiting) const;
 	void PaintGlyph(const FGlyph& Glyph, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer, FVector2f Position, FLinearColor Tint, float Scale,
 	    float Fracture, int32 Index) const;
@@ -59,6 +62,10 @@ private:
 	FLinearColor TextColor = {};
 	ETextJustify::Type Justification = ETextJustify::Left;
 	float WrapWidth = 360.0f;
+	int32 LinesPerPage = 0;
+	int32 CurrentPage = INDEX_NONE;
+	FString PlaybackText;
+	TArray<FTextRange> Pages;
 	bool bShowRevealDots = true;
 	FSlateBrush DotBrush;
 	FOnDialogueTextOpacityChanged OnOpacityChanged;

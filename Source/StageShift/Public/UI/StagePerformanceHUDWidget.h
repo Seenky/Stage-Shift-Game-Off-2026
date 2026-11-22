@@ -13,10 +13,14 @@ class UTextBlock;
 
 struct FStagePerformanceCue
 {
-	UTexture2D* Icon = nullptr;
+	EStageCueKind Kind = EStageCueKind::General;
 	AActor* Actor = nullptr;
 	int32 Number = 0;
 	EStageCueWindowPhase Phase = EStageCueWindowPhase::Hidden;
+	double StartsAt = 0.0;
+	double EndsAt = 0.0;
+	float WindowStart = 0.0f;
+	float WindowEnd = 0.0f;
 };
 
 UCLASS(Abstract)
@@ -28,16 +32,22 @@ public:
 	void Present(const FStagePerformanceCue& Cue);
 
 protected:
+	virtual void NativeTick(const FGeometry& Geometry, float DeltaSeconds) override;
+
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ActorNumber;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> NumberBadge;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueIcon;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueState;
-	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor WaitingColor = FLinearColor(0.47f, 0.25f, 0.11f);
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> Timing;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> ActionStatus;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> ActionPrompt;
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor OpenColor = FLinearColor(0.12f, 0.46f, 0.32f);
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor ClosedColor = FLinearColor(0.62f, 0.09f, 0.07f);
 
 private:
 	int32 LastNumber = INDEX_NONE;
+	EStageCueWindowPhase LastPhase = EStageCueWindowPhase::Hidden;
+	double StartsAt = 0.0;
+	double EndsAt = 0.0;
 };
 
 UCLASS(Abstract)
@@ -67,10 +77,6 @@ protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UImage> AudienceIcon;
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") TSubclassOf<UStagePerformanceTagWidget> CueTagClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") TSubclassOf<UStagePerformanceTagWidget> ActorTagClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Appearance") TObjectPtr<UTexture2D> StarFilled;
-	UPROPERTY(EditDefaultsOnly, Category = "Appearance") TObjectPtr<UTexture2D> StarEmpty;
-	UPROPERTY(EditDefaultsOnly, Category = "Appearance") TObjectPtr<UTexture2D> ApplauseIcon;
-	UPROPERTY(EditDefaultsOnly, Category = "Appearance") TObjectPtr<UTexture2D> MurmurIcon;
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor PositiveColor = FLinearColor(0.63f, 0.9f, 0.61f);
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor NegativeColor = FLinearColor(1.0f, 0.47f, 0.31f);
 
