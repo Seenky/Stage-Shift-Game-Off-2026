@@ -27,7 +27,8 @@ class STAGESHIFT_API UStageImpactAction : public UStageAction
 
 public:
 	void Setup(EStageImpactMode InMode, AActor* InTarget, AStagePhysicsActor* InProp, float InDelay,
-	    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimMontage* InFall, AStageSoundControl* InSoundControl);
+	    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimSequenceBase* InThrowAnimation, UAnimMontage* InFall,
+	    AStageSoundControl* InSoundControl);
 
 protected:
 	virtual void OnStart_Implementation() override;
@@ -48,12 +49,14 @@ private:
 	TWeakObjectPtr<AStageSoundControl> SoundControl;
 	TWeakObjectPtr<UPrimitiveComponent> FlightBody;
 	TWeakObjectPtr<UAnimInstance> AnimInstance;
-	TWeakObjectPtr<UAnimMontage> PlayingWindup;
+	TWeakObjectPtr<UAnimMontage> PlayingAnimation;
 	UPROPERTY(Transient) TObjectPtr<UAnimSequenceBase> Windup;
+	UPROPERTY(Transient) TObjectPtr<UAnimSequenceBase> ThrowAnimation;
 	UPROPERTY(Transient) TObjectPtr<UAnimMontage> Fall;
 	float Delay = 0.0f;
 	float StageTimeRequired = 0.0f;
 	uint32 SoundWindowId = 0;
+	bool bThrowStarted = false;
 	bool bRestoreHitNotifications = false;
 	bool bRestoreCCD = false;
 	FTimerHandle ImpactTimer;

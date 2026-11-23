@@ -134,7 +134,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm/s", ToolTip = "Speed limit for player aim assistance when reaching the target or clearing an obstruction."))
 	float MaxAimAssistThrowSpeed = 1550.0f;
 	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm", ToolTip = "Maximum rise above the ordinary arc's first obstruction. Zero disables assisted lobs."))
-	float MaxThrowLobHeight = 200.0f;
+	float MaxThrowLobHeight = 300.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw")
 	bool bAssistTargetRange = true;
 	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm"))

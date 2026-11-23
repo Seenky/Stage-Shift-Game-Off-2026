@@ -84,6 +84,7 @@ protected:
 
 private:
 	void ApplyCueTarget(FName InCueId, AActor* InTarget);
+	void ReleaseAimOperator();
 	void SetState(EStageSpotlightState Value);
 	void UpdateLightIntensity(float DeltaSeconds);
 	void CheckTarget();
@@ -92,7 +93,7 @@ private:
 	float LightAlpha = 0.f;
 	float AimingIntensityAlpha = 0.f;
 	double KeepLightUntil = 0.0;
-	bool bHasCommittedAim = false;
+	bool bAimCommittedForCue = false;
 	FVector2D AimOffset = FVector2D::ZeroVector;
 	TOptional<FVector2D> LastCursorPosition;
 	TWeakObjectPtr<AActor> AimOperator;

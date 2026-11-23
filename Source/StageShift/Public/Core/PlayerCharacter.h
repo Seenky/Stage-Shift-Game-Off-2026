@@ -14,6 +14,7 @@ class UPhysicsManipulationComponent;
 class USceneComponent;
 class UThrowAimComponent;
 class UInteractionOutlineComponent;
+class AStageBackstageShortcut;
 class AStageSoundControl;
 
 UCLASS()
@@ -96,11 +97,18 @@ private:
 
 	UFUNCTION()
 	void OnJumpInput(const FInputActionInstance& Instance);
+	void UpdateBackstageShortcut();
+	void SetNearbyShortcut(AStageBackstageShortcut* Shortcut);
+	void CheckDiveForBackstageShortcut();
+	bool TravelThroughBackstageShortcut(const AStageBackstageShortcut& Destination, bool bSimulating);
 
 	UFUNCTION()
 	void OnSprintInput(const FInputActionInstance& Instance);
 
 	float TargetSpeed = 0.0f;
+	TWeakObjectPtr<AStageBackstageShortcut> NearbyShortcut;
+	TOptional<FVector> PreviousDiveHeadLocation;
+	bool bUsedShortcutDuringDive = false;
 	TWeakObjectPtr<AStageSoundControl> FocusedSoundControl;
 	bool bSoundStickHeld = false;
 };

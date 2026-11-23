@@ -115,6 +115,8 @@ public:
 	FPhysicsRecoverySelector RecoverySelector;
 
 	bool IsPhysicsMontageActive() const { return bMeshCollisionSaved || bIsRecovering; }
+	bool IsPlayingPhysicsMontage(FName MontageName) const { return bMeshCollisionSaved && ActiveMontageName == MontageName; }
+	bool IsSimulatingPhysicsMontage() const { return bIsSimActive; }
 	bool IsStayingDown() const { return bStayDown && (bIsSimActive || bMeshCollisionSaved); }
 	bool StayDown(UAnimMontage* FallMontage, const FVector& PushDirection);
 	void EndStageFall();

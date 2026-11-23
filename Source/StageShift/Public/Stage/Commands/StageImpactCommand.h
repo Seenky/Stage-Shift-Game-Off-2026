@@ -32,5 +32,8 @@ private:
 	    ToolTip = "Optional console used by a parallel Sound Cue targeting the same actor. An on-time signal triggers the action immediately. A missed cue skips a throw."))
 	FName SyncWithSoundControlId;
 	UPROPERTY(EditAnywhere, Category = "Animation", meta = (EditCondition = "Mode != EStageImpactMode::Collapse", EditConditionHides)) TObjectPtr<UAnimSequenceBase> WindupAnimation;
+	UPROPERTY(EditAnywhere, Category = "Animation", meta = (EditCondition = "Mode == EStageImpactMode::Throw", EditConditionHides,
+	    ToolTip = "Animation played on an on-time sound for a synchronized throw."))
+	TObjectPtr<UAnimSequenceBase> ThrowAnimation;
 	UPROPERTY(EditAnywhere, Category = "Animation") TObjectPtr<UAnimMontage> FallMontage;
 };

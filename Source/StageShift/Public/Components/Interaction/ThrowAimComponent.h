@@ -84,6 +84,7 @@ private:
 	FVector2D ScreenPosition = FVector2D::ZeroVector;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
 	FVector AimTarget = FVector::ZeroVector;
+	FVector DisplayedAimTarget = FVector::ZeroVector;
 	FVector AimSurfaceNormal = FVector::UpVector;
 	FVector AimDirection = FVector::ForwardVector;
 	TArray<FVector> PreviewPath;
@@ -91,10 +92,12 @@ private:
 	FHitResult PreviewImpact;
 	uint64 LastCursorUpdateFrame = MAX_uint64;
 	double NextThrowPreviewAt = 0.0;
+	double LastStablePreviewAt = 0.0;
 	double PreviewBlendRemaining = 0.0;
-	double AimGroundHeightOffset = 0.0;
+	TOptional<double> AimGroundZ;
 	bool bPreviewBlocked = false;
 	bool bPreviewUsesHighArc = false;
+	bool bBlendLandingOnly = false;
 	bool bAiming = false;
 	bool bDraggingAim = false;
 	bool bWasPreparing = false;

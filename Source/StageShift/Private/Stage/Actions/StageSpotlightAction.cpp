@@ -59,11 +59,7 @@ void UStageSpotlightAction::OnStart_Implementation()
 	{
 		bCueShown = false;
 		Finish(EStageActionResult::Failed);
-		return;
 	}
-
-	// A previously fixed beam may already cover this role.
-	HandleSpotlightChanged(CueId, Actor, Lamp->GetSpotlightState());
 }
 
 void UStageSpotlightAction::HandleSpotlightChanged(FName ChangedCueId, AActor* Target, EStageSpotlightState State)

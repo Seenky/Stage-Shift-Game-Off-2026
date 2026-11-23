@@ -107,27 +107,28 @@ void AStageSpotlightControl::ReleaseCue(const UObject& Requester, bool bSucceede
 
 void AStageSpotlightControl::ApplyCueTarget(FName InCueId, AActor* InTarget)
 {
+	ReleaseAimOperator();
+	bAimCommittedForCue = false;
 	Target = InTarget;
 	CueId = InCueId;
-	if (State == EStageSpotlightState::Aiming)
-	{
-		if (!Target.IsValid()) CommitAim();
-		return;
-	}
 	SetState(Target.IsValid() ? EStageSpotlightState::Ready : EStageSpotlightState::Idle);
-	CheckTarget();
 }
 
 void AStageSpotlightControl::CommitAim()
 {
 	if (State != EStageSpotlightState::Aiming) return;
+	ReleaseAimOperator();
+	bAimCommittedForCue = Target.IsValid();
+	SetState(Target.IsValid() ? EStageSpotlightState::Ready : EStageSpotlightState::Idle);
+	CheckTarget();
+}
+
+void AStageSpotlightControl::ReleaseAimOperator()
+{
 	if (const AActor* Operator = AimOperator.Get())
 		if (auto* Interaction = Operator->FindComponentByClass<UInteractionComponent>())
 			ControlLever->ReleaseHandGrip(*Interaction);
 	AimOperator.Reset();
-	bHasCommittedAim |= Target.IsValid();
-	SetState(Target.IsValid() ? EStageSpotlightState::Ready : EStageSpotlightState::Idle);
-	CheckTarget();
 }
 
 void AStageSpotlightControl::Tick(float DeltaSeconds)
@@ -194,7 +195,8 @@ void AStageSpotlightControl::UpdateLightIntensity(float DeltaSeconds)
 	constexpr float FadeInDuration = 0.25f;
 	constexpr float FadeOutDuration = 0.45f;
 	constexpr float AimingFadeDuration = 0.25f;
-	const bool bShouldLight = Target.IsValid() || GetWorld()->GetTimeSeconds() < KeepLightUntil;
+	const bool bShouldLight = State == EStageSpotlightState::Aiming || (bAimCommittedForCue && Target.IsValid())
+	    || GetWorld()->GetTimeSeconds() < KeepLightUntil;
 	LightAlpha = FMath::FInterpConstantTo(LightAlpha, bShouldLight ? 1.f : 0.f, DeltaSeconds,
 	    1.f / (bShouldLight ? FadeInDuration : FadeOutDuration));
 
@@ -207,7 +209,7 @@ void AStageSpotlightControl::UpdateLightIntensity(float DeltaSeconds)
 
 void AStageSpotlightControl::CheckTarget()
 {
-	if (!bHasCommittedAim || State == EStageSpotlightState::Idle || State == EStageSpotlightState::Aiming) return;
+	if (!bAimCommittedForCue || State == EStageSpotlightState::Idle || State == EStageSpotlightState::Aiming) return;
 	const AActor* Focus = Target.Get();
 	bool bLit = false;
 	if (Focus && Spotlight->IsVisible() && Spotlight->Intensity > 0.f)

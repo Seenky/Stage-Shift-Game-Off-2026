@@ -151,7 +151,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	{
 		FVector2D ReticlePosition = ScreenPosition - FVector2D(Bounds.Min);
 		const bool bVisible = bDraggingAim ? bInteractive : bPreviewBlocked && bHasAimTarget
-		    && PC->ProjectWorldLocationToScreen(AimTarget, ReticlePosition, true);
+		    && PC->ProjectWorldLocationToScreen(DisplayedAimTarget, ReticlePosition, true);
 		Reticle->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		if (bVisible) Reticle->SetPositionInViewport(ReticlePosition, true);
 	}
@@ -230,6 +230,7 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		LastMousePosition = Mouse;
 
 	FVector RayStart, RayDirection;
+	const bool bHadAimTarget = bHasAimTarget;
 	bHasAimTarget = Controller.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection);
 	if (!bHasAimTarget)
 	{
@@ -252,18 +253,20 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 	{
 		if (bRefreshGround || GetWorld()->GetTimeSeconds() >= NextThrowPreviewAt)
 		{
-			// Keep the projected cursor responsive between floor probes, even beyond scenery.
-			AimGroundHeightOffset = 0.0;
-			AimSurfaceNormal = FVector::UpVector;
+			// Keep the last floor height when scenery hides the surface from this probe.
 			constexpr double FloorProbeHeight = 35.0;
 			const FVector Vertical = FVector::UpVector * FloorProbeHeight;
 			if (GetWorld()->LineTraceSingleByChannel(Hit, AimTarget + Vertical, AimTarget - Vertical, AimTraceChannel, Query) && Hit.ImpactNormal.Z >= 0.7)
 			{
-				AimGroundHeightOffset = Hit.ImpactPoint.Z - AimTarget.Z;
+				AimGroundZ = Hit.ImpactPoint.Z;
 				AimSurfaceNormal = Hit.ImpactNormal;
 			}
 		}
-		AimTarget.Z += AimGroundHeightOffset;
+		if (AimGroundZ.IsSet())
+		{
+			const double GroundDistance = (AimGroundZ.GetValue() - RayStart.Z) / RayDirection.Z;
+			if (GroundDistance > 0.0 && GroundDistance <= AimTraceDistance) AimTarget = RayStart + RayDirection * GroundDistance;
+		}
 	}
 	else
 	{
@@ -278,23 +281,34 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		DrawDebugSphere(GetWorld(), AimTarget, 5.f, 8, FColor::Cyan);
 	}
 #endif
-	if (!bDraggingAim) Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
+	if (!bDraggingAim)
+	{
+		DisplayedAimTarget = bHadAimTarget && !bRefreshGround ? FMath::VInterpTo(DisplayedAimTarget, AimTarget, DeltaTime, 22.f) : AimTarget;
+		Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
+	}
 }
 
 void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 {
-	if (!bShow)
+	const auto ClearPreview = [this]
 	{
-		NextThrowPreviewAt = 0.0;
 		PreviewBlendRemaining = 0.0;
 		PreviewPath.Reset();
 		DisplayedPath.Reset();
 		PreviewImpact = {};
 		bPreviewBlocked = false;
+		bBlendLandingOnly = false;
 		HideThrowTape();
+	};
+	if (!bShow)
+	{
+		NextThrowPreviewAt = 0.0;
+		LastStablePreviewAt = 0.0;
+		ClearPreview();
 		return;
 	}
 	constexpr double PreviewInterval = 1.0 / 20.0;
+	constexpr double PreviewGracePeriod = 0.12;
 	const double Now = GetWorld()->GetTimeSeconds();
 	// Sample the last visible release frames before the timer detaches the prop.
 	if (Now < NextThrowPreviewAt && !(bAimFrozen && Interaction->IsReleaseImminent()))
@@ -304,6 +318,7 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	}
 	NextThrowPreviewAt += PreviewInterval;
 	if (NextThrowPreviewAt <= Now) NextThrowPreviewAt = Now + PreviewInterval;
+	const bool bKeepRecentPreview = !bAimFrozen && !PreviewPath.IsEmpty() && Now - LastStablePreviewAt < PreviewGracePeriod;
 
 	TArray<FVector> Path;
 	FHitResult Hit;
@@ -315,14 +330,24 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 #endif
 	if (!Manipulation->PredictThrow(Interaction->GetInteractionHoldDuration(), Path, Hit, bDrawDebug, &bBlocked, &bUsesHighArc))
 	{
-		PreviewPath.Reset();
-		PreviewBlendRemaining = 0.0;
-		bPreviewBlocked = false;
-		HideThrowTape();
+		if (!bKeepRecentPreview) ClearPreview();
+		else if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
 		return;
 	}
-	if (Hit.bBlockingHit && !bBlocked)
+	const bool bLanding = Hit.bBlockingHit && !bBlocked;
+	const bool bPreviousLanding = PreviewImpact.bBlockingHit && !bPreviewBlocked;
+	if (bKeepRecentPreview && (bLanding != bPreviousLanding || bBlocked != bPreviewBlocked))
 	{
+		// One sweep at the edge of a prop should not replace the landing mark with a cross.
+		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
+		return;
+	}
+	LastStablePreviewAt = Now;
+	if (bLanding)
+	{
+		// The sweep can report different corners of the prop as it rotates.
+		Hit.ImpactPoint.X = Path.Last().X;
+		Hit.ImpactPoint.Y = Path.Last().Y;
 		// The prop hits simple collision, which can sit below the rendered floorboards.
 		constexpr double SurfaceProbeHalfHeight = 12.0;
 		const FVector Probe = FVector::UpVector * SurfaceProbeHalfHeight;
@@ -352,12 +377,15 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 			Path.Insert(FMath::Lerp(Path[LastIndex - 1], Contact, 0.5), LastIndex);
 	}
 	// Switching arcs or impact surfaces can put intermediate points inside an obstacle.
+	const bool bSameFloor = bLanding && bPreviousLanding && FMath::Abs(Hit.ImpactPoint.Z - PreviewImpact.ImpactPoint.Z) <= 35.0;
 	const bool bSameImpactSurface = Hit.bBlockingHit == PreviewImpact.bBlockingHit &&
-	    (!Hit.bBlockingHit || (Hit.GetComponent() == PreviewImpact.GetComponent()
+	    (!Hit.bBlockingHit || ((bSameFloor || Hit.GetComponent() == PreviewImpact.GetComponent())
 	    && FVector::DotProduct(Hit.ImpactNormal, PreviewImpact.ImpactNormal) >= 0.95));
 	const bool bCanBlend = !bAimFrozen && !PreviewPath.IsEmpty() && bBlocked == bPreviewBlocked
 	    && bSameImpactSurface && bUsesHighArc == bPreviewUsesHighArc;
-	PreviewBlendRemaining = bCanBlend ? PreviewInterval : 0.0;
+	bBlendLandingOnly = !bAimFrozen && !bCanBlend && bSameFloor
+	    && FVector::DistSquared(Hit.ImpactPoint, PreviewImpact.ImpactPoint) <= FMath::Square(90.0);
+	PreviewBlendRemaining = bCanBlend || bBlendLandingOnly ? PreviewInterval : 0.0;
 	PreviewPath = MoveTemp(Path);
 	PreviewImpact = Hit;
 	bPreviewBlocked = bBlocked;
@@ -384,12 +412,24 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 
 	const int32 PreviousCount = DisplayedPath.Num();
 	const FVector Tail = PreviousCount > 0 ? DisplayedPath.Last() : PreviewPath[0];
+	// Swap the arc immediately when its shape changes, then ease the last strips into the new landing point.
+	const FVector LandingOffset = bBlendLandingOnly ? (Tail - PreviewPath.Last()) * (1.0 - Alpha) : FVector::ZeroVector;
+	const int32 LandingSamples = FMath::Min(PreviewPath.Num() - 1, 4);
+	const int32 LandingStart = PreviewPath.Num() - 1 - LandingSamples;
 	DisplayedPath.SetNumUninitialized(PreviewPath.Num());
 	double PathLength = 0.0;
 	for (int32 Index = 0; Index < PreviewPath.Num(); ++Index)
 	{
-		const FVector Previous = Index < PreviousCount ? DisplayedPath[Index] : Tail;
-		DisplayedPath[Index] = FMath::Lerp(Previous, PreviewPath[Index], Alpha);
+		if (bBlendLandingOnly)
+		{
+			const double Fraction = Index > LandingStart ? static_cast<double>(Index - LandingStart) / LandingSamples : 0.0;
+			DisplayedPath[Index] = PreviewPath[Index] + LandingOffset * FMath::Square(Fraction);
+		}
+		else
+		{
+			const FVector Previous = Index < PreviousCount ? DisplayedPath[Index] : Tail;
+			DisplayedPath[Index] = FMath::Lerp(Previous, PreviewPath[Index], Alpha);
+		}
 		if (Index > 0) PathLength += FVector::Distance(DisplayedPath[Index - 1], DisplayedPath[Index]);
 	}
 
@@ -514,6 +554,8 @@ void UThrowAimComponent::StopAiming()
 	if (Reticle) Reticle->RemoveFromParent();
 	Reticle = nullptr;
 	UpdateThrowPreview(false);
+	AimGroundZ.Reset();
+	AimSurfaceNormal = FVector::UpVector;
 	bAiming = bDraggingAim = bWasPreparing = bStickMoved = false;
 	bAimFrozen = bHasAimTarget = false;
 	if (Manipulation.IsValid()) Manipulation->ClearThrowTarget();
