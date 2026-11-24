@@ -23,6 +23,7 @@ public:
 	UInteractionOutlineComponent();
 	virtual void Activate(bool bReset = false) override;
 	virtual void Deactivate() override;
+	void SetPickupCueHighlight(UObject& Source, bool bEnabled);
 
 	UPROPERTY(EditAnywhere, Category = "Outline")
 	TObjectPtr<UMaterialInterface> OutlineMaterial;
@@ -53,6 +54,7 @@ protected:
 
 private:
 	TArray<FInteractionOutlineStencil> PrimitiveStates;
+	TSet<TWeakObjectPtr<UObject>> PickupCueSources;
 	TWeakObjectPtr<AActor> VisualTarget;
 	TWeakObjectPtr<AStagePhysicsActor> FocusedProp;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
@@ -71,6 +73,7 @@ private:
 	void RestorePrimitives();
 	void ClearVisual();
 	void UpdateMaterial(float Thickness);
+	void UpdatePickupCueMaterial();
 	UFUNCTION()
 	void OnControllerChanged(APawn* Pawn, AController* OldController, AController* NewController);
 	UFUNCTION()

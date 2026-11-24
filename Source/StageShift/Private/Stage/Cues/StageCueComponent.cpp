@@ -685,9 +685,11 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 			if (CastIndex != INDEX_NONE) Number = CastIndex + 1;
 		}
 		EStageCueWindowPhase Phase = Cue.View.State == EStageCueState::Upcoming ? EStageCueWindowPhase::Waiting : EStageCueWindowPhase::Open;
+		if (Cue.View.State == EStageCueState::Problem)
+			Phase = Kind == EStageCueKind::General && !Cue.View.bHasDeadline ? EStageCueWindowPhase::Hidden : EStageCueWindowPhase::Closed;
 		float WindowStart = 0.0f;
 		float WindowEnd = 0.0f;
-		if (Cue.View.State == EStageCueState::Problem || Cue.bSoundWindowClosed || (Cue.SoundLatestAt > 0.0 && Now > Cue.SoundLatestAt))
+		if (Cue.bSoundWindowClosed || (Cue.SoundLatestAt > 0.0 && Now > Cue.SoundLatestAt))
 			Phase = EStageCueWindowPhase::Closed;
 		if (Cue.SoundLatestAt > 0.0)
 		{

@@ -9,6 +9,11 @@
 #include "Physics/PhysicsActor.h"
 #include "UObject/ConstructorHelpers.h"
 
+namespace
+{
+const FName PickupCueEnabledParameter(TEXT("PickupCueEnabled"));
+}
+
 bool FInteractionOutlineStencil::Apply(UPrimitiveComponent& Primitive, int32 Mask)
 {
 	if (Component.Get() == &Primitive) return Update(Mask);
@@ -98,6 +103,21 @@ void UInteractionOutlineComponent::Deactivate()
 	UpdatePostProcess();
 }
 
+void UInteractionOutlineComponent::SetPickupCueHighlight(UObject& Source, bool bEnabled)
+{
+	if (bEnabled) PickupCueSources.Add(&Source);
+	else PickupCueSources.Remove(&Source);
+	for (auto It = PickupCueSources.CreateIterator(); It; ++It)
+		if (!It->IsValid()) It.RemoveCurrent();
+	UpdatePickupCueMaterial();
+}
+
+void UInteractionOutlineComponent::UpdatePickupCueMaterial()
+{
+	if (MaterialInstance)
+		MaterialInstance->SetScalarParameterValue(PickupCueEnabledParameter, PickupCueSources.IsEmpty() ? 0.0f : 1.0f);
+}
+
 void UInteractionOutlineComponent::UpdatePostProcess()
 {
 	const APawn* Pawn = Cast<APawn>(GetOwner());
@@ -111,6 +131,7 @@ void UInteractionOutlineComponent::UpdatePostProcess()
 		PostProcess->Settings.AddBlendable(MaterialInstance, 1.0f);
 		PostProcess->RegisterComponent();
 		UpdateMaterial(OutlineThickness);
+		UpdatePickupCueMaterial();
 	}
 	if (PostProcess) PostProcess->bEnabled = bEnabled;
 }

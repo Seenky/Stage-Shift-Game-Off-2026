@@ -2,9 +2,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Components/Dialogue/DialogueComponent.h"
-#include "Components/Image.h"
 #include "Components/Interaction/InteractionComponent.h"
-#include "Components/RichTextBlockImageDecorator.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetComponent.h"
@@ -218,9 +216,16 @@ void AStageSoundControl::RefreshSelector()
 	UUserWidget* Widget = SoundSelector->GetUserWidgetObject();
 	if (!Widget || !SoundOptions.IsValidIndex(SelectedSoundIndex)) return;
 
+	const auto SetLabel = [&](FName WidgetName, int32 Index)
+	{
+		if (auto* Label = Cast<UTextBlock>(Widget->GetWidgetFromName(WidgetName)))
+		{
+			const FStageSoundOption& Option = SoundOptions[Index];
+			Label->SetText(Option.DisplayName.IsEmpty() ? FText::FromName(Option.SoundId) : Option.DisplayName);
+		}
+	};
 	if (Widget->GetWidgetFromName(TEXT("SoundTag0")))
 	{
-		const UDataTable* Icons = SoundIcons.LoadSynchronous();
 		for (int32 Slot = 0; Slot < 3; ++Slot)
 		{
 			auto* Tag = Widget->GetWidgetFromName(*FString::Printf(TEXT("SoundTag%d"), Slot));
@@ -230,36 +235,16 @@ void AStageSoundControl::RefreshSelector()
 
 			const int32 Index = SoundOptions.Num() <= 3 ? Slot
 			    : (SelectedSoundIndex + SoundOptions.Num() + Slot - 1) % SoundOptions.Num();
-			const FStageSoundOption& Option = SoundOptions[Index];
 			const bool bSelected = Index == SelectedSoundIndex;
 			Tag->SetRenderTranslation(FVector2D(0.f, bSelected ? 4.f : 0.f));
 			if (auto* Background = Widget->GetWidgetFromName(*FString::Printf(TEXT("SelectedTag%d"), Slot)))
 				Background->SetVisibility(bSelected ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
-			const FRichImageRow* Row = Icons ? Icons->FindRow<FRichImageRow>(Option.SoundId, TEXT("Stage sound icons"), false) : nullptr;
-			UObject* IconResource = Row ? Row->Brush.GetResourceObject() : nullptr;
-			if (auto* Icon = Cast<UImage>(Widget->GetWidgetFromName(*FString::Printf(TEXT("SoundIcon%d"), Slot))))
-			{
-				Icon->SetBrushResourceObject(IconResource);
-				Icon->SetVisibility(IconResource ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-			}
-			if (auto* Label = Cast<UTextBlock>(Widget->GetWidgetFromName(*FString::Printf(TEXT("SoundLabel%d"), Slot))))
-			{
-				Label->SetVisibility(IconResource ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-				if (!IconResource) Label->SetText(Option.DisplayName.IsEmpty() ? FText::FromName(Option.SoundId) : Option.DisplayName);
-			}
+			SetLabel(*FString::Printf(TEXT("SoundLabel%d"), Slot), Index);
 		}
 		return;
 	}
 
-	const auto SetLabel = [&](FName WidgetName, int32 Index)
-	{
-		if (auto* Label = Cast<UTextBlock>(Widget->GetWidgetFromName(WidgetName)))
-		{
-			const FStageSoundOption& Option = SoundOptions[Index];
-			Label->SetText(Option.DisplayName.IsEmpty() ? FText::FromName(Option.SoundId) : Option.DisplayName);
-		}
-	};
 	SetLabel(TEXT("SelectedSound"), SelectedSoundIndex);
 	if (SoundOptions.Num() > 1) SetLabel(TEXT("PreviousSound"), (SelectedSoundIndex + SoundOptions.Num() - 1) % SoundOptions.Num());
 	if (SoundOptions.Num() > 2) SetLabel(TEXT("NextSound"), (SelectedSoundIndex + 1) % SoundOptions.Num());

@@ -8,6 +8,7 @@
 class AStageManager;
 class UCanvasPanel;
 class UImage;
+class UInteractionOutlineComponent;
 class UPanelWidget;
 class UTextBlock;
 
@@ -93,9 +94,11 @@ private:
 	UFUNCTION() void HandleOpeningOverdue();
 	void ShowAudienceReaction(bool bPositive);
 	void PositionActorTags(const FGeometry& Geometry);
+	void UpdatePickupCueOutline(bool bHighlight);
 	UStagePerformanceTagWidget* GetTag(UPanelWidget& Panel, TSubclassOf<UStagePerformanceTagWidget> TagClass, int32 Index);
 
 	TWeakObjectPtr<AStageManager> Source;
+	TWeakObjectPtr<UInteractionOutlineComponent> PickupCueOutline;
 	TArray<TWeakObjectPtr<AActor>, TInlineAllocator<5>> TaggedActors;
 	TArray<TWeakObjectPtr<AActor>, TInlineAllocator<4>> CastMembers;
 	int32 LastScene = INDEX_NONE;

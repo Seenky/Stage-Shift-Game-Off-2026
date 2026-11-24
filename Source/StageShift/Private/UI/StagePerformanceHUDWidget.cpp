@@ -6,6 +6,7 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Dialogue/DialogueBubbleWidget.h"
 #include "Components/Image.h"
+#include "Components/Interaction/InteractionOutlineComponent.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/World.h"
@@ -119,6 +120,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 	SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (!bVisible)
 	{
+		UpdatePickupCueOutline(false);
 		DeltaUntil = AudienceUntil = -1.0;
 		LastScoreAt = -10.0;
 		return;
@@ -155,6 +157,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 			if (AActor* Actor = Stage.GetParticipant(Role)) CastMembers.AddUnique(Actor);
 
 	int32 CueCount = 0;
+	bool bHighlightPickups = false;
 	for (const FStagePerformanceCue& Cue : Cues)
 	{
 		if (auto* Tag = GetTag(*CueTags, CueTagClass, CueCount))
@@ -162,6 +165,8 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 			++CueCount;
 			Tag->Present(Cue);
 			Tag->SetVisibility(ESlateVisibility::HitTestInvisible);
+			bHighlightPickups |= Cue.Kind == EStageCueKind::Props
+			    && (Cue.bPreparation || Cue.Phase == EStageCueWindowPhase::Open || Cue.PausedProgress.IsSet());
 		}
 		if (Cue.bPreparation || !IsValid(Cue.Actor) || TaggedActors.Contains(Cue.Actor)) continue;
 		if (auto* Tag = GetTag(*ActorLayer, ActorTagClass, TaggedActors.Num()))
@@ -174,6 +179,17 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 		CueTags->GetChildAt(Index)->SetVisibility(ESlateVisibility::Collapsed);
 	for (int32 Index = TaggedActors.Num(); Index < ActorLayer->GetChildrenCount(); ++Index)
 		ActorLayer->GetChildAt(Index)->SetVisibility(ESlateVisibility::Collapsed);
+	UpdatePickupCueOutline(bHighlightPickups);
+}
+
+void UStagePerformanceHUDWidget::UpdatePickupCueOutline(bool bHighlight)
+{
+	APawn* Pawn = bHighlight ? GetOwningPlayerPawn() : nullptr;
+	auto* Outline = Pawn ? Pawn->FindComponentByClass<UInteractionOutlineComponent>() : nullptr;
+	if (Outline == PickupCueOutline.Get()) return;
+	if (auto* Previous = PickupCueOutline.Get()) Previous->SetPickupCueHighlight(*this, false);
+	PickupCueOutline = Outline;
+	if (Outline) Outline->SetPickupCueHighlight(*this, true);
 }
 
 UStagePerformanceTagWidget* UStagePerformanceHUDWidget::GetTag(UPanelWidget& Panel,
@@ -310,6 +326,7 @@ void UStagePerformanceHUDWidget::NativeTick(const FGeometry& Geometry, float Del
 
 void UStagePerformanceHUDWidget::NativeDestruct()
 {
+	UpdatePickupCueOutline(false);
 	if (AStageManager* Stage = Source.Get())
 	{
 		Stage->OnScoreChanged.RemoveAll(this);
