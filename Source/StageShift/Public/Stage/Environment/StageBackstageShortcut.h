@@ -20,6 +20,7 @@ class STAGESHIFT_API AStageBackstageShortcut : public AActor
 public:
 	AStageBackstageShortcut();
 	AStageBackstageShortcut* GetPartner() const;
+	FTransform GetEntranceTransform() const;
 	FVector GetExitFloorLocation() const;
 	bool IsDiveEntering(const FVector& Previous, const FVector& Current) const;
 	void SetNearby(bool bNearby);

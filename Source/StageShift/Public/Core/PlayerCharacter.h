@@ -100,7 +100,7 @@ private:
 	void UpdateBackstageShortcut();
 	void SetNearbyShortcut(AStageBackstageShortcut* Shortcut);
 	void CheckDiveForBackstageShortcut();
-	bool TravelThroughBackstageShortcut(const AStageBackstageShortcut& Destination, bool bSimulating);
+	bool TraverseBackstageShortcut(const AStageBackstageShortcut& Source, const AStageBackstageShortcut& Destination);
 
 	UFUNCTION()
 	void OnSprintInput(const FInputActionInstance& Instance);
@@ -108,7 +108,7 @@ private:
 	float TargetSpeed = 0.0f;
 	TWeakObjectPtr<AStageBackstageShortcut> NearbyShortcut;
 	TOptional<FVector> PreviousDiveHeadLocation;
-	bool bUsedShortcutDuringDive = false;
+	bool bTraversedShortcutDuringDive = false;
 	TWeakObjectPtr<AStageSoundControl> FocusedSoundControl;
 	bool bSoundStickHeld = false;
 };

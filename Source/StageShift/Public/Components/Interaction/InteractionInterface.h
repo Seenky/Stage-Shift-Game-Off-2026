@@ -23,6 +23,7 @@ class STAGESHIFT_API IInteractionInterface
 public:
 	// Optional mesh used for the interaction outline.
 	virtual const UMeshComponent* GetInteractionMesh() const { return nullptr; }
+	virtual bool CanInteractWhileCarrying() const { return false; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	bool CanInteract(const FInteractionContext& InteractionContext) const;

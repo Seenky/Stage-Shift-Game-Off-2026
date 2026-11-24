@@ -18,6 +18,9 @@ namespace
 {
 constexpr float FeedbackFadeTime = 0.25f;
 const FName SymbolParameter(TEXT("Symbol"));
+const FName FaceColorParameter(TEXT("FaceColor"));
+const FLinearColor LightingFaceColor(FColor(0x97, 0xbd, 0xdf));
+const FLinearColor SoundFaceColor(FColor(0xe2, 0x8c, 0x7c));
 const FName ProgressParameter(TEXT("Progress"));
 const FName WindowStartParameter(TEXT("WindowStart"));
 const FName WindowEndParameter(TEXT("WindowEnd"));
@@ -47,6 +50,18 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 		if (NumberBadge) NumberBadge->SetVisibility(ActorNumber->GetVisibility());
 	}
 	if (CueIcon) SetSymbol(*CueIcon, static_cast<float>(Cue.Kind));
+	if (CueFaceFabric && LastKind != Cue.Kind)
+	{
+		LastKind = Cue.Kind;
+		if (auto* Material = CueFaceFabric->GetDynamicMaterial())
+		{
+			if (!DefaultFaceColor.IsSet()) DefaultFaceColor = Material->K2_GetVectorParameterValue(FaceColorParameter);
+			FLinearColor FaceColor = DefaultFaceColor.GetValue();
+			if (Cue.Kind == EStageCueKind::Lighting) FaceColor = LightingFaceColor;
+			if (Cue.Kind == EStageCueKind::Sound) FaceColor = SoundFaceColor;
+			Material->SetVectorParameterValue(FaceColorParameter, FaceColor);
+		}
+	}
 	StartsAt = Cue.StartsAt;
 	EndsAt = Cue.EndsAt;
 	PausedProgress = Cue.PausedProgress;

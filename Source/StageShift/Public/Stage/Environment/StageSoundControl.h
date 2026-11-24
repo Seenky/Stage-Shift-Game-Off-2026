@@ -6,6 +6,7 @@
 #include "StageSoundControl.generated.h"
 
 class APlayerController;
+class UDataTable;
 class USoundBase;
 class UStageControlMeshComponent;
 class UStaticMeshComponent;
@@ -109,6 +110,9 @@ protected:
 	TObjectPtr<UWidgetComponent> SoundSelector;
 	UPROPERTY(EditAnywhere, Category = "Stage|Sound", meta = (TitleProperty = "SoundId"))
 	TArray<FStageSoundOption> SoundOptions;
+	UPROPERTY(EditDefaultsOnly, Category = "Stage|Sound")
+	TSoftObjectPtr<UDataTable> SoundIcons = TSoftObjectPtr<UDataTable>(
+	    FSoftObjectPath(TEXT("/Game/DEV/UI/StageSignals/DT_StageSoundIcons.DT_StageSoundIcons")));
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage|Sound") FName CueId;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stage|Sound") TObjectPtr<USoundBase> Sound;

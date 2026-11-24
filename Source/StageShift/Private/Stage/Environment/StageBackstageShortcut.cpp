@@ -61,6 +61,11 @@ AStageBackstageShortcut* AStageBackstageShortcut::GetPartner() const
 	return IsValid(Partner) && Partner != this && !Partner->IsActorBeingDestroyed() && Partner->Partner == this ? Partner.Get() : nullptr;
 }
 
+FTransform AStageBackstageShortcut::GetEntranceTransform() const
+{
+	return Entrance->GetComponentTransform();
+}
+
 FVector AStageBackstageShortcut::GetExitFloorLocation() const
 {
 	return Exit->GetComponentLocation();

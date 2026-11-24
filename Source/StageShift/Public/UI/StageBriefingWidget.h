@@ -7,6 +7,7 @@ class AStageManager;
 class UButton;
 class USoundBase;
 class UTextBlock;
+class UTextLayoutWidget;
 
 UCLASS(Abstract, Blueprintable)
 class STAGESHIFT_API UStageBriefingWidget : public UUserWidget
@@ -22,7 +23,7 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> BriefingText;
+	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextLayoutWidget> BriefingText;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UButton> ContinueButton;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ErrorText;
 

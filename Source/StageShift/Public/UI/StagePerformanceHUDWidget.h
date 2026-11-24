@@ -39,6 +39,7 @@ protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ActorNumber;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> NumberBadge;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueIcon;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueFaceFabric;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> Timing;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> ActionStatus;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> ActionPrompt;
@@ -48,6 +49,8 @@ protected:
 
 private:
 	int32 LastNumber = INDEX_NONE;
+	EStageCueKind LastKind = EStageCueKind::General;
+	TOptional<FLinearColor> DefaultFaceColor;
 	EStageCueWindowPhase LastPhase = EStageCueWindowPhase::Hidden;
 	bool bLastPreparation = false;
 	double StartsAt = 0.0;

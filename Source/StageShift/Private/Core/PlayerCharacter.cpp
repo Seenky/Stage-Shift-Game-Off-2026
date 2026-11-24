@@ -18,9 +18,6 @@
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
 #include "Components/Interaction/InteractionOutlineComponent.h"
-#include "PhysicsEngine/PhysicsAsset.h"
-#include "PhysicsEngine/BodyInstance.h"
-#include "PhysicsEngine/SkeletalBodySetup.h"
 #include "Stage/Environment/StageBackstageShortcut.h"
 #include "Stage/Environment/StageSoundControl.h"
 #include "UObject/ConstructorHelpers.h"
@@ -29,7 +26,6 @@ namespace
 {
 	const FName DiveMontageName(TEXT("Jump"));
 	const FName DiveHeadBone(TEXT("head"));
-	const FName DivePelvisBone(TEXT("pelvis"));
 }
 
 APlayerCharacter::APlayerCharacter()
@@ -80,6 +76,7 @@ void APlayerCharacter::UnPossessed()
 {
 	SetNearbyShortcut(nullptr);
 	PreviousDiveHeadLocation.Reset();
+	bTraversedShortcutDuringDive = false;
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()); PlayerController && PlayerController->IsLocalController())
 	{
 		PlayerController->ClearAudioListenerAttenuationOverride();
@@ -241,10 +238,10 @@ void APlayerCharacter::CheckDiveForBackstageShortcut()
 	if (!IsLocallyControlled() || !IsPlayerControlled() || !PhysicalMontageComponent->IsPlayingPhysicsMontage(DiveMontageName))
 	{
 		PreviousDiveHeadLocation.Reset();
-		bUsedShortcutDuringDive = false;
+		bTraversedShortcutDuringDive = false;
 		return;
 	}
-	if (bUsedShortcutDuringDive) return;
+	if (bTraversedShortcutDuringDive) return;
 
 	const FVector Head = GetMesh()->GetBoneLocation(DiveHeadBone);
 	const FVector Previous = PreviousDiveHeadLocation.Get(Head);
@@ -254,61 +251,25 @@ void APlayerCharacter::CheckDiveForBackstageShortcut()
 	const FVector Forward = GetActorForwardVector();
 
 	// The head continues travelling after the dive switches from capsule movement to ragdoll.
-	for (TActorIterator<AStageBackstageShortcut> Shortcut(GetWorld()); Shortcut; ++Shortcut)
+	for (TActorIterator<AStageBackstageShortcut> It(GetWorld()); It; ++It)
 	{
+		const AStageBackstageShortcut* Shortcut = *It;
 		if (FVector::DotProduct(Forward, Shortcut->GetActorForwardVector()) >= -0.15 || !Shortcut->IsDiveEntering(Previous, Head)) continue;
-		if (const auto* Destination = Shortcut->GetPartner()) bUsedShortcutDuringDive = TravelThroughBackstageShortcut(*Destination, bSimulating);
+		if (const auto* Destination = Shortcut->GetPartner())
+			bTraversedShortcutDuringDive = TraverseBackstageShortcut(*Shortcut, *Destination);
 		break;
 	}
 }
 
-bool APlayerCharacter::TravelThroughBackstageShortcut(const AStageBackstageShortcut& Destination, bool bSimulating)
+bool APlayerCharacter::TraverseBackstageShortcut(const AStageBackstageShortcut& Source, const AStageBackstageShortcut& Destination)
 {
-	const UCapsuleComponent* Capsule = GetCapsuleComponent();
-	const FVector Location = Destination.GetExitFloorLocation() + FVector::UpVector * (Capsule->GetScaledCapsuleHalfHeight() + 18.0);
-	FCollisionQueryParams Query(SCENE_QUERY_STAT(BackstageShortcut), false, this);
-	Query.AddIgnoredComponent(GetHeldPhysicsComponent());
-	if (GetWorld()->OverlapBlockingTestByChannel(Location, FQuat::Identity, Capsule->GetCollisionObjectType(), Capsule->GetCollisionShape(),
-	        Query, FCollisionResponseParams(Capsule->GetCollisionResponseToChannels()))) return false;
-
-	USkeletalMeshComponent* BodyMesh = GetMesh();
-	const FBodyInstance* Pelvis = bSimulating ? BodyMesh->GetBodyInstance(DivePelvisBone) : nullptr;
-	const UPhysicsAsset* Asset = BodyMesh->GetPhysicsAsset();
-	if (bSimulating && (!Asset || !Pelvis || !Pelvis->IsValidBodyInstance())) return false;
-	const FVector IncomingVelocity = Pelvis ? Pelvis->GetUnrealWorldVelocity() : GetVelocity();
-	// Keep the exit dive inside the backstage aisle.
-	const FVector ExitVelocity = Destination.GetActorForwardVector() * FMath::Clamp(IncomingVelocity.Size2D() * 0.5, 130.0, 190.0)
-	    + FVector::UpVector * FMath::Max(IncomingVelocity.Z, 105.0);
-	const FQuat ExitRotation = Destination.GetActorQuat();
-	const FQuat Redirect = ExitRotation * GetActorQuat().Inverse();
-	const FVector OldPelvis = Pelvis ? Pelvis->GetUnrealWorldTransform().GetLocation() : FVector::ZeroVector;
-	TArray<TPair<FBodyInstance*, FTransform>, TInlineAllocator<24>> BodyPoses;
-	if (Pelvis)
-	{
-		// TeleportTo updates the mesh transforms, so capture the simulated pose before moving the capsule.
-		for (const USkeletalBodySetup* Setup : Asset->SkeletalBodySetups)
-		{
-			FBodyInstance* Body = Setup ? BodyMesh->GetBodyInstance(Setup->BoneName) : nullptr;
-			if (Body && Body->IsInstanceSimulatingPhysics()) BodyPoses.Emplace(Body, Body->GetUnrealWorldTransform());
-		}
-	}
-	if (!TeleportTo(Location, ExitRotation.Rotator())) return false;
-
-	if (Pelvis)
-	{
-		// The capsule and the simulated body are separate during the dive. Move both with the same turn.
-		const FVector NewPelvis = Location - FVector::UpVector * 25.0;
-		for (auto& [Body, Pose] : BodyPoses)
-		{
-			Pose.SetLocation(NewPelvis + Redirect.RotateVector(Pose.GetLocation() - OldPelvis));
-			Pose.SetRotation(Redirect * Pose.GetRotation());
-			Body->SetBodyTransform(Pose, ETeleportType::TeleportPhysics);
-		}
-		BodyMesh->SetAllPhysicsLinearVelocity(ExitVelocity);
-		GetCharacterMovement()->DisableMovement();
-	}
-	else LaunchCharacter(ExitVelocity, true, true);
-	return true;
+	const FTransform Entrance = Source.GetEntranceTransform();
+	const FTransform Exit = Destination.GetEntranceTransform();
+	// Both openings face out of the cloth: a half-turn maps travel into one to travel out of the other.
+	const FQuat Rotation = Exit.GetRotation() * FQuat(FVector::UpVector, UE_DOUBLE_PI) * Entrance.GetRotation().Inverse();
+	const FTransform Link(Rotation, Exit.GetLocation() - Rotation.RotateVector(Entrance.GetLocation()));
+	return PhysicalMontageComponent->RedirectPhysicsMontage(Link, Destination.GetExitFloorLocation(),
+	    Destination.GetActorForwardVector().GetSafeNormal2D(), GetHeldPhysicsComponent());
 }
 
 void APlayerCharacter::OnSprintInput(const FInputActionInstance& Instance)

@@ -17,7 +17,8 @@ enum class EInteractionHandMotion : uint8
 	Give,
 	Press,
 	Pull,
-	Hold
+	Hold,
+	RopeGrip
 };
 
 struct FInteractionHandPose
