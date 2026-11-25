@@ -105,7 +105,7 @@ private:
 	bool bEndingPlay = false;
 	FHitResult CandidateHit;
 	bool CanResumeInteraction() const;
-	FHitResult ResolveInteractionCandidate(FGameplayTag ActionTag) const;
+	FHitResult ResolveInteractionCandidate(FGameplayTag ActionTag, bool bWhileCarrying = false) const;
 	FHitResult ResolveHandoffCandidate() const;
 	bool TryHandOff();
 	void SetInteractionCandidate(const FHitResult& Hit);

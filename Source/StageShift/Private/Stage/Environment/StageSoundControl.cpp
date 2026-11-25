@@ -224,6 +224,27 @@ void AStageSoundControl::RefreshSelector()
 			Label->SetText(Option.DisplayName.IsEmpty() ? FText::FromName(Option.SoundId) : Option.DisplayName);
 		}
 	};
+	if (Widget->GetWidgetFromName(TEXT("SoundTag0")))
+	{
+		for (int32 Slot = 0; Slot < 3; ++Slot)
+		{
+			auto* Tag = Widget->GetWidgetFromName(*FString::Printf(TEXT("SoundTag%d"), Slot));
+			if (!Tag) continue;
+			Tag->SetVisibility(Slot < SoundOptions.Num() ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			if (Slot >= SoundOptions.Num()) continue;
+
+			const int32 Index = SoundOptions.Num() <= 3 ? Slot
+			    : (SelectedSoundIndex + SoundOptions.Num() + Slot - 1) % SoundOptions.Num();
+			const bool bSelected = Index == SelectedSoundIndex;
+			Tag->SetRenderTranslation(FVector2D(0.f, bSelected ? 4.f : 0.f));
+			if (auto* Background = Widget->GetWidgetFromName(*FString::Printf(TEXT("SelectedTag%d"), Slot)))
+				Background->SetVisibility(bSelected ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+
+			SetLabel(*FString::Printf(TEXT("SoundLabel%d"), Slot), Index);
+		}
+		return;
+	}
+
 	SetLabel(TEXT("SelectedSound"), SelectedSoundIndex);
 	if (SoundOptions.Num() > 1) SetLabel(TEXT("PreviousSound"), (SelectedSoundIndex + SoundOptions.Num() - 1) % SoundOptions.Num());
 	if (SoundOptions.Num() > 2) SetLabel(TEXT("NextSound"), (SelectedSoundIndex + 1) % SoundOptions.Num());

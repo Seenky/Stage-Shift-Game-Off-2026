@@ -5,6 +5,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedPlayerInput.h"
+#include "Components/CapsuleComponent.h"
+#include "EngineUtils.h"
+#include "Engine/World.h"
 #include "Engine/LocalPlayer.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -15,8 +18,15 @@
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
 #include "Components/Interaction/ThrowAimComponent.h"
 #include "Components/Interaction/InteractionOutlineComponent.h"
+#include "Stage/Environment/StageBackstageShortcut.h"
 #include "Stage/Environment/StageSoundControl.h"
 #include "UObject/ConstructorHelpers.h"
+
+namespace
+{
+	const FName DiveMontageName(TEXT("Jump"));
+	const FName DiveHeadBone(TEXT("head"));
+}
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -64,6 +74,9 @@ void APlayerCharacter::BeginPlay()
 
 void APlayerCharacter::UnPossessed()
 {
+	SetNearbyShortcut(nullptr);
+	PreviousDiveHeadLocation.Reset();
+	bTraversedShortcutDuringDive = false;
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()); PlayerController && PlayerController->IsLocalController())
 	{
 		PlayerController->ClearAudioListenerAttenuationOverride();
@@ -79,6 +92,8 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	if (!GetCharacterMovement()) return;
+	UpdateBackstageShortcut();
+	CheckDiveForBackstageShortcut();
 
 	// Movement applies the mass-dependent Drag multiplier; sprint cannot bypass it.
 	GetCharacterMovement()->MaxWalkSpeed =
@@ -182,11 +197,79 @@ void APlayerCharacter::OnInteractionCandidateChanged(AActor* Candidate)
 
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)
 {
-	if (PhysicsManipulationComponent->IsDragging() || !GetCharacterMovement()->IsMovingOnGround() || PhysicalMontageComponent->IsPhysicsMontageActive()) return;
+	if (PhysicsManipulationComponent->IsDragging() || !GetCharacterMovement()->IsMovingOnGround() || IsPhysicsMontageActive()) return;
 	const APlayerController* PC = Cast<APlayerController>(GetController());
 	const UEnhancedPlayerInput* Input = PC ? Cast<UEnhancedPlayerInput>(PC->PlayerInput) : nullptr;
 	const FVector Direction = Input && MoveInputAction ? MovementInputToWorld(Input->GetActionValue(MoveInputAction)).GetSafeNormal2D() : FVector::ZeroVector;
-	PhysicalMontageComponent->StartPhysicsMontage(TEXT("Jump"), GetVelocity(), Direction);
+	PhysicalMontageComponent->StartPhysicsMontage(DiveMontageName, GetVelocity(), Direction);
+}
+
+void APlayerCharacter::UpdateBackstageShortcut()
+{
+	AStageBackstageShortcut* Closest = nullptr;
+	if (IsLocallyControlled() && IsPlayerControlled() && GetCharacterMovement()->IsMovingOnGround() && !IsPhysicsMontageActive())
+	{
+		TArray<AActor*> Candidates;
+		GetCapsuleComponent()->GetOverlappingActors(Candidates, AStageBackstageShortcut::StaticClass());
+		double ClosestDistance = TNumericLimits<double>::Max();
+		for (AActor* Candidate : Candidates)
+		{
+			auto* Shortcut = Cast<AStageBackstageShortcut>(Candidate);
+			if (!IsValid(Shortcut) || !Shortcut->GetPartner()) continue;
+			const double Distance = FVector::DistSquared2D(GetActorLocation(), Shortcut->GetActorLocation());
+			if (Distance >= ClosestDistance) continue;
+			Closest = Shortcut;
+			ClosestDistance = Distance;
+		}
+	}
+	SetNearbyShortcut(Closest);
+}
+
+void APlayerCharacter::SetNearbyShortcut(AStageBackstageShortcut* Shortcut)
+{
+	if (NearbyShortcut.Get() == Shortcut) return;
+	if (auto* Previous = NearbyShortcut.Get()) Previous->SetNearby(false);
+	NearbyShortcut = Shortcut;
+	if (Shortcut) Shortcut->SetNearby(true);
+}
+
+void APlayerCharacter::CheckDiveForBackstageShortcut()
+{
+	if (!IsLocallyControlled() || !IsPlayerControlled() || !PhysicalMontageComponent->IsPlayingPhysicsMontage(DiveMontageName))
+	{
+		PreviousDiveHeadLocation.Reset();
+		bTraversedShortcutDuringDive = false;
+		return;
+	}
+	if (bTraversedShortcutDuringDive) return;
+
+	const FVector Head = GetMesh()->GetBoneLocation(DiveHeadBone);
+	const FVector Previous = PreviousDiveHeadLocation.Get(Head);
+	PreviousDiveHeadLocation = Head;
+	const bool bSimulating = PhysicalMontageComponent->IsSimulatingPhysicsMontage();
+	if ((!bSimulating && !GetCharacterMovement()->IsFalling()) || Previous.Equals(Head, 0.1)) return;
+	const FVector Forward = GetActorForwardVector();
+
+	// The head continues travelling after the dive switches from capsule movement to ragdoll.
+	for (TActorIterator<AStageBackstageShortcut> It(GetWorld()); It; ++It)
+	{
+		const AStageBackstageShortcut* Shortcut = *It;
+		if (FVector::DotProduct(Forward, Shortcut->GetActorForwardVector()) >= -0.15 || !Shortcut->IsDiveEntering(Previous, Head)) continue;
+		if (const auto* Destination = Shortcut->GetPartner())
+			bTraversedShortcutDuringDive = TraverseBackstageShortcut(*Shortcut, *Destination);
+		break;
+	}
+}
+
+bool APlayerCharacter::TraverseBackstageShortcut(const AStageBackstageShortcut& Source, const AStageBackstageShortcut& Destination)
+{
+	const FTransform Entrance = Source.GetEntranceTransform();
+	const FTransform Exit = Destination.GetEntranceTransform();
+	// Both openings face out of the cloth: a half-turn maps travel into one to travel out of the other.
+	const FQuat Rotation = Exit.GetRotation() * FQuat(FVector::UpVector, UE_DOUBLE_PI) * Entrance.GetRotation().Inverse();
+	const FTransform Link(Rotation, Exit.GetLocation() - Rotation.RotateVector(Entrance.GetLocation()));
+	return PhysicalMontageComponent->RedirectPhysicsMontage(Link, Destination.GetExitFloorLocation(),
+	    Destination.GetActorForwardVector().GetSafeNormal2D(), GetHeldPhysicsComponent());
 }
 
 void APlayerCharacter::OnSprintInput(const FInputActionInstance& Instance)

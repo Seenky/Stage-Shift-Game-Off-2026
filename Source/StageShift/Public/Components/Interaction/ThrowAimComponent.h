@@ -5,12 +5,10 @@
 
 class ACharacter;
 class APlayerController;
-class UInstancedStaticMeshComponent;
 class UInteractionComponent;
-class UMaterialInterface;
+class UNiagaraComponent;
+class UNiagaraSystem;
 class UPhysicsManipulationComponent;
-class UStaticMesh;
-class UStaticMeshComponent;
 class UUserWidget;
 
 UCLASS(ClassGroup = (Interaction), meta = (BlueprintSpawnableComponent))
@@ -47,10 +45,7 @@ protected:
 	float MouseSensitivity = 0.55f;
 
 	UPROPERTY(EditAnywhere, Category = "Aim|Preview")
-	TObjectPtr<UMaterialInterface> LandingMaterial;
-
-	UPROPERTY(EditAnywhere, Category = "Aim|Preview")
-	TObjectPtr<UMaterialInterface> TrajectoryMaterial;
+	TObjectPtr<UNiagaraSystem> ThrowTapeSystem;
 
 	UPROPERTY(EditAnywhere, Category = "Aim|Cursor", meta = (ClampMin = "1.0", ToolTip = "Cursor speed in pixels per second at 1080p."))
 	float StickCursorSpeed = 900.0f;
@@ -71,39 +66,38 @@ protected:
 	float TurnSpeed = 12.0f;
 
 private:
+	void CreateReticle(APlayerController& Controller, TSubclassOf<UUserWidget> WidgetClass);
 	void UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround = false);
 	void UpdateThrowPreview(bool bShow, float DeltaTime = 0.f);
 	void DrawThrowTrajectory(float DeltaTime);
-	bool GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const;
+	void HideThrowTape();
+	bool GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds) const;
 	TWeakObjectPtr<ACharacter> Character;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
 	TWeakObjectPtr<UPhysicsManipulationComponent> Manipulation;
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> Reticle;
 	UPROPERTY(Transient)
-	TObjectPtr<UStaticMeshComponent> LandingMarker;
-	UPROPERTY(Transient)
-	TObjectPtr<UInstancedStaticMeshComponent> TrajectoryDots;
-	UPROPERTY()
-	TObjectPtr<UStaticMesh> TrajectoryDotMesh;
-	UPROPERTY()
-	TObjectPtr<UStaticMesh> LandingMarkerMesh;
+	TObjectPtr<UNiagaraComponent> ThrowTape;
 	FVector2D StickInput = FVector2D::ZeroVector;
 	FVector2D StickDeviceSample = FVector2D::ZeroVector;
 	FVector2D ScreenPosition = FVector2D::ZeroVector;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
 	FVector AimTarget = FVector::ZeroVector;
+	FVector DisplayedAimTarget = FVector::ZeroVector;
 	FVector AimSurfaceNormal = FVector::UpVector;
 	FVector AimDirection = FVector::ForwardVector;
 	TArray<FVector> PreviewPath;
-	TArray<FTransform> DisplayedDots;
+	TArray<FVector> DisplayedPath;
 	FHitResult PreviewImpact;
 	uint64 LastCursorUpdateFrame = MAX_uint64;
 	double NextThrowPreviewAt = 0.0;
+	double LastStablePreviewAt = 0.0;
 	double PreviewBlendRemaining = 0.0;
-	double AimGroundHeightOffset = 0.0;
+	TOptional<double> AimGroundZ;
 	bool bPreviewBlocked = false;
 	bool bPreviewUsesHighArc = false;
+	bool bBlendLandingOnly = false;
 	bool bAiming = false;
 	bool bDraggingAim = false;
 	bool bWasPreparing = false;

@@ -12,7 +12,9 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "PhysicsEngine/BodyInstance.h"
 #include "PhysicsEngine/PhysicsAsset.h"
+#include "PhysicsEngine/SkeletalBodySetup.h"
 #include "TimerManager.h"
 
 namespace
@@ -20,13 +22,17 @@ namespace
 	const FName PelvisBone(TEXT("pelvis"));
 	const FName RagdollProfile(TEXT("Ragdoll"));
 	constexpr float RecoveryRetryInterval = 0.2f;
+	constexpr float ShortcutRecoveryDelay = 0.24f;
+	constexpr float ShortcutRecoveryPlayRate = 1.65f;
 
-	bool FindRecoveryLocation(const UCapsuleComponent& Capsule, const UCharacterMovementComponent& Movement, float Clearance, const FVector& GroundProbe, FVector& Location)
+	bool FindRecoveryLocation(const UCapsuleComponent& Capsule, const UCharacterMovementComponent& Movement, float Clearance, const FVector& GroundProbe,
+	    FVector& Location, const UPrimitiveComponent* IgnoredComponent = nullptr)
 	{
 		const float Radius = Capsule.GetScaledCapsuleRadius() + FMath::Max(0.0f, Clearance);
 		const float HalfHeight = FMath::Max(Capsule.GetScaledCapsuleHalfHeight(), Radius);
 		const FCollisionShape Shape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
-		const FCollisionQueryParams Query(SCENE_QUERY_STAT(PhysicalMontageRecovery), false, Capsule.GetOwner());
+		FCollisionQueryParams Query(SCENE_QUERY_STAT(PhysicalMontageRecovery), false, Capsule.GetOwner());
+		Query.AddIgnoredComponent(IgnoredComponent);
 		FCollisionResponseParams Responses(Capsule.GetCollisionResponseToChannels());
 		// Recovery needs room for the body, including props the walking capsule ignores.
 		Responses.CollisionResponse.SetResponse(ECC_PhysicsBody, ECR_Block);
@@ -186,6 +192,91 @@ void UPhysicalMontageComponent::EndStageFall()
 	if (bIsSimActive && GetWorld()) GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, 0.1f, false);
 }
 
+bool UPhysicalMontageComponent::RedirectPhysicsMontage(const FTransform& Link, const FVector& ExitFloor, const FVector& ExitForward,
+    const UPrimitiveComponent* HeldComponent)
+{
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	USkeletalMeshComponent* Mesh = GetSkeletalMesh();
+	if (!Character || !Mesh || !bMeshCollisionSaved || bStayDown || ExitForward.IsNearlyZero()) return false;
+
+	const UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+	UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+	const FRotator Rotation = Link.TransformRotation(Character->GetActorQuat()).Rotator();
+	FVector AnchorVelocity = Movement->Velocity;
+	FVector Anchor = Character->GetActorLocation();
+	struct FBodyPose
+	{
+		FBodyInstance* Body;
+		FTransform Transform;
+		FVector Velocity;
+		FVector AngularVelocity;
+	};
+	TArray<FBodyPose, TInlineAllocator<24>> Pose;
+	if (bIsSimActive)
+	{
+		const UPhysicsAsset* Asset = Mesh->GetPhysicsAsset();
+		const FBodyInstance* Pelvis = Mesh->GetBodyInstance(PelvisBone);
+		if (!Asset || !Pelvis || !Pelvis->IsValidBodyInstance()) return false;
+		Mesh->HandleExistingParallelEvaluationTask(true, true);
+		Anchor = Pelvis->GetUnrealWorldTransform().GetLocation();
+		AnchorVelocity = Pelvis->GetUnrealWorldVelocity();
+		for (const USkeletalBodySetup* Setup : Asset->SkeletalBodySetups)
+		{
+			FBodyInstance* Body = Setup ? Mesh->GetBodyInstance(Setup->BoneName) : nullptr;
+			if (Body && Body->IsInstanceSimulatingPhysics())
+				Pose.Add({Body, Body->GetUnrealWorldTransform(), Body->GetUnrealWorldVelocity(), Body->GetUnrealWorldAngularVelocityInRadians()});
+		}
+	}
+
+	const FVector MappedAnchor = Link.TransformPositionNoScale(Anchor);
+	const FVector MappedVelocity = Link.TransformVectorNoScale(AnchorVelocity);
+	// The head can reach the opening after the capsule has already glanced off the frame.
+	const double ForwardSpeed = FVector::DotProduct(MappedVelocity, ExitForward);
+	const double LaunchSpeed = FVector::DotProduct(Link.TransformVectorNoScale(MontageLaunchVelocity), ExitForward);
+	const FVector ExitVelocityCorrection = ForwardSpeed < 150.0
+	    ? ExitForward * FMath::Max(0.0, FMath::Min(LaunchSpeed, 300.0) - ForwardSpeed)
+	    : FVector::ZeroVector;
+	for (const float Inset : {80.0f, 40.0f, 0.0f})
+	{
+		// Nudge outward only as needed for the capsule. Preserve the crossing's sideways offset.
+		const double Push = FMath::Max(0.0, FVector::DotProduct(ExitFloor - MappedAnchor, ExitForward) - Inset);
+		const FVector MappedLocation = MappedAnchor + ExitForward * Push;
+		const FVector FloorProbe(MappedLocation.X, MappedLocation.Y, ExitFloor.Z);
+		FVector StandingLocation;
+		if (!FindRecoveryLocation(*Capsule, *Movement, 0.0f, FloorProbe, StandingLocation, HeldComponent)) continue;
+		FVector CapsuleLocation = StandingLocation;
+		if (!bIsSimActive) CapsuleLocation.Z = FMath::Max(CapsuleLocation.Z, MappedLocation.Z);
+		if (!Character->TeleportTo(CapsuleLocation, Rotation)) continue;
+
+		bQuickRecovery = true;
+		if (bIsSimActive)
+		{
+			const double FloorZ = StandingLocation.Z - Capsule->GetScaledCapsuleHalfHeight();
+			const double Lift = FMath::Max(0.0, FloorZ + 25.0 - MappedLocation.Z);
+			const FVector Clearance = ExitForward * Push + FVector::UpVector * Lift + Character->GetActorLocation() - CapsuleLocation;
+			for (const FBodyPose& Bone : Pose)
+			{
+				FTransform Transform = Bone.Transform;
+				Transform.SetLocation(Link.TransformPositionNoScale(Transform.GetLocation()) + Clearance);
+				Transform.SetRotation(Link.TransformRotation(Transform.GetRotation()));
+				Bone.Body->SetBodyTransform(Transform, ETeleportType::TeleportPhysics);
+				Bone.Body->SetLinearVelocity(Link.TransformVectorNoScale(Bone.Velocity) + ExitVelocityCorrection, false);
+				Bone.Body->SetAngularVelocityInRadians(Link.TransformVectorNoScale(Bone.AngularVelocity), false);
+			}
+			Movement->DisableMovement();
+			bHasRecoveryTarget = false;
+			GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, ShortcutRecoveryDelay, false);
+		}
+		else
+		{
+			Movement->SetMovementMode(MOVE_Falling);
+			Movement->Velocity = MappedVelocity + ExitVelocityCorrection;
+		}
+		return true;
+	}
+	return false;
+}
+
 bool UPhysicalMontageComponent::BeginPhysicsAnimation(const FPhysicalMontageSettings& Settings, const FPhysicalAnimationInput& Input, FName ActionName)
 {
 	if (IsPhysicsMontageActive() || !PreparePhysics(Settings, Input, ActionName)) return false;
@@ -226,6 +317,7 @@ bool UPhysicalMontageComponent::PreparePhysics(const FPhysicalMontageSettings& S
 
 	ActiveSettings = Settings;
 	bHasRecoveryTarget = false;
+	bQuickRecovery = false;
 	ActiveInput = Input;
 	if (!Settings.Montage) ActiveSettings.StrengthMultiplier = 0.0f;
 	ActiveMontageName = ActionName;
@@ -322,7 +414,25 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	}
 	Mesh->SetAllBodiesBelowSimulatePhysics(PelvisBone, true, true);
 	Mesh->SetAllBodiesBelowPhysicsBlendWeight(PelvisBone, ActiveSettings.PhysicsBlendWeight);
-	if (!bPreserveSimulation) Mesh->SetAllPhysicsLinearVelocity(InitialVelocity);
+	if (!bPreserveSimulation)
+	{
+		if (!ActiveInput.InitialPoseRotation.IsNearlyZero())
+		{
+			// Rotate the ragdoll together while keeping the character capsule upright for recovery.
+			const FQuat Facing = Character->GetActorQuat();
+			const FQuat PoseRotation = Facing * ActiveInput.InitialPoseRotation.Quaternion() * Facing.Inverse();
+			const FVector Pivot = Pelvis->GetUnrealWorldTransform().GetLocation();
+			Mesh->ForEachBodyBelow(PelvisBone, true, false, [&](FBodyInstance* Body)
+			{
+				if (!Body->IsInstanceSimulatingPhysics()) return;
+				FTransform Transform = Body->GetUnrealWorldTransform();
+				Transform.SetLocation(Pivot + PoseRotation.RotateVector(Transform.GetLocation() - Pivot));
+				Transform.SetRotation(PoseRotation * Transform.GetRotation());
+				Body->SetBodyTransform(Transform, ETeleportType::ResetPhysics);
+			});
+		}
+		Mesh->SetAllPhysicsLinearVelocity(InitialVelocity);
+	}
 	if (!ActiveInput.Impulse.IsNearlyZero())
 	{
 		Mesh->AddImpulseAtLocation(ActiveInput.Impulse, ActiveInput.ImpulseLocation, ActiveInput.ImpulseBone);
@@ -334,7 +444,8 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	}
 
 	if (!bStayDown)
-		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics, FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);
+		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics,
+		    bQuickRecovery ? ShortcutRecoveryDelay : FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);
 }
 
 void UPhysicalMontageComponent::RestorePhysics()
@@ -426,7 +537,8 @@ void UPhysicalMontageComponent::RestorePhysics()
 		{
 			BlendIn.BlendTime = 0.0f;
 		}
-		if (AnimInstance->Montage_PlayWithBlendIn(SelectedRecovery, BlendIn) > 0.0f)
+		const float PlayRate = bQuickRecovery ? ShortcutRecoveryPlayRate : FMath::Max(ActiveSettings.RecoveryPlayRate, 0.1f);
+		if (AnimInstance->Montage_PlayWithBlendIn(SelectedRecovery, BlendIn, PlayRate) > 0.0f)
 		{
 			bIsRecovering = true;
 			FOnMontageEnded EndDelegate;

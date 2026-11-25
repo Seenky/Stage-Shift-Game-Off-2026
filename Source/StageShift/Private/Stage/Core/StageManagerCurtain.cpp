@@ -283,7 +283,6 @@ void AStageManager::TickCurtainProduction()
 			if (NextOpeningPenaltyAt < 0.)
 			{
 				NextOpeningPenaltyAt = OpeningDeadline;
-				PlayerCues->ReportProblem(CurtainSignal, NSLOCTEXT("StageProduction", "AudienceWaiting", "Зрители ждут!"));
 				if (OpeningOverdueSound) UGameplayStatics::PlaySound2D(this, OpeningOverdueSound);
 				OnOpeningOverdue.Broadcast();
 			}

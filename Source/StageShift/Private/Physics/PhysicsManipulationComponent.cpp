@@ -24,6 +24,11 @@
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Physics/PhysicsActor.h"
 
+namespace
+{
+	constexpr double ThrowTraceSeconds = 2.5;
+}
+
 UPhysicsManipulationComponent::UPhysicsManipulationComponent()
 {
 	bAutoActivate = false;
@@ -551,11 +556,11 @@ void UPhysicsManipulationComponent::SetThrowTargetFromView(const FVector& WorldL
 
 FVector UPhysicsManipulationComponent::CalculateThrowVelocity(
     const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
-    FVector& OutTarget, float& OutAimSpeed) const
+    FVector& OutTarget, float& OutLobSpeedLimit) const
 {
 	const float Charge = FMath::Clamp((HoldDuration - TapDuration) / FMath::Max(MaxChargeDuration, UE_SMALL_NUMBER), 0.0f, 1.0f);
 	const float Speed = FMath::Lerp(MinThrowSpeed, FMath::Max(MinThrowSpeed, MaxThrowSpeed), Charge);
-	OutAimSpeed = Speed;
+	OutLobSpeedLimit = Speed;
 	OutTarget = Aim.Target;
 	if (!Aim.bHasTarget)
 	{
@@ -568,26 +573,30 @@ FVector UPhysicsManipulationComponent::CalculateThrowVelocity(
 	const double SurfaceOffset = FMath::Max(
 	    FVector::DotProduct(Component.Bounds.BoxExtent, Aim.SurfaceNormal.GetAbs()) - FVector::DotProduct(CenterOffset, Aim.SurfaceNormal), 0.0);
 	OutTarget = Aim.Target + Aim.SurfaceNormal * SurfaceOffset;
+	FVector BallisticTarget = OutTarget;
 	const double ViewIncidence = -FVector::DotProduct(Aim.ViewDirection, Aim.SurfaceNormal);
 	if (ViewIncidence > UE_KINDA_SMALL_NUMBER)
 	{
 		// Follow the same view ray when compensating for the prop's size.
 		const double Retreat = FMath::Min(SurfaceOffset / ViewIncidence, FMath::Max(Component.Bounds.SphereRadius, 1.0) * 2.0);
-		OutTarget = Aim.Target - Aim.ViewDirection * Retreat;
+		BallisticTarget = Aim.Target - Aim.ViewDirection * Retreat;
 	}
-	const FVector Offset = OutTarget - Start;
+	const FVector Offset = BallisticTarget - Start;
 	const float GravityZ = Component.IsGravityEnabled() && GetWorld() ? GetWorld()->GetGravityZ() : 0.0f;
 	if (FMath::Abs(GravityZ) > UE_SMALL_NUMBER && Offset.SizeSquared2D() > 1.0)
 	{
+		float AimSpeed = Speed;
 		if (bAssistTargetRange)
 		{
+			const bool bPlayerAim = !Aim.ViewDirection.IsNearlyZero();
+			const float MaxSpeed = bPlayerAim ? FMath::Max(MaxThrowSpeed, MaxAimAssistThrowSpeed) : MaxThrowSpeed;
 			// A low charge can be below the minimum ballistic speed for this point.
-			// Raise it only as far as needed, within the configured maximum strength.
 			const double RequiredSquared = FMath::Abs(GravityZ) * FMath::Max(Offset.Z + Offset.Size(), 0.0);
 			const double MinimumSpeed = FMath::Sqrt(RequiredSquared) * (1.0 + UE_KINDA_SMALL_NUMBER);
-			OutAimSpeed = FMath::Max(Speed, FMath::Min(static_cast<float>(MinimumSpeed), FMath::Max(MinThrowSpeed, MaxThrowSpeed)));
+			AimSpeed = FMath::Max(Speed, FMath::Min(static_cast<float>(MinimumSpeed), MaxSpeed));
+			OutLobSpeedLimit = FMath::Max(AimSpeed, MaxSpeed);
 		}
-		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, OutTarget, OutAimSpeed);
+		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, BallisticTarget, AimSpeed);
 		Parameters.OverrideGravityZ = GravityZ;
 		Parameters.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
 		Parameters.bAcceptClosestOnNoSolutions = true;
@@ -602,57 +611,60 @@ FVector UPhysicsManipulationComponent::ResolveThrowVelocity(UPrimitiveComponent&
 {
 	if (bOutUsesHighArc) *bOutUsesHighArc = false;
 	FVector Target;
-	float AimSpeed;
-	FVector Velocity = CalculateThrowVelocity(Component, Aim, Center, Start, HoldDuration, Target, AimSpeed);
+	float LobSpeedLimit;
+	FVector Velocity = CalculateThrowVelocity(Component, Aim, Center, Start, HoldDuration, Target, LobSpeedLimit);
 	const double Gravity = Component.IsGravityEnabled() ? -GetWorld()->GetGravityZ() : 0.0;
-	const bool bCanLob = Aim.bHasTarget && !Aim.ViewDirection.IsNearlyZero() && MaxThrowLobHeight > 0.f && Gravity > UE_SMALL_NUMBER;
+	const bool bPlayerAim = Aim.bHasTarget && !Aim.ViewDirection.IsNearlyZero();
+	const bool bCanLob = bPlayerAim && MaxThrowLobHeight > 0.f && Gravity > UE_SMALL_NUMBER;
 	if (!Path && !bCanLob) return Velocity;
 
-	const auto IsGroundHit = [&Aim](const FHitResult& Hit)
+	const auto IsLanding = [&Aim](const FHitResult& Hit)
 	{
-		return Hit.bBlockingHit && FVector::DotProduct(Hit.ImpactNormal, Aim.SurfaceNormal) > 0.7
-		    && FMath::Abs(Hit.ImpactPoint.Z - Aim.Target.Z) <= 20.0;
-	};
-	const double LandingTolerance = FMath::Max(25.0, Component.Bounds.SphereRadius + 15.0);
-	const auto LandedAtGoal = [&Aim, &IsGroundHit, LandingTolerance](const FHitResult& Hit)
-	{
-		return IsGroundHit(Hit) && FVector::DistSquared2D(Hit.ImpactPoint, Aim.Target) <= FMath::Square(LandingTolerance);
+		// A floor contact is a valid ordinary throw, including when the prop lands a little short.
+		return Hit.bBlockingHit && Hit.ImpactNormal.Z >= 0.7
+		    && Hit.ImpactPoint.Z <= Aim.Target.Z + 35.0;
 	};
 	FHitResult Hit;
-	TraceThrowPath(Component, Center, Start, Velocity, Path, Hit, bDrawDebug);
-	if (bCanLob && Hit.bBlockingHit && !IsGroundHit(Hit))
+	const FVector Obstruction = TraceThrowPath(Component, Center, Start, Velocity, Path, Hit, false);
+	if (bCanLob && Hit.bBlockingHit && !IsLanding(Hit))
 	{
+		// Center the prop over the floor target so it can clear the far side of the obstacle.
 		const FVector Offset = Target - Start;
-		const double DropFromApex = MaxThrowLobHeight - Offset.Z;
-		if (DropFromApex >= 0.0 && Offset.SizeSquared2D() > 1.0)
+		const FVector2D Horizontal(Offset.X, Offset.Y);
+		const FVector2D ObstructionHorizontal(Obstruction.X - Start.X, Obstruction.Y - Start.Y);
+		const double Progress = Horizontal.SizeSquared() > 1.0 ? FVector2D::DotProduct(ObstructionHorizontal, Horizontal) / Horizontal.SizeSquared() : 0.0;
+		if (Progress > UE_KINDA_SMALL_NUMBER && Progress < 1.0 - UE_KINDA_SMALL_NUMBER)
 		{
-			// Reduce the high solution's launch speed as needed to keep its apex inside the allowed height.
-			const double MaxUpSpeed = FMath::Sqrt(2.0 * Gravity * MaxThrowLobHeight);
-			const double CappedFlightTime = (MaxUpSpeed + FMath::Sqrt(2.0 * Gravity * DropFromApex)) / Gravity;
-			const double CappedSpeed = FVector(Offset.X / CappedFlightTime, Offset.Y / CappedFlightTime, MaxUpSpeed).Size();
-			UGameplayStatics::FSuggestProjectileVelocityParameters Lob(this, Start, Target, FMath::Min(AimSpeed, static_cast<float>(CappedSpeed)));
-			Lob.OverrideGravityZ = -Gravity;
-			Lob.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
-			Lob.bFavorHighArc = true;
-			FVector LobVelocity;
-			if (UGameplayStatics::SuggestProjectileVelocity(Lob, LobVelocity) && LobVelocity.Z > FMath::Max(0.0, Velocity.Z) + 1.0
-			    && LobVelocity.Z <= MaxUpSpeed + 0.1)
+			// At horizontal progress u, gravity adds g*t²*u*(1-u)/2 above the straight start-to-target line.
+			const double HeightAtObstruction = Obstruction.Z - Start.Z - Offset.Z * Progress;
+			const double HeightPerTimeSquared = 0.5 * Gravity * Progress * (1.0 - Progress);
+			const double LandingTolerance = FMath::Max(25.0, Component.Bounds.SphereRadius + 15.0);
+			constexpr double HeightStep = 20.0;
+			TArray<FVector> LobPath;
+			for (double Rise = HeightStep; Rise <= MaxThrowLobHeight; Rise += HeightStep)
 			{
-				TArray<FVector> LobPath;
+				const double TimeSquared = (HeightAtObstruction + Rise) / HeightPerTimeSquared;
+				if (TimeSquared <= 0.0) continue;
+				if (TimeSquared > FMath::Square(ThrowTraceSeconds)) break;
+				const double FlightTime = FMath::Sqrt(TimeSquared);
+				const FVector LobVelocity = Offset / FlightTime + FVector(0.0, 0.0, 0.5 * Gravity * FlightTime);
+				if (LobVelocity.SizeSquared() > FMath::Square(static_cast<double>(LobSpeedLimit))) continue;
+
 				FHitResult LobHit;
-				TraceThrowPath(Component, Center, Start, LobVelocity, Path ? &LobPath : nullptr, LobHit, bDrawDebug);
-				if (LandedAtGoal(LobHit))
-				{
-					if (bOutUsesHighArc) *bOutUsesHighArc = true;
-					Velocity = LobVelocity;
-					Hit = LobHit;
-					if (Path) *Path = MoveTemp(LobPath);
-				}
+				TraceThrowPath(Component, Center, Start, LobVelocity, Path ? &LobPath : nullptr, LobHit, false);
+				if (!IsLanding(LobHit) || FVector::DistSquared2D(LobHit.ImpactPoint, Aim.Target) > FMath::Square(LandingTolerance)) continue;
+
+				if (bOutUsesHighArc) *bOutUsesHighArc = true;
+				Velocity = LobVelocity;
+				Hit = LobHit;
+				if (Path) *Path = MoveTemp(LobPath);
+				break;
 			}
 		}
 	}
+	if (bDrawDebug) TraceThrowPath(Component, Center, Start, Velocity, nullptr, Hit, true);
 	if (OutHit) *OutHit = Hit;
-	if (bOutBlocked) *bOutBlocked = Hit.bBlockingHit && Hit.ImpactNormal.Z < 0.7;
+	if (bOutBlocked) *bOutBlocked = bPlayerAim ? !IsLanding(Hit) : Hit.bBlockingHit && Hit.ImpactNormal.Z < 0.7;
 	return Velocity;
 }
 
@@ -668,7 +680,7 @@ bool UPhysicsManipulationComponent::PredictThrow(float HoldDuration, TArray<FVec
 	return Path.Num() > 1;
 }
 
-void UPhysicsManipulationComponent::TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start,
+FVector UPhysicsManipulationComponent::TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start,
 	const FVector& Velocity, TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const
 {
 	const FTransform Transform = Component.GetComponentTransform();
@@ -684,15 +696,16 @@ void UPhysicsManipulationComponent::TraceThrowPath(UPrimitiveComponent& Componen
 	Query.bFindInitialOverlaps = false;
 
 	constexpr int32 StepsPerSecond = 24;
+	constexpr int32 StepCount = static_cast<int32>(ThrowTraceSeconds * StepsPerSecond);
 	if (Path)
 	{
-		Path->Reset(2 * StepsPerSecond + 1);
+		Path->Reset(StepCount + 1);
 		Path->Add(Start);
 	}
 	constexpr float DebugLifetime = 0.075f;
 	if (bDrawDebug) DrawDebugBox(GetWorld(), Start + ShapeOffset, Shape.GetBox(), Transform.GetRotation(), FColor::Orange, false, DebugLifetime);
 	FVector Previous = Start;
-	for (int32 Step = 1; Step <= 2 * StepsPerSecond; ++Step)
+	for (int32 Step = 1; Step <= StepCount; ++Step)
 	{
 		const double Time = Step / static_cast<double>(StepsPerSecond);
 		const FVector Next = Start + Velocity * Time + FVector(0, 0, 0.5 * Gravity * Time * Time);
@@ -712,12 +725,14 @@ void UPhysicsManipulationComponent::TraceThrowPath(UPrimitiveComponent& Componen
 		}
 		if (bHit)
 		{
-			if (Path) Path->Add(FMath::Lerp(Previous, Next, Hit.Time));
-			break;
+			const FVector Contact = FMath::Lerp(Previous, Next, Hit.Time);
+			if (Path) Path->Add(Contact);
+			return Contact;
 		}
 		if (Path) Path->Add(Next);
 		Previous = Next;
 	}
+	return Previous;
 }
 
 FVector UPhysicsManipulationComponent::GetThrowReleaseAdjustment(const UPrimitiveComponent& Component, const FVector& Start) const

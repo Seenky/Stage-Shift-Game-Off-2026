@@ -48,10 +48,15 @@ void UInteractionComponent::RefreshInteractionCandidate(FGameplayTag ActionTag)
 {
 	if (bDispatchingInteraction) return;
 	FHitResult Hit;
-	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() && !IsPlayingReleaseAnimation())
+	if (IsActive() && !bEndingPlay && IsValid(GetOwner()) && GetWorld() && !IsPlayingReleaseAnimation() && HandMotion != EInteractionHandMotion::RopeGrip)
 	{
 		if (!HasActiveInteraction()) Hit = ResolveInteractionCandidate(ActionTag);
-		else if (ActiveResult == EInteractionResult::Latched) Hit = ResolveHandoffCandidate();
+		else if (ActiveResult == EInteractionResult::Latched)
+		{
+			Hit = ResolveHandoffCandidate();
+			if (!Hit.GetActor() && Cast<AStagePhysicsActor>(ActiveInteraction.InteractedActor.Get()))
+				Hit = ResolveInteractionCandidate(ActionTag, true);
+		}
 	}
 	SetInteractionCandidate(Hit);
 }
@@ -222,7 +227,8 @@ void UInteractionComponent::PlayHandMotion(EInteractionHandMotion Motion, const 
 
 void UInteractionComponent::ReleaseHandGrip(const USceneComponent& Anchor)
 {
-	if (HandMotion == EInteractionHandMotion::Hold && HandAnchor.Get() == &Anchor)
+	if ((HandMotion == EInteractionHandMotion::Hold || HandMotion == EInteractionHandMotion::RopeGrip)
+	    && (!HandAnchor.IsValid() || HandAnchor.Get() == &Anchor))
 	{
 		HandMotion = EInteractionHandMotion::None;
 		HandAnchor.Reset();
@@ -277,6 +283,11 @@ bool UInteractionComponent::SampleHandMotion(FInteractionHandPose& OutPose) cons
 		OutPose.Hands[0] = OutPose.Hands[1] - Right * 16.0;
 		OutPose.Lean = Facing * (0.07f * OutPose.Weights[1]);
 		OutPose.Reach = Facing * (15.0f * OutPose.Weights[1]);
+		break;
+	case EInteractionHandMotion::RopeGrip:
+		OutPose.Weights[0] = FMath::SmoothStep(0.0f, 0.17f, Elapsed);
+		OutPose.Hands[0] = Contact;
+		OutPose.Reach = Facing * (12.0f * OutPose.Weights[0]);
 		break;
 	default:
 		break;
@@ -366,7 +377,7 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 {
 	OutPayload.Reset();
 
-	if (!IsActive() || !IsValid(GetOwner()) || !GetWorld() || bDispatchingInteraction || bEndingPlay)
+	if (!IsActive() || !IsValid(GetOwner()) || !GetWorld() || bDispatchingInteraction || bEndingPlay || HandMotion == EInteractionHandMotion::RopeGrip)
 	{
 		return EInteractionResult::Rejected;
 	}
@@ -381,6 +392,24 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 
 	if (HasActiveInteraction())
 	{
+		// A one-shot control can use the free hand while the carried prop keeps its latched interaction.
+		AActor* Candidate = CandidateHit.GetActor();
+		const auto* Control = Cast<IInteractionInterface>(Candidate);
+		if (Control && Candidate != ActiveInteraction.InteractedActor.Get() && Control->CanInteractWhileCarrying())
+		{
+			FInteractionContext Context;
+			Context.ActionTag = InteractionContext.ActionTag;
+			Context.Interactor = GetOwner();
+			Context.Hit = CandidateHit;
+			const EInteractionResult Result = IInteractionInterface::Execute_OnInteraction(Candidate, Context);
+			if (Result == EInteractionResult::Completed)
+			{
+				OutPayload.InteractedActor = Candidate;
+				OutPayload.InteractedComponent = Context.Hit.GetComponent();
+			}
+			return Result;
+		}
+
 		if (!CanResumeInteraction()) return EInteractionResult::Rejected;
 
 		AActor* Target = ActiveInteraction.InteractedActor.Get();
@@ -429,7 +458,7 @@ EInteractionResult UInteractionComponent::BeginInteraction(const FInteractionCon
 	return Result;
 }
 
-FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag ActionTag) const
+FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag ActionTag, bool bWhileCarrying) const
 {
 	TArray<FOverlapResult> Overlaps;
 	FCollisionQueryParams CollisionParams(SCENE_QUERY_STAT(Interaction), false, GetOwner());
@@ -460,6 +489,11 @@ FHitResult UInteractionComponent::ResolveInteractionCandidate(FGameplayTag Actio
 		UPrimitiveComponent* Component = Overlap.GetComponent();
 		AActor* Target = Overlap.GetActor();
 		if (!IsValid(Component) || !IsValid(Target) || Target->IsActorBeingDestroyed() || !Target->Implements<UInteractionInterface>() || Visited.Contains(Component)) continue;
+		if (bWhileCarrying)
+		{
+			const auto* Control = Cast<IInteractionInterface>(Target);
+			if (!Control || !Control->CanInteractWhileCarrying()) continue;
+		}
 		Visited.Add(Component);
 
 		FVector Point;

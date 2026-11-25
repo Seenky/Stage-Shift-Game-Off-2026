@@ -8,6 +8,7 @@
 class AStageManager;
 class UCanvasPanel;
 class UImage;
+class UInteractionOutlineComponent;
 class UPanelWidget;
 class UTextBlock;
 
@@ -39,6 +40,7 @@ protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ActorNumber;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> NumberBadge;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueIcon;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueFaceFabric;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> Timing;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> ActionStatus;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> ActionPrompt;
@@ -48,6 +50,8 @@ protected:
 
 private:
 	int32 LastNumber = INDEX_NONE;
+	EStageCueKind LastKind = EStageCueKind::General;
+	TOptional<FLinearColor> DefaultFaceColor;
 	EStageCueWindowPhase LastPhase = EStageCueWindowPhase::Hidden;
 	bool bLastPreparation = false;
 	double StartsAt = 0.0;
@@ -90,9 +94,11 @@ private:
 	UFUNCTION() void HandleOpeningOverdue();
 	void ShowAudienceReaction(bool bPositive);
 	void PositionActorTags(const FGeometry& Geometry);
+	void UpdatePickupCueOutline(bool bHighlight);
 	UStagePerformanceTagWidget* GetTag(UPanelWidget& Panel, TSubclassOf<UStagePerformanceTagWidget> TagClass, int32 Index);
 
 	TWeakObjectPtr<AStageManager> Source;
+	TWeakObjectPtr<UInteractionOutlineComponent> PickupCueOutline;
 	TArray<TWeakObjectPtr<AActor>, TInlineAllocator<5>> TaggedActors;
 	TArray<TWeakObjectPtr<AActor>, TInlineAllocator<4>> CastMembers;
 	int32 LastScene = INDEX_NONE;

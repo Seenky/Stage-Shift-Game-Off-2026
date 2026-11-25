@@ -43,6 +43,9 @@ struct STAGESHIFT_API FPhysicalAnimationInput
 	FVector ImpulseLocation = FVector::ZeroVector;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName ImpulseBone;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ToolTip = "Initial rotation of the physical pose around the pelvis, relative to the character."))
+	FRotator InitialPoseRotation = FRotator::ZeroRotator;
 };
 
 USTRUCT(BlueprintType)
@@ -89,6 +92,9 @@ struct STAGESHIFT_API FPhysicalMontageSettings
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery", meta = (ClampMin = "0.1", Units = "s"))
 	float TimeToRecovery = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery", meta = (ClampMin = "0.1"))
+	float RecoveryPlayRate = 1.0f;
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -115,9 +121,12 @@ public:
 	FPhysicsRecoverySelector RecoverySelector;
 
 	bool IsPhysicsMontageActive() const { return bMeshCollisionSaved || bIsRecovering; }
+	bool IsPlayingPhysicsMontage(FName MontageName) const { return bMeshCollisionSaved && ActiveMontageName == MontageName; }
+	bool IsSimulatingPhysicsMontage() const { return bIsSimActive; }
 	bool IsStayingDown() const { return bStayDown && (bIsSimActive || bMeshCollisionSaved); }
 	bool StayDown(UAnimMontage* FallMontage, const FVector& PushDirection);
 	void EndStageFall();
+	bool RedirectPhysicsMontage(const FTransform& Link, const FVector& ExitFloor, const FVector& ExitForward, const UPrimitiveComponent* HeldComponent);
 
 	UFUNCTION(BlueprintCallable)
 	void ActivatePhysics(FName MontageName);
@@ -196,4 +205,5 @@ private:
 	bool bIsSimActive = false;
 	bool bIsRecovering = false;
 	bool bStayDown = false;
+	bool bQuickRecovery = false;
 };

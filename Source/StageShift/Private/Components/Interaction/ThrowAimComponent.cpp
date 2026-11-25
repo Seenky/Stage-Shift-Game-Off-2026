@@ -1,6 +1,5 @@
 #include "Components/Interaction/ThrowAimComponent.h"
 
-#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -13,7 +12,9 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerInput.h"
 #include "HAL/IConsoleManager.h"
-#include "Materials/MaterialInstanceDynamic.h"
+#include "NiagaraComponent.h"
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
+#include "NiagaraSystem.h"
 #include "Physics/PhysicsActor.h"
 #include "Physics/PhysicsManipulationComponent.h"
 #include "SceneView.h"
@@ -33,14 +34,8 @@ UThrowAimComponent::UThrowAimComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickGroup = TG_PrePhysics;
 	ReticleWidgetClass = UThrowAimWidget::StaticClass();
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> Dot(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> DotMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowTrajectory.M_ThrowTrajectory"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> MarkerPlane(TEXT("/Engine/BasicShapes/Plane.Plane"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MarkerMaterial(TEXT("/Game/DEV/UI/Cursor/M_ThrowLanding.M_ThrowLanding"));
-	TrajectoryDotMesh = Dot.Object;
-	TrajectoryMaterial = DotMaterial.Object;
-	LandingMarkerMesh = MarkerPlane.Object;
-	LandingMaterial = MarkerMaterial.Object;
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Tape(TEXT("/Game/DEV/UI/Cursor/ThrowTape/NS_ThrowTape.NS_ThrowTape"));
+	ThrowTapeSystem = Tape.Object;
 }
 
 void UThrowAimComponent::BeginPlay()
@@ -91,8 +86,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	UCharacterMovementComponent* Movement = Pawn->GetCharacterMovement();
 	FIntRect Bounds;
-	FVector2D PlayerOrigin;
-	if (!GetViewportBounds(*PC, Bounds, PlayerOrigin)) return;
+	if (!GetViewportBounds(*PC, Bounds)) return;
 	if (!bAiming)
 	{
 		bAiming = true;
@@ -122,15 +116,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		const auto* DraggedComponent = bDraggingAim ? Manipulation->GetManipulatedComponent() : nullptr;
 		const auto* DraggedProp = DraggedComponent ? Cast<AStagePhysicsActor>(DraggedComponent->GetOwner()) : nullptr;
 		const bool bShowDragReticle = bDraggingAim && !(DraggedProp && DraggedProp->IsCurtainLever());
-		Reticle = bShowDragReticle && ReticleWidgetClass ? CreateWidget<UUserWidget>(PC, ReticleWidgetClass) : nullptr;
-		if (Reticle)
-		{
-			Reticle->SetIsFocusable(false);
-			Reticle->SetVisibility(ESlateVisibility::HitTestInvisible);
-			Reticle->AddToPlayerScreen(20);
-			Reticle->SetDesiredSizeInViewport(ReticleSize);
-			Reticle->SetAlignmentInViewport(FVector2D(0.5, 0.5));
-		}
+		if (bShowDragReticle && ReticleWidgetClass) CreateReticle(*PC, ReticleWidgetClass);
 	}
 	if (!bDraggingAim)
 	{
@@ -143,40 +129,58 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (!bPreparing && bWasPreparing) bAimFrozen = true;
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
-	if (Reticle)
-	{
-		Reticle->SetVisibility(bInteractive ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		Reticle->SetPositionInViewport(ScreenPosition - PlayerOrigin, true);
-	}
 	// Drag coordinates character facing with the simulated grip. The cursor only
 	// supplies the desired direction here, so a blocked prop cannot twist the arms.
-	if (bDraggingAim) return;
-	if (bHasAimTarget)
+	if (!bDraggingAim)
 	{
-		const FVector ToTarget = (AimTarget - Pawn->GetActorLocation()).GetSafeNormal2D();
-		if (!ToTarget.IsNearlyZero()) AimDirection = ToTarget;
+		if (bHasAimTarget)
+		{
+			const FVector ToTarget = (AimTarget - Pawn->GetActorLocation()).GetSafeNormal2D();
+			if (!ToTarget.IsNearlyZero()) AimDirection = ToTarget;
+		}
+		const FRotator Target(0, AimDirection.Rotation().Yaw, 0);
+		Pawn->SetActorRotation(FMath::RInterpTo(Pawn->GetActorRotation(), Target, DeltaTime, TurnSpeed));
+		UpdateThrowPreview(Manipulation->IsCarrying() && (bPreparing || bFollowingThrough), DeltaTime);
+		if (bPreviewBlocked && bHasAimTarget && !Reticle)
+		{
+			CreateReticle(*PC, UThrowAimWidget::StaticClass());
+			if (auto* Widget = Cast<UThrowAimWidget>(Reticle)) Widget->SetBlocked();
+		}
 	}
-	const FRotator Target(0, AimDirection.Rotation().Yaw, 0);
-	Pawn->SetActorRotation(FMath::RInterpTo(Pawn->GetActorRotation(), Target, DeltaTime, TurnSpeed));
-	UpdateThrowPreview(Manipulation->IsCarrying() && (bPreparing || bFollowingThrough), DeltaTime);
+	if (Reticle)
+	{
+		FVector2D ReticlePosition = ScreenPosition - FVector2D(Bounds.Min);
+		const bool bVisible = bDraggingAim ? bInteractive : bPreviewBlocked && bHasAimTarget
+		    && PC->ProjectWorldLocationToScreen(DisplayedAimTarget, ReticlePosition, true);
+		Reticle->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bVisible) Reticle->SetPositionInViewport(ReticlePosition, true);
+	}
 }
 
-bool UThrowAimComponent::GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds, FVector2D& PlayerOrigin) const
+void UThrowAimComponent::CreateReticle(APlayerController& Controller, TSubclassOf<UUserWidget> WidgetClass)
+{
+	Reticle = CreateWidget<UUserWidget>(&Controller, WidgetClass);
+	if (!Reticle) return;
+	Reticle->SetIsFocusable(false);
+	Reticle->AddToPlayerScreen(20);
+	Reticle->SetDesiredSizeInViewport(ReticleSize);
+	Reticle->SetAlignmentInViewport(FVector2D(0.5, 0.5));
+}
+
+bool UThrowAimComponent::GetViewportBounds(const APlayerController& Controller, FIntRect& Bounds) const
 {
 	const ULocalPlayer* Player = Controller.GetLocalPlayer();
 	if (!Player || !Player->ViewportClient || !Player->ViewportClient->Viewport) return false;
 	FSceneViewProjectionData Projection;
 	if (!Player->GetProjectionData(Player->ViewportClient->Viewport, Projection)) return false;
 	Bounds = Projection.GetConstrainedViewRect();
-	PlayerOrigin = FVector2D(Projection.GetViewRect().Min);
 	return Bounds.Width() > 0 && Bounds.Height() > 0;
 }
 
 void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround)
 {
 	FIntRect Bounds;
-	FVector2D PlayerOrigin;
-	if (!GetViewportBounds(Controller, Bounds, PlayerOrigin)) return;
+	if (!GetViewportBounds(Controller, Bounds)) return;
 	FVector2D Mouse;
 	const bool bHasMouse = Controller.GetMousePosition(Mouse.X, Mouse.Y);
 	const bool bAbsoluteMouse = Controller.bShowMouseCursor || !Controller.GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture();
@@ -226,6 +230,7 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		LastMousePosition = Mouse;
 
 	FVector RayStart, RayDirection;
+	const bool bHadAimTarget = bHasAimTarget;
 	bHasAimTarget = Controller.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection);
 	if (!bHasAimTarget)
 	{
@@ -248,18 +253,20 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 	{
 		if (bRefreshGround || GetWorld()->GetTimeSeconds() >= NextThrowPreviewAt)
 		{
-			// Keep the projected cursor responsive between floor probes, even beyond scenery.
-			AimGroundHeightOffset = 0.0;
-			AimSurfaceNormal = FVector::UpVector;
+			// Keep the last floor height when scenery hides the surface from this probe.
 			constexpr double FloorProbeHeight = 35.0;
 			const FVector Vertical = FVector::UpVector * FloorProbeHeight;
 			if (GetWorld()->LineTraceSingleByChannel(Hit, AimTarget + Vertical, AimTarget - Vertical, AimTraceChannel, Query) && Hit.ImpactNormal.Z >= 0.7)
 			{
-				AimGroundHeightOffset = Hit.ImpactPoint.Z - AimTarget.Z;
+				AimGroundZ = Hit.ImpactPoint.Z;
 				AimSurfaceNormal = Hit.ImpactNormal;
 			}
 		}
-		AimTarget.Z += AimGroundHeightOffset;
+		if (AimGroundZ.IsSet())
+		{
+			const double GroundDistance = (AimGroundZ.GetValue() - RayStart.Z) / RayDirection.Z;
+			if (GroundDistance > 0.0 && GroundDistance <= AimTraceDistance) AimTarget = RayStart + RayDirection * GroundDistance;
+		}
 	}
 	else
 	{
@@ -274,24 +281,34 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		DrawDebugSphere(GetWorld(), AimTarget, 5.f, 8, FColor::Cyan);
 	}
 #endif
-	if (!bDraggingAim) Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
+	if (!bDraggingAim)
+	{
+		DisplayedAimTarget = bHadAimTarget && !bRefreshGround ? FMath::VInterpTo(DisplayedAimTarget, AimTarget, DeltaTime, 22.f) : AimTarget;
+		Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
+	}
 }
 
 void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 {
+	const auto ClearPreview = [this]
+	{
+		PreviewBlendRemaining = 0.0;
+		PreviewPath.Reset();
+		DisplayedPath.Reset();
+		PreviewImpact = {};
+		bPreviewBlocked = false;
+		bBlendLandingOnly = false;
+		HideThrowTape();
+	};
 	if (!bShow)
 	{
 		NextThrowPreviewAt = 0.0;
-		PreviewBlendRemaining = 0.0;
-		PreviewPath.Reset();
-		DisplayedDots.Reset();
-		PreviewImpact = {};
-		bPreviewBlocked = false;
-		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
-		if (LandingMarker) LandingMarker->SetVisibility(false);
+		LastStablePreviewAt = 0.0;
+		ClearPreview();
 		return;
 	}
 	constexpr double PreviewInterval = 1.0 / 20.0;
+	constexpr double PreviewGracePeriod = 0.12;
 	const double Now = GetWorld()->GetTimeSeconds();
 	// Sample the last visible release frames before the timer detaches the prop.
 	if (Now < NextThrowPreviewAt && !(bAimFrozen && Interaction->IsReleaseImminent()))
@@ -301,6 +318,7 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	}
 	NextThrowPreviewAt += PreviewInterval;
 	if (NextThrowPreviewAt <= Now) NextThrowPreviewAt = Now + PreviewInterval;
+	const bool bKeepRecentPreview = !bAimFrozen && !PreviewPath.IsEmpty() && Now - LastStablePreviewAt < PreviewGracePeriod;
 
 	TArray<FVector> Path;
 	FHitResult Hit;
@@ -312,16 +330,40 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 #endif
 	if (!Manipulation->PredictThrow(Interaction->GetInteractionHoldDuration(), Path, Hit, bDrawDebug, &bBlocked, &bUsesHighArc))
 	{
-		PreviewPath.Reset();
-		PreviewBlendRemaining = 0.0;
-		bPreviewBlocked = false;
-		if (TrajectoryDots) TrajectoryDots->SetVisibility(false);
-		if (LandingMarker) LandingMarker->SetVisibility(false);
+		if (!bKeepRecentPreview) ClearPreview();
+		else if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
 		return;
+	}
+	const bool bLanding = Hit.bBlockingHit && !bBlocked;
+	const bool bPreviousLanding = PreviewImpact.bBlockingHit && !bPreviewBlocked;
+	if (bKeepRecentPreview && (bLanding != bPreviousLanding || bBlocked != bPreviewBlocked))
+	{
+		// One sweep at the edge of a prop should not replace the landing mark with a cross.
+		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
+		return;
+	}
+	LastStablePreviewAt = Now;
+	if (bLanding)
+	{
+		// The sweep can report different corners of the prop as it rotates.
+		Hit.ImpactPoint.X = Path.Last().X;
+		Hit.ImpactPoint.Y = Path.Last().Y;
+		// The prop hits simple collision, which can sit below the rendered floorboards.
+		constexpr double SurfaceProbeHalfHeight = 12.0;
+		const FVector Probe = FVector::UpVector * SurfaceProbeHalfHeight;
+		FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowLandingSurface), true, GetOwner());
+		Query.AddIgnoredComponent(Manipulation->GetManipulatedComponent());
+		FHitResult SurfaceHit;
+		if (GetWorld()->LineTraceSingleByChannel(SurfaceHit, Hit.ImpactPoint + Probe, Hit.ImpactPoint - Probe, AimTraceChannel, Query)
+		    && SurfaceHit.ImpactNormal.Z >= 0.7)
+		{
+			Hit.ImpactPoint = SurfaceHit.ImpactPoint;
+			Hit.ImpactNormal = SurfaceHit.ImpactNormal;
+		}
 	}
 	if (Hit.bBlockingHit)
 	{
-		// The sweep follows the prop's center. Ease the preview toward the surface contact it marks.
+		// Ease the preview from the prop's center toward the first contact returned by the sweep.
 		const FVector Contact = Hit.ImpactPoint + Hit.ImpactNormal;
 		const FVector ContactOffset = Contact - Path.Last();
 		const int32 LastIndex = Path.Num() - 1;
@@ -335,48 +377,20 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 			Path.Insert(FMath::Lerp(Path[LastIndex - 1], Contact, 0.5), LastIndex);
 	}
 	// Switching arcs or impact surfaces can put intermediate points inside an obstacle.
+	const bool bSameFloor = bLanding && bPreviousLanding && FMath::Abs(Hit.ImpactPoint.Z - PreviewImpact.ImpactPoint.Z) <= 35.0;
 	const bool bSameImpactSurface = Hit.bBlockingHit == PreviewImpact.bBlockingHit &&
-	    (!Hit.bBlockingHit || (Hit.GetComponent() == PreviewImpact.GetComponent()
+	    (!Hit.bBlockingHit || ((bSameFloor || Hit.GetComponent() == PreviewImpact.GetComponent())
 	    && FVector::DotProduct(Hit.ImpactNormal, PreviewImpact.ImpactNormal) >= 0.95));
 	const bool bCanBlend = !bAimFrozen && !PreviewPath.IsEmpty() && bBlocked == bPreviewBlocked
 	    && bSameImpactSurface && bUsesHighArc == bPreviewUsesHighArc;
-	PreviewBlendRemaining = bCanBlend ? PreviewInterval : 0.0;
+	bBlendLandingOnly = !bAimFrozen && !bCanBlend && bSameFloor
+	    && FVector::DistSquared(Hit.ImpactPoint, PreviewImpact.ImpactPoint) <= FMath::Square(90.0);
+	PreviewBlendRemaining = bCanBlend || bBlendLandingOnly ? PreviewInterval : 0.0;
 	PreviewPath = MoveTemp(Path);
 	PreviewImpact = Hit;
 	bPreviewBlocked = bBlocked;
 	bPreviewUsesHighArc = bUsesHighArc;
 
-	if (!TrajectoryDots && TrajectoryDotMesh && TrajectoryMaterial)
-	{
-		TrajectoryDots = NewObject<UInstancedStaticMeshComponent>(GetOwner(), TEXT("ThrowTrajectory"));
-		TrajectoryDots->SetStaticMesh(TrajectoryDotMesh);
-		TrajectoryDots->SetMaterial(0, TrajectoryMaterial);
-		TrajectoryDots->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		TrajectoryDots->SetCanEverAffectNavigation(false);
-		TrajectoryDots->SetCastShadow(false);
-		TrajectoryDots->RegisterComponent();
-	}
-
-	if (Hit.bBlockingHit && !LandingMarker && LandingMarkerMesh && LandingMaterial)
-	{
-		LandingMarker = NewObject<UStaticMeshComponent>(GetOwner(), TEXT("ThrowLandingMarker"));
-		LandingMarker->SetStaticMesh(LandingMarkerMesh);
-		LandingMarker->SetMaterial(0, LandingMaterial);
-		LandingMarker->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		LandingMarker->SetCanEverAffectNavigation(false);
-		LandingMarker->SetCastShadow(false);
-		LandingMarker->SetReceivesDecals(false);
-		LandingMarker->SetWorldScale3D(FVector(0.92));
-		LandingMarker->RegisterComponent();
-		LandingMarker->CreateDynamicMaterialInstance(0);
-	}
-	if (LandingMarker)
-	{
-		if (auto* Material = Cast<UMaterialInstanceDynamic>(LandingMarker->GetMaterial(0)))
-			Material->SetVectorParameterValue(TEXT("MarkerColor"),
-			    bBlocked ? FLinearColor(2.0f, 0.05f, 0.025f) : FLinearColor::White);
-		LandingMarker->SetVisibility(Hit.bBlockingHit);
-	}
 	DrawThrowTrajectory(DeltaTime);
 }
 
@@ -384,41 +398,132 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 {
 	const double Alpha = PreviewBlendRemaining > DeltaTime ? DeltaTime / PreviewBlendRemaining : 1.0;
 	PreviewBlendRemaining = FMath::Max(PreviewBlendRemaining - DeltaTime, 0.0);
-	if (TrajectoryDots)
+	if (!ThrowTapeSystem)
 	{
-		const int32 PreviousCount = DisplayedDots.Num();
-		const int32 Count = PreviewPath.Num() - 2;
-		const FVector Tail = PreviousCount > 0 ? DisplayedDots.Last().GetLocation() : PreviewPath[0];
-		DisplayedDots.SetNum(Count);
-		bool bChanged = PreviousCount != Count;
-		for (int32 Index = 0; Index < Count; ++Index)
-		{
-			FTransform& Dot = DisplayedDots[Index];
-			const FVector& Target = PreviewPath[Index + 1];
-			if (Index >= PreviousCount) Dot = FTransform(FQuat::Identity, Tail, FVector(0.10));
-			const FVector Location = FMath::Lerp(Dot.GetLocation(), Target, Alpha);
-			if (Dot.GetLocation().Equals(Location, 0.05)) continue;
-			Dot.SetLocation(Location);
-			bChanged = true;
-		}
-		if (TrajectoryDots->GetInstanceCount() != Count)
-		{
-			TrajectoryDots->ClearInstances();
-			TrajectoryDots->AddInstances(DisplayedDots, false, true, false);
-		}
-		else if (bChanged && Count > 0)
-		{
-			TrajectoryDots->BatchUpdateInstancesTransforms(0, DisplayedDots, true);
-		}
-		TrajectoryDots->SetVisibility(Count > 0);
+		HideThrowTape();
+		return;
 	}
-	if (LandingMarker && PreviewImpact.bBlockingHit)
+
+	const APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
+	if (!Controller) return;
+	FVector ViewLocation;
+	FRotator ViewRotation;
+	Controller->GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	const int32 PreviousCount = DisplayedPath.Num();
+	const FVector Tail = PreviousCount > 0 ? DisplayedPath.Last() : PreviewPath[0];
+	// Swap the arc immediately when its shape changes, then ease the last strips into the new landing point.
+	const FVector LandingOffset = bBlendLandingOnly ? (Tail - PreviewPath.Last()) * (1.0 - Alpha) : FVector::ZeroVector;
+	const int32 LandingSamples = FMath::Min(PreviewPath.Num() - 1, 4);
+	const int32 LandingStart = PreviewPath.Num() - 1 - LandingSamples;
+	DisplayedPath.SetNumUninitialized(PreviewPath.Num());
+	double PathLength = 0.0;
+	for (int32 Index = 0; Index < PreviewPath.Num(); ++Index)
 	{
+		if (bBlendLandingOnly)
+		{
+			const double Fraction = Index > LandingStart ? static_cast<double>(Index - LandingStart) / LandingSamples : 0.0;
+			DisplayedPath[Index] = PreviewPath[Index] + LandingOffset * FMath::Square(Fraction);
+		}
+		else
+		{
+			const FVector Previous = Index < PreviousCount ? DisplayedPath[Index] : Tail;
+			DisplayedPath[Index] = FMath::Lerp(Previous, PreviewPath[Index], Alpha);
+		}
+		if (Index > 0) PathLength += FVector::Distance(DisplayedPath[Index - 1], DisplayedPath[Index]);
+	}
+
+	// NS_ThrowTape spawns 40 strips, including nine for the landing mark and one hidden fallback.
+	constexpr int32 MaxArcStrips = 30;
+	constexpr double TargetStripSpacing = 80.0;
+	const int32 ArcStrips = FMath::Clamp(FMath::RoundToInt(PathLength / TargetStripSpacing), 1, MaxArcStrips);
+	// On a blocked throw, bring the last strip close to the obstacle.
+	const double EndGap = bPreviewBlocked && PreviewImpact.bBlockingHit ? 0.35 : 1.0;
+	const double Spacing = PathLength / (ArcStrips + EndGap);
+	TArray<FVector> Positions;
+	TArray<FQuat> Rotations;
+	TArray<FVector> Scales;
+	Positions.Reserve(ArcStrips + 10);
+	Rotations.Reserve(ArcStrips + 10);
+	Scales.Reserve(ArcStrips + 10);
+	const auto AddStrip = [&](const FVector& Position, const FQuat& Rotation, double Length, double Width)
+	{
+		Positions.Add(Position);
+		Rotations.Add(Rotation);
+		Scales.Emplace(Length / 100.0, Width / 100.0, 1.0); // The Niagara mesh is a 100 cm plane.
+	};
+
+	double Distance = 0.0;
+	int32 StripIndex = 1;
+	for (int32 Index = 1; Index < DisplayedPath.Num() && StripIndex <= ArcStrips; ++Index)
+	{
+		const FVector& Start = DisplayedPath[Index - 1];
+		const FVector Segment = DisplayedPath[Index] - Start;
+		const double SegmentLength = Segment.Size();
+		if (SegmentLength <= UE_KINDA_SMALL_NUMBER) continue;
+		while (StripIndex <= ArcStrips && Spacing * StripIndex <= Distance + SegmentLength)
+		{
+			const FVector Position = Start + Segment * ((Spacing * StripIndex - Distance) / SegmentLength);
+			const FVector Tangent = Segment / SegmentLength;
+			const FVector ToView = ViewLocation - Position;
+			const double Length = FMath::Clamp(Spacing * 0.56, 15.0, 47.0);
+			AddStrip(Position, FRotationMatrix::MakeFromXZ(Tangent, ToView).ToQuat(), Length, Length * 0.33);
+			++StripIndex;
+		}
+		Distance += SegmentLength;
+	}
+
+	if (PreviewImpact.bBlockingHit && !bPreviewBlocked)
+	{
+		const FVector Center = DisplayedPath.Last();
 		const FVector Normal = PreviewImpact.ImpactNormal;
-		const FVector Location = FMath::Lerp(LandingMarker->GetComponentLocation(), PreviewPath.Last(), Alpha);
-		const FQuat Rotation = FQuat::Slerp(LandingMarker->GetComponentQuat(), FRotationMatrix::MakeFromZ(Normal).ToQuat(), Alpha);
-		LandingMarker->SetWorldLocationAndRotation(Location, Rotation);
+		const FMatrix Surface = FRotationMatrix::MakeFromZX(Normal, FVector::ForwardVector);
+		const FVector X = Surface.GetScaledAxis(EAxis::X);
+		const FVector Y = Surface.GetScaledAxis(EAxis::Y);
+		const FQuat AlongX = Surface.ToQuat();
+		const FQuat AlongY = FQuat(Normal, UE_HALF_PI) * AlongX;
+		constexpr double HalfExtent = 47.0;
+		constexpr double Length = 28.0;
+		constexpr double Width = 12.5;
+		for (const double SX : {-1.0, 1.0})
+		{
+			for (const double SY : {-1.0, 1.0})
+			{
+				const FVector Corner = Center + HalfExtent * (SX * X + SY * Y);
+				AddStrip(Corner - (Length - Width) * 0.5 * SX * X, AlongX, Length, Width);
+				AddStrip(Corner - (Length - Width) * 0.5 * SY * Y + 0.2 * Normal, AlongY, Length, Width);
+			}
+		}
+		AddStrip(Center, FQuat(Normal, UE_PI * 0.25) * AlongX, 25.5, 25.5);
 	}
+
+	// Array lookups beyond the used slots clamp to the final, invisible strip.
+	Positions.Add(DisplayedPath.Last());
+	Rotations.Add(FQuat::Identity);
+	Scales.Add(FVector::ZeroVector);
+	if (!ThrowTape)
+	{
+		ThrowTape = NewObject<UNiagaraComponent>(GetOwner(), TEXT("ThrowTapePreview"));
+		ThrowTape->SetAutoActivate(false);
+		ThrowTape->SetAsset(ThrowTapeSystem);
+		ThrowTape->SetCastShadow(false);
+		ThrowTape->SetWorldLocation(DisplayedPath[0]);
+		ThrowTape->SetTickBehavior(ENiagaraTickBehavior::UseComponentTickGroup);
+		ThrowTape->SetTickGroup(TG_PostPhysics);
+		ThrowTape->RegisterComponent();
+	}
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayPosition(ThrowTape, TEXT("User.TapePositions"), Positions);
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayQuat(ThrowTape, TEXT("User.TapeRotations"), Rotations);
+	UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(ThrowTape, TEXT("User.TapeScales"), Scales);
+	ThrowTape->SetVisibility(true);
+	if (!ThrowTape->IsActive()) ThrowTape->Activate(true);
+}
+
+void UThrowAimComponent::HideThrowTape()
+{
+	if (!ThrowTape) return;
+	ThrowTape->SetVisibility(false);
+	if (ThrowTape->IsActive()) ThrowTape->DeactivateImmediate();
 }
 
 void UThrowAimComponent::FreezeAim()
@@ -449,6 +554,8 @@ void UThrowAimComponent::StopAiming()
 	if (Reticle) Reticle->RemoveFromParent();
 	Reticle = nullptr;
 	UpdateThrowPreview(false);
+	AimGroundZ.Reset();
+	AimSurfaceNormal = FVector::UpVector;
 	bAiming = bDraggingAim = bWasPreparing = bStickMoved = false;
 	bAimFrozen = bHasAimTarget = false;
 	if (Manipulation.IsValid()) Manipulation->ClearThrowTarget();
@@ -457,7 +564,6 @@ void UThrowAimComponent::StopAiming()
 void UThrowAimComponent::EndPlay(const EEndPlayReason::Type Reason)
 {
 	StopAiming();
-	if (TrajectoryDots) TrajectoryDots->DestroyComponent();
-	if (LandingMarker) LandingMarker->DestroyComponent();
+	if (ThrowTape) ThrowTape->DestroyComponent();
 	Super::EndPlay(Reason);
 }

@@ -16,7 +16,8 @@
 #include "TimerManager.h"
 
 void UStageImpactAction::Setup(EStageImpactMode InMode, AActor* InTarget, AStagePhysicsActor* InProp, float InDelay,
-    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimMontage* InFall, AStageSoundControl* InSoundControl)
+    float InStageTimeRequired, UAnimSequenceBase* InWindup, UAnimSequenceBase* InThrowAnimation, UAnimMontage* InFall,
+    AStageSoundControl* InSoundControl)
 {
 	Mode = InMode;
 	Target = InTarget;
@@ -24,6 +25,7 @@ void UStageImpactAction::Setup(EStageImpactMode InMode, AActor* InTarget, AStage
 	Delay = InDelay;
 	StageTimeRequired = InStageTimeRequired;
 	Windup = InWindup;
+	ThrowAnimation = InThrowAnimation;
 	Fall = InFall;
 	SoundControl = InSoundControl;
 }
@@ -49,11 +51,17 @@ void UStageImpactAction::OnStart_Implementation()
 		}
 		const auto* Character = Cast<ACharacter>(Owner);
 		auto* Instance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
-		if (Instance && Windup && Delay > 0.0f)
+		AnimInstance = Instance;
+		const bool bHoldWindup = Mode == EStageImpactMode::Throw && SoundControl.IsValid();
+		if (Instance && Windup && (bHoldWindup || Delay > 0.0f))
 		{
-			AnimInstance = Instance;
-			PlayingWindup = Instance->PlaySlotAnimationAsDynamicMontage(Windup, TEXT("RightHand"), 0.07f, 0.1f,
-			    FMath::Max(0.1f, Windup->GetPlayLength() / Delay));
+			const float PlayRate = bHoldWindup ? 1.0f : FMath::Max(0.1f, Windup->GetPlayLength() / Delay);
+			if (auto* Montage = UAnimMontage::CreateSlotAnimationAsDynamicMontage(Windup, TEXT("RightHand"), 0.07f, 0.1f, PlayRate))
+			{
+				// Leave the last frame of the windup in the slot until the sound or cleanup.
+				Montage->bEnableAutoBlendOut = !bHoldWindup;
+				if (Instance->Montage_Play(Montage, PlayRate) > 0.0f) PlayingAnimation = Montage;
+			}
 		}
 	}
 	if (SoundControl.IsValid()) return;
@@ -79,7 +87,17 @@ void UStageImpactAction::HandleSoundResult(const FStageSoundWindow& Window, ESta
 	}
 	else if (Window.Id == SoundWindowId && Result == EStageSoundResult::OnTime)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(ImpactTimer);
+		auto& Timers = GetWorld()->GetTimerManager();
+		Timers.ClearTimer(ImpactTimer);
+		if (auto* Instance = AnimInstance.Get(); Mode == EStageImpactMode::Throw && Instance && ThrowAnimation)
+			if (auto* Montage = Instance->PlaySlotAnimationAsDynamicMontage(ThrowAnimation, TEXT("RightHand"), 0.04f, 0.08f))
+			{
+				PlayingAnimation = Montage;
+				bThrowStarted = true;
+				const float ReleaseDelay = FMath::Min(0.1f, 0.5f * ThrowAnimation->GetPlayLength());
+				Timers.SetTimer(ImpactTimer, this, &ThisClass::PerformImpact, ReleaseDelay, false);
+				return;
+			}
 		PerformImpact();
 	}
 	else if (Window.Id == SoundWindowId && Result == EStageSoundResult::Cancelled)
@@ -142,7 +160,7 @@ void UStageImpactAction::HandlePropHit(UPrimitiveComponent*, AActor* OtherActor,
 
 EStageActionStopMode UStageImpactAction::GetStopMode_Implementation(EStageActionStopReason Reason) const
 {
-	if (Reason == EStageActionStopReason::Interrupt && FlightBody.IsValid()) return EStageActionStopMode::FinishAction;
+	if (Reason == EStageActionStopReason::Interrupt && (bThrowStarted || FlightBody.IsValid())) return EStageActionStopMode::FinishAction;
 	return Super::GetStopMode_Implementation(Reason);
 }
 
@@ -187,5 +205,5 @@ void UStageImpactAction::Cleanup_Implementation()
 		if (bRestoreCCD) Body->SetUseCCD(false);
 		if (auto* Item = Prop.Get()) Item->IgnoreCatchFor(nullptr);
 	}
-	if (auto* Instance = AnimInstance.Get(); Instance && PlayingWindup.IsValid()) Instance->Montage_Stop(0.1f, PlayingWindup.Get());
+	if (auto* Instance = AnimInstance.Get(); Instance && PlayingAnimation.IsValid()) Instance->Montage_Stop(0.1f, PlayingAnimation.Get());
 }

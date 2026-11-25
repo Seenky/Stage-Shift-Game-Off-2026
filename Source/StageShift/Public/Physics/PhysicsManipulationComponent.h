@@ -131,8 +131,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm/s"))
 	float MaxThrowSpeed = 1400.0f;
-	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm", ToolTip = "Maximum rise above the release point for an assisted lob. Zero disables assisted lobs."))
-	float MaxThrowLobHeight = 120.0f;
+	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm/s", ToolTip = "Speed limit for player aim assistance when reaching the target or clearing an obstruction."))
+	float MaxAimAssistThrowSpeed = 1550.0f;
+	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm", ToolTip = "Maximum rise above the ordinary arc's first obstruction. Zero disables assisted lobs."))
+	float MaxThrowLobHeight = 300.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Throw")
 	bool bAssistTargetRange = true;
 	UPROPERTY(EditAnywhere, Category = "Throw", meta = (ClampMin = "0.0", Units = "cm"))
@@ -211,11 +213,11 @@ private:
 	void ClearPickupPlayback();
 	FVector CalculateThrowVelocity(
 	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
-	    FVector& OutTarget, float& OutAimSpeed) const;
+	    FVector& OutTarget, float& OutLobSpeedLimit) const;
 	FVector ResolveThrowVelocity(UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
 	    TArray<FVector>* Path = nullptr, FHitResult* OutHit = nullptr, bool bDrawDebug = false, bool* bOutBlocked = nullptr,
 	    bool* bOutUsesHighArc = nullptr) const;
-	void TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start, const FVector& Velocity,
+	FVector TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start, const FVector& Velocity,
 	    TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const;
 	FVector GetThrowReleaseAdjustment(const UPrimitiveComponent& Component, const FVector& Start) const;
 

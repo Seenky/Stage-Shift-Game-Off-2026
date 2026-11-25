@@ -75,7 +75,7 @@ EStageCueWindowPhase GetPropSignalPhase(const FStageCueRuntime& Cue, const AActo
 	    ? EStageCueWindowPhase::Open : EStageCueWindowPhase::Waiting;
 }
 
-void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UTexture2D* Icon, const AActor* Recipient, double Now)
+void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UTexture2D* Icon, const AActor* Recipient, double Now, bool bShowPreparation)
 {
 	const bool bTimed = Cue.View.bHasDeadline && !Cue.bSoundWindowClosed;
 	float Start = 0.0f;
@@ -109,7 +109,7 @@ void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UT
 		else if (Now < Cue.SoundEarliestAt)
 		{
 			Phase = EStageCueWindowPhase::Waiting;
-			Caption = NSLOCTEXT("StageCues", "SoundWait", "ЖДИ");
+			Caption = bShowPreparation ? NSLOCTEXT("StagePerformance", "CuePrepare", "Подготовьтесь") : NSLOCTEXT("StageCues", "SoundWait", "ЖДИ");
 		}
 		else
 		{
@@ -118,10 +118,13 @@ void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UT
 		}
 		if (Now < Cue.SoundFeedbackUntil || (Cue.bSoundWindowClosed && Cue.bKeepUntilStepEnds)) Caption = Cue.SoundFeedback;
 	}
-	else if (Cue.Definition.Kind == EStageCueKind::Lighting && Cue.View.State == EStageCueState::Upcoming)
+	else if (Cue.View.State == EStageCueState::Upcoming
+	    && (Cue.Definition.Kind == EStageCueKind::Lighting || Cue.Definition.Kind == EStageCueKind::Sound))
 	{
 		Phase = EStageCueWindowPhase::Waiting;
-		Caption = NSLOCTEXT("StageCues", "LightPrepare", "ГОТОВЬСЯ");
+		Caption = Cue.Definition.Kind == EStageCueKind::Sound
+		    ? NSLOCTEXT("StagePerformance", "CuePrepare", "Подготовьтесь")
+		    : NSLOCTEXT("StageCues", "LightPrepare", "ГОТОВЬСЯ");
 	}
 	else if (Cue.Definition.Kind == EStageCueKind::Props && IsValid(Recipient))
 	{
@@ -381,6 +384,11 @@ void UStageCueComponent::NotifyStepStarted(FName StepId)
 	const double Now = GetWorld()->GetTimeSeconds();
 	Cues.RemoveAll([&](const FStageCueRuntime& Cue)
 	{
+		if (Cue.Definition.Kind == EStageCueKind::Sound && Cue.View.State == EStageCueState::Upcoming)
+		{
+			TSet<FName> StepsToActivation;
+			return StepId.IsNone() || !DefinitionSource->GetStepRange(StepId, Cue.Definition.ActivateAtStepId, StepsToActivation);
+		}
 		return Cue.bKeepUntilStepEnds && (StepId.IsNone() || Cue.Performer.IsValid() || Cue.View.State == EStageCueState::Completed
 		    || (Cue.View.bHasDeadline && Now >= Cue.Deadline) || Cue.Definition.HideAtStepId.IsNone());
 	});
@@ -478,7 +486,7 @@ TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly, bool bDed
 		    ? Cue.Definition.Targets.FindByPredicate([](const FStageCueTarget& Target) { return Target.Type == EStageCueMarkerType::Recipient; })
 		    : nullptr;
 		const bool bPreparing = View.State == EStageCueState::Upcoming
-		    && (!bDeduplicateKinds || RecipientMarker || Cue.Definition.Kind == EStageCueKind::Lighting);
+		    && (!bDeduplicateKinds || RecipientMarker || Cue.Definition.Kind == EStageCueKind::Lighting || Cue.Definition.Kind == EStageCueKind::Sound);
 		if (!bShowPreparation && !Cue.bKeepUntilStepEnds)
 		{
 			if (bPreparing) continue;
@@ -647,7 +655,8 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 	TArray<FStagePerformanceCue, TInlineAllocator<6>> Tags;
 	TArray<FPreparationCue, TInlineAllocator<3>> Preparations;
 	const int32 CurrentStep = Stage.GetCurrentStepIndex();
-	const bool bCanPreview = Stage.GetState() == EStageState::Running && ActiveStage && ActiveStage->bShowPreparationCues;
+	const bool bShowPreparation = ActiveStage && ActiveStage->bShowPreparationCues;
+	const bool bCanPreview = Stage.GetState() == EStageState::Running && bShowPreparation;
 	const double Now = GetWorld()->GetTimeSeconds();
 	const int32 Limit = FMath::Clamp(MaxCards, 1, 5);
 	const auto HasActiveCard = [&Tags](const FStagePerformanceCue& Cue)
@@ -676,9 +685,11 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 			if (CastIndex != INDEX_NONE) Number = CastIndex + 1;
 		}
 		EStageCueWindowPhase Phase = Cue.View.State == EStageCueState::Upcoming ? EStageCueWindowPhase::Waiting : EStageCueWindowPhase::Open;
+		if (Cue.View.State == EStageCueState::Problem)
+			Phase = Kind == EStageCueKind::General && !Cue.View.bHasDeadline ? EStageCueWindowPhase::Hidden : EStageCueWindowPhase::Closed;
 		float WindowStart = 0.0f;
 		float WindowEnd = 0.0f;
-		if (Cue.View.State == EStageCueState::Problem || Cue.bSoundWindowClosed || (Cue.SoundLatestAt > 0.0 && Now > Cue.SoundLatestAt))
+		if (Cue.bSoundWindowClosed || (Cue.SoundLatestAt > 0.0 && Now > Cue.SoundLatestAt))
 			Phase = EStageCueWindowPhase::Closed;
 		if (Cue.SoundLatestAt > 0.0)
 		{
@@ -705,9 +716,11 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 		const double EndsAt = Cue.View.bHasDeadline ? Cue.Deadline : 0.0;
 		const double StartsAt = Cue.View.bHasDeadline ? Cue.Deadline - Cue.TimerDuration : 0.0;
 		const TOptional<float> PausedProgress = Cue.bDisplayPaused ? TOptional<float>(1.0f - Cue.View.TimeFraction) : TOptional<float>();
-		const bool bPreparation = Cue.View.State == EStageCueState::Upcoming;
-		const FStagePerformanceCue Tag{Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress, bPreparation};
-		if (!bPreparation)
+		const bool bUpcoming = Cue.View.State == EStageCueState::Upcoming;
+		const bool bWaitingForSound = bShowPreparation && Kind == EStageCueKind::Sound && Phase == EStageCueWindowPhase::Waiting
+		    && Now < Cue.SoundEarliestAt && !Cue.bDisplayPaused && !Cue.bActionEnded;
+		const FStagePerformanceCue Tag{Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress, bUpcoming || bWaitingForSound};
+		if (!bUpcoming)
 		{
 			if (Tags.Num() < Limit && !HasActiveCard(Tag)) Tags.Add(Tag);
 			continue;
@@ -745,6 +758,7 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 void UStageCueComponent::UpdateWorldSignals()
 {
 	const TArray<int32> Indices = GetVisibleIndices(true);
+	const bool bShowPreparation = !DefinitionSource || DefinitionSource->bShowPreparationCues;
 	APlayerController* Player = GetWorld()->GetFirstPlayerController();
 	if (Indices.IsEmpty() || !Player || !Player->IsLocalController())
 	{
@@ -859,7 +873,7 @@ void UStageCueComponent::UpdateWorldSignals()
 		}
 		Signal->SetWorldLocation(Location);
 		if (auto* Widget = Cast<UStageCueSignalWidget>(Signal->GetUserWidgetObject()))
-			PresentWorldSignal(*Widget, Cue, Icon, Recipient, GetWorld()->GetTimeSeconds());
+			PresentWorldSignal(*Widget, Cue, Icon, Recipient, GetWorld()->GetTimeSeconds(), bShowPreparation);
 		FVector2D ScreenCenter;
 		if (Player->ProjectWorldLocationToScreen(Location, ScreenCenter))
 		{

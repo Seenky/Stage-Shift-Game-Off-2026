@@ -40,7 +40,7 @@ UStageAction* UStageImpactCommand::CreateMainAction_Implementation(const FStageE
 	}
 	auto* Action = NewObject<UStageImpactAction>(Member);
 	Action->Setup(Mode, Target, Cast<AStagePhysicsActor>(ResolveTarget(InContext, PropId)),
-	    ImpactDelay, StageTimeRequired, WindupAnimation, FallMontage, SoundControl);
+	    ImpactDelay, StageTimeRequired, WindupAnimation, ThrowAnimation, FallMontage, SoundControl);
 	Action->SetExecutionBudget(GetNeededTime() + 2.0f);
 	return Action;
 }
