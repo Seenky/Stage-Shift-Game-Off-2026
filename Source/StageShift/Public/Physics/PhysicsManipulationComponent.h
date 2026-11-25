@@ -68,6 +68,8 @@ public:
 	bool PredictThrow(float HoldDuration, TArray<FVector>& Path, FHitResult& Hit, bool bDrawDebug = false,
 	    bool* bOutBlocked = nullptr, bool* bOutUsesHighArc = nullptr) const;
 
+	static void AddThrowIgnoredCharacters(const UWorld& World, FCollisionQueryParams& Query);
+
 	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
 
 	virtual void ReleaseComponent() override;
@@ -212,13 +214,13 @@ private:
 	FTransform GetDragFrame() const;
 	void ClearPickupPlayback();
 	FVector CalculateThrowVelocity(
-	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
+	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration, double SweepRadius,
 	    FVector& OutTarget, float& OutLobSpeedLimit) const;
 	FVector ResolveThrowVelocity(UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
 	    TArray<FVector>* Path = nullptr, FHitResult* OutHit = nullptr, bool bDrawDebug = false, bool* bOutBlocked = nullptr,
 	    bool* bOutUsesHighArc = nullptr) const;
-	FVector TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start, const FVector& Velocity,
-	    TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const;
+	FVector TraceThrowPath(const UPrimitiveComponent& Component, const FVector& Start, const FVector& Velocity, double SweepRadius,
+	    const FCollisionQueryParams& Query, TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const;
 	FVector GetThrowReleaseAdjustment(const UPrimitiveComponent& Component, const FVector& Start) const;
 
 	UFUNCTION()
