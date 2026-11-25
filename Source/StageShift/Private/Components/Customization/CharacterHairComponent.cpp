@@ -34,7 +34,7 @@ void UCharacterHairComponent::RefreshHairstyle()
 {
 	if (IsTemplate()) return;
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	USkeletalMeshComponent* Body = Character ? Character->GetMesh() : nullptr;
+	USkeletalMeshComponent* Body = Character ? Character->GetMesh() : Cast<USkeletalMeshComponent>(GetAttachParent());
 	if (!Body || Body == this) return;
 
 	HandleExistingParallelEvaluationTask(true, true);

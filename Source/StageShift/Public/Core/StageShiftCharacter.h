@@ -2,6 +2,7 @@
 
 #include "GameFramework/Character.h"
 #include "Animation/CharacterPhysicsAnimationSet.h"
+#include "Components/Customization/StageShiftCharacterAppearance.h"
 #include "StageShiftCharacter.generated.h"
 
 class UMeshDeformer;
@@ -31,6 +32,12 @@ public:
 
 	UDollPhysicsComponent* GetDollPhysics() const { return DollPhysicsComponent; }
 	void PlayFootstep(bool bLeftFoot) const;
+
+	UFUNCTION(BlueprintPure, Category = "Character|Appearance")
+	FStageShiftCharacterAppearance GetAppearance() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Character|Appearance")
+	void ApplyAppearance(const FStageShiftCharacterAppearance& Appearance);
 
 protected:
 	virtual void PostRegisterAllComponents() override;

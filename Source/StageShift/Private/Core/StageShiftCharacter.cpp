@@ -5,6 +5,7 @@
 #include "Animation/StageShiftAnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Customization/CharacterHairComponent.h"
+#include "Components/Customization/CharacterHairStyle.h"
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
 #include "Components/FacialAnimation/FacialAnimationProfile.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
@@ -74,6 +75,21 @@ void AStageShiftCharacter::PostRegisterAllComponents()
 {
 	Super::PostRegisterAllComponents();
 	if (!IsTemplate() && GetMesh() && !GetMesh()->GetAnimClass() && !DefaultAnimationClass.IsNull()) GetMesh()->SetAnimInstanceClass(DefaultAnimationClass.LoadSynchronous());
+}
+
+FStageShiftCharacterAppearance AStageShiftCharacter::GetAppearance() const
+{
+	FStageShiftCharacterAppearance Appearance;
+	Appearance.Body = GetMesh()->GetSkeletalMeshAsset();
+	Appearance.Outfit = OutfitMesh->GetSkeletalMeshAsset();
+	Appearance.Hat = HatMesh->GetSkeletalMeshAsset();
+	Appearance.Hairstyle = HairMesh->Hairstyle;
+	return Appearance;
+}
+
+void AStageShiftCharacter::ApplyAppearance(const FStageShiftCharacterAppearance& Appearance)
+{
+	Appearance.ApplyTo(*GetMesh(), *OutfitMesh, *HatMesh, *HairMesh);
 }
 
 void AStageShiftCharacter::PostInitializeComponents()
