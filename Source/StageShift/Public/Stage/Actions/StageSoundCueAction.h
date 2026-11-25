@@ -17,6 +17,7 @@ public:
 	void Setup(AStageSoundControl* InControl, UAnimSequenceBase* InWindupAnimation, FName InAnimationSlot, FName InCueAnchorId, bool bInRequireOnTime,
 	    FName InCueId);
 	void SetupSound(FName InSoundId, AActor* InSoundTarget, const FStageSoundTiming& InTiming);
+	bool WasPlayedOnTime() const { return bPlayedOnTime; }
 
 protected:
 	virtual void OnStart_Implementation() override;
@@ -42,6 +43,7 @@ private:
 	float WindupDuration = 0.0f;
 	bool bCueShown = false;
 	bool bRequireOnTime = false;
+	bool bPlayedOnTime = false;
 	FTimerHandle WindupTimer;
 	FTimerHandle EndTimer;
 };

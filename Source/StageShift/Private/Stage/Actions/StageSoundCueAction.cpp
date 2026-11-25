@@ -99,6 +99,7 @@ void UStageSoundCueAction::PlayWindup()
 void UStageSoundCueAction::HandleSoundResult(const FStageSoundWindow& Window, EStageSoundResult Result)
 {
 	if (Window.Id != WindowId) return;
+	if (Result == EStageSoundResult::OnTime) bPlayedOnTime = true;
 	if (const auto* Manager = Context.Manager.Get(); bCueShown && Manager && Manager->PlayerCues)
 	{
 		if (Result == EStageSoundResult::Ready) Manager->PlayerCues->SetSoundWindow(CueId, Window);

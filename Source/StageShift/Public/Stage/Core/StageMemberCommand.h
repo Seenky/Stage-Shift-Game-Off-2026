@@ -105,6 +105,7 @@ public:
 	virtual void ResetRuntime(const FStageExecutionContext& InContext, UStageMemberCommand* InRoot, float InPlannedStartTime, float InPlannedEndTime);
 
 	virtual bool IsComposite() const { return false; }
+	virtual int32 GetEarnedScore() const { return ScoreValue; }
 
 	virtual const TArray<TObjectPtr<UStageMemberCommand>>& GetChildCommands() const;
 	virtual UWorld* GetWorld() const override;
