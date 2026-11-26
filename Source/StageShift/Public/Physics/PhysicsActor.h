@@ -53,6 +53,7 @@ public:
 	bool IsCurtainLever() const { return CurtainRail.IsValid(); }
 	bool IsBeingManipulated() const;
 	bool IsBeingDragged() const;
+	void SetPickupCueHighlighted(UObject& Source, bool bHighlighted);
 
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Props")
 	FStagePropTransferEvent OnPropTransfer;
@@ -79,6 +80,7 @@ private:
 
 	void RefreshPickupOutline();
 	bool SetPickupOutlineFocused(bool bFocused);
+	int32 GetPickupOutlineMask(bool bFocused) const;
 	void ConfigureCharacterContact();
 	void CheckCatch();
 	void IgnoreThrowerDuringRelease(const AActor& Source);
@@ -97,6 +99,8 @@ private:
 	double LastImpactSoundTime = -1.0;
 	bool bMissedThrow = false;
 	FInteractionOutlineStencil PickupOutline;
+	TSet<TWeakObjectPtr<UObject>> PickupCueHighlightSources;
+	bool bPickupOutlineFocused = false;
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;

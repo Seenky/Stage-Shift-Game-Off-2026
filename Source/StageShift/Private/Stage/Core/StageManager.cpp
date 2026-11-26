@@ -374,6 +374,12 @@ void AStageManager::IssueCommands(const TArray<TObjectPtr<UStageMemberCommand>>&
 	}
 }
 
+const FStageStep* AStageManager::FindPreparedStep(FName StepId) const
+{
+	const int32 Index = ActiveStage ? ActiveStage->FindStepIndex(StepId) : INDEX_NONE;
+	return PreparedSteps.IsValidIndex(Index) ? &PreparedSteps[Index] : nullptr;
+}
+
 FStageRootExecution* AStageManager::FindRoot(const UStageMemberCommand* Command)
 {
 	const auto* Root = Command ? Command->GetRootCommand() : nullptr;

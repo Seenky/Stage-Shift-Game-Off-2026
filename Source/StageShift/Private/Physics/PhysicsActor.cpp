@@ -45,15 +45,33 @@ void AStagePhysicsActor::RefreshPickupOutline()
 	    || !Mesh->IsSimulatingPhysics() || !Mesh->IsQueryCollisionEnabled())
 	{
 		PickupOutline.Reset();
+		bPickupOutlineFocused = false;
 		return;
 	}
 
-	PickupOutline.Apply(*Mesh, FInteractionOutlineStencil::Available);
+	PickupOutline.Apply(*Mesh, GetPickupOutlineMask(bPickupOutlineFocused));
+}
+
+int32 AStagePhysicsActor::GetPickupOutlineMask(bool bFocused) const
+{
+	return FInteractionOutlineStencil::Available | (bFocused ? FInteractionOutlineStencil::Focused : 0)
+	    | (PickupCueHighlightSources.IsEmpty() ? 0 : FInteractionOutlineStencil::PickupCue);
 }
 
 bool AStagePhysicsActor::SetPickupOutlineFocused(bool bFocused)
 {
-	return PickupOutline.Update(FInteractionOutlineStencil::Available | (bFocused ? FInteractionOutlineStencil::Focused : 0));
+	const bool bUpdated = PickupOutline.Update(GetPickupOutlineMask(bFocused));
+	bPickupOutlineFocused = bUpdated && bFocused;
+	return bUpdated;
+}
+
+void AStagePhysicsActor::SetPickupCueHighlighted(UObject& Source, bool bHighlighted)
+{
+	if (bHighlighted) PickupCueHighlightSources.Add(&Source);
+	else PickupCueHighlightSources.Remove(&Source);
+	for (auto It = PickupCueHighlightSources.CreateIterator(); It; ++It)
+		if (!It->IsValid()) It.RemoveCurrent();
+	RefreshPickupOutline();
 }
 
 void AStagePhysicsActor::HandleImpactSound(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
@@ -237,6 +255,9 @@ void AStagePhysicsActor::CheckCatch()
 
 	UPhysicsManipulationComponent* BestReceiver = nullptr;
 	double BestDistance = FMath::Square(CatchRadius);
+	UStageMemberComponent* NearestWrongReceiver = nullptr;
+	double WrongReceiverDistance = BestDistance;
+	const double ReleasedAt = CatchDeadline - CatchWindow;
 	FVector CatchContact = FVector::ZeroVector;
 	for (const FOverlapResult& Overlap : Overlaps)
 	{
@@ -244,17 +265,30 @@ void AStagePhysicsActor::CheckCatch()
 		if (Candidate == IgnoredCatchActor.Get()) continue;
 		auto* Receiver = IsValid(Candidate) ? Candidate->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
 		// A throw released on time may still be in flight after the cue closes.
-		if (!Receiver || !Receiver->CanReceiveStagePropAt(CatchDeadline - CatchWindow)) continue;
+		if (!Receiver || !Receiver->CanReceiveStagePropAt(ReleasedAt)) continue;
 		const FVector Hand = Receiver->GetCarryPoint()->GetComponentLocation();
 		const FVector Intercept = FMath::ClosestPointOnSegment(Hand, Previous, Current);
 		const double Distance = FVector::DistSquared(Hand, Intercept);
 		if (Distance >= BestDistance || !HasClearReach(Intercept, Hand, Source, Candidate) || !HasClearReach(Current, Hand, Source, Candidate)) continue;
+		if (!Receiver->CanReceiveStagePropAt(ReleasedAt, this))
+		{
+			if (Distance < WrongReceiverDistance)
+			{
+				NearestWrongReceiver = Candidate->FindComponentByClass<UStageMemberComponent>();
+				WrongReceiverDistance = Distance;
+			}
+			continue;
+		}
 		BestReceiver = Receiver;
 		BestDistance = Distance;
 		static const FName GripSocket(TEXT("Grip"));
 		CatchContact = Body->DoesSocketExist(GripSocket) ? Body->GetSocketLocation(GripSocket) + (Intercept - Current) : Intercept;
 	}
-	if (!BestReceiver) return;
+	if (!BestReceiver)
+	{
+		if (NearestWrongReceiver) NearestWrongReceiver->HandleWrongStageProp(ReleasedAt);
+		return;
+	}
 
 	AActor* ReceiverActor = BestReceiver->GetOwner();
 	ActiveManipulator = BestReceiver;

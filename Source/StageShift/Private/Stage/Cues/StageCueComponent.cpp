@@ -10,7 +10,9 @@
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "Physics/PhysicsActor.h"
 #include "Physics/PhysicsManipulationComponent.h"
+#include "Stage/Commands/PickUpCommand.h"
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/StageCondition.h"
 #include "Stage/Core/Data/StageDataAsset.h"
@@ -25,6 +27,25 @@ namespace
 {
 constexpr double SignalSize = 72.0;
 constexpr double SignalGap = 8.0;
+
+const UPickUpCommand* FindPickupInTree(const UStageMemberCommand* Command)
+{
+	if (!IsValid(Command)) return nullptr;
+	if (const auto* Pickup = Cast<UPickUpCommand>(Command)) return Pickup;
+	for (const UStageMemberCommand* Child : Command->GetChildCommands())
+		if (const auto* Pickup = FindPickupInTree(Child)) return Pickup;
+	return nullptr;
+}
+
+const UPickUpCommand* FindCuePickup(const AStageManager& Stage, const FStageCueDefinition& Definition, const AActor& Actor)
+{
+	const FName StepId = Definition.ActivateAtStepId.IsNone() ? Definition.ShowAtStepId : Definition.ActivateAtStepId;
+	if (const FStageStep* Step = Stage.FindPreparedStep(StepId))
+		for (const auto& Assignment : Step->Commands)
+			if (Stage.GetParticipant(Assignment.GetEffectiveRoleId()) == &Actor)
+				if (const auto* Pickup = FindPickupInTree(Assignment.Command)) return Pickup;
+	return nullptr;
+}
 
 FVector OffsetSignalOnScreen(const APlayerController& Player, const FVector& MarkerLocation, const FVector2D& PixelOffset,
     double Padding, TConstArrayView<FBox2D> DialogueBounds)
@@ -719,7 +740,20 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 		const bool bUpcoming = Cue.View.State == EStageCueState::Upcoming;
 		const bool bWaitingForSound = bShowPreparation && Kind == EStageCueKind::Sound && Phase == EStageCueWindowPhase::Waiting
 		    && Now < Cue.SoundEarliestAt && !Cue.bDisplayPaused && !Cue.bActionEnded;
-		const FStagePerformanceCue Tag{Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress, bUpcoming || bWaitingForSound};
+		FStagePerformanceCue Tag{Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress, bUpcoming || bWaitingForSound};
+		if (Kind == EStageCueKind::Props && IsValid(Actor))
+		{
+			const auto* Member = Actor->FindComponentByClass<UStageMemberComponent>();
+			const auto* ActivePickup = !bUpcoming && Member ? Member->GetActivePickUpCommand() : nullptr;
+			if (bUpcoming || Phase == EStageCueWindowPhase::Open || PausedProgress.IsSet()
+			    || (Phase == EStageCueWindowPhase::Waiting && ActivePickup))
+			{
+				const auto* Pickup = ActivePickup ? ActivePickup : FindCuePickup(Stage, Cue.Definition, *Actor);
+				if (Pickup)
+					for (FName Id : Pickup->GetPickupTargets())
+						if (auto* Prop = Cast<AStagePhysicsActor>(Stage.GetTarget(Id)); IsValid(Prop)) Tag.PickupTargets.AddUnique(Prop);
+			}
+		}
 		if (!bUpcoming)
 		{
 			if (Tags.Num() < Limit && !HasActiveCard(Tag)) Tags.Add(Tag);

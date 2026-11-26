@@ -18,6 +18,7 @@ public:
 
 	UDialogueComponent();
 	bool PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop = false);
+	bool PlayOptionalLine(const FDialogueLine& Line);
 	bool CaptureResumeData(FGuid PlaybackId, FDialogueResumeData& OutData) const;
 	bool ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId);
 
@@ -95,6 +96,8 @@ private:
 	void BeginHold();
 
 	void FinishPlayback(EDialogueEndReason EndReason);
+	bool IsPlayingOptionalLine() const { return IsPlaying() && PlaybackState.PlaybackId == OptionalPlaybackId; }
+	FGuid OptionalPlaybackId;
 
 	UPROPERTY(Transient)
 	FDialoguePlaybackState PlaybackState = {};

@@ -2,6 +2,7 @@
 
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/GameViewportClient.h"
@@ -129,6 +130,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (bInteractive && !bAimFrozen) UpdateAim(*PC, DeltaTime);
 	if (!bPreparing && bWasPreparing) bAimFrozen = true;
+	UpdateCatchPreview(bPreparing && !bAimFrozen ? PC : nullptr);
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
 	// Drag coordinates character facing with the simulated grip. The cursor only
@@ -314,6 +316,34 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 	bHasAimTarget = true;
 	AimTarget = Target;
 	if (!bDraggingAim) Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
+}
+
+void UThrowAimComponent::UpdateCatchPreview(APlayerController* Controller)
+{
+	UInteractionComponent* Target = nullptr;
+	if (Controller)
+	{
+		const double Now = GetWorld()->GetTimeSeconds();
+		if (Now < NextCatchPreviewAt) return;
+		NextCatchPreviewAt = Now + 0.05;
+		FVector Start, Direction;
+		if (Controller->DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, Start, Direction))
+		{
+			FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowCatchPreview), false, GetOwner());
+			Query.AddIgnoredComponent(Manipulation->GetManipulatedComponent());
+			FHitResult Hit;
+			// This ray only drives the hand pose. The throw simulation still ignores characters.
+			if (GetWorld()->LineTraceSingleByChannel(Hit, Start, Start + Direction * AimTraceDistance, ECC_Visibility, Query))
+				if (AActor* Actor = Hit.GetActor(); IsValid(Actor) && Actor->FindComponentByClass<UStageMemberComponent>())
+					if (const auto* Receiver = Actor->FindComponentByClass<UPhysicsManipulationComponent>(); Receiver && Receiver->CanReceiveStageProp())
+						Target = Actor->FindComponentByClass<UInteractionComponent>();
+		}
+	}
+	else NextCatchPreviewAt = 0.0;
+	if (CatchPreviewTarget.Get() == Target) return;
+	if (auto* Previous = CatchPreviewTarget.Get()) Previous->SetCatchPreview(false);
+	CatchPreviewTarget = Target;
+	if (Target) Target->SetCatchPreview(true);
 }
 
 void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
@@ -563,6 +593,7 @@ void UThrowAimComponent::FreezeAim()
 	APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
 	if (Controller && Controller->IsLocalController()) UpdateAim(*Controller, GetWorld()->GetDeltaSeconds());
 	bAimFrozen = true;
+	UpdateCatchPreview(nullptr);
 	// The release animation can still move the prop before it leaves the hand.
 	NextThrowPreviewAt = 0.0;
 }
@@ -575,6 +606,7 @@ bool UThrowAimComponent::GetAimTarget(FVector& WorldLocation) const
 
 void UThrowAimComponent::StopAiming()
 {
+	UpdateCatchPreview(nullptr);
 	if (!bAiming) return;
 	if (ACharacter* Pawn = Character.Get(); Pawn && !bDraggingAim)
 	{
