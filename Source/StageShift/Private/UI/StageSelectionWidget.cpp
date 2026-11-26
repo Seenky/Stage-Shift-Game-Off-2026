@@ -29,6 +29,7 @@ void UStageSelectionWidget::ShowOption(const FStageSelectionOption& Option, bool
 	PreviousButton->SetIsEnabled(bHasOtherOptions);
 	NextButton->SetIsEnabled(bHasOtherOptions);
 	ErrorText->SetVisibility(ESlateVisibility::Collapsed);
+	if (bSliding) OnSelectionPreviewChanged();
 }
 
 void UStageSelectionWidget::FocusSelection()

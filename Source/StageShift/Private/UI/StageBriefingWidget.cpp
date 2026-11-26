@@ -25,11 +25,12 @@ void UStageBriefingWidget::SetSceneBriefing(AStageManager* InManager, const FTex
 	ErrorText->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void UStageBriefingWidget::SetProductionResult(AStageManager* InManager, const FText& Text)
+void UStageBriefingWidget::SetProductionResult(AStageManager* InManager, const FText& Text, int32 Score, int32 Stars, int32 TotalStars)
 {
 	SetSceneBriefing(InManager, Text);
 	if (auto* Header = Cast<UTextBlock>(GetWidgetFromName(TEXT("Header"))))
 		Header->SetText(NSLOCTEXT("StageBriefing", "ResultHeader", "Итог спектакля"));
+	OnProductionResultPresented(Score, Stars, TotalStars);
 }
 
 void UStageBriefingWidget::NativeConstruct()

@@ -720,6 +720,11 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 		const bool bWaitingForSound = bShowPreparation && Kind == EStageCueKind::Sound && Phase == EStageCueWindowPhase::Waiting
 		    && Now < Cue.SoundEarliestAt && !Cue.bDisplayPaused && !Cue.bActionEnded;
 		const FStagePerformanceCue Tag{Kind, Number > 0 ? Actor : nullptr, Number, Phase, StartsAt, EndsAt, WindowStart, WindowEnd, PausedProgress, bUpcoming || bWaitingForSound};
+		if (!bUpcoming && bWaitingForSound)
+		{
+			Preparations.Add({Tag, 0});
+			continue;
+		}
 		if (!bUpcoming)
 		{
 			if (Tags.Num() < Limit && !HasActiveCard(Tag)) Tags.Add(Tag);

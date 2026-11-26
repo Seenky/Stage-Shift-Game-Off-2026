@@ -36,6 +36,7 @@ public class StageShift : ModuleRules
 			"RigVM",
 			"PBIK",
 			"Slate",
+			"ApplicationCore",
 			"NavigationSystem",
 			"Niagara",
 

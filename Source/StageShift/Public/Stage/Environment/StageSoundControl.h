@@ -86,6 +86,7 @@ public:
 	bool HasSound(FName SoundId) const;
 	void SetSelectorFocused(bool bFocused);
 	void CycleSound(int32 Direction);
+	bool CanCycleSound() const { return SoundOptions.Num() > 1; }
 	UFUNCTION(BlueprintPure, Category = "Stage|Sound")
 	FName GetSelectedSoundId() const;
 	UFUNCTION(BlueprintPure, Category = "Stage|Sound")

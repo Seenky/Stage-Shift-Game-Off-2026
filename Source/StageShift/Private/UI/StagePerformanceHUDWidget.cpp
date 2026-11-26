@@ -19,13 +19,12 @@ namespace
 {
 constexpr float FeedbackFadeTime = 0.25f;
 const FName SymbolParameter(TEXT("Symbol"));
-const FName FaceColorParameter(TEXT("FaceColor"));
-const FLinearColor LightingFaceColor(FColor(0x97, 0xbd, 0xdf));
-const FLinearColor SoundFaceColor(FColor(0xe2, 0x8c, 0x7c));
 const FName ProgressParameter(TEXT("Progress"));
 const FName WindowStartParameter(TEXT("WindowStart"));
 const FName WindowEndParameter(TEXT("WindowEnd"));
 const FName PhaseParameter(TEXT("Phase"));
+const FName PreparationParameter(TEXT("Preparation"));
+const FName InkParameter(TEXT("Ink"));
 
 enum class EPerformanceSymbol : uint8 { FilledStar = 5, EmptyStar, Applause, Murmur };
 
@@ -50,18 +49,10 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 		ActorNumber->SetVisibility(Cue.Number > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		if (NumberBadge) NumberBadge->SetVisibility(ActorNumber->GetVisibility());
 	}
-	if (CueIcon) SetSymbol(*CueIcon, static_cast<float>(Cue.Kind));
-	if (CueFaceFabric && LastKind != Cue.Kind)
+	if (CueIcon && LastKind != Cue.Kind)
 	{
 		LastKind = Cue.Kind;
-		if (auto* Material = CueFaceFabric->GetDynamicMaterial())
-		{
-			if (!DefaultFaceColor.IsSet()) DefaultFaceColor = Material->K2_GetVectorParameterValue(FaceColorParameter);
-			FLinearColor FaceColor = DefaultFaceColor.GetValue();
-			if (Cue.Kind == EStageCueKind::Lighting) FaceColor = LightingFaceColor;
-			if (Cue.Kind == EStageCueKind::Sound) FaceColor = SoundFaceColor;
-			Material->SetVectorParameterValue(FaceColorParameter, FaceColor);
-		}
+		SetSymbol(*CueIcon, static_cast<float>(Cue.Kind));
 	}
 	StartsAt = Cue.StartsAt;
 	EndsAt = Cue.EndsAt;
@@ -74,21 +65,36 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 			Material->SetScalarParameterValue(WindowStartParameter, Cue.WindowStart);
 			Material->SetScalarParameterValue(WindowEndParameter, Cue.WindowEnd);
 			Material->SetScalarParameterValue(PhaseParameter, static_cast<float>(Cue.Phase));
+			Material->SetScalarParameterValue(PreparationParameter, Cue.bPreparation ? 1.f : 0.f);
 		}
 	}
-	if (ActionPrompt && (LastPhase != Cue.Phase || bLastPreparation != Cue.bPreparation))
+	if (LastPhase != Cue.Phase || bLastPreparation != Cue.bPreparation)
 	{
 		LastPhase = Cue.Phase;
 		bLastPreparation = Cue.bPreparation;
 		const bool bOpen = Cue.Phase == EStageCueWindowPhase::Open;
 		const bool bClosed = Cue.Phase == EStageCueWindowPhase::Closed;
-		UWidget* Status = ActionStatus ? ActionStatus.Get() : ActionPrompt.Get();
-		Status->SetVisibility(Cue.bPreparation || bOpen || bClosed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		if (Cue.bPreparation) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CuePrepare", "Подготовьтесь"));
-		else if (bOpen) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueNow", "Сейчас"));
-		else if (bClosed) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueLate", "Поздно"));
-		else ActionPrompt->SetText(FText::GetEmpty());
-		ActionPrompt->SetColorAndOpacity(Cue.bPreparation ? PreparationColor : bOpen ? OpenColor : ClosedColor);
+		const FLinearColor Ink = Cue.bPreparation ? PreparationColor : bClosed ? ClosedColor : OpenColor;
+		if (auto* Material = CueFaceFabric ? CueFaceFabric->GetDynamicMaterial() : nullptr)
+		{
+			Material->SetScalarParameterValue(PhaseParameter, static_cast<float>(Cue.Phase));
+			Material->SetScalarParameterValue(PreparationParameter, Cue.bPreparation ? 1.f : 0.f);
+		}
+		if (auto* Material = CueIcon ? CueIcon->GetDynamicMaterial() : nullptr)
+		{
+			Material->SetVectorParameterValue(InkParameter, Ink);
+		}
+		if (ActionPrompt)
+		{
+			UWidget* Status = ActionStatus ? ActionStatus.Get() : ActionPrompt.Get();
+			Status->SetVisibility(Cue.bPreparation || bOpen || bClosed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			if (Cue.bPreparation) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CuePrepare", "Подготовьтесь"));
+			else if (bOpen) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueNow", "Сейчас"));
+			else if (bClosed) ActionPrompt->SetText(NSLOCTEXT("StagePerformance", "CueLate", "Поздно"));
+			else ActionPrompt->SetText(FText::GetEmpty());
+			ActionPrompt->SetColorAndOpacity(Ink);
+		}
+		OnCueAppearanceChanged(Cue.bPreparation, bClosed);
 	}
 }
 

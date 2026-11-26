@@ -23,9 +23,15 @@ void AStageManager::RefreshSceneBriefing()
 	if (PendingSceneBriefing.IsEmpty() || BriefingWidget || !GetWorld()) return;
 	APlayerController* Player = GetWorld()->GetFirstPlayerController();
 	if (!Player || !Player->HasActorBegunPlay() || !Player->IsLocalController() || !Player->GetLocalPlayer()) return;
-	auto* Widget = CreateWidget<UStageBriefingWidget>(Player, BriefingWidgetClass.LoadSynchronous());
+	TSubclassOf<UStageBriefingWidget> WidgetClass = BriefingWidgetClass.LoadSynchronous();
+	if (!WidgetClass) return;
+	if (bShowingProductionResult)
+	{
+		if (const auto ResultClass = WidgetClass.GetDefaultObject()->GetProductionResultClass()) WidgetClass = ResultClass;
+	}
+	auto* Widget = CreateWidget<UStageBriefingWidget>(Player, WidgetClass);
 	if (!Widget) return;
-	if (bShowingProductionResult) Widget->SetProductionResult(this, PendingSceneBriefing);
+	if (bShowingProductionResult) Widget->SetProductionResult(this, PendingSceneBriefing, GetScore(), GetStarCount(), StarThresholds.Num());
 	else Widget->SetSceneBriefing(this, PendingSceneBriefing);
 	if (!Widget->AddToPlayerScreen(30)) return;
 
