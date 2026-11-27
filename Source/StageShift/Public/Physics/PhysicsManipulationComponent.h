@@ -38,10 +38,11 @@ public:
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
 
 	bool IsCarrying() const { return bCarryAttached; }
+	bool IsCatchingProp() const { return CatchStartedAt >= 0.0; }
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction|Stage Props")
 	bool CanReceiveStageProp() const;
-	bool CanReceiveStagePropAt(double AcceptedAt) const;
+	bool CanReceiveStagePropAt(double AcceptedAt, const AActor* Prop = nullptr) const;
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Stage Props")
 	void SetAcceptStageProps(bool bAccept);
 	UPROPERTY(BlueprintAssignable, Category = "Physics Interaction|Stage Props")
@@ -67,6 +68,8 @@ public:
 
 	bool PredictThrow(float HoldDuration, TArray<FVector>& Path, FHitResult& Hit, bool bDrawDebug = false,
 	    bool* bOutBlocked = nullptr, bool* bOutUsesHighArc = nullptr) const;
+
+	static void AddThrowIgnoredCharacters(const UWorld& World, FCollisionQueryParams& Query);
 
 	bool GetPickupTarget(FVector& WorldLocation, float& Weight, FVector* HandOffset = nullptr) const;
 
@@ -151,7 +154,7 @@ protected:
 private:
 	friend class AStagePhysicsActor;
 	friend class UStageMemberComponent;
-	bool BeginManipulationInternal(const FHitResult& Hit, EPhysicsInteractionType Type, bool bPlayPickupAnimation);
+	bool BeginCatch(class AStagePhysicsActor& Prop, AActor& Source, double ReleasedAt);
 	bool TransferCarriedPropTo(UPhysicsManipulationComponent& Receiver);
 	UFUNCTION()
 	void UpdateStagePropReadiness();
@@ -201,24 +204,33 @@ private:
 	FThrowAim ThrowAim;
 	TWeakObjectPtr<class UAnimInstance> PickupInstance;
 	TWeakObjectPtr<class UAnimMontage> PickupMontage;
+	TWeakObjectPtr<AActor> CatchSource;
+	FTransform CatchStartTransform;
+	double CatchStartedAt = -1.0;
+	double CatchReleasedAt = 0.0;
+	float CatchReachTime = 0.0f;
 	bool bPickupPending = false;
 	bool bCarryAttached = false;
 
-	bool AttachCarriedObject(bool bKeepWorldTransform);
+	bool AttachCarriedObject();
+	void ReserveCarriedObject(UPrimitiveComponent& Component);
+	void WatchPickupPlayback(UAnimInstance& Instance, UAnimMontage& Montage);
+	void CompletePickup();
+	void UpdateCatch();
 	void BeginDrag(const FHitResult& Hit);
 	void SetDragGrip(const FVector& GripPoint);
 	void UpdateDrag(float DeltaTime);
 	void CancelManipulation();
 	FTransform GetDragFrame() const;
-	void ClearPickupPlayback();
+	void ClearPickupPlayback(bool bStopMontage = false);
 	FVector CalculateThrowVelocity(
-	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
+	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration, double SweepRadius,
 	    FVector& OutTarget, float& OutLobSpeedLimit) const;
 	FVector ResolveThrowVelocity(UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
 	    TArray<FVector>* Path = nullptr, FHitResult* OutHit = nullptr, bool bDrawDebug = false, bool* bOutBlocked = nullptr,
 	    bool* bOutUsesHighArc = nullptr) const;
-	FVector TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start, const FVector& Velocity,
-	    TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const;
+	FVector TraceThrowPath(const UPrimitiveComponent& Component, const FVector& Start, const FVector& Velocity, double SweepRadius,
+	    const FCollisionQueryParams& Query, TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const;
 	FVector GetThrowReleaseAdjustment(const UPrimitiveComponent& Component, const FVector& Start) const;
 
 	UFUNCTION()

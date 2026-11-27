@@ -1,6 +1,7 @@
 #include "Stage/Environment/StageControlMeshComponent.h"
 
 #include "AnimationRuntime.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 #include "Engine/SkinnedAsset.h"
 
 UStageControlMeshComponent::UStageControlMeshComponent(const FObjectInitializer& ObjectInitializer)
@@ -9,6 +10,7 @@ UStageControlMeshComponent::UStageControlMeshComponent(const FObjectInitializer&
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetGenerateOverlapEvents(false);
 	SetCanEverAffectNavigation(false);
+	FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*this);
 }
 
 void UStageControlMeshComponent::SetControlPose(FName Bone, const FQuat& Rotation, const FVector& Offset)

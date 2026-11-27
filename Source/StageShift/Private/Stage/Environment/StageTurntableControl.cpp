@@ -2,6 +2,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 #include "Engine/StaticMesh.h"
 #include "Stage/Environment/StageControlLeverComponent.h"
 #include "Stage/Environment/StageControlMeshComponent.h"
@@ -26,6 +27,7 @@ AStageTurntableControl::AStageTurntableControl()
 void AStageTurntableControl::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!ControlVisual->GetSkinnedAsset()) FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*ControlMesh);
 	ControlLever->BindVisual(*ControlVisual, TEXT("turntable_knob"), true);
 }
 

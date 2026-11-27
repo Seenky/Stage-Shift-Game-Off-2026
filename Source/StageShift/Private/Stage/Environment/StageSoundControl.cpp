@@ -1,4 +1,5 @@
 #include "Stage/Environment/StageSoundControl.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Components/Dialogue/DialogueComponent.h"
@@ -55,6 +56,12 @@ AStageSoundControl::AStageSoundControl()
 const UMeshComponent* AStageSoundControl::GetInteractionMesh() const
 {
 	return ControlVisual->GetSkinnedAsset() ? static_cast<const UMeshComponent*>(ControlVisual.Get()) : ControlMesh.Get();
+}
+
+void AStageSoundControl::BeginPlay()
+{
+	Super::BeginPlay();
+	if (!ControlVisual->GetSkinnedAsset()) FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*ControlMesh);
 }
 
 bool AStageSoundControl::CanInteract_Implementation(const FInteractionContext& Context) const

@@ -16,6 +16,7 @@ public:
 	static FGuid StepKey(const UStageDataAsset* Asset, int32 Index);
 	static FGuid ReactionKey(const UStageDataAsset* Asset, int32 Index);
 	bool SetContainerMode(const UStageScenarioEdNode* Node, UClass* Class);
+	bool SetPrimaryBranch(const UStageScenarioEdNode* Node);
 	void EnsureIdentities();
 	bool AddTypedStep(UClass* Class, FName RoleId, int32 AfterIndex = INDEX_NONE);
 	bool AddTypedReaction(UClass* Class, FName RoleId);

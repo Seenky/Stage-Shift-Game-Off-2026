@@ -130,6 +130,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Stage")
 
 	UStageDataAsset* GetActiveStage() const { return ActiveStage; }
+	const FStageStep* FindPreparedStep(FName StepId) const;
 	int32 GetCurrentStepIndex() const { return CurrentStepIndex; }
 	UFUNCTION(BlueprintPure, Category = "Stage")
 

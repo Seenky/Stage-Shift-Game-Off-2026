@@ -13,6 +13,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Physics/PhysicsActor.h"
 #include "Stage/Core/StageManager.h"
 
 namespace
@@ -126,7 +127,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 	SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (!bVisible)
 	{
-		UpdatePickupCueOutline(false);
+		UpdatePickupCueOutline();
 		DeltaUntil = AudienceUntil = -1.0;
 		LastScoreAt = -10.0;
 		return;
@@ -163,7 +164,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 			if (AActor* Actor = Stage.GetParticipant(Role)) CastMembers.AddUnique(Actor);
 
 	int32 CueCount = 0;
-	bool bHighlightPickups = false;
+	TArray<AStagePhysicsActor*> PickupTargets;
 	for (const FStagePerformanceCue& Cue : Cues)
 	{
 		if (auto* Tag = GetTag(*CueTags, CueTagClass, CueCount))
@@ -171,8 +172,7 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 			++CueCount;
 			Tag->Present(Cue);
 			Tag->SetVisibility(ESlateVisibility::HitTestInvisible);
-			bHighlightPickups |= Cue.Kind == EStageCueKind::Props
-			    && (Cue.bPreparation || Cue.Phase == EStageCueWindowPhase::Open || Cue.PausedProgress.IsSet());
+			for (AStagePhysicsActor* Prop : Cue.PickupTargets) PickupTargets.AddUnique(Prop);
 		}
 		if (Cue.bPreparation || !IsValid(Cue.Actor) || TaggedActors.Contains(Cue.Actor)) continue;
 		if (auto* Tag = GetTag(*ActorLayer, ActorTagClass, TaggedActors.Num()))
@@ -185,13 +185,23 @@ void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArray
 		CueTags->GetChildAt(Index)->SetVisibility(ESlateVisibility::Collapsed);
 	for (int32 Index = TaggedActors.Num(); Index < ActorLayer->GetChildrenCount(); ++Index)
 		ActorLayer->GetChildAt(Index)->SetVisibility(ESlateVisibility::Collapsed);
-	UpdatePickupCueOutline(bHighlightPickups);
+	UpdatePickupCueOutline(PickupTargets);
 }
 
-void UStagePerformanceHUDWidget::UpdatePickupCueOutline(bool bHighlight)
+void UStagePerformanceHUDWidget::UpdatePickupCueOutline(TConstArrayView<AStagePhysicsActor*> Props)
 {
-	APawn* Pawn = bHighlight ? GetOwningPlayerPawn() : nullptr;
+	APawn* Pawn = Props.IsEmpty() ? nullptr : GetOwningPlayerPawn();
 	auto* Outline = Pawn ? Pawn->FindComponentByClass<UInteractionOutlineComponent>() : nullptr;
+	TSet<TWeakObjectPtr<AStagePhysicsActor>> NewTargets;
+	if (Outline)
+		for (AStagePhysicsActor* Prop : Props)
+			if (IsValid(Prop)) NewTargets.Add(Prop);
+	for (const auto& WeakProp : HighlightedPickups)
+		if (AStagePhysicsActor* Prop = WeakProp.Get(); Prop && !NewTargets.Contains(WeakProp)) Prop->SetPickupCueHighlighted(*this, false);
+	for (const auto& WeakProp : NewTargets)
+		if (AStagePhysicsActor* Prop = WeakProp.Get(); Prop && !HighlightedPickups.Contains(WeakProp)) Prop->SetPickupCueHighlighted(*this, true);
+	HighlightedPickups = MoveTemp(NewTargets);
+
 	if (Outline == PickupCueOutline.Get()) return;
 	if (auto* Previous = PickupCueOutline.Get()) Previous->SetPickupCueHighlight(*this, false);
 	PickupCueOutline = Outline;
@@ -332,7 +342,7 @@ void UStagePerformanceHUDWidget::NativeTick(const FGeometry& Geometry, float Del
 
 void UStagePerformanceHUDWidget::NativeDestruct()
 {
-	UpdatePickupCueOutline(false);
+	UpdatePickupCueOutline();
 	if (AStageManager* Stage = Source.Get())
 	{
 		Stage->OnScoreChanged.RemoveAll(this);

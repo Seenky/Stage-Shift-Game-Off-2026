@@ -37,6 +37,7 @@ void UStageSoundCueCommand::ValidateContext(const FStageExecutionContext& InCont
 
 void UStageSoundCueCommand::OnPreStart_Implementation(const FStageExecutionContext& InContext)
 {
+	bPlayedOnTime = false;
 	const auto* Control = Cast<AStageSoundControl>(ResolveTarget(InContext, SoundControlId));
 	NeededTime = !SoundId.IsNone() ? Timing.GetDuration() : Control ? Control->GetWindowDuration() : 0.0f;
 }
@@ -60,4 +61,10 @@ UStageAction* UStageSoundCueCommand::CreateMainAction_Implementation(const FStag
 	if (!SoundId.IsNone()) Action->SetupSound(SoundId, ResolveTarget(InContext, SoundTargetId), Timing);
 	Action->SetExecutionBudget(NeededTime + 1.0f);
 	return Action;
+}
+
+void UStageSoundCueCommand::OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult)
+{
+	Super::OnMainActionResult_Implementation(Action, ActionResult);
+	if (const auto* Sound = Cast<UStageSoundCueAction>(Action); Sound && Sound->WasPlayedOnTime()) bPlayedOnTime = true;
 }

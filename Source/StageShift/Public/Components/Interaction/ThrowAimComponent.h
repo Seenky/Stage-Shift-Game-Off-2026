@@ -67,7 +67,8 @@ protected:
 
 private:
 	void CreateReticle(APlayerController& Controller, TSubclassOf<UUserWidget> WidgetClass);
-	void UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround = false);
+	void UpdateAim(APlayerController& Controller, float DeltaTime);
+	void UpdateCatchPreview(APlayerController* Controller);
 	void UpdateThrowPreview(bool bShow, float DeltaTime = 0.f);
 	void DrawThrowTrajectory(float DeltaTime);
 	void HideThrowTape();
@@ -75,6 +76,7 @@ private:
 	TWeakObjectPtr<ACharacter> Character;
 	TWeakObjectPtr<UInteractionComponent> Interaction;
 	TWeakObjectPtr<UPhysicsManipulationComponent> Manipulation;
+	TWeakObjectPtr<UInteractionComponent> CatchPreviewTarget;
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> Reticle;
 	UPROPERTY(Transient)
@@ -84,14 +86,15 @@ private:
 	FVector2D ScreenPosition = FVector2D::ZeroVector;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
 	FVector AimTarget = FVector::ZeroVector;
-	FVector DisplayedAimTarget = FVector::ZeroVector;
 	FVector AimSurfaceNormal = FVector::UpVector;
 	FVector AimDirection = FVector::ForwardVector;
 	TArray<FVector> PreviewPath;
 	TArray<FVector> DisplayedPath;
 	FHitResult PreviewImpact;
 	uint64 LastCursorUpdateFrame = MAX_uint64;
+	double AimReferenceZ = 0.0;
 	double NextThrowPreviewAt = 0.0;
+	double NextCatchPreviewAt = 0.0;
 	double LastStablePreviewAt = 0.0;
 	double PreviewBlendRemaining = 0.0;
 	TOptional<double> AimGroundZ;

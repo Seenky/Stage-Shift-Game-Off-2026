@@ -142,7 +142,9 @@ void FStageGraphOrganization::Project(UStageScenarioEdGraph* Graph, const TArray
 	}
 	else if (Graph->ActiveGroup.IsValid() || Graph->ScopeCommand || Graph->bParallelAssignments || Graph->bReactionAssignments)
 	{
-		auto* Exit = Boundary(EStageScenarioNodeKind::Return, Graph->bLinear ? TEXT("Return") : TEXT("All completed"), Index * 330);
+		const auto* Parallel = Cast<UParallelStageMemberCommand>(Graph->ScopeCommand);
+		const TCHAR* ExitTitle = Graph->bLinear ? TEXT("Return") : Parallel && Parallel->bFinishOnPrimaryBranch ? TEXT("Primary completed") : TEXT("All completed");
+		auto* Exit = Boundary(EStageScenarioNodeKind::Return, ExitTitle, Index * 330);
 		if (Graph->bLinear)
 			Link(Previous, Exit);
 		else
@@ -535,6 +537,8 @@ bool FStageGraphOrganization::Delete(UStageScenarioEdGraph* Graph, const TArray<
 			Transaction.Cancel();
 			return false;
 		}
+		if (auto* Parallel = Cast<UParallelStageMemberCommand>(Graph->ScopeCommand); Parallel && !Parallel->Children.Contains(Parallel->PrimaryBranch))
+			Parallel->PrimaryBranch = nullptr;
 	}
 	for (auto& G : Graph->Groups())
 		G.Members.RemoveAll([&](FGuid Id)

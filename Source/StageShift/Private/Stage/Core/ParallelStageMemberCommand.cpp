@@ -3,9 +3,17 @@
 #include "Components/Stage/StageMemberComponent.h"
 #include "StageCommandContainerHelpers.h"
 
+void UParallelStageMemberCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
+{
+	Super::ValidateDefinition(Data, Path, Errors);
+	if (bFinishOnPrimaryBranch && (!PrimaryBranch || !Children.Contains(PrimaryBranch)))
+		Errors.Add(Path + TEXT(" / Select a primary branch for Parallel."));
+}
+
 float UParallelStageMemberCommand::GetNeededTime_Implementation() const
 {
 	if (!StageCommandContainer::HasValidChildren(this)) return 0.0f;
+	if (bFinishOnPrimaryBranch && PrimaryBranch && Children.Contains(PrimaryBranch)) return StageCommandContainer::NeededTime(PrimaryBranch);
 	float Duration = 0.0f;
 	for (const UStageMemberCommand* Child : Children)
 		Duration = FMath::Max(Duration, StageCommandContainer::NeededTime(Child));
@@ -15,6 +23,8 @@ float UParallelStageMemberCommand::GetNeededTime_Implementation() const
 float UParallelStageMemberCommand::GetRemainingTime_Implementation() const
 {
 	if (GetState() == EStageExecutionState::Finished || !StageCommandContainer::HasValidChildren(this)) return 0.0f;
+	if (bFinishOnPrimaryBranch && PrimaryBranch && Children.Contains(PrimaryBranch) && GetState() != EStageExecutionState::Stopping)
+		return PrimaryBranch->GetState() == EStageExecutionState::NotStarted ? StageCommandContainer::NeededTime(PrimaryBranch) : PrimaryBranch->GetRemainingTime();
 	float Remaining = 0.0f;
 	for (const UStageMemberCommand* Child : Children)
 	{
@@ -52,16 +62,18 @@ void UParallelStageMemberCommand::CheckChildrenResults()
 
 void UParallelStageMemberCommand::OnStart_Implementation()
 {
-	if (!StageCommandContainer::HasValidChildren(this) || !Context.MemberComponent.IsValid())
+	UStageMemberCommand* Primary = bFinishOnPrimaryBranch ? PrimaryBranch.Get() : nullptr;
+	if (!StageCommandContainer::HasValidChildren(this) || !Context.MemberComponent.IsValid() || (bFinishOnPrimaryBranch && (!Primary || !Children.Contains(Primary))))
 	{
 		Finish(EStageCommandResult::Failed);
 		return;
 	}
 	CheckChildrenResults(); // Subscribe every branch before any branch can finish synchronously.
 	bIssuingChildren = true;
+	if (Primary && Primary->GetState() == EStageExecutionState::NotStarted) Context.MemberComponent->StartPreparedCommand(Primary);
 	for (UStageMemberCommand* Child : Children)
 	{
-		if (GetState() != EStageExecutionState::Running) break;
+		if (GetState() != EStageExecutionState::Running || (Primary && Primary->GetState() == EStageExecutionState::Finished)) break;
 		if (Child->GetState() == EStageExecutionState::NotStarted) Context.MemberComponent->StartPreparedCommand(Child);
 	}
 	bIssuingChildren = false;
@@ -80,8 +92,13 @@ void UParallelStageMemberCommand::HandleChildFinished(UStageMemberCommand* Comma
 void UParallelStageMemberCommand::OnStop_Implementation(EStageActionStopReason Reason)
 {
 	CheckChildrenResults();
-	const bool bWasIssuingChildren = bIssuingChildren;
-	bIssuingChildren = true;
+	StopChildren(Reason);
+	TryFinish();
+}
+
+void UParallelStageMemberCommand::StopChildren(EStageActionStopReason Reason)
+{
+	TGuardValue<bool> Issuing(bIssuingChildren, true);
 	for (UStageMemberCommand* Child : Children)
 	{
 		if (!IsValid(Child) || Child->GetOuter() != this || Child->GetState() == EStageExecutionState::Finished) continue;
@@ -90,15 +107,21 @@ void UParallelStageMemberCommand::OnStop_Implementation(EStageActionStopReason R
 		else
 			Child->RequestStop(Reason);
 	}
-	bIssuingChildren = bWasIssuingChildren;
-	TryFinish();
 }
 
 void UParallelStageMemberCommand::TryFinish()
 {
 	if (GetState() == EStageExecutionState::Finished || bIssuingChildren) return;
-	const EStageCommandResult Result = StageCommandContainer::ResolveResult(ChildResults);
+	const bool bUsePrimary = bFinishOnPrimaryBranch && GetState() == EStageExecutionState::Running;
+	const int32 PrimaryIndex = bUsePrimary ? Children.IndexOfByKey(PrimaryBranch) : INDEX_NONE;
+	if (bUsePrimary && !ChildResults.IsValidIndex(PrimaryIndex)) return;
+	const EStageCommandResult Result = bUsePrimary ? ChildResults[PrimaryIndex] : StageCommandContainer::ResolveResult(ChildResults);
 	if (Result == EStageCommandResult::None) return;
+	if (bUsePrimary)
+	{
+		StopChildren(EStageActionStopReason::ParallelBranchFinished);
+		if (ChildResults.Contains(EStageCommandResult::None)) return;
+	}
 	for (UStageMemberCommand* Child : Children)
 		if (IsValid(Child)) Child->OnFinished.RemoveDynamic(this, &UParallelStageMemberCommand::HandleChildFinished);
 	Finish(GetState() == EStageExecutionState::Stopping ? EStageCommandResult::Cancelled : Result);

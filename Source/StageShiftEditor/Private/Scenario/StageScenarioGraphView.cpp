@@ -158,6 +158,8 @@ bool FStageScenarioGraphAdapter::Wrap(const UStageScenarioEdNode* Node, UClass* 
 	RenewGuids(Inner);
 	Wrapper->EditorGuid = Key(*Slot);
 	Array->Add(Inner);
+	if (auto* Parallel = Cast<UParallelStageMemberCommand>(Node->ParentCommand); Parallel && Parallel->PrimaryBranch == *Slot)
+		Parallel->PrimaryBranch = Wrapper;
 	*Slot = Wrapper;
 	Changed();
 	return true;
@@ -187,6 +189,8 @@ bool FStageScenarioGraphAdapter::SetContainerMode(const UStageScenarioEdNode* No
 	for (auto& Draft : Data->EditorDrafts)
 		if (Draft.Kind == EStageGraphDraftKind::Child && Draft.Scope == Key(*Slot) && !Draft.Step.Commands.IsEmpty())
 			Draft.Step.Commands[0].Command = DuplicateObject<UStageMemberCommand>(Draft.GetCommand(), Replacement);
+	if (auto* Parallel = Cast<UParallelStageMemberCommand>(Node->ParentCommand); Parallel && Parallel->PrimaryBranch == *Slot)
+		Parallel->PrimaryBranch = Replacement;
 	*Slot = Replacement;
 	Changed();
 	return true;
@@ -440,6 +444,8 @@ void FStageScenarioGraphAdapter::BuildView(UStageScenarioEdGraph* Graph) const
 			N->AssignmentIndex = AssignmentIndex;
 			N->ReactionIndex = Reaction;
 			Describe(N, C);
+			if (const auto* Parallel = Cast<UParallelStageMemberCommand>(Graph->ScopeCommand); Parallel && Parallel->bFinishOnPrimaryBranch && Parallel->PrimaryBranch == C)
+				N->Summary = N->Summary.IsEmpty() ? TEXT("Основная") : TEXT("Основная · ") + N->Summary;
 			Logical.Add(N);
 		}
 	}

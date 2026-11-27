@@ -1,4 +1,5 @@
 #include "Stage/Environment/StageSpotlightControl.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/SpotLightComponent.h"
@@ -41,6 +42,7 @@ const UMeshComponent* AStageSpotlightControl::GetInteractionMesh() const
 void AStageSpotlightControl::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!ControlVisual->GetSkinnedAsset()) FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*ControlMesh);
 	ControlLever->BindVisual(*ControlVisual, TEXT("light_lever"), false);
 	BaseRotation = Spotlight->GetRelativeRotation();
 	BaseIntensity = Spotlight->Intensity;

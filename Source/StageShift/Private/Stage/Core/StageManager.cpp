@@ -374,6 +374,12 @@ void AStageManager::IssueCommands(const TArray<TObjectPtr<UStageMemberCommand>>&
 	}
 }
 
+const FStageStep* AStageManager::FindPreparedStep(FName StepId) const
+{
+	const int32 Index = ActiveStage ? ActiveStage->FindStepIndex(StepId) : INDEX_NONE;
+	return PreparedSteps.IsValidIndex(Index) ? &PreparedSteps[Index] : nullptr;
+}
+
 FStageRootExecution* AStageManager::FindRoot(const UStageMemberCommand* Command)
 {
 	const auto* Root = Command ? Command->GetRootCommand() : nullptr;
@@ -749,10 +755,12 @@ void AStageManager::AccountCommandResult(UStageMemberCommand* Command, EStageCom
 		CurrentLatenessLevel = ResolveLatenessLevel(CurrentLatenessSeconds);
 	}
 	if (Result != EStageCommandResult::Succeeded || Command->IsComposite() || !Command->HasStartedMainAction()) return;
+	const int32 EarnedScore = Command->GetEarnedScore();
+	if (EarnedScore <= 0) return;
 	float Multiplier = 1.0f;
 	if (Entry->CommandType == EStageCommandType::Scenario)
 		if (const float* Value = ScoreMultipliers.Find(ResolveLatenessLevel(GetCommandLateness(Command)))) Multiplier = *Value;
-	AddScore(FMath::RoundToInt(static_cast<double>(Command->ScoreValue) * Multiplier));
+	AddScore(FMath::RoundToInt(static_cast<double>(EarnedScore) * Multiplier));
 }
 
 void AStageManager::ReceiveStageEvent(const FStageEvent& Event)

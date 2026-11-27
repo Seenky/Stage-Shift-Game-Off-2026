@@ -54,6 +54,7 @@ public:
 	static FVector GetControlGripLocation(const UStaticMeshComponent& Mesh, FName SocketName);
 	void PlayHandMotion(EInteractionHandMotion Motion, const FVector& GripLocation, const USceneComponent* Anchor = nullptr, FName Socket = NAME_None);
 	void ReleaseHandGrip(const USceneComponent& Anchor);
+	void SetCatchPreview(bool bShow);
 	bool SampleHandMotion(FInteractionHandPose& OutPose) const;
 
 	// Shared by the preview and BeginInteraction; never dispatches OnInteraction.
@@ -124,6 +125,8 @@ private:
 	FName HandAnchorSocket;
 	FVector HandContact = FVector::ZeroVector;
 	double HandMotionStartedAt = 0.0;
+	double CatchPreviewStartedAt = -1.0;
+	bool SampleCatchPreview(FInteractionHandPose& OutPose) const;
 
 	void OnInputStarted();
 	void OnInputReleased();

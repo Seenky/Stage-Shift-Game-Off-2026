@@ -2,6 +2,7 @@
 
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
+#include "Components/Dialogue/DialogueComponent.h"
 #include "Engine/World.h"
 #include "Physics/PhysicsActor.h"
 #include "Stage/Actions/PickUpAction.h"
@@ -30,6 +31,29 @@ TConstArrayView<FName> UPickUpCommand::GetPickupTargets() const
 	return TargetIds;
 }
 
+bool UPickUpCommand::AcceptsStageProp(const AActor& Prop) const
+{
+	for (FName Id : GetPickupTargets())
+		if (ResolveTarget(Context, Id) == &Prop) return true;
+	return false;
+}
+
+void UPickUpCommand::PlayWrongPropLine()
+{
+	if (bWrongPropLineTriggered || WrongPropLine.IsEmpty()) return;
+	bWrongPropLineTriggered = true;
+	AActor* Owner = StageInteraction::GetOwner(Context);
+	if (auto* Dialogue = IsValid(Owner) ? Owner->FindComponentByClass<UDialogueComponent>() : nullptr)
+	{
+		FDialogueLine Line;
+		Line.SpeakersName = FText::GetEmpty();
+		Line.Text = WrongPropLine;
+		Line.HoldDuration = 0.6f;
+		Line.bCheatOut = false;
+		Dialogue->PlayOptionalLine(Line);
+	}
+}
+
 void UPickUpCommand::ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const
 {
 	Super::ValidateDefinition(Data, Path, Errors);
@@ -40,10 +64,15 @@ void UPickUpCommand::ValidateDefinition(const UStageDataAsset* Data, const FStri
 	if (!FMath::IsFinite(MaxDistance) || MaxDistance <= 0) Errors.Add(Path + TEXT(" / MaxDistance must be positive and finite"));
 	if (!FMath::IsFinite(ThrowWindowLead) || !FMath::IsFinite(ThrowWindowDuration) || ThrowWindowLead < 0.0f || ThrowWindowDuration < 0.0f)
 		Errors.Add(Path + TEXT(" / Throw window timings must be finite and non-negative"));
+	if (!FMath::IsFinite(CheckDistanceTime) || CheckDistanceTime < 0.01f)
+		Errors.Add(Path + TEXT(" / Check Distance Time must be at least 0.01 seconds"));
+	if (!FMath::IsFinite(PickUpPeriodTime) || PickUpPeriodTime < 0.01f)
+		Errors.Add(Path + TEXT(" / Pick Up Period Time must be at least 0.01 seconds"));
 }
 
 void UPickUpCommand::OnStart_Implementation()
 {
+	bWrongPropLineTriggered = false;
 	PropThrowWindow.Reset();
 	if (ThrowWindowDuration > 0.0f)
 		if (const UWorld* World = GetWorld())
@@ -98,34 +127,14 @@ bool UPickUpCommand::IsResultAchieved_Implementation(const FStageExecutionContex
 	return false;
 }
 
-AActor* UPickUpCommand::FindPickupTarget(const FStageExecutionContext& InContext) const
-{
-	const auto Targets = GetPickupTargets();
-	if (Targets.Num() == 1) return ResolveTarget(InContext, Targets[0]);
-	AActor* Owner = StageInteraction::GetOwner(InContext);
-	AActor* BestTarget = nullptr;
-	float BestDistance = TNumericLimits<float>::Max();
-	for (const FName Id : Targets)
-	{
-		auto* Item = Cast<AStagePhysicsActor>(ResolveTarget(InContext, Id));
-		if (!Item || Item->GetInteractionType() != EPhysicsInteractionType::Carry) continue;
-		if (StageInteraction::GetOtherItemHolder(Owner, Item)) continue;
-		FInteractionContext Interaction;
-		if (StageInteraction::MakeContext(Owner, Item, FGameplayTag(), EInteractionPhase::Start, MaxDistance, Interaction) &&
-		    Interaction.Hit.Distance < BestDistance && IInteractionInterface::Execute_CanInteract(Item, Interaction))
-		{
-			BestTarget = Item;
-			BestDistance = Interaction.Hit.Distance;
-		}
-	}
-	return BestTarget;
-}
-
 UStageAction* UPickUpCommand::CreateMainAction_Implementation(const FStageExecutionContext& InContext)
 {
 	if (!InContext.MemberComponent.IsValid() || !InContext.Manager.IsValid()) return nullptr;
-	AActor* Target = FindPickupTarget(InContext);
+	TArray<TWeakObjectPtr<AActor>> Candidates;
+	for (const FName Id : GetPickupTargets()) Candidates.Add(ResolveTarget(InContext, Id));
 	auto* Action = NewObject<UPickUpAction>(InContext.MemberComponent.Get());
-	Action->SetupPickUp(Target, MaxDistance);
+	Action->SetupPickUp(MoveTemp(Candidates), MaxDistance, PropThrowWindow, CheckDistanceTime, PickUpPeriodTime);
+	if (const UWorld* World = GetWorld(); PropThrowWindow.IsSet() && World)
+		Action->SetExecutionBudget(static_cast<float>(PropThrowWindow->GetUpperBoundValue() - World->GetTimeSeconds()) + 1.0f);
 	return Action;
 }

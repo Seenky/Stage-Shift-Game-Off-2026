@@ -6,6 +6,7 @@
 #include "StageMemberComponent.generated.h"
 
 class UStageAction;
+class UPickUpCommand;
 class UStageMemberCommand;
 class UStageRecoveryRulesDataAsset;
 class UStatusesComponent;
@@ -27,7 +28,9 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 	bool IsPhysicallyBlocked() const;
-	bool IsWaitingForStageProp(double AcceptedAt) const;
+	bool IsWaitingForStageProp(double AcceptedAt, const AActor* Prop = nullptr) const;
+	const UPickUpCommand* GetActivePickUpCommand() const;
+	void HandleWrongStageProp(double AcceptedAt);
 	TOptional<TRange<double>> GetStagePropThrowWindow() const;
 	void ShowPartnerInteractionPose();
 	bool IsPartnerInteractionPoseActive() const;
@@ -119,6 +122,7 @@ private:
 	bool CanRememberStageMark(const UStageMemberCommand* SourceCommand) const;
 	void UpdateStageMarkStatus();
 	void UpdateStagePropReadiness() const;
+	UStageMemberCommand* FindStagePropCommand(double AcceptedAt, const AActor* Prop = nullptr) const;
 	void PumpCommands();
 	void UpdateExecutions();
 	void AdvanceExecution(UStageMemberCommand* Command);

@@ -2,6 +2,7 @@
 
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
+#include "Components/Stage/StageMemberComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/GameViewportClient.h"
@@ -21,13 +22,14 @@
 #include "UI/ThrowAimWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
-#if ENABLE_DRAW_DEBUG
 namespace
 {
+constexpr double LandingMarkerLift = 6.0;
+#if ENABLE_DRAW_DEBUG
 TAutoConsoleVariable<int32> CVarDebugThrowTrace(TEXT("Stage.DebugThrowTrace"), 0,
-    TEXT("Draw the cursor ray and the box sweeps used for the throw landing preview: 1 = on, 0 = off."), ECVF_Cheat);
-}
+    TEXT("Draw the cursor ray, ground sphere sweep, and throw trajectory sweeps: 1 = on, 0 = off."), ECVF_Cheat);
 #endif
+}
 
 UThrowAimComponent::UThrowAimComponent()
 {
@@ -96,6 +98,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		bGamepad = StickInput.SizeSquared() > FMath::Square(StickDeadZone);
 		AimDirection = Pawn->GetActorForwardVector().GetSafeNormal2D();
 		const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
+		AimReferenceZ = Ground.Z;
 		if (!bHasScreenPosition && !PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition))
 		{
 			ScreenPosition = FVector2D(Bounds.Min + Bounds.Size() / 2);
@@ -127,6 +130,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (bInteractive && !bAimFrozen) UpdateAim(*PC, DeltaTime);
 	if (!bPreparing && bWasPreparing) bAimFrozen = true;
+	UpdateCatchPreview(bPreparing && !bAimFrozen ? PC : nullptr);
 	bWasPreparing = bPreparing;
 	bStickMoved = false;
 	// Drag coordinates character facing with the simulated grip. The cursor only
@@ -151,7 +155,7 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	{
 		FVector2D ReticlePosition = ScreenPosition - FVector2D(Bounds.Min);
 		const bool bVisible = bDraggingAim ? bInteractive : bPreviewBlocked && bHasAimTarget
-		    && PC->ProjectWorldLocationToScreen(DisplayedAimTarget, ReticlePosition, true);
+		    && PC->ProjectWorldLocationToScreen(AimTarget + FVector::UpVector * LandingMarkerLift, ReticlePosition, true);
 		Reticle->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		if (bVisible) Reticle->SetPositionInViewport(ReticlePosition, true);
 	}
@@ -177,10 +181,11 @@ bool UThrowAimComponent::GetViewportBounds(const APlayerController& Controller, 
 	return Bounds.Width() > 0 && Bounds.Height() > 0;
 }
 
-void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTime, bool bRefreshGround)
+void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTime)
 {
 	FIntRect Bounds;
 	if (!GetViewportBounds(Controller, Bounds)) return;
+	const FVector2D PreviousScreenPosition = ScreenPosition;
 	FVector2D Mouse;
 	const bool bHasMouse = Controller.GetMousePosition(Mouse.X, Mouse.Y);
 	const bool bAbsoluteMouse = Controller.bShowMouseCursor || !Controller.GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture();
@@ -229,63 +234,116 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 	else if (bHasMouse)
 		LastMousePosition = Mouse;
 
+	// Walking can change the release point, but only cursor input moves the aim point.
+	UWorld* World = GetWorld();
+	const bool bUpdateTarget = bDraggingAim || !bHasAimTarget || ScreenPosition != PreviousScreenPosition;
+	bool bDrawDebug = false;
+#if ENABLE_DRAW_DEBUG
+	bDrawDebug = !bDraggingAim && CVarDebugThrowTrace.GetValueOnGameThread() != 0;
+#endif
+	if (!bUpdateTarget && (!bDrawDebug || World->GetTimeSeconds() < NextThrowPreviewAt)) return;
+
 	FVector RayStart, RayDirection;
-	const bool bHadAimTarget = bHasAimTarget;
-	bHasAimTarget = Controller.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection);
-	if (!bHasAimTarget)
+	if (!Controller.DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, RayStart, RayDirection))
 	{
-		Manipulation->ClearThrowTarget();
+		if (bUpdateTarget)
+		{
+			bHasAimTarget = false;
+			Manipulation->ClearThrowTarget();
+		}
 		return;
 	}
 	FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowCursor), true, GetOwner());
 	Query.AddIgnoredComponent(Manipulation->GetManipulatedComponent());
 	FHitResult Hit;
 	const FVector RayEnd = RayStart + RayDirection * AimTraceDistance;
-	const double FloorZ = Character->GetActorLocation().Z - Character->GetSimpleCollisionHalfHeight();
+	const double FloorZ = bDraggingAim ? Character->GetActorLocation().Z - Character->GetSimpleCollisionHalfHeight() : AimReferenceZ;
 	const double FloorDistance = FMath::Abs(RayDirection.Z) > 0.001 ? (FloorZ - RayStart.Z) / RayDirection.Z : -1.0;
 	const bool bReachesFloor = FloorDistance > 0.0 && FloorDistance <= AimTraceDistance;
-	AimTarget = bReachesFloor ? RayStart + RayDirection * FloorDistance : RayEnd;
+	FVector Target = bReachesFloor ? RayStart + RayDirection * FloorDistance : RayEnd;
 	if (bDraggingAim)
 	{
-		if (GetWorld()->LineTraceSingleByChannel(Hit, RayStart, RayEnd, AimTraceChannel, Query)) AimTarget = Hit.ImpactPoint;
+		if (World->LineTraceSingleByChannel(Hit, RayStart, RayEnd, AimTraceChannel, Query)) Target = Hit.ImpactPoint;
 	}
 	else if (bReachesFloor)
 	{
-		if (bRefreshGround || GetWorld()->GetTimeSeconds() >= NextThrowPreviewAt)
+		// Keep the last floor height when scenery hides the surface from this probe.
+		constexpr double FloorProbeHeight = 35.0;
+		constexpr float FloorProbeRadius = 8.0f;
+		const FVector Vertical = FVector::UpVector * FloorProbeHeight;
+		UPhysicsManipulationComponent::AddThrowIgnoredCharacters(*World, Query);
+		const bool bHit = World->SweepSingleByChannel(Hit, Target + Vertical, Target - Vertical,
+		    FQuat::Identity, AimTraceChannel, FCollisionShape::MakeSphere(FloorProbeRadius), Query);
+		const bool bFloorHit = bHit && !Hit.bStartPenetrating && Hit.ImpactNormal.Z >= 0.7;
+#if ENABLE_DRAW_DEBUG
+		if (bDrawDebug)
 		{
-			// Keep the last floor height when scenery hides the surface from this probe.
-			constexpr double FloorProbeHeight = 35.0;
-			const FVector Vertical = FVector::UpVector * FloorProbeHeight;
-			if (GetWorld()->LineTraceSingleByChannel(Hit, AimTarget + Vertical, AimTarget - Vertical, AimTraceChannel, Query) && Hit.ImpactNormal.Z >= 0.7)
-			{
-				AimGroundZ = Hit.ImpactPoint.Z;
-				AimSurfaceNormal = Hit.ImpactNormal;
-			}
+			constexpr float DebugLifetime = 0.075f;
+			DrawDebugCapsule(World, Target, FloorProbeHeight + FloorProbeRadius, FloorProbeRadius, FQuat::Identity,
+			    FColor::Magenta, false, DebugLifetime);
+			if (bHit) DrawDebugPoint(World, Hit.ImpactPoint, 6.0f, bFloorHit ? FColor::Green : FColor::Red, false, DebugLifetime);
 		}
-		if (AimGroundZ.IsSet())
+#endif
+		if (bUpdateTarget && bFloorHit)
+		{
+			AimGroundZ = Hit.ImpactPoint.Z;
+			AimSurfaceNormal = Hit.ImpactNormal;
+		}
+		if (bUpdateTarget && AimGroundZ.IsSet())
 		{
 			const double GroundDistance = (AimGroundZ.GetValue() - RayStart.Z) / RayDirection.Z;
-			if (GroundDistance > 0.0 && GroundDistance <= AimTraceDistance) AimTarget = RayStart + RayDirection * GroundDistance;
+			if (GroundDistance > 0.0 && GroundDistance <= AimTraceDistance) Target = RayStart + RayDirection * GroundDistance;
 		}
+#if ENABLE_DRAW_DEBUG
+		if (bDrawDebug)
+		{
+			const FVector& DebugTarget = bUpdateTarget ? Target : AimTarget;
+			DrawDebugLine(World, RayStart, DebugTarget, FColor::Cyan);
+			DrawDebugSphere(World, DebugTarget, 5.f, 8, FColor::Cyan);
+		}
+#endif
+		if (!bUpdateTarget) return;
 	}
 	else
 	{
-		bHasAimTarget = false;
-		Manipulation->ClearThrowTarget();
+		if (bUpdateTarget)
+		{
+			bHasAimTarget = false;
+			Manipulation->ClearThrowTarget();
+		}
 		return;
 	}
-#if ENABLE_DRAW_DEBUG
-	if (!bDraggingAim && CVarDebugThrowTrace.GetValueOnGameThread() != 0)
+	bHasAimTarget = true;
+	AimTarget = Target;
+	if (!bDraggingAim) Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
+}
+
+void UThrowAimComponent::UpdateCatchPreview(APlayerController* Controller)
+{
+	UInteractionComponent* Target = nullptr;
+	if (Controller)
 	{
-		DrawDebugLine(GetWorld(), RayStart, AimTarget, FColor::Cyan);
-		DrawDebugSphere(GetWorld(), AimTarget, 5.f, 8, FColor::Cyan);
+		const double Now = GetWorld()->GetTimeSeconds();
+		if (Now < NextCatchPreviewAt) return;
+		NextCatchPreviewAt = Now + 0.05;
+		FVector Start, Direction;
+		if (Controller->DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, Start, Direction))
+		{
+			FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowCatchPreview), false, GetOwner());
+			Query.AddIgnoredComponent(Manipulation->GetManipulatedComponent());
+			FHitResult Hit;
+			// This ray only drives the hand pose. The throw simulation still ignores characters.
+			if (GetWorld()->LineTraceSingleByChannel(Hit, Start, Start + Direction * AimTraceDistance, ECC_Visibility, Query))
+				if (AActor* Actor = Hit.GetActor(); IsValid(Actor) && Actor->FindComponentByClass<UStageMemberComponent>())
+					if (const auto* Receiver = Actor->FindComponentByClass<UPhysicsManipulationComponent>(); Receiver && Receiver->CanReceiveStageProp())
+						Target = Actor->FindComponentByClass<UInteractionComponent>();
+		}
 	}
-#endif
-	if (!bDraggingAim)
-	{
-		DisplayedAimTarget = bHadAimTarget && !bRefreshGround ? FMath::VInterpTo(DisplayedAimTarget, AimTarget, DeltaTime, 22.f) : AimTarget;
-		Manipulation->SetThrowTargetFromView(AimTarget, AimSurfaceNormal, RayDirection);
-	}
+	else NextCatchPreviewAt = 0.0;
+	if (CatchPreviewTarget.Get() == Target) return;
+	if (auto* Previous = CatchPreviewTarget.Get()) Previous->SetCatchPreview(false);
+	CatchPreviewTarget = Target;
+	if (Target) Target->SetCatchPreview(true);
 }
 
 void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
@@ -313,7 +371,7 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	// Sample the last visible release frames before the timer detaches the prop.
 	if (Now < NextThrowPreviewAt && !(bAimFrozen && Interaction->IsReleaseImminent()))
 	{
-		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
+		if (!PreviewPath.IsEmpty()) DrawThrowTrajectory(DeltaTime);
 		return;
 	}
 	NextThrowPreviewAt += PreviewInterval;
@@ -331,7 +389,7 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	if (!Manipulation->PredictThrow(Interaction->GetInteractionHoldDuration(), Path, Hit, bDrawDebug, &bBlocked, &bUsesHighArc))
 	{
 		if (!bKeepRecentPreview) ClearPreview();
-		else if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
+		else DrawThrowTrajectory(DeltaTime);
 		return;
 	}
 	const bool bLanding = Hit.bBlockingHit && !bBlocked;
@@ -339,13 +397,13 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 	if (bKeepRecentPreview && (bLanding != bPreviousLanding || bBlocked != bPreviewBlocked))
 	{
 		// One sweep at the edge of a prop should not replace the landing mark with a cross.
-		if (PreviewBlendRemaining > 0.0) DrawThrowTrajectory(DeltaTime);
+		DrawThrowTrajectory(DeltaTime);
 		return;
 	}
 	LastStablePreviewAt = Now;
 	if (bLanding)
 	{
-		// The sweep can report different corners of the prop as it rotates.
+		// Center the landing marker under the sweep sphere.
 		Hit.ImpactPoint.X = Path.Last().X;
 		Hit.ImpactPoint.Y = Path.Last().Y;
 		// The prop hits simple collision, which can sit below the rendered floorboards.
@@ -353,6 +411,7 @@ void UThrowAimComponent::UpdateThrowPreview(bool bShow, float DeltaTime)
 		const FVector Probe = FVector::UpVector * SurfaceProbeHalfHeight;
 		FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowLandingSurface), true, GetOwner());
 		Query.AddIgnoredComponent(Manipulation->GetManipulatedComponent());
+		UPhysicsManipulationComponent::AddThrowIgnoredCharacters(*GetWorld(), Query);
 		FHitResult SurfaceHit;
 		if (GetWorld()->LineTraceSingleByChannel(SurfaceHit, Hit.ImpactPoint + Probe, Hit.ImpactPoint - Probe, AimTraceChannel, Query)
 		    && SurfaceHit.ImpactNormal.Z >= 0.7)
@@ -473,11 +532,13 @@ void UThrowAimComponent::DrawThrowTrajectory(float DeltaTime)
 		Distance += SegmentLength;
 	}
 
-	if (PreviewImpact.bBlockingHit && !bPreviewBlocked)
+	if (PreviewImpact.bBlockingHit && !bPreviewBlocked && bHasAimTarget)
 	{
-		const FVector Center = DisplayedPath.Last();
-		const FVector Normal = PreviewImpact.ImpactNormal;
-		const FMatrix Surface = FRotationMatrix::MakeFromZX(Normal, FVector::ForwardVector);
+		const FVector HitNormal = AimSurfaceNormal;
+		const double Pitch = FMath::RadiansToDegrees(FMath::Atan2(FMath::Max(-HitNormal.X, 0.0), HitNormal.Z));
+		const FRotationMatrix Surface(FRotator(Pitch, 0.0, 0.0));
+		const FVector Normal = Surface.GetScaledAxis(EAxis::Z);
+		const FVector Center = AimTarget + FVector::UpVector * LandingMarkerLift;
 		const FVector X = Surface.GetScaledAxis(EAxis::X);
 		const FVector Y = Surface.GetScaledAxis(EAxis::Y);
 		const FQuat AlongX = Surface.ToQuat();
@@ -530,8 +591,9 @@ void UThrowAimComponent::FreezeAim()
 {
 	if (!bAiming || bAimFrozen || bDraggingAim) return;
 	APlayerController* Controller = Character.IsValid() ? Cast<APlayerController>(Character->GetController()) : nullptr;
-	if (Controller && Controller->IsLocalController()) UpdateAim(*Controller, GetWorld()->GetDeltaSeconds(), true);
+	if (Controller && Controller->IsLocalController()) UpdateAim(*Controller, GetWorld()->GetDeltaSeconds());
 	bAimFrozen = true;
+	UpdateCatchPreview(nullptr);
 	// The release animation can still move the prop before it leaves the hand.
 	NextThrowPreviewAt = 0.0;
 }
@@ -544,6 +606,7 @@ bool UThrowAimComponent::GetAimTarget(FVector& WorldLocation) const
 
 void UThrowAimComponent::StopAiming()
 {
+	UpdateCatchPreview(nullptr);
 	if (!bAiming) return;
 	if (ACharacter* Pawn = Character.Get(); Pawn && !bDraggingAim)
 	{

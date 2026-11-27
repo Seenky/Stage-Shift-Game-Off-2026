@@ -6,6 +6,7 @@
 #include "StagePerformanceHUDWidget.generated.h"
 
 class AStageManager;
+class AStagePhysicsActor;
 class UCanvasPanel;
 class UImage;
 class UInteractionOutlineComponent;
@@ -24,6 +25,7 @@ struct FStagePerformanceCue
 	float WindowEnd = 0.0f;
 	TOptional<float> PausedProgress;
 	bool bPreparation = false;
+	TArray<AStagePhysicsActor*> PickupTargets;
 };
 
 UCLASS(Abstract)
@@ -96,11 +98,12 @@ private:
 	UFUNCTION() void HandleOpeningOverdue();
 	void ShowAudienceReaction(bool bPositive);
 	void PositionActorTags(const FGeometry& Geometry);
-	void UpdatePickupCueOutline(bool bHighlight);
+	void UpdatePickupCueOutline(TConstArrayView<AStagePhysicsActor*> Props = {});
 	UStagePerformanceTagWidget* GetTag(UPanelWidget& Panel, TSubclassOf<UStagePerformanceTagWidget> TagClass, int32 Index);
 
 	TWeakObjectPtr<AStageManager> Source;
 	TWeakObjectPtr<UInteractionOutlineComponent> PickupCueOutline;
+	TSet<TWeakObjectPtr<AStagePhysicsActor>> HighlightedPickups;
 	TArray<TWeakObjectPtr<AActor>, TInlineAllocator<5>> TaggedActors;
 	TArray<TWeakObjectPtr<AActor>, TInlineAllocator<4>> CastMembers;
 	int32 LastScene = INDEX_NONE;

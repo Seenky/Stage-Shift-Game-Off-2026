@@ -5,6 +5,7 @@
 #include "Misc/ScopeExit.h"
 #include "NativeGameplayTags.h"
 #include "Physics/PhysicsManipulationComponent.h"
+#include "Stage/Commands/PickUpCommand.h"
 #include "Stage/Core/Data/StageRecoveryRulesDataAsset.h"
 #include "Stage/Core/StageAction.h"
 #include "Stage/Core/StageManager.h"
@@ -57,16 +58,36 @@ bool UStageMemberComponent::IsPhysicallyBlocked() const
 	return (PhysicalMontage.IsValid() && PhysicalMontage->IsPhysicsMontageActive()) || (StatusComponent.IsValid() && StatusComponent->GetStatuses().HasTag(TAG_StageMemberFallen));
 }
 
-bool UStageMemberComponent::IsWaitingForStageProp(double AcceptedAt) const
+UStageMemberCommand* UStageMemberComponent::FindStagePropCommand(double AcceptedAt, const AActor* Prop) const
 {
-	return !bMemberFinished && !bClosingMember && Manager.IsValid() && Executions.ContainsByPredicate([this, AcceptedAt](const FStageCommandExecution& Entry)
+	if (bMemberFinished || bClosingMember || !Manager.IsValid()) return nullptr;
+	for (const FStageCommandExecution& Entry : Executions)
 	{
-		const UStageMemberCommand* Command = Entry.Command;
+		UStageMemberCommand* Command = Entry.Command;
 		if (!IsValid(Command) || Command->GetState() != EStageExecutionState::Running || !Command->ExpectsStageProp() || IsScenarioPaused(Command))
-			return false;
+			continue;
 		const auto Window = Command->GetPropThrowWindow();
-		return !Window.IsSet() || Window->Contains(AcceptedAt);
-	});
+		if ((!Window.IsSet() || Window->Contains(AcceptedAt)) && (!Prop || Command->AcceptsStageProp(*Prop))) return Command;
+	}
+	return nullptr;
+}
+
+bool UStageMemberComponent::IsWaitingForStageProp(double AcceptedAt, const AActor* Prop) const
+{
+	return FindStagePropCommand(AcceptedAt, Prop) != nullptr;
+}
+
+const UPickUpCommand* UStageMemberComponent::GetActivePickUpCommand() const
+{
+	for (const FStageCommandExecution& Entry : Executions)
+		if (const auto* Command = Cast<UPickUpCommand>(Entry.Command); IsValid(Command) && Command->GetState() == EStageExecutionState::Running)
+			return Command;
+	return nullptr;
+}
+
+void UStageMemberComponent::HandleWrongStageProp(double AcceptedAt)
+{
+	if (auto* Command = Cast<UPickUpCommand>(FindStagePropCommand(AcceptedAt))) Command->PlayWrongPropLine();
 }
 
 TOptional<TRange<double>> UStageMemberComponent::GetStagePropThrowWindow() const

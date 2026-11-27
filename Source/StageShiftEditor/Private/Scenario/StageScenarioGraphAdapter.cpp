@@ -325,7 +325,22 @@ bool FStageScenarioGraphAdapter::ReplaceCommand(const UStageScenarioEdNode* Node
 	EnsureIdentities();
 	if (Node->ParentCommand) Node->ParentCommand->Modify();
 	*Slot = Candidate;
-	return Edit.Commit(Transaction);
+	if (!Edit.Commit(Transaction)) return false;
+	if (auto* Parallel = Cast<UParallelStageMemberCommand>(Node->ParentCommand); Parallel && Parallel->PrimaryBranch == Node->Command)
+		Parallel->PrimaryBranch = Candidate;
+	return true;
+}
+
+bool FStageScenarioGraphAdapter::SetPrimaryBranch(const UStageScenarioEdNode* Node)
+{
+	auto* Parallel = Node ? Cast<UParallelStageMemberCommand>(Node->ParentCommand) : nullptr;
+	if (!Parallel || !Node->Command || !Parallel->Children.Contains(Node->Command) || !Backup(Data)) return false;
+	const FScopedTransaction Transaction(NSLOCTEXT("StageScenario", "SetPrimaryBranch", "Set primary Parallel branch"));
+	Parallel->Modify();
+	Parallel->PrimaryBranch = Node->Command;
+	Parallel->bFinishOnPrimaryBranch = true;
+	Changed();
+	return true;
 }
 
 bool FStageScenarioGraphAdapter::Delete(const UStageScenarioEdNode* Node)
@@ -348,7 +363,10 @@ bool FStageScenarioGraphAdapter::Delete(const UStageScenarioEdNode* Node)
 		Data->Steps.RemoveAt(Node->StepIndex);
 	else
 		AssignmentArray->RemoveAt(Node->AssignmentIndex);
-	return Edit.Commit(Transaction);
+	if (!Edit.Commit(Transaction)) return false;
+	if (auto* Parallel = Cast<UParallelStageMemberCommand>(Node->ParentCommand); Parallel && Parallel->PrimaryBranch == Node->Command)
+		Parallel->PrimaryBranch = nullptr;
+	return true;
 }
 
 bool FStageScenarioGraphAdapter::Duplicate(const UStageScenarioEdNode* Node)

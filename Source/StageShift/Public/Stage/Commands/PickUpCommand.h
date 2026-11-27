@@ -14,7 +14,10 @@ public:
 	virtual void PostLoad() override;
 	virtual uint8 GetResourceMask() const override { return 3; }
 	virtual bool ExpectsStageProp() const override { return true; }
+	virtual bool AcceptsStageProp(const AActor& Prop) const override;
 	virtual TOptional<TRange<double>> GetPropThrowWindow() const override { return PropThrowWindow; }
+	TConstArrayView<FName> GetPickupTargets() const;
+	void PlayWrongPropLine();
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const override;
 
@@ -26,11 +29,10 @@ protected:
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
 
 private:
-	TConstArrayView<FName> GetPickupTargets() const;
-	AActor* FindPickupTarget(const FStageExecutionContext& InContext) const;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Scenario", meta = (AllowPrivateAccess, GetOptions = "GetTargetOptions"))
 	TArray<FName> TargetIds;
+	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (MultiLine, ToolTip = "Optional line when a wrong prop reaches the actor during the catch window."))
+	FText WrongPropLine;
 
 	// Serialized by older assets and may still be set by a graph parameter binding.
 	UPROPERTY(BlueprintReadOnly, Category = "Scenario", meta = (AllowPrivateAccess))
@@ -42,10 +44,16 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Throw Window", meta = (ClampMin = "0.0", Units = "s"))
 	float ThrowWindowLead = 0.0f;
 
-	// Zero preserves the existing ability to receive a prop for the whole command.
-	UPROPERTY(EditAnywhere, Category = "Throw Window", meta = (ClampMin = "0.0", Units = "s"))
+	UPROPERTY(EditAnywhere, Category = "Throw Window", meta = (ClampMin = "0.0", Units = "s", ToolTip = "Time to accept throws and wait for nearby props after the lead. Zero uses a single immediate pickup attempt."))
 	float ThrowWindowDuration = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Throw Window", meta = (ClampMin = "0.01", Units = "s", ToolTip = "Interval between checks for an available prop during the window."))
+	float CheckDistanceTime = 0.1f;
+
+	UPROPERTY(EditAnywhere, Category = "Throw Window", meta = (ClampMin = "0.01", Units = "s", ToolTip = "Minimum delay after an unsuccessful pickup attempt during the window."))
+	float PickUpPeriodTime = 0.2f;
 
 	TOptional<TRange<double>> PropThrowWindow;
 	float NeededTime = 0.0f;
+	bool bWrongPropLineTriggered = false;
 };

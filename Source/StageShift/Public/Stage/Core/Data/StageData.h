@@ -108,7 +108,8 @@ UENUM(BlueprintType)
 enum class EStageActionStopReason : uint8
 {
 	Interrupt,
-	Cancel
+	Cancel,
+	ParallelBranchFinished
 };
 
 UENUM(BlueprintType)

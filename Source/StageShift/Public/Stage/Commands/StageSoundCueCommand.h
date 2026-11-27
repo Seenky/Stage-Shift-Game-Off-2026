@@ -14,12 +14,14 @@ class STAGESHIFT_API UStageSoundCueCommand : public UStageMemberCommand
 public:
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 	virtual void ValidateContext(const FStageExecutionContext& InContext, const FString& Path, TArray<FString>& Errors) const override;
+	virtual int32 GetEarnedScore() const override { return bPlayedOnTime ? Super::GetEarnedScore() : 0; }
 
 protected:
 	virtual void OnPreStart_Implementation(const FStageExecutionContext& InContext) override;
 	virtual bool IsResultAchieved_Implementation(const FStageExecutionContext& InContext) const override;
 	virtual float GetNeededTime_Implementation() const override { return NeededTime; }
 	virtual UStageAction* CreateMainAction_Implementation(const FStageExecutionContext& InContext) override;
+	virtual void OnMainActionResult_Implementation(UStageAction* Action, EStageActionResult ActionResult) override;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Scenario", meta = (GetOptions = "GetTargetOptions"))
@@ -50,4 +52,5 @@ private:
 	FName AnimationSlot = TEXT("RightHand");
 
 	float NeededTime = 0.0f;
+	bool bPlayedOnTime = false;
 };

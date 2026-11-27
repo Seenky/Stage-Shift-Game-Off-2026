@@ -46,6 +46,7 @@ public:
 	bool CanHandOff(const AActor* From, const AActor* To) const;
 	float GetHandoffRange() const { return HandoffRange; }
 	void WatchThrownProp(AActor* Thrower);
+	bool IsInCatchFlight() const;
 	void IgnoreCatchFor(AActor* Actor) { IgnoredCatchActor = Actor; }
 	void NotifyPropCarried(AActor* Carrier);
 	void SetCurtainRail(AStageCurtainRail* Rail);
@@ -53,6 +54,7 @@ public:
 	bool IsCurtainLever() const { return CurtainRail.IsValid(); }
 	bool IsBeingManipulated() const;
 	bool IsBeingDragged() const;
+	void SetPickupCueHighlighted(UObject& Source, bool bHighlighted);
 
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Props")
 	FStagePropTransferEvent OnPropTransfer;
@@ -60,6 +62,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	EPhysicsInteractionType InteractionType = EPhysicsInteractionType::None;
@@ -79,8 +82,9 @@ private:
 
 	void RefreshPickupOutline();
 	bool SetPickupOutlineFocused(bool bFocused);
+	int32 GetPickupOutlineMask(bool bFocused) const;
 	void ConfigureCharacterContact();
-	void CheckCatch();
+	void StopWatchingThrow();
 	void IgnoreThrowerDuringRelease(const AActor& Source);
 	void RestoreThrowerCollision();
 	bool HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const;
@@ -88,7 +92,6 @@ private:
 	void HandleImpactSound(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
 	    FVector NormalImpulse, const FHitResult& Hit);
 
-	FTimerHandle CatchTimer;
 	FTimerHandle ThrowerCollisionTimer;
 	TWeakObjectPtr<AActor> Thrower;
 	TWeakObjectPtr<AActor> IgnoredCatchActor;
@@ -97,6 +100,8 @@ private:
 	double LastImpactSoundTime = -1.0;
 	bool bMissedThrow = false;
 	FInteractionOutlineStencil PickupOutline;
+	TSet<TWeakObjectPtr<UObject>> PickupCueHighlightSources;
+	bool bPickupOutlineFocused = false;
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<UPhysicsManipulationComponent> ActiveManipulator;

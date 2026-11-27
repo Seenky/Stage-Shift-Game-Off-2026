@@ -97,6 +97,13 @@ bool UDialogueComponent::PlayLine(const FDialogueLine& Line, bool bForceStop)
 	return PlayLineWithId(Line, FGuid::NewGuid(), bForceStop);
 }
 
+bool UDialogueComponent::PlayOptionalLine(const FDialogueLine& Line)
+{
+	if (IsPlaying()) return false;
+	OptionalPlaybackId = FGuid::NewGuid();
+	return PlayLineWithId(Line, OptionalPlaybackId);
+}
+
 bool UDialogueComponent::PlayLineWithId(const FDialogueLine& Line, FGuid PlaybackId, bool bForceStop)
 {
 	if (!PlaybackId.IsValid()) return false;
@@ -105,7 +112,7 @@ bool UDialogueComponent::PlayLineWithId(const FDialogueLine& Line, FGuid Playbac
 		return false;
 	}
 
-	if (IsPlaying() && !bForceStop)
+	if (IsPlaying() && !bForceStop && !IsPlayingOptionalLine())
 	{
 		return false;
 	}
@@ -404,7 +411,7 @@ void UDialogueComponent::FinishPlayback(const EDialogueEndReason EndReason)
 
 	const FGuid EndedPlaybackId = PlaybackState.PlaybackId;
 
-	const bool bCanResume = EndReason == EDialogueEndReason::Interrupted && PlaybackState.Phase == EDialoguePlaybackPhase::Revealing;
+	const bool bCanResume = EndReason == EDialogueEndReason::Interrupted && PlaybackState.Phase == EDialoguePlaybackPhase::Revealing && !IsPlayingOptionalLine();
 	LastRevealDelay = 0.0f;
 	if (UWorld* World = GetWorld())
 	{
@@ -455,7 +462,7 @@ bool UDialogueComponent::CaptureResumeData(FGuid PlaybackId, FDialogueResumeData
 
 bool UDialogueComponent::ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId)
 {
-	if (bEndingPlay || !HasBegunPlay() || !GetWorld() || IsPlaying() || !PlaybackId.IsValid() || !Data.IsValid() || Data.Source.Get() != this
+	if (bEndingPlay || !HasBegunPlay() || !GetWorld() || (IsPlaying() && !IsPlayingOptionalLine()) || !PlaybackId.IsValid() || !Data.IsValid() || Data.Source.Get() != this
 	    || !FMath::IsFinite(Data.RemainingDelay) || Data.RemainingDelay < 0)
 		return false;
 	TArray<int32> Ends, Starts;
@@ -464,6 +471,11 @@ bool UDialogueComponent::ResumeSnapshotWithId(const FDialogueResumeData& Data, F
 	if (Ends.IsEmpty() || Data.RevealedLetters < 0 || Data.RevealedLetters > Ends.Num() || Data.RevealedWords < 0 || Data.RevealedWords > Starts.Num()) return false;
 	for (int32 Index : Data.TriggeredCueIndices)
 		if (!Data.Line.Cues.IsValidIndex(Index)) return false;
+	if (IsPlayingOptionalLine())
+	{
+		FinishPlayback(EDialogueEndReason::Interrupted);
+		if (!IsValid(this) || !HasBegunPlay() || IsPlaying()) return false;
+	}
 	PlaybackState = {};
 	PlaybackState.Line = Data.Line;
 	PlaybackState.PlaybackId = PlaybackId;

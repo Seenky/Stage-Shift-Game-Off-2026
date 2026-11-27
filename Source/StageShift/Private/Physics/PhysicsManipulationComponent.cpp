@@ -15,11 +15,11 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/StageShiftCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
-#include "PhysicsEngine/BodySetup.h"
 #include "Components/Physics/DollPhysicsComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Physics/PhysicsActor.h"
@@ -27,6 +27,13 @@
 namespace
 {
 	constexpr double ThrowTraceSeconds = 2.5;
+	constexpr float CatchReachDuration = 0.18f;
+	const FName GrabObjectNotify(TEXT("GrabObject"));
+
+	bool IsGrabNotify(const FAnimNotifyEvent& Event)
+	{
+		return Event.Notify && Event.Notify->GetNotifyName() == TEXT("GrabObject");
+	}
 }
 
 UPhysicsManipulationComponent::UPhysicsManipulationComponent()
@@ -60,13 +67,13 @@ bool UPhysicsManipulationComponent::CanReceiveStageProp() const
 	return World && CanReceiveStagePropAt(World->GetTimeSeconds());
 }
 
-bool UPhysicsManipulationComponent::CanReceiveStagePropAt(double AcceptedAt) const
+bool UPhysicsManipulationComponent::CanReceiveStagePropAt(double AcceptedAt, const AActor* Prop) const
 {
 	const AActor* Owner = GetOwner();
 	if (!bAcceptStageProps || bPropPlayEnded || !IsValid(Owner) || Owner->IsActorBeingDestroyed() || !HasBegunPlay() || !CarryPoint.IsValid()
 	    || CarryPoint->GetOwner() != Owner || ManipulatedComponent.IsValid() || GetGrabbedComponent()) return false;
 	const auto* Member = Owner->FindComponentByClass<UStageMemberComponent>();
-	if (Member && !Member->IsWaitingForStageProp(AcceptedAt)) return false;
+	if (Member && !Member->IsWaitingForStageProp(AcceptedAt, Prop)) return false;
 	const auto* Physics = Owner->FindComponentByClass<UPhysicalMontageComponent>();
 	return !Physics || !Physics->IsPhysicsMontageActive();
 }
@@ -107,11 +114,6 @@ bool UPhysicsManipulationComponent::CanManipulate(const FHitResult& Hit, EPhysic
 
 bool UPhysicsManipulationComponent::BeginManipulation(const FHitResult& Hit, EPhysicsInteractionType Type)
 {
-	return BeginManipulationInternal(Hit, Type, true);
-}
-
-bool UPhysicsManipulationComponent::BeginManipulationInternal(const FHitResult& Hit, EPhysicsInteractionType Type, bool bPlayPickupAnimation)
-{
 	if (!CanManipulate(Hit, Type)) return false;
 	UPrimitiveComponent* Component = Hit.GetComponent();
 	ActiveType = Type;
@@ -125,22 +127,12 @@ bool UPhysicsManipulationComponent::BeginManipulationInternal(const FHitResult& 
 		const UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>();
 		const FInteractionAnimation* Animation = Interaction ? Interaction->FindAnimationForTarget(Component->GetOwner()) : nullptr;
 		UAnimMontage* Montage = Animation ? Animation->Montage.Get() : nullptr;
-		const bool bHasGrabNotify = Montage
-		    && Montage->Notifies.ContainsByPredicate([](const FAnimNotifyEvent& Event)
-		{
-			return Event.Notify && Event.Notify->GetNotifyName() == TEXT("GrabObject");
-		});
-		if (bPlayPickupAnimation && Instance && bHasGrabNotify)
+		if (Instance && Montage && Montage->Notifies.ContainsByPredicate(IsGrabNotify))
 		{
 			LocalGripLocation = Component->GetComponentTransform().InverseTransformPosition(Hit.ImpactPoint);
-			PickupInstance = Instance;
-			PickupMontage = Montage;
-			bPickupPending = true;
-			Instance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &ThisClass::OnPickupNotify);
-			Instance->OnMontageEnded.AddUniqueDynamic(this, &ThisClass::OnPickupMontageEnded);
-			SetComponentTickEnabled(true);
+			WatchPickupPlayback(*Instance, *Montage);
 		}
-		else if (!AttachCarriedObject(false))
+		else if (!AttachCarriedObject())
 		{
 			ReleaseComponent();
 			return false;
@@ -161,6 +153,69 @@ bool UPhysicsManipulationComponent::BeginManipulationInternal(const FHitResult& 
 		OnItemPickedUp.Broadcast(ManipulatedActor.Get());
 	}
 
+	return true;
+}
+
+void UPhysicsManipulationComponent::WatchPickupPlayback(UAnimInstance& Instance, UAnimMontage& Montage)
+{
+	PickupInstance = &Instance;
+	PickupMontage = &Montage;
+	bPickupPending = true;
+	Instance.OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &ThisClass::OnPickupNotify);
+	Instance.OnMontageEnded.AddUniqueDynamic(this, &ThisClass::OnPickupMontageEnded);
+	SetComponentTickEnabled(true);
+}
+
+bool UPhysicsManipulationComponent::BeginCatch(AStagePhysicsActor& Prop, AActor& Source, double ReleasedAt)
+{
+	UPrimitiveComponent* Component = Prop.GetStaticMeshComponent();
+	const FHitResult Hit(&Prop, Component, Component->GetComponentLocation(), FVector::UpVector);
+	if (!CanManipulate(Hit, EPhysicsInteractionType::Carry)) return false;
+
+	AActor* Receiver = GetOwner();
+	UInteractionComponent* Interaction = Receiver->FindComponentByClass<UInteractionComponent>();
+	const auto* Animation = Interaction ? Interaction->FindAnimationForTarget(&Prop) : nullptr;
+	const auto* Character = Cast<ACharacter>(Receiver);
+	UAnimInstance* Instance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
+	UAnimMontage* Montage = Animation ? Animation->Montage.Get() : nullptr;
+
+	const FVector Contact = Component->DoesSocketExist(GripSocket) ? Component->GetSocketLocation(GripSocket) : Component->GetCenterOfMass();
+	ActiveType = EPhysicsInteractionType::Carry;
+	ManipulatedComponent = Component;
+	ManipulatedActor = &Prop;
+	CatchSource = &Source;
+	CatchReleasedAt = ReleasedAt;
+	CatchStartedAt = GetWorld()->GetTimeSeconds();
+	CatchStartTransform = Component->GetComponentTransform();
+	CatchReachTime = CatchReachDuration;
+	Component->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	Component->SetPhysicsAngularVelocityInRadians(FVector::ZeroVector);
+	ReserveCarriedObject(*Component);
+	Prop.RefreshPickupOutline();
+	Prop.OnEndPlay.AddUniqueDynamic(this, &ThisClass::OnManipulatedActorEndPlay);
+
+	if (Instance && Montage)
+	{
+		float SectionStart = 0.0f;
+		float SectionEnd = Montage->GetPlayLength();
+		const int32 Section = Montage->GetSectionIndex(Animation->StartSection);
+		if (Section != INDEX_NONE) Montage->GetSectionStartAndEndTime(Section, SectionStart, SectionEnd);
+		const auto* Grab = Montage->Notifies.FindByPredicate([SectionStart, SectionEnd](const FAnimNotifyEvent& Event)
+		{
+			return IsGrabNotify(Event) && Event.GetTriggerTime() > SectionStart && Event.GetTriggerTime() <= SectionEnd;
+		});
+		if (Grab)
+		{
+			const float StartAt = FMath::Max(SectionStart, Grab->GetTriggerTime() - CatchReachDuration);
+			WatchPickupPlayback(*Instance, *Montage);
+			if (Instance->Montage_Play(Montage, 1.0f, EMontagePlayReturnType::MontageLength, StartAt, false) > 0.0f)
+				CatchReachTime = Grab->GetTriggerTime() - StartAt;
+			else ClearPickupPlayback();
+		}
+	}
+	if (Interaction) Interaction->PlayHandMotion(EInteractionHandMotion::Catch, Contact, Component);
+	SetComponentTickEnabled(true);
+	UpdateStagePropReadiness();
 	return true;
 }
 
@@ -423,21 +478,27 @@ void UPhysicsManipulationComponent::UpdateDrag(float DeltaTime)
 	DragEffort = FMath::FInterpTo(DragEffort, static_cast<float>(Force.Size() / ForceLimit), DeltaTime, 6.0f);
 }
 
-bool UPhysicsManipulationComponent::AttachCarriedObject(bool bKeepWorldTransform)
+void UPhysicsManipulationComponent::ReserveCarriedObject(UPrimitiveComponent& Component)
+{
+	PreviousCollision = Component.GetCollisionEnabled();
+	LocalCarryCenter = Component.GetComponentTransform().InverseTransformPosition(Component.GetCenterOfMass());
+	bWasSimulatingPhysics = Component.IsSimulatingPhysics();
+	Component.SetSimulatePhysics(false);
+	Component.SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+bool UPhysicsManipulationComponent::AttachCarriedObject()
 {
 	UPrimitiveComponent* Component = ManipulatedComponent.Get();
-	if (!Component || !CarryPoint.IsValid() || !Component->IsSimulatingPhysics()) return false;
-
-	PreviousCollision = Component->GetCollisionEnabled();
-	LocalCarryCenter = Component->GetComponentTransform().InverseTransformPosition(Component->GetCenterOfMass());
-	bWasSimulatingPhysics = true;
-	Component->SetSimulatePhysics(false);
-	Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	const FAttachmentTransformRules& Rules = bKeepWorldTransform ? FAttachmentTransformRules::KeepWorldTransform : FAttachmentTransformRules::SnapToTargetNotIncludingScale;
-	if (!Component->AttachToComponent(CarryPoint.Get(), Rules))
+	if (!Component || !CarryPoint.IsValid() || (!IsCatchingProp() && !Component->IsSimulatingPhysics())) return false;
+	if (!IsCatchingProp()) ReserveCarriedObject(*Component);
+	if (!Component->AttachToComponent(CarryPoint.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale))
 	{
-		Component->SetCollisionEnabled(PreviousCollision);
-		Component->SetSimulatePhysics(bWasSimulatingPhysics);
+		if (!IsCatchingProp())
+		{
+			Component->SetCollisionEnabled(PreviousCollision);
+			Component->SetSimulatePhysics(bWasSimulatingPhysics);
+		}
 		return false;
 	}
 	bCarryAttached = true;
@@ -450,7 +511,7 @@ bool UPhysicsManipulationComponent::GetPickupTarget(FVector& WorldLocation, floa
 {
 	const UPrimitiveComponent* Component = ManipulatedComponent.Get();
 	const UAnimInstance* Instance = PickupInstance.Get();
-	if (!Component || !Instance || !Instance->Montage_IsActive(PickupMontage.Get())) return false;
+	if (IsCatchingProp() || !Component || !Instance || !Instance->Montage_IsActive(PickupMontage.Get())) return false;
 
 	WorldLocation = bCarryAttached               ? GrabLocation
 	    : Component->DoesSocketExist(GripSocket) ? Component->GetSocketLocation(GripSocket)
@@ -469,33 +530,71 @@ void UPhysicsManipulationComponent::OnPickupNotify(FName Name, const FBranchingP
 {
 	UAnimInstance* Instance = PickupInstance.Get();
 	const FAnimMontageInstance* Montage = Instance ? Instance->GetActiveInstanceForMontage(PickupMontage.Get()) : nullptr;
-	if (!bPickupPending || Name != TEXT("GrabObject") || !Montage || Montage->GetInstanceID() != Payload.MontageInstanceID) return;
+	if (!bPickupPending || Name != GrabObjectNotify || !Montage || Montage->GetInstanceID() != Payload.MontageInstanceID) return;
+	CompletePickup();
+}
 
+void UPhysicsManipulationComponent::CompletePickup()
+{
+	const bool bCaught = IsCatchingProp();
+	const TWeakObjectPtr<AActor> Source = CatchSource;
 	float Weight = 0.0f;
 	GetPickupTarget(GrabLocation, Weight);
 	// Selection already accepted the pickup; the reach animation must not veto it.
-	if (!AttachCarriedObject(false))
+	if (!AttachCarriedObject())
 	{
-		if (UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
+		if (!bCaught)
+			if (UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
 		ReleaseComponent();
 		return;
 	}
 	bPickupPending = false;
+	CatchStartedAt = -1.0;
+	CatchSource.Reset();
 	SetComponentTickEnabled(false);
+	if (bCaught) ClearPickupPlayback(true);
 
-	if (auto* Prop = Cast<AStagePhysicsActor>(ManipulatedActor.Get())) Prop->NotifyPropCarried(GetOwner());
-	OnItemPickedUp.Broadcast(ManipulatedActor.Get());
+	AActor* Item = ManipulatedActor.Get();
+	AStagePhysicsActor* Prop = Cast<AStagePhysicsActor>(Item);
+	if (Prop) Prop->NotifyPropCarried(GetOwner());
+	OnItemPickedUp.Broadcast(Item);
+	if (bCaught && IsValid(Prop)) Prop->OnPropTransfer.Broadcast(Prop, Source.Get(), GetOwner(), EStagePropTransferResult::Caught, Prop->CatchWindow);
 }
 
-void UPhysicsManipulationComponent::ClearPickupPlayback()
+void UPhysicsManipulationComponent::UpdateCatch()
 {
-	if (UAnimInstance* Instance = PickupInstance.Get())
+	auto* Component = ManipulatedComponent.Get();
+	const AActor* Owner = GetOwner();
+	const auto* Physics = Owner ? Owner->FindComponentByClass<UPhysicalMontageComponent>() : nullptr;
+	const auto* Member = Owner ? Owner->FindComponentByClass<UStageMemberComponent>() : nullptr;
+	const UWorld* World = GetWorld();
+	if (!World || !Component || !CarryPoint.IsValid() || (Physics && Physics->IsPhysicsMontageActive())
+	    || (Member && !Member->IsWaitingForStageProp(CatchReleasedAt, ManipulatedActor.Get())))
+	{
+		ReleaseComponent();
+		return;
+	}
+
+	const float Alpha = FMath::SmoothStep(0.0f, CatchReachTime, static_cast<float>(World->GetTimeSeconds() - CatchStartedAt));
+	const FTransform Grip = CarryPoint->GetComponentTransform();
+	Component->SetWorldLocationAndRotation(FMath::Lerp(CatchStartTransform.GetLocation(), Grip.GetLocation(), Alpha),
+	    FQuat::Slerp(CatchStartTransform.GetRotation(), Grip.GetRotation(), Alpha), false, nullptr, ETeleportType::TeleportPhysics);
+	// Characters without a pickup montage use the existing procedural catch pose.
+	if (!PickupMontage.IsValid() && Alpha >= 1.0f) CompletePickup();
+}
+
+void UPhysicsManipulationComponent::ClearPickupPlayback(bool bStopMontage)
+{
+	UAnimInstance* Instance = PickupInstance.Get();
+	UAnimMontage* Montage = PickupMontage.Get();
+	PickupInstance.Reset();
+	PickupMontage.Reset();
+	if (Instance)
 	{
 		Instance->OnPlayMontageNotifyBegin.RemoveDynamic(this, &ThisClass::OnPickupNotify);
 		Instance->OnMontageEnded.RemoveDynamic(this, &ThisClass::OnPickupMontageEnded);
+		if (bStopMontage && Montage) Instance->Montage_Stop(0.10f, Montage);
 	}
-	PickupInstance.Reset();
-	PickupMontage.Reset();
 }
 
 void UPhysicsManipulationComponent::OnPickupMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -504,7 +603,8 @@ void UPhysicsManipulationComponent::OnPickupMontageEnded(UAnimMontage* Montage, 
 	if (Montage != PickupMontage.Get() || (Instance && Instance->Montage_IsActive(Montage))) return;
 	if (bPickupPending)
 	{
-		if (UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
+		if (!IsCatchingProp())
+			if (UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
 		ReleaseComponent();
 	}
 	ClearPickupPlayback();
@@ -554,8 +654,16 @@ void UPhysicsManipulationComponent::SetThrowTargetFromView(const FVector& WorldL
 	ThrowAim.ViewDirection = ViewDirection.GetSafeNormal();
 }
 
+void UPhysicsManipulationComponent::AddThrowIgnoredCharacters(const UWorld& World, FCollisionQueryParams& Query)
+{
+	for (TActorIterator<ACharacter> It(&World); It; ++It)
+	{
+		Query.AddIgnoredActor(*It);
+	}
+}
+
 FVector UPhysicsManipulationComponent::CalculateThrowVelocity(
-    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration,
+    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration, double SweepRadius,
     FVector& OutTarget, float& OutLobSpeedLimit) const
 {
 	const float Charge = FMath::Clamp((HoldDuration - TapDuration) / FMath::Max(MaxChargeDuration, UE_SMALL_NUMBER), 0.0f, 1.0f);
@@ -569,26 +677,22 @@ FVector UPhysicsManipulationComponent::CalculateThrowVelocity(
 	}
 
 	if (Speed <= UE_SMALL_NUMBER) return FVector::ZeroVector;
-	const FVector CenterOffset = Component.Bounds.Origin - Center;
-	const double SurfaceOffset = FMath::Max(
-	    FVector::DotProduct(Component.Bounds.BoxExtent, Aim.SurfaceNormal.GetAbs()) - FVector::DotProduct(CenterOffset, Aim.SurfaceNormal), 0.0);
-	OutTarget = Aim.Target + Aim.SurfaceNormal * SurfaceOffset;
-	FVector BallisticTarget = OutTarget;
-	const double ViewIncidence = -FVector::DotProduct(Aim.ViewDirection, Aim.SurfaceNormal);
-	if (ViewIncidence > UE_KINDA_SMALL_NUMBER)
+	const bool bPlayerAim = !Aim.ViewDirection.IsNearlyZero();
+	double SurfaceOffset = SweepRadius;
+	if (!bPlayerAim)
 	{
-		// Follow the same view ray when compensating for the prop's size.
-		const double Retreat = FMath::Min(SurfaceOffset / ViewIncidence, FMath::Max(Component.Bounds.SphereRadius, 1.0) * 2.0);
-		BallisticTarget = Aim.Target - Aim.ViewDirection * Retreat;
+		const FVector CenterOffset = Component.Bounds.Origin - Center;
+		SurfaceOffset = FMath::Max(
+		    FVector::DotProduct(Component.Bounds.BoxExtent, Aim.SurfaceNormal.GetAbs()) - FVector::DotProduct(CenterOffset, Aim.SurfaceNormal), 0.0);
 	}
-	const FVector Offset = BallisticTarget - Start;
+	OutTarget = Aim.Target + Aim.SurfaceNormal * SurfaceOffset;
+	const FVector Offset = OutTarget - Start;
 	const float GravityZ = Component.IsGravityEnabled() && GetWorld() ? GetWorld()->GetGravityZ() : 0.0f;
 	if (FMath::Abs(GravityZ) > UE_SMALL_NUMBER && Offset.SizeSquared2D() > 1.0)
 	{
 		float AimSpeed = Speed;
 		if (bAssistTargetRange)
 		{
-			const bool bPlayerAim = !Aim.ViewDirection.IsNearlyZero();
 			const float MaxSpeed = bPlayerAim ? FMath::Max(MaxThrowSpeed, MaxAimAssistThrowSpeed) : MaxThrowSpeed;
 			// A low charge can be below the minimum ballistic speed for this point.
 			const double RequiredSquared = FMath::Abs(GravityZ) * FMath::Max(Offset.Z + Offset.Size(), 0.0);
@@ -596,7 +700,7 @@ FVector UPhysicsManipulationComponent::CalculateThrowVelocity(
 			AimSpeed = FMath::Max(Speed, FMath::Min(static_cast<float>(MinimumSpeed), MaxSpeed));
 			OutLobSpeedLimit = FMath::Max(AimSpeed, MaxSpeed);
 		}
-		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, BallisticTarget, AimSpeed);
+		UGameplayStatics::FSuggestProjectileVelocityParameters Parameters(this, Start, OutTarget, AimSpeed);
 		Parameters.OverrideGravityZ = GravityZ;
 		Parameters.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
 		Parameters.bAcceptClosestOnNoSolutions = true;
@@ -610,22 +714,33 @@ FVector UPhysicsManipulationComponent::ResolveThrowVelocity(UPrimitiveComponent&
     const FVector& Start, float HoldDuration, TArray<FVector>* Path, FHitResult* OutHit, bool bDrawDebug, bool* bOutBlocked, bool* bOutUsesHighArc) const
 {
 	if (bOutUsesHighArc) *bOutUsesHighArc = false;
+	const double BoundsRadius = Component.CalcBounds(FTransform::Identity).SphereRadius * Component.GetComponentTransform().GetScale3D().GetAbsMax();
+	const double SweepRadius = FMath::Max(BoundsRadius / 1.5, 1.0);
 	FVector Target;
 	float LobSpeedLimit;
-	FVector Velocity = CalculateThrowVelocity(Component, Aim, Center, Start, HoldDuration, Target, LobSpeedLimit);
+	FVector Velocity = CalculateThrowVelocity(Component, Aim, Center, Start, HoldDuration, SweepRadius, Target, LobSpeedLimit);
 	const double Gravity = Component.IsGravityEnabled() ? -GetWorld()->GetGravityZ() : 0.0;
 	const bool bPlayerAim = Aim.bHasTarget && !Aim.ViewDirection.IsNearlyZero();
 	const bool bCanLob = bPlayerAim && MaxThrowLobHeight > 0.f && Gravity > UE_SMALL_NUMBER;
 	if (!Path && !bCanLob) return Velocity;
 
+	FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowPreview), false, GetOwner());
+	Query.AddIgnoredActor(Component.GetOwner());
+	Query.bFindInitialOverlaps = false;
+	AddThrowIgnoredCharacters(*GetWorld(), Query);
+
 	const auto IsLanding = [&Aim](const FHitResult& Hit)
 	{
-		// A floor contact is a valid ordinary throw, including when the prop lands a little short.
 		return Hit.bBlockingHit && Hit.ImpactNormal.Z >= 0.7
 		    && Hit.ImpactPoint.Z <= Aim.Target.Z + 35.0;
 	};
+	const double LandingTolerance = FMath::Max(25.0, BoundsRadius + 15.0);
+	const auto IsLandingAtTarget = [&](const FHitResult& Hit)
+	{
+		return IsLanding(Hit) && FVector::DistSquared2D(Hit.ImpactPoint, Aim.Target) <= FMath::Square(LandingTolerance);
+	};
 	FHitResult Hit;
-	const FVector Obstruction = TraceThrowPath(Component, Center, Start, Velocity, Path, Hit, false);
+	const FVector Obstruction = TraceThrowPath(Component, Start, Velocity, SweepRadius, Query, Path, Hit, false);
 	if (bCanLob && Hit.bBlockingHit && !IsLanding(Hit))
 	{
 		// Center the prop over the floor target so it can clear the far side of the obstacle.
@@ -638,7 +753,6 @@ FVector UPhysicsManipulationComponent::ResolveThrowVelocity(UPrimitiveComponent&
 			// At horizontal progress u, gravity adds g*t²*u*(1-u)/2 above the straight start-to-target line.
 			const double HeightAtObstruction = Obstruction.Z - Start.Z - Offset.Z * Progress;
 			const double HeightPerTimeSquared = 0.5 * Gravity * Progress * (1.0 - Progress);
-			const double LandingTolerance = FMath::Max(25.0, Component.Bounds.SphereRadius + 15.0);
 			constexpr double HeightStep = 20.0;
 			TArray<FVector> LobPath;
 			for (double Rise = HeightStep; Rise <= MaxThrowLobHeight; Rise += HeightStep)
@@ -651,8 +765,8 @@ FVector UPhysicsManipulationComponent::ResolveThrowVelocity(UPrimitiveComponent&
 				if (LobVelocity.SizeSquared() > FMath::Square(static_cast<double>(LobSpeedLimit))) continue;
 
 				FHitResult LobHit;
-				TraceThrowPath(Component, Center, Start, LobVelocity, Path ? &LobPath : nullptr, LobHit, false);
-				if (!IsLanding(LobHit) || FVector::DistSquared2D(LobHit.ImpactPoint, Aim.Target) > FMath::Square(LandingTolerance)) continue;
+				TraceThrowPath(Component, Start, LobVelocity, SweepRadius, Query, Path ? &LobPath : nullptr, LobHit, false);
+				if (!IsLandingAtTarget(LobHit)) continue;
 
 				if (bOutUsesHighArc) *bOutUsesHighArc = true;
 				Velocity = LobVelocity;
@@ -662,9 +776,9 @@ FVector UPhysicsManipulationComponent::ResolveThrowVelocity(UPrimitiveComponent&
 			}
 		}
 	}
-	if (bDrawDebug) TraceThrowPath(Component, Center, Start, Velocity, nullptr, Hit, true);
+	if (bDrawDebug) TraceThrowPath(Component, Start, Velocity, SweepRadius, Query, nullptr, Hit, true);
 	if (OutHit) *OutHit = Hit;
-	if (bOutBlocked) *bOutBlocked = bPlayerAim ? !IsLanding(Hit) : Hit.bBlockingHit && Hit.ImpactNormal.Z < 0.7;
+	if (bOutBlocked) *bOutBlocked = bPlayerAim ? !IsLandingAtTarget(Hit) : Hit.bBlockingHit && Hit.ImpactNormal.Z < 0.7;
 	return Velocity;
 }
 
@@ -680,20 +794,12 @@ bool UPhysicsManipulationComponent::PredictThrow(float HoldDuration, TArray<FVec
 	return Path.Num() > 1;
 }
 
-FVector UPhysicsManipulationComponent::TraceThrowPath(UPrimitiveComponent& Component, const FVector& Center, const FVector& Start,
-	const FVector& Velocity, TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const
+FVector UPhysicsManipulationComponent::TraceThrowPath(const UPrimitiveComponent& Component, const FVector& Start, const FVector& Velocity,
+	double SweepRadius, const FCollisionQueryParams& Query, TArray<FVector>* Path, FHitResult& Hit, bool bDrawDebug) const
 {
-	const FTransform Transform = Component.GetComponentTransform();
-	const UBodySetup* BodySetup = Component.GetBodySetup();
-	const FBox CollisionBounds = BodySetup ? BodySetup->AggGeom.CalcAABB(FTransform::Identity) : FBox(ForceInit);
-	const FBoxSphereBounds Bounds = CollisionBounds.IsValid ? FBoxSphereBounds(CollisionBounds) : Component.CalcBounds(FTransform::Identity);
-	const FVector ShapeOffset = Transform.TransformPosition(Bounds.Origin) - Center;
-	const FCollisionShape Shape = FCollisionShape::MakeBox((Bounds.BoxExtent * Transform.GetScale3D().GetAbs()).ComponentMax(FVector(1.0)));
+	const FCollisionShape Shape = FCollisionShape::MakeSphere(SweepRadius);
 	const FCollisionResponseParams Responses(Component.GetCollisionResponseToChannels());
 	const double Gravity = Component.IsGravityEnabled() ? GetWorld()->GetGravityZ() : 0.0;
-	FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowPreview), false, GetOwner());
-	Query.AddIgnoredActor(Component.GetOwner());
-	Query.bFindInitialOverlaps = false;
 
 	constexpr int32 StepsPerSecond = 24;
 	constexpr int32 StepCount = static_cast<int32>(ThrowTraceSeconds * StepsPerSecond);
@@ -703,23 +809,21 @@ FVector UPhysicsManipulationComponent::TraceThrowPath(UPrimitiveComponent& Compo
 		Path->Add(Start);
 	}
 	constexpr float DebugLifetime = 0.075f;
-	if (bDrawDebug) DrawDebugBox(GetWorld(), Start + ShapeOffset, Shape.GetBox(), Transform.GetRotation(), FColor::Orange, false, DebugLifetime);
+	if (bDrawDebug) DrawDebugSphere(GetWorld(), Start, SweepRadius, 12, FColor::Orange, false, DebugLifetime);
 	FVector Previous = Start;
 	for (int32 Step = 1; Step <= StepCount; ++Step)
 	{
 		const double Time = Step / static_cast<double>(StepsPerSecond);
 		const FVector Next = Start + Velocity * Time + FVector(0, 0, 0.5 * Gravity * Time * Time);
-		const FVector SweepStart = Previous + ShapeOffset;
-		const FVector SweepEnd = Next + ShapeOffset;
 		const bool bHit = GetWorld()->SweepSingleByChannel(
-		    Hit, SweepStart, SweepEnd, Transform.GetRotation(), Component.GetCollisionObjectType(), Shape, Query, Responses);
+		    Hit, Previous, Next, FQuat::Identity, Component.GetCollisionObjectType(), Shape, Query, Responses);
 		if (bDrawDebug)
 		{
-			DrawDebugLine(GetWorld(), SweepStart, bHit ? Hit.Location : SweepEnd, FColor::Orange, false, DebugLifetime, 0, 1.5f);
+			DrawDebugLine(GetWorld(), Previous, bHit ? Hit.Location : Next, FColor::Orange, false, DebugLifetime, 0, 1.5f);
 			if (bHit)
 			{
-				DrawDebugLine(GetWorld(), Hit.Location, SweepEnd, FColor::Red, false, DebugLifetime);
-				DrawDebugBox(GetWorld(), Hit.Location, Shape.GetBox(), Transform.GetRotation(), FColor::Red, false, DebugLifetime);
+				DrawDebugLine(GetWorld(), Hit.Location, Next, FColor::Red, false, DebugLifetime);
+				DrawDebugSphere(GetWorld(), Hit.Location, SweepRadius, 12, FColor::Red, false, DebugLifetime);
 				DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 6.f, 8, FColor::Red, false, DebugLifetime);
 			}
 		}
@@ -742,6 +846,7 @@ FVector UPhysicsManipulationComponent::GetThrowReleaseAdjustment(const UPrimitiv
 	if (!Mesh || !Mesh->GetPhysicsAsset() || ThrowMaxReleaseAdjustment <= 0.0f) return FVector::ZeroVector;
 	FCollisionQueryParams Query(SCENE_QUERY_STAT(ThrowReleaseClearance), false, GetOwner());
 	Query.AddIgnoredActor(Component.GetOwner());
+	AddThrowIgnoredCharacters(*GetWorld(), Query);
 	const float Radius = Component.Bounds.SphereRadius;
 	FVector Center = Start;
 	double Remaining = ThrowMaxReleaseAdjustment;
@@ -774,7 +879,10 @@ FVector UPhysicsManipulationComponent::GetThrowReleaseAdjustment(const UPrimitiv
 
 void UPhysicsManipulationComponent::ReleaseComponent()
 {
-	ClearPickupPlayback();
+	const bool bCatching = IsCatchingProp();
+	CatchStartedAt = -1.0;
+	CatchSource.Reset();
+	ClearPickupPlayback(bCatching);
 	if (IsDragging())
 	{
 		if (UPrimitiveComponent* Component = ManipulatedComponent.Get();
@@ -804,9 +912,9 @@ void UPhysicsManipulationComponent::ReleaseComponent()
 
 	if (UPrimitiveComponent* Component = ManipulatedComponent.Get())
 	{
-		if (bCarryAttached)
+		if (bCarryAttached || bCatching)
 		{
-			Component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+			if (bCarryAttached) Component->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 			Component->SetCollisionEnabled(PreviousCollision);
 			Component->SetSimulatePhysics(bWasSimulatingPhysics);
 			if (auto* Prop = Cast<AStagePhysicsActor>(ManipulatedActor.Get())) Prop->RefreshPickupOutline();
@@ -828,6 +936,11 @@ void UPhysicsManipulationComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	if (IsDragging())
 	{
 		UpdateDrag(DeltaTime);
+		return;
+	}
+	if (IsCatchingProp())
+	{
+		UpdateCatch();
 		return;
 	}
 	if (bPickupPending)

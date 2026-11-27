@@ -1,4 +1,5 @@
 #include "Stage/Environment/StageBackstageRope.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -95,6 +96,7 @@ void AStageBackstageRope::OnConstruction(const FTransform& Transform)
 void AStageBackstageRope::BeginPlay()
 {
 	Super::BeginPlay();
+	FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*Grip);
 	const TSoftClassPtr<UStageCueSignalWidget> WidgetClass(FSoftObjectPath(TEXT("/Game/DEV/UI/StageSignals/W_StageCueSignal.W_StageCueSignal_C")));
 	Signal->SetWidgetClass(WidgetClass.LoadSynchronous());
 	Approach->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::OnApproach);

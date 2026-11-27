@@ -235,11 +235,30 @@ void UInteractionComponent::ReleaseHandGrip(const USceneComponent& Anchor)
 	}
 }
 
+void UInteractionComponent::SetCatchPreview(bool bShow)
+{
+	if (!bShow) CatchPreviewStartedAt = -1.0;
+	else if (CatchPreviewStartedAt < 0.0 && GetWorld()) CatchPreviewStartedAt = GetWorld()->GetTimeSeconds();
+}
+
+bool UInteractionComponent::SampleCatchPreview(FInteractionHandPose& OutPose) const
+{
+	if (CatchPreviewStartedAt < 0.0) return false;
+	const AActor* Owner = GetOwner();
+	OutPose = {};
+	OutPose.Facing = Owner->GetActorForwardVector().GetSafeNormal2D();
+	OutPose.Hands[1] = Owner->GetActorLocation() + OutPose.Facing * 24.0 + Owner->GetActorRightVector() * 32.0 + FVector::UpVector * 53.0;
+	const float Elapsed = static_cast<float>(GetWorld()->GetTimeSeconds() - CatchPreviewStartedAt);
+	OutPose.Weights[1] = FMath::SmoothStep(0.0f, 0.18f, Elapsed);
+	return OutPose.IsActive();
+}
+
 bool UInteractionComponent::SampleHandMotion(FInteractionHandPose& OutPose) const
 {
 	const UWorld* World = GetWorld();
 	const AActor* Owner = GetOwner();
-	if (!World || !IsValid(Owner) || !IsActive() || HandMotion == EInteractionHandMotion::None || HandAnchor.IsStale()) return false;
+	if (!World || !IsValid(Owner) || !IsActive()) return false;
+	if (HandMotion == EInteractionHandMotion::None || HandAnchor.IsStale()) return SampleCatchPreview(OutPose);
 	const USceneComponent* Anchor = HandAnchor.Get();
 	const FVector Contact = Anchor ? Anchor->GetSocketTransform(HandAnchorSocket).TransformPosition(HandContact) : HandContact;
 	const float Elapsed = static_cast<float>(World->GetTimeSeconds() - HandMotionStartedAt);
@@ -292,7 +311,7 @@ bool UInteractionComponent::SampleHandMotion(FInteractionHandPose& OutPose) cons
 	default:
 		break;
 	}
-	return OutPose.IsActive();
+	return OutPose.IsActive() || SampleCatchPreview(OutPose);
 }
 
 bool UInteractionComponent::PlaySection(const FInteractionAnimation& Animation, FName Section)
