@@ -176,10 +176,11 @@ private:
 	double NextOpeningPenaltyAt = -1.;
 	double CastMoveDeadline = 0.;
 	int32 ExpectedSector = INDEX_NONE;
-	bool QueueSceneBriefing(const FText& Text, FText& Error);
+	bool QueueSceneBriefing(const FText& Text, FText& Error, const UStageDataAsset* Scenario = nullptr);
 	void RefreshSceneBriefing();
 	void CloseSceneBriefing();
 	FText PendingSceneBriefing;
+	TWeakObjectPtr<const UStageDataAsset> PendingBriefingScenario;
 	UPROPERTY(Transient) TObjectPtr<UStageBriefingWidget> BriefingWidget;
 	bool bConfirmingSceneBriefing = false;
 	bool bShowingProductionResult = false;

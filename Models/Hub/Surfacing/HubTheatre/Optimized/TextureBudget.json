@@ -1,0 +1,383 @@
+{
+  "source": "Existing Substance Painter texture sets",
+  "source_export_preset": "Stage Shift Unreal ORM",
+  "iterations": "Preserve the full resolution Painter project and source bakes. Export at source resolution, then resample only documented channels with linear RGB / normalized normals.",
+  "texture_sets": {
+    "BalconyRail": {
+      "BaseColor": 2048,
+      "Emissive": 512,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "CastlePreview": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "CompanyRug": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "CraftBench": {
+      "BaseColor": 2048,
+      "Emissive": 512,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "CrimePreview": {
+      "BaseColor": 1024,
+      "Emissive": 512,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "DressingCorner": {
+      "BaseColor": 1024,
+      "Emissive": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "EntrySteps": {
+      "BaseColor": 2048,
+      "Emissive": 512,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "FlyRig": {
+      "BaseColor": 1024,
+      "Emissive": 512,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "ForegroundDrapes": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "MusicCorner": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "PlankFloor": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "PortalValance": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "ScenicGreens": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 512
+    },
+    "SeaPreview": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "SelectionPreview": {
+      "BaseColor": 2048,
+      "Emissive": 512,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "SelectionStand": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "SelectorDrapery": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "SelectorHardware": {
+      "BaseColor": 2048,
+      "Emissive": 1024,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "SelectorSign": {
+      "BaseColor": 2048,
+      "Normal": "constant",
+      "ORM": 1024
+    },
+    "SoundDesk": {
+      "BaseColor": 2048,
+      "Emissive": 512,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "TimberShell": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Wardrobe": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "WardrobeCostumes": {
+      "BaseColor": 1024,
+      "Normal": 2048,
+      "ORM": 1024
+    },
+    "WinterPreview": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "WorkshopProps": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 1024
+    }
+  },
+  "maps": [
+    {
+      "file": "Textures/Hub_BalconyRail_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_CastlePreview_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_CastlePreview_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_CastlePreview_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_CraftBench_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_CraftBench_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_CrimePreview_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_CrimePreview_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_CrimePreview_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_CrimePreview_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_DressingCorner_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_DressingCorner_Emissive.png",
+      "size": 1024,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_DressingCorner_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_DressingCorner_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_EntrySteps_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_EntrySteps_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_FlyRig_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_FlyRig_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_FlyRig_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_FlyRig_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_MusicCorner_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_ScenicGreens_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_ScenicGreens_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_ScenicGreens_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_SeaPreview_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_SeaPreview_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_SeaPreview_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_SelectionPreview_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_SelectorHardware_Emissive.png",
+      "size": 1024,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_SelectorHardware_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_SelectorSign_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_SoundDesk_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_SoundDesk_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_WardrobeCostumes_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_WardrobeCostumes_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_Wardrobe_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_WinterPreview_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Hub_WinterPreview_Normal.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_WinterPreview_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Hub_WorkshopProps_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    }
+  ]
+}

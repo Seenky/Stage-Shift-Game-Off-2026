@@ -1,0 +1,150 @@
+{
+  "exportShaderParams": false,
+  "defaultExportPreset": "Stage Shift Unreal ORM",
+  "exportPresets": [
+    {
+      "name": "Stage Shift Unreal ORM",
+      "maps": [
+        {
+          "channels": [
+            {
+              "destChannel": "R",
+              "srcChannel": "R",
+              "srcMapName": "basecolor",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "G",
+              "srcChannel": "G",
+              "srcMapName": "basecolor",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "B",
+              "srcChannel": "B",
+              "srcMapName": "basecolor",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "A",
+              "srcChannel": "L",
+              "srcMapName": "opacity",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            }
+          ],
+          "fileName": "$textureSet_BaseColor(_$colorSpace)(.$udim)",
+          "parameters": {
+            "bitDepth": "8",
+            "dithering": false,
+            "fileFormat": "png"
+          }
+        },
+        {
+          "channels": [
+            {
+              "destChannel": "R",
+              "srcChannel": "L",
+              "srcMapName": "AO_Mixed",
+              "srcMapType": "virtualMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "G",
+              "srcChannel": "L",
+              "srcMapName": "roughness",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "B",
+              "srcChannel": "L",
+              "srcMapName": "metallic",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            }
+          ],
+          "fileName": "$textureSet_ORM(_$colorSpace)(.$udim)",
+          "parameters": {
+            "bitDepth": "8",
+            "dithering": false,
+            "fileFormat": "png"
+          }
+        },
+        {
+          "channels": [
+            {
+              "destChannel": "R",
+              "srcChannel": "R",
+              "srcMapName": "Normal_DirectX",
+              "srcMapType": "virtualMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "G",
+              "srcChannel": "G",
+              "srcMapName": "Normal_DirectX",
+              "srcMapType": "virtualMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "B",
+              "srcChannel": "B",
+              "srcMapName": "Normal_DirectX",
+              "srcMapType": "virtualMap",
+              "srcPath": ""
+            }
+          ],
+          "fileName": "$textureSet_Normal(_$colorSpace)(.$udim)",
+          "parameters": {
+            "bitDepth": "8",
+            "dithering": true,
+            "fileFormat": "png"
+          }
+        },
+        {
+          "channels": [
+            {
+              "destChannel": "R",
+              "srcChannel": "R",
+              "srcMapName": "emissive",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "G",
+              "srcChannel": "G",
+              "srcMapName": "emissive",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            },
+            {
+              "destChannel": "B",
+              "srcChannel": "B",
+              "srcMapName": "emissive",
+              "srcMapType": "documentMap",
+              "srcPath": ""
+            }
+          ],
+          "fileName": "$textureSet_Emissive(_$colorSpace)(.$udim)",
+          "parameters": {
+            "bitDepth": "8",
+            "dithering": false,
+            "fileFormat": "png"
+          }
+        }
+      ]
+    }
+  ],
+  "exportParameters": [
+    {
+      "parameters": {
+        "paddingAlgorithm": "infinite",
+        "dithering": false
+      }
+    }
+  ]
+}

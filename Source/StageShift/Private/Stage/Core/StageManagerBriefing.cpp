@@ -4,9 +4,10 @@
 #include "Components/Button.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Stage/Core/Data/StageDataAsset.h"
 #include "UI/StageBriefingWidget.h"
 
-bool AStageManager::QueueSceneBriefing(const FText& Text, FText& Error)
+bool AStageManager::QueueSceneBriefing(const FText& Text, FText& Error, const UStageDataAsset* Scenario)
 {
 	if (!BriefingWidgetClass.LoadSynchronous())
 	{
@@ -14,6 +15,7 @@ bool AStageManager::QueueSceneBriefing(const FText& Text, FText& Error)
 		return false;
 	}
 	PendingSceneBriefing = Text;
+	PendingBriefingScenario = Scenario;
 	RefreshSceneBriefing();
 	return true;
 }
@@ -32,7 +34,12 @@ void AStageManager::RefreshSceneBriefing()
 	auto* Widget = CreateWidget<UStageBriefingWidget>(Player, WidgetClass);
 	if (!Widget) return;
 	if (bShowingProductionResult) Widget->SetProductionResult(this, PendingSceneBriefing, GetScore(), GetStarCount(), StarThresholds.Num());
-	else Widget->SetSceneBriefing(this, PendingSceneBriefing);
+	else
+	{
+		const auto* Scenario = PendingBriefingScenario.Get();
+		const TConstArrayView<FStageBriefingProp> Props = Scenario ? MakeArrayView(Scenario->BriefingProps) : TConstArrayView<FStageBriefingProp>();
+		Widget->SetSceneBriefing(this, PendingSceneBriefing, Props);
+	}
 	if (!Widget->AddToPlayerScreen(30)) return;
 
 	BriefingWidget = Widget;
@@ -44,6 +51,7 @@ void AStageManager::RefreshSceneBriefing()
 void AStageManager::CloseSceneBriefing()
 {
 	PendingSceneBriefing = FText::GetEmpty();
+	PendingBriefingScenario.Reset();
 	bShowingProductionResult = false;
 	if (auto* Widget = BriefingWidget.Get())
 	{

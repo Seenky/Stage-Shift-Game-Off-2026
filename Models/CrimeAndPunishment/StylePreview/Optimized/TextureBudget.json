@@ -1,0 +1,1247 @@
+{
+  "description": "Downsample the active FlatHP exports for in-place Unreal updates.",
+  "maps": [
+    {
+      "file": "Textures/Backstage/T_Backstage_Costume_Rack_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Costume_Rack_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Costume_Rack_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Ladder_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Ladder_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Ladder_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Storage_Shelf_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Storage_Shelf_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Backstage_Storage_Shelf_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Costume_Hanger_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Costume_Hanger_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Costume_Hanger_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Hatbox_Oxblood_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Hatbox_Oxblood_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Hatbox_Oxblood_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Hatbox_Teal_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Hatbox_Teal_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Hatbox_Teal_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Offcuts_Bin_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Offcuts_Bin_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Offcuts_Bin_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Offcuts_and_Paper_Rolls_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Offcuts_and_Paper_Rolls_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Offcuts_and_Paper_Rolls_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Scenery_Trolley_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Scenery_Trolley_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Scenery_Trolley_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Kraft_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Kraft_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Kraft_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Oxblood_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Oxblood_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Oxblood_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Teal_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Teal_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Travel_Case_Teal_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Large_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Large_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Large_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Open_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Open_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Open_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Small_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Small_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Backstage/T_Work_Crate_Small_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Auditorium_Aisle_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Auditorium_Aisle_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Auditorium_Aisle_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Backstage_Mask_Hanging_Tab_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Backstage_Mask_Hanging_Tab_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Backstage_Mask_Hanging_Tab_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Brown_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Brown_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Brown_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Linen_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Linen_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Linen_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Oxblood_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Oxblood_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Oxblood_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Teal_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Teal_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Coat_Teal_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Folded_Bed_Blanket_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Folded_Bed_Blanket_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Folded_Bed_Blanket_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Linen_Pillow_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Linen_Pillow_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Linen_Pillow_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Rug_Slate_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Rug_Slate_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Rug_Slate_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Rug_Sonya_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Fabric/T_Rug_Sonya_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Fabric/T_Rug_Sonya_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Blue_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Blue_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Blue_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Green_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Green_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Green_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Open_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Open_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Open_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Red_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Red_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Book_Red_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Folded_Letter_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Folded_Letter_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Folded_Letter_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Framed_Paper_Icon_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Framed_Paper_Icon_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Framed_Paper_Icon_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Paper_Oil_Lamp_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/HandProps/T_Paper_Oil_Lamp_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/HandProps/T_Paper_Oil_Lamp_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Chair_Pawnbroker_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Chair_Pawnbroker_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Chair_Pawnbroker_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Paneled_Door_Frame_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Paneled_Door_Frame_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Paneled_Door_Frame_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Paneled_Door_Leaf_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Paneled_Door_Leaf_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Paneled_Door_Leaf_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Pawnbroker_Cabinet_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Pawnbroker_Cabinet_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Pawnbroker_Cabinet_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Peg_Rail_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Peg_Rail_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Peg_Rail_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Sash_Window_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Sash_Window_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Sash_Window_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Table_Pawnbroker_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Table_Pawnbroker_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Table_Pawnbroker_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Torn_Paper_Brick_Inset_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Torn_Paper_Brick_Inset_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Pawnbroker/T_Torn_Paper_Brick_Inset_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Coiled_Ropes_and_Pulley_Rack_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Coiled_Ropes_and_Pulley_Rack_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Coiled_Ropes_and_Pulley_Rack_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Bulb_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Bulb_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Bulb_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Frame_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Frame_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Frame_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Glass_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Glass_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Mirror_Glass_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Table_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Table_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Dressing_Table_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Sound_Console_Stand_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Sound_Console_Stand_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Sound_Console_Stand_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Stage_Footlight_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Stage_Footlight_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Stage_Footlight_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Theatre_Wall_Sconce_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Theatre_Wall_Sconce_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Theatre_Wall_Sconce_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Vanity_Bottle_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Vanity_Bottle_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Vanity_Bottle_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Vanity_Stool_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Practical/T_Vanity_Stool_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Practical/T_Vanity_Stool_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Arched_Window_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Arched_Window_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Arched_Window_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Chair_Investigator_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Chair_Investigator_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Chair_Investigator_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Chair_Walnut_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Chair_Walnut_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Chair_Walnut_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Desk_Investigator_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Desk_Investigator_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Desk_Investigator_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Flat_Scenery_Back_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Flat_Scenery_Back_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Flat_Scenery_Back_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Sonya_Bed_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Sonya_Bed_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Sonya_Bed_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Sonya_Wall_Shelf_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Sonya_Wall_Shelf_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Sonya_Wall_Shelf_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Table_Simple_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Scenery/T_Table_Simple_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Scenery/T_Table_Simple_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Scenery_Pilaster_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Stage/T_Scenery_Pilaster_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Scenery_Pilaster_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Scenery_Reverse_Brace_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Stage/T_Scenery_Reverse_Brace_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Scenery_Reverse_Brace_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Stage_Steps_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Stage/T_Stage_Steps_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Stage_Steps_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Turntable_Hub_and_Cap_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Stage/T_Turntable_Hub_and_Cap_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Turntable_Hub_and_Cap_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Turntable_Rail_30deg_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/Stage/T_Turntable_Rail_30deg_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/Stage/T_Turntable_Rail_30deg_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Backstage_Mask_Frame_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/TheatreShell/T_Backstage_Mask_Frame_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Backstage_Mask_Frame_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Backstage_Mask_Rod_BaseColor_FlatHP.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/TheatreShell/T_Backstage_Mask_Rod_Normal_DX_FlatHP.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Backstage_Mask_Rod_ORM_FlatHP.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Proscenium_Pier_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/TheatreShell/T_Proscenium_Pier_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Proscenium_Pier_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Beam_4m_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Beam_4m_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Beam_4m_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Knee_Brace_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Knee_Brace_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Knee_Brace_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Post_BaseColor_FlatHP.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Post_Normal_DX_FlatHP.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "Textures/TheatreShell/T_Timber_Post_ORM_FlatHP.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    }
+  ]
+}

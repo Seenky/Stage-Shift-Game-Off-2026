@@ -164,7 +164,7 @@ bool AStageManager::StartConfiguredStage(FText& Error)
 		return false;
 	}
 	return ConfiguredStage->SceneBriefing.IsEmpty() ? StartStageByIds(ConfiguredStage, {}, Error) :
-	    QueueSceneBriefing(ConfiguredStage->SceneBriefing, Error);
+	    QueueSceneBriefing(ConfiguredStage->SceneBriefing, Error, ConfiguredStage);
 }
 
 AStageTurntable* AStageManager::ResolveTurntable() const

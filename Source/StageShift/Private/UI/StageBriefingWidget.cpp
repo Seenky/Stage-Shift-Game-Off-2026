@@ -1,12 +1,21 @@
 #include "UI/StageBriefingWidget.h"
 
 #include "Components/Button.h"
+#include "Components/Image.h"
+#include "Components/PanelWidget.h"
 #include "Components/RichTextBlock.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Stage/Core/StageManager.h"
+#include "Stage/Core/Data/StageDataAsset.h"
 
-void UStageBriefingWidget::SetSceneBriefing(AStageManager* InManager, const FText& Text)
+void UStageBriefingPropWidget::SetProp(const FStageBriefingProp& Prop)
+{
+	PropName->SetText(Prop.Name);
+	PropIcon->SetBrushFromTexture(Prop.Icon);
+}
+
+void UStageBriefingWidget::SetSceneBriefing(AStageManager* InManager, const FText& Text, TConstArrayView<FStageBriefingProp> Props)
 {
 	Manager = InManager;
 	if (auto* RichText = Cast<URichTextBlock>(BriefingText))
@@ -23,6 +32,24 @@ void UStageBriefingWidget::SetSceneBriefing(AStageManager* InManager, const FTex
 		PlainText->SetText(DisplayText == Text.ToString() ? Text : FText::FromString(MoveTemp(DisplayText)));
 	}
 	ErrorText->SetVisibility(ESlateVisibility::Collapsed);
+	SetProps(Props);
+}
+
+void UStageBriefingWidget::SetProps(TConstArrayView<FStageBriefingProp> Props)
+{
+	if (!PropInventory || !PropCards) return;
+	PropCards->ClearChildren();
+	if (PropCardClass)
+		for (const FStageBriefingProp& Prop : Props)
+		{
+			if (!Prop.Icon || Prop.Name.IsEmpty()) continue;
+			if (auto* Card = CreateWidget<UStageBriefingPropWidget>(GetOwningPlayer(), PropCardClass))
+			{
+				Card->SetProp(Prop);
+				PropCards->AddChild(Card);
+			}
+		}
+	PropInventory->SetVisibility(PropCards->HasAnyChildren() ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 }
 
 void UStageBriefingWidget::SetProductionResult(AStageManager* InManager, const FText& Text, int32 Score, int32 Stars, int32 TotalStars)

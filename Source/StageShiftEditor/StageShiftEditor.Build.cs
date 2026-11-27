@@ -8,6 +8,7 @@ public class StageShiftEditor : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "Blutility", "StageShift" });
 		PrivateDependencyModuleNames.AddRange(new[] { "AnimationBlueprintLibrary", "UnrealEd", "StageShift", "PropertyEditor", "GraphEditor", "Slate", "SlateCore",
-			"AssetDefinition", "AssetTools", "ToolMenus", "InputCore", "GameplayTags", "AssetRegistry", "ApplicationCore", "StructUtilsEditor", "WorkspaceMenuStructure" });
+			"AssetDefinition", "AssetTools", "ToolMenus", "InputCore", "GameplayTags", "AssetRegistry", "ApplicationCore", "StructUtilsEditor",
+			"WorkspaceMenuStructure", "ContentBrowser", "RHI" });
 	}
 }

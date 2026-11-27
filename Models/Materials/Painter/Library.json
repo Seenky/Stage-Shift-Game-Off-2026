@@ -1,0 +1,275 @@
+{
+  "Warm Paper": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Warm Paper.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_ButtonPlaque",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954845
+  },
+  "Antique Brass": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Antique Brass.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_ButtonPlaque",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4020354
+  },
+  "Painted Cardboard Gold": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Painted Cardboard Gold.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_ComedyMask",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954853
+  },
+  "Gold Cloth Trim": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Gold Cloth Trim.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_MenuTassels",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 2840699
+  },
+  "Hemp Rope": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Hemp Rope.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_MenuTassels",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 2840697
+  },
+  "Painted Wood Brown": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Painted Wood Brown.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_TitleSign",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954846
+  },
+  "Painted Cardboard Plum": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Painted Cardboard Plum.spsm",
+    "source": "Models/Menu/Surfacing/Painter/01_Title/Menu_Title.spp",
+    "texture_set": "Menu_TragedyMask",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954853
+  },
+  "Corrugated Cardboard Edge": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Corrugated Cardboard Edge.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_LowMeadowShrub",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Fluted core and liners · aligned to the cut",
+      "Material colour and response"
+    ],
+    "bytes": 4487688
+  },
+  "Wood Russet": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Wood Russet.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_LowMeadowShrub",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4348061
+  },
+  "Scenic Paint Green": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Scenic Paint Green.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_LowMeadowShrub",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954845
+  },
+  "Scenic Paint Light": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Scenic Paint Light.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_LowMeadowShrub",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954847
+  },
+  "Scenic Paint Shadow": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Scenic Paint Shadow.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_LowMeadowShrub",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954846
+  },
+  "Scenic Paint Rose": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Scenic Paint Rose.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_RoseWagonScenery",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954846
+  },
+  "Scenic Plaster": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Scenic Plaster.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_StoneBalustrade",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954846
+  },
+  "Theatre Velvet": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Theatre Velvet.spsm",
+    "source": "Models/Menu/Surfacing/Painter/03_Curtains/Menu_Curtains.spp",
+    "texture_set": "Menu_Valance",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 2840703
+  },
+  "Wood Shadow": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Wood Shadow.spsm",
+    "source": "Models/Menu/Surfacing/Painter/04_Stage/Menu_Stage.spp",
+    "texture_set": "Menu_StageDeck",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4348060
+  },
+  "Oak Honey": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Oak Honey.spsm",
+    "source": "Models/Menu/Surfacing/Painter/04_Stage/Menu_Stage.spp",
+    "texture_set": "Menu_StageDeck",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4348060
+  },
+  "Painted Iron": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Painted Iron.spsm",
+    "source": "Models/Menu/Surfacing/Painter/06_Lights/Menu_Lights.spp",
+    "texture_set": "Menu_BackstageLantern",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4020350
+  },
+  "Painted Wood Teal": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Painted Wood Teal.spsm",
+    "source": "Models/Menu/Surfacing/Painter/07_Architecture/Menu_Architecture.spp",
+    "texture_set": "Menu_BackWallBay",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954845
+  },
+  "Aged Wood Umber": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Aged Wood Umber.spsm",
+    "source": "Models/Menu/Surfacing/Painter/07_Architecture/Menu_Architecture.spp",
+    "texture_set": "Menu_WallBeam_01",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4348060
+  },
+  "Kraft Cardboard": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Kraft Cardboard.spsm",
+    "source": "Models/Menu/Surfacing/Painter/08_Backstage/Menu_Backstage.spp",
+    "texture_set": "Menu_ScrollCrate",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 3954841
+  },
+  "Leather Case": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Leather Case.spsm",
+    "source": "Models/Menu/Surfacing/Painter/08_Backstage/Menu_Backstage.spp",
+    "texture_set": "Menu_TravelChest",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 4020373
+  },
+  "Dark Felt": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Dark Felt.spsm",
+    "source": "Models/Menu/Surfacing/Painter/09_HandmadeTitle/Menu_HandmadeTitle.spp",
+    "texture_set": "ComedyMask",
+    "layers": [
+      "Charcoal textile"
+    ],
+    "bytes": 20021481
+  },
+  "Plain Canvas": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Plain Canvas.spsm",
+    "source": "Models/Menu/Surfacing/Painter/02_Scenery/Menu_Scenery.spp",
+    "texture_set": "Menu_CastleCanvas",
+    "layers": [
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 1918361
+  },
+  "Matte Carpet": {
+    "file": "Models/Materials/Painter/Smart Materials/Stage Shift - Matte Carpet.spsm",
+    "source": "Models/Hub/Surfacing/Painter/Hub_Textiles.spp",
+    "texture_set": "Hub_CompanyRug",
+    "layers": [
+      "High-frequency finish normal",
+      "Close-range fibres and dry finish",
+      "Material colour and response"
+    ],
+    "bytes": 2840737
+  }
+}

@@ -10,6 +10,20 @@
 #include "Engine/DataAsset.h"
 #include "StageDataAsset.generated.h"
 
+class UTexture2D;
+
+USTRUCT(BlueprintType)
+struct FStageBriefingProp
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing")
+	FText Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing")
+	TObjectPtr<UTexture2D> Icon;
+};
+
 UCLASS()
 
 class STAGESHIFT_API UStageDataAsset : public UPrimaryDataAsset
@@ -19,6 +33,9 @@ class STAGESHIFT_API UStageDataAsset : public UPrimaryDataAsset
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing", meta = (MultiLine))
 	FText SceneBriefing;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Briefing", meta = (TitleProperty = "Name"))
+	TArray<FStageBriefingProp> BriefingProps;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Cues", meta = (ToolTip = "Show advance world signals that say GET READY. Active prompts and their timers are still shown."))
 	bool bShowPreparationCues = true;

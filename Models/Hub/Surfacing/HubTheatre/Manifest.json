@@ -1,0 +1,2005 @@
+{
+  "source": "Hub_Theatre.blend",
+  "sets": {
+    "PlankFloor": {
+      "batch": "Architecture",
+      "roles": [
+        "OakAged",
+        "OakAmber",
+        "OakBrown",
+        "OakCopper",
+        "OakDark"
+      ],
+      "triangles": 3380,
+      "bounds": [
+        [
+          -581.4392700195312,
+          -635.2233276367188,
+          -76.70010375976562
+        ],
+        [
+          533.8119506835938,
+          657.7009887695312,
+          0.0
+        ]
+      ],
+      "source_objects": 36
+    },
+    "TimberShell": {
+      "batch": "Architecture",
+      "roles": [
+        "BackWood",
+        "Beam",
+        "OakAged",
+        "OakDark",
+        "Walnut"
+      ],
+      "triangles": 3390,
+      "bounds": [
+        [
+          -473.7544250488281,
+          -653.5323486328125,
+          -8.0
+        ],
+        [
+          518.4666748046875,
+          653.5323486328125,
+          456.0
+        ]
+      ],
+      "source_objects": 76
+    },
+    "BalconyRail": {
+      "batch": "Architecture",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "GoldenBraid",
+        "LanternGlow",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark"
+      ],
+      "triangles": 19108,
+      "bounds": [
+        [
+          -592.5841064453125,
+          -234.49481201171875,
+          -88.75084686279297
+        ],
+        [
+          -393.1152648925781,
+          583.5877075195312,
+          116.62152862548828
+        ]
+      ],
+      "source_objects": 71
+    },
+    "EntrySteps": {
+      "batch": "Architecture",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "LanternGlow",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney"
+      ],
+      "triangles": 6698,
+      "bounds": [
+        [
+          -716.956787109375,
+          -509.6809997558594,
+          -82.00604248046875
+        ],
+        [
+          -459.75079345703125,
+          -208.07533264160156,
+          116.63153839111328
+        ]
+      ],
+      "source_objects": 46
+    },
+    "ForegroundDrapes": {
+      "batch": "Textiles",
+      "roles": [
+        "GoldenBraid",
+        "Velvet",
+        "VelvetDark",
+        "Wine"
+      ],
+      "triangles": 16228,
+      "bounds": [
+        [
+          -616.8989868164062,
+          -665.9987182617188,
+          -156.18194580078125
+        ],
+        [
+          -442.55609130859375,
+          665.6472778320312,
+          751.7457275390625
+        ]
+      ],
+      "source_objects": 23
+    },
+    "PortalValance": {
+      "batch": "Textiles",
+      "roles": [
+        "BackWood",
+        "Bronze",
+        "GoldenBraid",
+        "Velvet",
+        "VelvetDark"
+      ],
+      "triangles": 38788,
+      "bounds": [
+        [
+          268.99383544921875,
+          -656.6140747070312,
+          24.3927001953125
+        ],
+        [
+          351.0169677734375,
+          656.6390380859375,
+          487.31329345703125
+        ]
+      ],
+      "source_objects": 56
+    },
+    "CompanyRug": {
+      "batch": "Textiles",
+      "roles": [
+        "GoldenBraid",
+        "RugRed"
+      ],
+      "triangles": 3068,
+      "bounds": [
+        [
+          -293.03643798828125,
+          -167.48919677734375,
+          0.20000004768371582
+        ],
+        [
+          -8.963531494140625,
+          167.48919677734375,
+          6.199999809265137
+        ]
+      ],
+      "source_objects": 2
+    },
+    "SelectorDrapery": {
+      "batch": "Textiles",
+      "roles": [
+        "Bronze",
+        "GoldenBraid",
+        "Velvet",
+        "VelvetDark"
+      ],
+      "triangles": 19024,
+      "bounds": [
+        [
+          287.5513000488281,
+          -180.69996643066406,
+          86.24710845947266
+        ],
+        [
+          319.072265625,
+          180.69924926757812,
+          297.94451904296875
+        ]
+      ],
+      "source_objects": 33
+    },
+    "WardrobeCostumes": {
+      "batch": "Textiles",
+      "roles": [
+        "BlueFabric",
+        "Brass",
+        "Bronze",
+        "Canvas",
+        "GoldenBraid",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "PinkFabric",
+        "Rose",
+        "Slate",
+        "VelvetDark",
+        "Wine"
+      ],
+      "triangles": 11816,
+      "bounds": [
+        [
+          69.79386138916016,
+          368.3387451171875,
+          0.0
+        ],
+        [
+          175.76177978515625,
+          577.4512939453125,
+          251.84666442871094
+        ]
+      ],
+      "source_objects": 66
+    },
+    "Wardrobe": {
+      "batch": "Workshop",
+      "roles": [
+        "BackWood",
+        "Brass",
+        "Bronze",
+        "Canvas",
+        "GoldenBraid",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "PinkFabric",
+        "Rose",
+        "RugRed",
+        "Velvet",
+        "VelvetDark",
+        "Wine"
+      ],
+      "triangles": 16514,
+      "bounds": [
+        [
+          53.620811462402344,
+          374.85797119140625,
+          -1.0037202835083008
+        ],
+        [
+          323.135986328125,
+          610.15673828125,
+          338.3536376953125
+        ]
+      ],
+      "source_objects": 167
+    },
+    "DressingCorner": {
+      "batch": "Workshop",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "Forest",
+        "LanternGlow",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "Rose",
+        "RugDye",
+        "RugRed",
+        "Slate",
+        "Wine"
+      ],
+      "triangles": 9780,
+      "bounds": [
+        [
+          -101.74784088134766,
+          440.0412292480469,
+          -0.6280394196510315
+        ],
+        [
+          52.05927658081055,
+          615.14697265625,
+          218.60513305664062
+        ]
+      ],
+      "source_objects": 96
+    },
+    "CraftBench": {
+      "batch": "Workshop",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "GoldenBraid",
+        "LanternGlow",
+        "OakAged",
+        "OakAmber",
+        "OakBrown",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "PaperLight",
+        "PinkFabric"
+      ],
+      "triangles": 8186,
+      "bounds": [
+        [
+          -417.2217712402344,
+          311.3650817871094,
+          -0.01037502195686102
+        ],
+        [
+          -217.87359619140625,
+          560.0184936523438,
+          208.32000732421875
+        ]
+      ],
+      "source_objects": 117
+    },
+    "WorkshopProps": {
+      "batch": "Workshop",
+      "roles": [
+        "BlueFabric",
+        "Brass",
+        "Bronze",
+        "Canvas",
+        "Forest",
+        "Ink",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "Rose",
+        "Silver",
+        "Slate",
+        "Wine"
+      ],
+      "triangles": 14664,
+      "bounds": [
+        [
+          -391.6729736328125,
+          253.3733673095703,
+          -0.004839560016989708
+        ],
+        [
+          -191.7289581298828,
+          513.7774658203125,
+          170.1533966064453
+        ]
+      ],
+      "source_objects": 140
+    },
+    "SoundDesk": {
+      "batch": "Workshop",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "Canvas",
+        "GoldenBraid",
+        "Ink",
+        "LanternGlow",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "RugRed",
+        "Slate"
+      ],
+      "triangles": 16470,
+      "bounds": [
+        [
+          35.31946563720703,
+          -656.50537109375,
+          -0.012200419791042805
+        ],
+        [
+          238.649658203125,
+          -356.7442932128906,
+          313.4319763183594
+        ]
+      ],
+      "source_objects": 284
+    },
+    "MusicCorner": {
+      "batch": "Workshop",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "Canvas",
+        "Forest",
+        "GoldenBraid",
+        "Ink",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "RugPurple",
+        "RugRed",
+        "Walnut",
+        "Wine"
+      ],
+      "triangles": 16602,
+      "bounds": [
+        [
+          -370.03179931640625,
+          -573.294189453125,
+          -2.2878475189208984
+        ],
+        [
+          -137.96820068359375,
+          -270.7057800292969,
+          129.77896118164062
+        ]
+      ],
+      "source_objects": 172
+    },
+    "SelectionStand": {
+      "batch": "Scenography",
+      "roles": [
+        "BackWood",
+        "Bronze",
+        "Canvas",
+        "Forest",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "Slate",
+        "Snow",
+        "Storm",
+        "Walnut"
+      ],
+      "triangles": 8696,
+      "bounds": [
+        [
+          197.87258911132812,
+          -233.00003051757812,
+          -0.2702307403087616
+        ],
+        [
+          487.0000305175781,
+          233.00003051757812,
+          337.86444091796875
+        ]
+      ],
+      "source_objects": 181
+    },
+    "SelectorHardware": {
+      "batch": "Scenography",
+      "roles": [
+        "Brass",
+        "Bronze",
+        "Ink",
+        "LanternGlow",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakHoney",
+        "PaperLight",
+        "Walnut"
+      ],
+      "triangles": 10260,
+      "bounds": [
+        [
+          184.43382263183594,
+          -130.37779235839844,
+          26.710063934326172
+        ],
+        [
+          292.25,
+          130.37777709960938,
+          335.28839111328125
+        ]
+      ],
+      "source_objects": 76
+    },
+    "ScenicGreens": {
+      "batch": "Scenography",
+      "roles": [
+        "Forest",
+        "OakAmber"
+      ],
+      "triangles": 520,
+      "bounds": [
+        [
+          163.84234619140625,
+          -356.51312255859375,
+          -0.05999999865889549
+        ],
+        [
+          326.1863098144531,
+          371.7682800292969,
+          78.4167251586914
+        ]
+      ],
+      "source_objects": 12
+    },
+    "FlyRig": {
+      "batch": "Scenography",
+      "roles": [
+        "Beam",
+        "Brass",
+        "Bronze",
+        "GoldenBraid",
+        "Ink",
+        "LanternGlow",
+        "OakHoney",
+        "Slate"
+      ],
+      "triangles": 13216,
+      "bounds": [
+        [
+          233.81869506835938,
+          -609.0653076171875,
+          125.7486801147461
+        ],
+        [
+          461.1927795410156,
+          608.0653076171875,
+          464.88555908203125
+        ]
+      ],
+      "source_objects": 122
+    },
+    "SelectionPreview": {
+      "batch": "Scenography",
+      "roles": [
+        "BackWood",
+        "Bronze",
+        "OakAged",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "Plaster",
+        "Slate",
+        "Snow",
+        "Walnut",
+        "WindowLight",
+        "Wine"
+      ],
+      "triangles": 3226,
+      "bounds": [
+        [
+          353.0587158203125,
+          -122.94127655029297,
+          86.7915267944336
+        ],
+        [
+          452.9412841796875,
+          122.9412841796875,
+          264.5737609863281
+        ]
+      ],
+      "source_objects": 74
+    },
+    "CrimePreview": {
+      "batch": "Scenography",
+      "roles": [
+        "Brass",
+        "LanternGlow",
+        "OakAmber",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "Plaster",
+        "RugRed",
+        "Walnut",
+        "WindowLight"
+      ],
+      "triangles": 2912,
+      "bounds": [
+        [
+          -54.0,
+          -121.0,
+          0.0
+        ],
+        [
+          54.0,
+          121.0,
+          152.0
+        ]
+      ],
+      "source_objects": 24
+    },
+    "CastlePreview": {
+      "batch": "Scenography",
+      "roles": [
+        "BlueFabric",
+        "Forest",
+        "Leaf",
+        "LeafLight",
+        "OakAmber",
+        "OakCopper",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "PaperLight",
+        "Wine"
+      ],
+      "triangles": 2060,
+      "bounds": [
+        [
+          -69.0,
+          -129.0,
+          0.0
+        ],
+        [
+          69.0,
+          129.0,
+          215.0
+        ]
+      ],
+      "source_objects": 30
+    },
+    "WinterPreview": {
+      "batch": "Scenography",
+      "roles": [
+        "OakHoney",
+        "Paper",
+        "Slate",
+        "Snow",
+        "Storm"
+      ],
+      "triangles": 948,
+      "bounds": [
+        [
+          -84.92446899414062,
+          -115.74046325683594,
+          0.0
+        ],
+        [
+          84.92446899414062,
+          115.74046325683594,
+          123.83999633789062
+        ]
+      ],
+      "source_objects": 9
+    },
+    "SeaPreview": {
+      "batch": "Scenography",
+      "roles": [
+        "Canvas",
+        "OakDark",
+        "OakHoney",
+        "Paper",
+        "Slate",
+        "Snow",
+        "Storm",
+        "Walnut"
+      ],
+      "triangles": 2740,
+      "bounds": [
+        [
+          -84.92446899414062,
+          -115.74046325683594,
+          -1.9073486328125e-06
+        ],
+        [
+          84.92446899414062,
+          115.74046325683594,
+          123.83999633789062
+        ]
+      ],
+      "source_objects": 10
+    },
+    "SelectorSign": {
+      "batch": "Scenography",
+      "roles": [
+        "Forest"
+      ],
+      "triangles": 146,
+      "bounds": [
+        [
+          292.0699462890625,
+          -207.0,
+          241.95899963378906
+        ],
+        [
+          293.77001953125,
+          207.0,
+          332.31475830078125
+        ]
+      ],
+      "source_objects": 1
+    }
+  },
+  "meshes": [
+    {
+      "mesh": "PlankFloor",
+      "atlas": "PlankFloor",
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -581.4392700195312,
+          -635.2233276367188,
+          -76.70010375976562
+        ],
+        [
+          533.8119506835938,
+          657.7009887695312,
+          0.0
+        ]
+      ],
+      "source_objects": 36,
+      "triangles": 3380
+    },
+    {
+      "mesh": "TimberShell",
+      "atlas": "TimberShell",
+      "pivot": [
+        485,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -958.75439453125,
+          -653.5323486328125,
+          -8.0
+        ],
+        [
+          33.4666748046875,
+          653.5323486328125,
+          456.0
+        ]
+      ],
+      "source_objects": 76,
+      "triangles": 3390
+    },
+    {
+      "mesh": "BalconyRail",
+      "atlas": "BalconyRail",
+      "pivot": [
+        -493,
+        -240,
+        0
+      ],
+      "bounds": [
+        [
+          -99.58412170410156,
+          -474.49481201171875,
+          -88.75084686279297
+        ],
+        [
+          99.8847427368164,
+          343.5876770019531,
+          116.62152862548828
+        ]
+      ],
+      "source_objects": 71,
+      "triangles": 19108
+    },
+    {
+      "mesh": "EntrySteps",
+      "atlas": "EntrySteps",
+      "pivot": [
+        -532,
+        420,
+        0
+      ],
+      "bounds": [
+        [
+          -184.95677185058594,
+          -89.68099975585938,
+          -82.00604248046875
+        ],
+        [
+          72.24920654296875,
+          211.92466735839844,
+          116.63153839111328
+        ]
+      ],
+      "source_objects": 46,
+      "triangles": 6698
+    },
+    {
+      "mesh": "ForegroundDrapes",
+      "atlas": "ForegroundDrapes",
+      "pivot": [
+        -492,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -124.89898681640625,
+          -665.9987182617188,
+          -156.18194580078125
+        ],
+        [
+          49.44391632080078,
+          665.6472778320312,
+          751.7457275390625
+        ]
+      ],
+      "source_objects": 23,
+      "triangles": 16228
+    },
+    {
+      "mesh": "PortalValance",
+      "atlas": "PortalValance",
+      "pivot": [
+        456,
+        0,
+        385
+      ],
+      "bounds": [
+        [
+          -187.00616455078125,
+          -656.6140747070312,
+          -360.6072998046875
+        ],
+        [
+          -104.9830322265625,
+          656.6390380859375,
+          102.31329345703125
+        ]
+      ],
+      "source_objects": 56,
+      "triangles": 38788
+    },
+    {
+      "mesh": "CompanyRug",
+      "atlas": "CompanyRug",
+      "pivot": [
+        -124,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -169.03643798828125,
+          -167.48919677734375,
+          0.20000004768371582
+        ],
+        [
+          115.03646850585938,
+          167.48919677734375,
+          6.199999809265137
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 3068
+    },
+    {
+      "mesh": "SelectorDrapery_Selector_fine_fringe_along_three_swags_01",
+      "atlas": "SelectorDrapery",
+      "pivot": [
+        298.56402587890625,
+        -0.30274200439453125,
+        234.52947998046875
+      ],
+      "bounds": [
+        [
+          -3.845252513885498,
+          -176.0770721435547,
+          0.0
+        ],
+        [
+          3.845252513885498,
+          176.0844268798828,
+          49.74041748046875
+        ]
+      ],
+      "source_objects": 3,
+      "triangles": 6164
+    },
+    {
+      "mesh": "SelectorDrapery_Selector_left_tied_curtain_02",
+      "atlas": "SelectorDrapery",
+      "pivot": [
+        303.3157043457031,
+        -135.02183532714844,
+        86.40623474121094
+      ],
+      "bounds": [
+        [
+          -15.76440715789795,
+          -45.67813491821289,
+          -0.15777485072612762
+        ],
+        [
+          15.756550788879395,
+          45.67741775512695,
+          184.93673706054688
+        ]
+      ],
+      "source_objects": 12,
+      "triangles": 3708
+    },
+    {
+      "mesh": "SelectorDrapery_Selector_right_tied_curtain_03",
+      "atlas": "SelectorDrapery",
+      "pivot": [
+        303.31573486328125,
+        135.02183532714844,
+        86.40623474121094
+      ],
+      "bounds": [
+        [
+          -15.76440715789795,
+          -45.678131103515625,
+          -0.15912696719169617
+        ],
+        [
+          15.756550788879395,
+          45.67813491821289,
+          184.93673706054688
+        ]
+      ],
+      "source_objects": 12,
+      "triangles": 6710
+    },
+    {
+      "mesh": "SelectorDrapery_Selector_shaped_velvet_festoons_04",
+      "atlas": "SelectorDrapery",
+      "pivot": [
+        300.8758544921875,
+        7.62939453125e-06,
+        240.1448516845703
+      ],
+      "bounds": [
+        [
+          -5.720890522003174,
+          -177.42681884765625,
+          0.045013427734375
+        ],
+        [
+          6.128287315368652,
+          177.42681884765625,
+          57.799652099609375
+        ]
+      ],
+      "source_objects": 6,
+      "triangles": 2442
+    },
+    {
+      "mesh": "WardrobeCostumes_Costume_cream_blouse_01",
+      "atlas": "WardrobeCostumes",
+      "pivot": [
+        81.90022277832031,
+        -556.247314453125,
+        185.0500030517578
+      ],
+      "bounds": [
+        [
+          -12.10636043548584,
+          -21.043720245361328,
+          -0.00481472909450531
+        ],
+        [
+          12.757018089294434,
+          21.203977584838867,
+          66.79666137695312
+        ]
+      ],
+      "source_objects": 12,
+      "triangles": 1990
+    },
+    {
+      "mesh": "WardrobeCostumes_Costume_dressed_display_stand_02",
+      "atlas": "WardrobeCostumes",
+      "pivot": [
+        147.82958984375,
+        -402.8537902832031,
+        46.81550216674805
+      ],
+      "bounds": [
+        [
+          -24.4376220703125,
+          -34.51505661010742,
+          -46.81550216674805
+        ],
+        [
+          27.932193756103516,
+          34.27265548706055,
+          97.6044921875
+        ]
+      ],
+      "source_objects": 18,
+      "triangles": 3294
+    },
+    {
+      "mesh": "WardrobeCostumes_Costume_navy_court_jacket_03",
+      "atlas": "WardrobeCostumes",
+      "pivot": [
+        98.79112243652344,
+        -525.828125,
+        159.10000610351562
+      ],
+      "bounds": [
+        [
+          -15.92201042175293,
+          -23.407474517822266,
+          -0.026235539466142654
+        ],
+        [
+          16.410686492919922,
+          23.225683212280273,
+          92.74665832519531
+        ]
+      ],
+      "source_objects": 14,
+      "triangles": 2536
+    },
+    {
+      "mesh": "WardrobeCostumes_Costume_rose_stage_dress_04",
+      "atlas": "WardrobeCostumes",
+      "pivot": [
+        120.44815063476562,
+        -490.3293762207031,
+        158.6799774169922
+      ],
+      "bounds": [
+        [
+          -22.10886001586914,
+          -23.431453704833984,
+          -0.05512850359082222
+        ],
+        [
+          22.06024169921875,
+          23.74217987060547,
+          93.16668701171875
+        ]
+      ],
+      "source_objects": 16,
+      "triangles": 3012
+    },
+    {
+      "mesh": "WardrobeCostumes_Costume_wine_cape_05",
+      "atlas": "WardrobeCostumes",
+      "pivot": [
+        137.65773010253906,
+        -461.8263854980469,
+        184.64053344726562
+      ],
+      "bounds": [
+        [
+          -15.092024803161621,
+          -15.475772857666016,
+          0.01250759419053793
+        ],
+        [
+          14.165830612182617,
+          14.841858863830566,
+          67.20613098144531
+        ]
+      ],
+      "source_objects": 6,
+      "triangles": 984
+    },
+    {
+      "mesh": "Wardrobe",
+      "atlas": "Wardrobe",
+      "pivot": [
+        162,
+        -500,
+        0
+      ],
+      "bounds": [
+        [
+          -108.37918853759766,
+          -125.14204406738281,
+          -1.0037202835083008
+        ],
+        [
+          161.13597106933594,
+          110.1567611694336,
+          338.3536376953125
+        ]
+      ],
+      "source_objects": 167,
+      "triangles": 16514
+    },
+    {
+      "mesh": "DressingCorner",
+      "atlas": "DressingCorner",
+      "pivot": [
+        65,
+        -495,
+        0
+      ],
+      "bounds": [
+        [
+          -166.74783325195312,
+          -54.958770751953125,
+          -0.6280394196510315
+        ],
+        [
+          -12.94072437286377,
+          120.14697265625,
+          218.60513305664062
+        ]
+      ],
+      "source_objects": 96,
+      "triangles": 9780
+    },
+    {
+      "mesh": "CraftBench",
+      "atlas": "CraftBench",
+      "pivot": [
+        -283,
+        -435,
+        0
+      ],
+      "bounds": [
+        [
+          -134.2217559814453,
+          -123.63491821289062,
+          -0.01037502195686102
+        ],
+        [
+          65.12641143798828,
+          125.01850891113281,
+          208.32000732421875
+        ]
+      ],
+      "source_objects": 117,
+      "triangles": 8186
+    },
+    {
+      "mesh": "WorkshopProps_SM_Hub_Workbench_01",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -356.6541748046875,
+        -454.0869140625,
+        29.26205825805664
+      ],
+      "bounds": [
+        [
+          -35.01881408691406,
+          -57.51580810546875,
+          7.739290595054626e-07
+        ],
+        [
+          35.01876449584961,
+          57.515769958496094,
+          41.19093704223633
+        ]
+      ],
+      "source_objects": 40,
+      "triangles": 1560
+    },
+    {
+      "mesh": "WorkshopProps_Tailor_shears_pivot_and_two_blades_02",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -360.0704650878906,
+        -432.3563537597656,
+        108.76699829101562
+      ],
+      "bounds": [
+        [
+          -17.478551864624023,
+          -28.655324935913086,
+          -0.0019133803434669971
+        ],
+        [
+          17.378767013549805,
+          28.510835647583008,
+          4.789750099182129
+        ]
+      ],
+      "source_objects": 10,
+      "triangles": 848
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_hollow_brush_jar_03",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -273.54949951171875,
+        -403.9552001953125,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -15.625974655151367,
+          -15.625974655151367,
+          -0.0021760889794677496
+        ],
+        [
+          15.625974655151367,
+          15.625974655151367,
+          61.516387939453125
+        ]
+      ],
+      "source_objects": 14,
+      "triangles": 1222
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_lobed_pin_cushion_04",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -282.0862121582031,
+        -380.62872314453125,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -15.121559143066406,
+          -15.722870826721191,
+          -0.0008090856717899442
+        ],
+        [
+          15.121559143066406,
+          15.722870826721191,
+          19.014102935791016
+        ]
+      ],
+      "source_objects": 10,
+      "triangles": 520
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_open_canvas_chest_05",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -226.53382873535156,
+        -315.7047424316406,
+        0.0
+      ],
+      "bounds": [
+        [
+          -34.79908752441406,
+          -37.71985626220703,
+          -0.004839560016989708
+        ],
+        [
+          34.80487060546875,
+          37.73404312133789,
+          130.136474609375
+        ]
+      ],
+      "source_objects": 29,
+      "triangles": 2156
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_open_offcut_crate_06",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -290.41436767578125,
+        -292.44415283203125,
+        0.0
+      ],
+      "bounds": [
+        [
+          -38.5941162109375,
+          -39.07079315185547,
+          -0.004839560016989708
+        ],
+        [
+          38.560672760009766,
+          39.10248565673828,
+          67.47622680664062
+        ]
+      ],
+      "source_objects": 25,
+      "triangles": 1788
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_wound_bobbin_01_07",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -368.6691589355469,
+        -504.4850769042969,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -9.2924165725708,
+          -9.2924165725708,
+          -0.0015533851692453027
+        ],
+        [
+          9.2924165725708,
+          9.2924165725708,
+          16.501604080200195
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 918
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_wound_bobbin_02_08",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -381.3031921386719,
+        -469.0254821777344,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -9.612845420837402,
+          -9.612845420837402,
+          -0.0015687312697991729
+        ],
+        [
+          9.612845420837402,
+          9.612845420837402,
+          9.001351356506348
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 1388
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_wound_bobbin_03_09",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -265.5932312011719,
+        -367.4764709472656,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -9.100159645080566,
+          -9.100159645080566,
+          -0.0012864143354818225
+        ],
+        [
+          9.100159645080566,
+          9.100159645080566,
+          13.101593971252441
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 1388
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_wound_bobbin_04_10",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -325.9097595214844,
+        -363.61407470703125,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -8.52338981628418,
+          -8.52338981628418,
+          -0.0012753487098962069
+        ],
+        [
+          8.52338981628418,
+          8.52338981628418,
+          12.801557540893555
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 1218
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_wound_bobbin_05_11",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -332.9435729980469,
+        -458.9583435058594,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -9.2924165725708,
+          -9.2924165725708,
+          -0.0015533851692453027
+        ],
+        [
+          9.2924165725708,
+          9.2924165725708,
+          16.901336669921875
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 740
+    },
+    {
+      "mesh": "WorkshopProps_Workshop_wound_bobbin_06_12",
+      "atlas": "WorkshopProps",
+      "pivot": [
+        -362.25714111328125,
+        -489.7919921875,
+        108.63700103759766
+      ],
+      "bounds": [
+        [
+          -8.074790000915527,
+          -8.074790000915527,
+          -0.0014816761249676347
+        ],
+        [
+          8.074790000915527,
+          8.074790000915527,
+          14.901269912719727
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 918
+    },
+    {
+      "mesh": "SoundDesk",
+      "atlas": "SoundDesk",
+      "pivot": [
+        159,
+        493,
+        0
+      ],
+      "bounds": [
+        [
+          -123.6805419921875,
+          -163.50537109375,
+          -0.012200419791042805
+        ],
+        [
+          79.64965057373047,
+          136.2556915283203,
+          313.4319763183594
+        ]
+      ],
+      "source_objects": 284,
+      "triangles": 16470
+    },
+    {
+      "mesh": "MusicCorner",
+      "atlas": "MusicCorner",
+      "pivot": [
+        -220,
+        439,
+        0
+      ],
+      "bounds": [
+        [
+          -150.03179931640625,
+          -134.29420471191406,
+          -2.2878475189208984
+        ],
+        [
+          82.03179931640625,
+          168.29420471191406,
+          129.77896118164062
+        ]
+      ],
+      "source_objects": 172,
+      "triangles": 16602
+    },
+    {
+      "mesh": "SelectionStand",
+      "atlas": "SelectionStand",
+      "pivot": [
+        310,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -112.12744140625,
+          -233.0000457763672,
+          -0.2702307403087616
+        ],
+        [
+          177.0000762939453,
+          233.0000457763672,
+          337.86444091796875
+        ]
+      ],
+      "source_objects": 181,
+      "triangles": 8696
+    },
+    {
+      "mesh": "SelectorHardware_Selector_changeable_title_plaque_01",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        224.38629150390625,
+        9.5367431640625e-06,
+        47.30302810668945
+      ],
+      "bounds": [
+        [
+          -10.270792007446289,
+          -61.94929122924805,
+          0.035862959921360016
+        ],
+        [
+          10.272194862365723,
+          61.94929122924805,
+          31.831809997558594
+        ]
+      ],
+      "source_objects": 3,
+      "triangles": 246
+    },
+    {
+      "mesh": "SelectorHardware_Selector_comedy_badge_02",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        285.95684814453125,
+        -23.889171600341797,
+        283.4749450683594
+      ],
+      "bounds": [
+        [
+          -6.294224262237549,
+          -22.38022804260254,
+          -0.035006895661354065
+        ],
+        [
+          6.293152809143066,
+          22.391231536865234,
+          51.81343460083008
+        ]
+      ],
+      "source_objects": 3,
+      "triangles": 1228
+    },
+    {
+      "mesh": "SelectorHardware_Selector_curved_footlight_01_03",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        255.902099609375,
+        -118.9999771118164,
+        85.80999755859375
+      ],
+      "bounds": [
+        [
+          -9.427203178405762,
+          -9.42719554901123,
+          0.0
+        ],
+        [
+          9.427203178405762,
+          9.427210807800293,
+          13.358153343200684
+        ]
+      ],
+      "source_objects": 8,
+      "triangles": 878
+    },
+    {
+      "mesh": "SelectorHardware_Selector_curved_footlight_02_04",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        246.5255126953125,
+        -59.49999237060547,
+        85.80999755859375
+      ],
+      "bounds": [
+        [
+          -9.97851276397705,
+          -10.037537574768066,
+          -0.0056503526866436005
+        ],
+        [
+          9.969098091125488,
+          10.03753662109375,
+          14.182599067687988
+        ]
+      ],
+      "source_objects": 8,
+      "triangles": 808
+    },
+    {
+      "mesh": "SelectorHardware_Selector_curved_footlight_03_05",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        243.39999389648438,
+        8.583069757150952e-06,
+        85.80999755859375
+      ],
+      "bounds": [
+        [
+          -10.023381233215332,
+          -10.016403198242188,
+          -0.005225855857133865
+        ],
+        [
+          10.023381233215332,
+          10.016404151916504,
+          14.182599067687988
+        ]
+      ],
+      "source_objects": 8,
+      "triangles": 808
+    },
+    {
+      "mesh": "SelectorHardware_Selector_curved_footlight_04_06",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        246.52554321289062,
+        59.50000762939453,
+        85.80999755859375
+      ],
+      "bounds": [
+        [
+          -9.969098091125488,
+          -10.03753662109375,
+          -0.006591138429939747
+        ],
+        [
+          9.97851276397705,
+          10.037537574768066,
+          14.182599067687988
+        ]
+      ],
+      "source_objects": 8,
+      "triangles": 808
+    },
+    {
+      "mesh": "SelectorHardware_Selector_curved_footlight_05_07",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        255.902099609375,
+        119.0000228881836,
+        85.80999755859375
+      ],
+      "bounds": [
+        [
+          -9.427203178405762,
+          -9.42719554901123,
+          0.0
+        ],
+        [
+          9.427203178405762,
+          9.427210807800293,
+          13.358153343200684
+        ]
+      ],
+      "source_objects": 8,
+      "triangles": 878
+    },
+    {
+      "mesh": "SelectorHardware_Selector_left_paddle_housing_08",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        225.00192260742188,
+        -88.99999237060547,
+        48.40846252441406
+      ],
+      "bounds": [
+        [
+          -9.363517761230469,
+          -24.710689544677734,
+          -0.07397818565368652
+        ],
+        [
+          9.4017972946167,
+          24.71125030517578,
+          25.906042098999023
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 128
+    },
+    {
+      "mesh": "SelectorHardware_Selector_left_pressable_paddle_09",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        221.32626342773438,
+        -88.99999237060547,
+        53.399166107177734
+      ],
+      "bounds": [
+        [
+          -6.837027549743652,
+          -22.19999885559082,
+          0.09268414974212646
+        ],
+        [
+          6.837026596069336,
+          22.19999885559082,
+          20.259098052978516
+        ]
+      ],
+      "source_objects": 6,
+      "triangles": 252
+    },
+    {
+      "mesh": "SelectorHardware_Selector_right_paddle_housing_10",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        225.001953125,
+        89.00000762939453,
+        48.40846252441406
+      ],
+      "bounds": [
+        [
+          -9.363517761230469,
+          -24.710689544677734,
+          -0.07397818565368652
+        ],
+        [
+          9.4017972946167,
+          24.71125030517578,
+          25.906042098999023
+        ]
+      ],
+      "source_objects": 2,
+      "triangles": 128
+    },
+    {
+      "mesh": "SelectorHardware_Selector_right_pressable_paddle_11",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        221.3262939453125,
+        89.00000762939453,
+        53.399166107177734
+      ],
+      "bounds": [
+        [
+          -6.837027549743652,
+          -22.19999885559082,
+          0.09268414974212646
+        ],
+        [
+          6.837026596069336,
+          22.19999885559082,
+          20.259098052978516
+        ]
+      ],
+      "source_objects": 6,
+      "triangles": 252
+    },
+    {
+      "mesh": "SelectorHardware_Selector_service_bell_12",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        201.28875732421875,
+        1.0490416570974048e-05,
+        35.0
+      ],
+      "bounds": [
+        [
+          -16.85494041442871,
+          -26.356548309326172,
+          -0.0101776123046875
+        ],
+        [
+          15.10883617401123,
+          26.3323974609375,
+          25.48374366760254
+        ]
+      ],
+      "source_objects": 6,
+      "triangles": 818
+    },
+    {
+      "mesh": "SelectorHardware_Selector_sloped_controls_fascia_13",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        225.081787109375,
+        1.52587890625e-05,
+        26.68311882019043
+      ],
+      "bounds": [
+        [
+          -16.906694412231445,
+          -130.37777709960938,
+          0.026945898309350014
+        ],
+        [
+          16.918214797973633,
+          130.37779235839844,
+          50.951820373535156
+        ]
+      ],
+      "source_objects": 5,
+      "triangles": 500
+    },
+    {
+      "mesh": "SelectorHardware_Selector_tragedy_badge_14",
+      "atlas": "SelectorHardware",
+      "pivot": [
+        285.9632568359375,
+        23.81056022644043,
+        281.44879150390625
+      ],
+      "bounds": [
+        [
+          -6.249981880187988,
+          -21.186891555786133,
+          0.0015842367429286242
+        ],
+        [
+          6.286744117736816,
+          21.174556732177734,
+          48.55718231201172
+        ]
+      ],
+      "source_objects": 3,
+      "triangles": 2528
+    },
+    {
+      "mesh": "ScenicGreens",
+      "atlas": "ScenicGreens",
+      "pivot": [
+        260,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          -96.15765380859375,
+          -356.51312255859375,
+          -0.05999999865889549
+        ],
+        [
+          66.1863021850586,
+          371.7682800292969,
+          78.4167251586914
+        ]
+      ],
+      "source_objects": 12,
+      "triangles": 520
+    },
+    {
+      "mesh": "FlyRig",
+      "atlas": "FlyRig",
+      "pivot": [
+        442,
+        0,
+        355
+      ],
+      "bounds": [
+        [
+          -208.18130493164062,
+          -609.0653076171875,
+          -229.25132751464844
+        ],
+        [
+          19.192779541015625,
+          608.0653076171875,
+          109.88557434082031
+        ]
+      ],
+      "source_objects": 122,
+      "triangles": 13216
+    },
+    {
+      "mesh": "SelectionPreview",
+      "atlas": "SelectionPreview",
+      "pivot": [
+        310,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          43.058692932128906,
+          -122.9412841796875,
+          86.7915267944336
+        ],
+        [
+          142.94131469726562,
+          122.94129180908203,
+          264.5737609863281
+        ]
+      ],
+      "source_objects": 74,
+      "triangles": 3226
+    },
+    {
+      "mesh": "CrimePreview",
+      "atlas": "CrimePreview",
+      "pivot": [
+        310,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          43.80783462524414,
+          -110.22689056396484,
+          86.7915267944336
+        ],
+        [
+          142.19216918945312,
+          110.22689056396484,
+          225.25836181640625
+        ]
+      ],
+      "source_objects": 24,
+      "triangles": 2912
+    },
+    {
+      "mesh": "CastlePreview",
+      "atlas": "CastlePreview",
+      "pivot": [
+        310,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          43.807838439941406,
+          -91.96795654296875,
+          86.7915267944336
+        ],
+        [
+          142.19216918945312,
+          91.96795654296875,
+          240.07144165039062
+        ]
+      ],
+      "source_objects": 30,
+      "triangles": 2060
+    },
+    {
+      "mesh": "WinterPreview",
+      "atlas": "WinterPreview",
+      "pivot": [
+        310,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          43.807838439941406,
+          -67.04220581054688,
+          86.7915267944336
+        ],
+        [
+          142.19216918945312,
+          67.04220581054688,
+          158.52536010742188
+        ]
+      ],
+      "source_objects": 9,
+      "triangles": 948
+    },
+    {
+      "mesh": "SeaPreview",
+      "atlas": "SeaPreview",
+      "pivot": [
+        310,
+        0,
+        0
+      ],
+      "bounds": [
+        [
+          43.807838439941406,
+          -67.04220581054688,
+          86.7915267944336
+        ],
+        [
+          142.19216918945312,
+          67.04220581054688,
+          158.52536010742188
+        ]
+      ],
+      "source_objects": 10,
+      "triangles": 2740
+    },
+    {
+      "mesh": "SelectorSign",
+      "atlas": "SelectorSign",
+      "pivot": [
+        292.91998291015625,
+        -0.0,
+        241.95899963378906
+      ],
+      "bounds": [
+        [
+          -0.8500634431838989,
+          -207.0,
+          0.0
+        ],
+        [
+          0.8500634431838989,
+          207.0,
+          90.35575866699219
+        ]
+      ],
+      "source_objects": 1,
+      "triangles": 146
+    }
+  ]
+}

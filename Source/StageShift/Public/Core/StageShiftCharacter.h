@@ -13,6 +13,7 @@ class UDialogueComponent;
 class UFacialAnimationComponent;
 class UWidgetComponent;
 class UCharacterHairComponent;
+class UStageShiftCharacterPreset;
 class UStageShiftAnimInstance;
 class USoundBase;
 
@@ -40,6 +41,7 @@ public:
 	void ApplyAppearance(const FStageShiftCharacterAppearance& Appearance);
 
 protected:
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PostRegisterAllComponents() override;
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
@@ -70,6 +72,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Meshes")
 	TObjectPtr<USkeletalMeshComponent> OutfitMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Appearance")
+	TObjectPtr<UStageShiftCharacterPreset> AppearancePreset;
+
 	// Keep the animation graph out of native CDO construction: its editor node module must load first.
 	UPROPERTY(EditDefaultsOnly, Category = "Character|Meshes")
 	TSoftClassPtr<UStageShiftAnimInstance> DefaultAnimationClass;
@@ -108,6 +114,8 @@ private:
 	friend class UStageShiftCharacterMovementComponent;
 	friend class UDollPhysicsComponent;
 
+	void PreviewAppearancePreset();
+	FStageShiftCharacterAppearance GetPresetAppearance() const;
 	void ConfigureMovementCollision();
 	void UpdateDollPress();
 	void ApplyDollContact(const FHitResult& Impact);
