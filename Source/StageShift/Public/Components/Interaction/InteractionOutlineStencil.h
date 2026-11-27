@@ -5,9 +5,16 @@
 // The post-process material reads these bits and leaves all other stencil IDs available.
 struct FInteractionOutlineStencil
 {
+	static constexpr int32 PlayerOcclusionBlocker = 1 << 4;
 	static constexpr int32 PickupCue = 1 << 5;
 	static constexpr int32 Available = 1 << 6;
 	static constexpr int32 Focused = 1 << 7;
+
+	static void MarkPlayerOcclusionBlocker(UPrimitiveComponent& Primitive)
+	{
+		Primitive.SetCustomDepthStencilValue(Primitive.CustomDepthStencilValue | PlayerOcclusionBlocker);
+		Primitive.SetRenderCustomDepth(true);
+	}
 
 	bool Apply(UPrimitiveComponent& Primitive, int32 Mask);
 	bool Update(int32 Mask);

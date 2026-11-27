@@ -96,6 +96,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Stage|Sound") FStageSoundResultEvent OnCueResult;
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 

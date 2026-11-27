@@ -38,6 +38,7 @@ public:
 	UPrimitiveComponent* GetManipulatedComponent() const { return ManipulatedComponent.Get(); }
 
 	bool IsCarrying() const { return bCarryAttached; }
+	bool IsCatchingProp() const { return CatchStartedAt >= 0.0; }
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction|Stage Props")
 	bool CanReceiveStageProp() const;
@@ -153,7 +154,7 @@ protected:
 private:
 	friend class AStagePhysicsActor;
 	friend class UStageMemberComponent;
-	bool BeginManipulationInternal(const FHitResult& Hit, EPhysicsInteractionType Type, bool bPlayPickupAnimation);
+	bool BeginCatch(class AStagePhysicsActor& Prop, AActor& Source, double ReleasedAt);
 	bool TransferCarriedPropTo(UPhysicsManipulationComponent& Receiver);
 	UFUNCTION()
 	void UpdateStagePropReadiness();
@@ -203,16 +204,25 @@ private:
 	FThrowAim ThrowAim;
 	TWeakObjectPtr<class UAnimInstance> PickupInstance;
 	TWeakObjectPtr<class UAnimMontage> PickupMontage;
+	TWeakObjectPtr<AActor> CatchSource;
+	FTransform CatchStartTransform;
+	double CatchStartedAt = -1.0;
+	double CatchReleasedAt = 0.0;
+	float CatchReachTime = 0.0f;
 	bool bPickupPending = false;
 	bool bCarryAttached = false;
 
-	bool AttachCarriedObject(bool bKeepWorldTransform);
+	bool AttachCarriedObject();
+	void ReserveCarriedObject(UPrimitiveComponent& Component);
+	void WatchPickupPlayback(UAnimInstance& Instance, UAnimMontage& Montage);
+	void CompletePickup();
+	void UpdateCatch();
 	void BeginDrag(const FHitResult& Hit);
 	void SetDragGrip(const FVector& GripPoint);
 	void UpdateDrag(float DeltaTime);
 	void CancelManipulation();
 	FTransform GetDragFrame() const;
-	void ClearPickupPlayback();
+	void ClearPickupPlayback(bool bStopMontage = false);
 	FVector CalculateThrowVelocity(
 	    const UPrimitiveComponent& Component, const FThrowAim& Aim, const FVector& Center, const FVector& Start, float HoldDuration, double SweepRadius,
 	    FVector& OutTarget, float& OutLobSpeedLimit) const;

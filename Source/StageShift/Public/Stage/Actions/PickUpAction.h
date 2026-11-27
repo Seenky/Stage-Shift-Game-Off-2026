@@ -31,6 +31,7 @@ private:
 	UFUNCTION()
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void CheckForItem();
+	bool HasPendingCatch() const;
 	bool FindPickup(FInteractionContext& OutInteraction) const;
 	bool BuildPickupContext(AActor* Item, FInteractionContext& OutInteraction, FString* OutFailure = nullptr) const;
 	void StartPickup(const FInteractionContext& Interaction);

@@ -1,4 +1,5 @@
 #include "Stage/Environment/StageSelectionStation.h"
+#include "Components/Interaction/InteractionOutlineStencil.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Camera/CameraActor.h"
@@ -48,6 +49,9 @@ void AStageSelectionStation::OnConstruction(const FTransform& Transform)
 void AStageSelectionStation::BeginPlay()
 {
 	Super::BeginPlay();
+	FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*Display);
+	FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*PreviewA);
+	FInteractionOutlineStencil::MarkPlayerOcclusionBlocker(*PreviewB);
 	CurrentPreview = PreviewA;
 	IncomingPreview = PreviewB;
 }

@@ -34,7 +34,8 @@ enum class EStageGraphAction : uint8
 	RemovePreparation,
 	Fit,
 	RunSequence,
-	RunParallel
+	RunParallel,
+	SetPrimaryBranch
 };
 UCLASS(Transient)
 

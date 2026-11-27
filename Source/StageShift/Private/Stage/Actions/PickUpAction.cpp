@@ -95,6 +95,11 @@ void UPickUpAction::CheckForItem()
 	const double Now = World->GetTimeSeconds();
 	const double UntilOpen = PickupWindow->GetLowerBoundValue() - Now;
 	const double UntilClose = PickupWindow->GetUpperBoundValue() - Now;
+	if (HasPendingCatch())
+	{
+		World->GetTimerManager().SetTimer(CheckTimer, this, &ThisClass::CheckForItem, CheckDistanceTime, false);
+		return;
+	}
 	if (UntilClose <= 0.0)
 	{
 		FailPickup(TEXT("Pickup window expired"));
@@ -107,6 +112,13 @@ void UPickUpAction::CheckForItem()
 
 	FInteractionContext Interaction;
 	if (FindPickup(Interaction)) StartPickup(Interaction);
+}
+
+bool UPickUpAction::HasPendingCatch() const
+{
+	if (!Manipulator.IsValid() || !Manipulator->IsCatchingProp()) return false;
+	const auto* Component = Manipulator->GetManipulatedComponent();
+	return Component && Candidates.Contains(TWeakObjectPtr<AActor>(Component->GetOwner()));
 }
 
 bool UPickUpAction::FindPickup(FInteractionContext& OutInteraction) const
@@ -135,6 +147,7 @@ bool UPickUpAction::BuildPickupContext(AActor* Item, FInteractionContext& OutInt
 	const auto* Prop = Cast<AStagePhysicsActor>(Item);
 	if (!Prop || Prop->GetInteractionType() != EPhysicsInteractionType::Carry)
 		return Reject(TEXT("Target must be a StagePhysicsActor with Carry interaction"));
+	if (Prop->IsInCatchFlight()) return Reject(TEXT("Target is still in flight"));
 
 	AActor* Owner = StageInteraction::GetOwner(Context);
 	if (const AActor* Holder = StageInteraction::GetOtherItemHolder(Owner, Item))
@@ -246,6 +259,11 @@ void UPickUpAction::OnStop_Implementation(EStageActionStopMode Mode)
 
 void UPickUpAction::CancelPickup()
 {
+	if (HasPendingCatch())
+	{
+		Manipulator->ReleaseComponent();
+		return;
+	}
 	if (!bOwnPickup) return;
 	bOwnPickup = false;
 	const auto* Component = Manipulator.IsValid() ? Manipulator->GetManipulatedComponent() : nullptr;

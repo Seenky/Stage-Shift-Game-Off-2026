@@ -72,7 +72,8 @@ void UStageMemberCommand::Start(const FStageExecutionContext& InContext)
 
 void UStageMemberCommand::RequestStop(EStageActionStopReason Reason)
 {
-	if (CommandState == EStageExecutionState::Finished || CommandState == EStageExecutionState::Stopping) return;
+	if (CommandState == EStageExecutionState::Finished
+	    || (CommandState == EStageExecutionState::Stopping && Reason != EStageActionStopReason::ParallelBranchFinished)) return;
 
 	CommandState = EStageExecutionState::Stopping;
 	const TWeakObjectPtr<UStageMemberComponent> Member = Context.MemberComponent;

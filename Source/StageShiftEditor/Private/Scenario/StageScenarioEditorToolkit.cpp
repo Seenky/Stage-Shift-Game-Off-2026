@@ -136,7 +136,7 @@ void FStageScenarioEditorToolkit::Init(UObject* InAsset, EToolkitMode::Type Mode
 	Args.NameAreaSettings = FDetailsViewArgs::HideNameArea;
 	CommandDetails = Properties.CreateDetailView(Args);
 	AssetDetails = Properties.CreateDetailView(Args);
-	HideGraphProperties(CommandDetails.Get(), {TEXT("Children"), TEXT("GraphParameterBindings")});
+	HideGraphProperties(CommandDetails.Get(), {TEXT("Children"), TEXT("PrimaryBranch"), TEXT("GraphParameterBindings")});
 	CommandDetails->SetIsPropertyReadOnlyDelegate(FIsPropertyReadOnly::CreateLambda([this](const FPropertyAndParent& P)
 	{
 		return FStageGraphParameters::IsBound(Selected.IsValid() ? Selected->Command.Get() : nullptr, P);
@@ -776,6 +776,8 @@ void FStageScenarioEditorToolkit::Action(UStageScenarioEdGraph* Graph, EStageGra
 			Done = Adapter.Wrap(Node, Op == EStageGraphAction::WrapSequence ? USequenceStageMemberCommand::StaticClass() : UParallelStageMemberCommand::StaticClass());
 		else if (Op == EStageGraphAction::RunSequence || Op == EStageGraphAction::RunParallel)
 			Done = Adapter.SetContainerMode(Node, Op == EStageGraphAction::RunSequence ? USequenceStageMemberCommand::StaticClass() : UParallelStageMemberCommand::StaticClass());
+		else if (Op == EStageGraphAction::SetPrimaryBranch)
+			Done = Adapter.SetPrimaryBranch(Node);
 		else if (Op == EStageGraphAction::Delete)
 		{
 			Done = FStageGraphDrafts::Delete(Graph, Nodes);

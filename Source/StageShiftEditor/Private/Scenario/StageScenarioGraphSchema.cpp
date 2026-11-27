@@ -4,6 +4,7 @@
 #include "StageScenarioGraphAdapter.h"
 #include "StageCommandCatalog.h"
 #include "StageGraphDrafts.h"
+#include "Stage/Core/ParallelStageMemberCommand.h"
 #include "Stage/Core/StageMemberCommand.h"
 #include "ToolMenu.h"
 
@@ -113,6 +114,9 @@ void UStageScenarioGraphSchema::GetContextMenuActions(UToolMenu* Menu, UGraphNod
 		Add(TEXT("Open contents"), EStageGraphAction::Enter);
 	if (Node->Command)
 	{
+		if (const auto* Parallel = Cast<UParallelStageMemberCommand>(Node->ParentCommand);
+		    Parallel && Parallel->Children.Contains(Node->Command) && (!Parallel->bFinishOnPrimaryBranch || Parallel->PrimaryBranch != Node->Command))
+			Add(TEXT("Сделать основной веткой"), EStageGraphAction::SetPrimaryBranch);
 		Add(TEXT("Wrap in Sequence"), EStageGraphAction::WrapSequence);
 		Add(TEXT("Wrap in Parallel"), EStageGraphAction::WrapParallel);
 		Submenu(TEXT("Replace action"), EStageGraphAction::Replace);

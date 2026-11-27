@@ -64,8 +64,9 @@ void UStageAction::RequestStop(EStageActionStopReason Reason)
 	if (ActionState != EStageExecutionState::Running && ActionState != EStageExecutionState::Stopping) return;
 
 	const bool bWasStopping = ActionState == EStageExecutionState::Stopping;
+	const bool bStopImmediately = Reason == EStageActionStopReason::ParallelBranchFinished;
 	const EStageActionStopMode PreviousStopMode = ActionStopMode;
-	if (bWasStopping)
+	if (bWasStopping && !bStopImmediately)
 	{
 		const bool bFinalStopAfterInterruption = (Reason == EStageActionStopReason::Cancel && ActionStopReason == EStageActionStopReason::Interrupt);
 		if (!bFinalStopAfterInterruption) return;
@@ -73,7 +74,7 @@ void UStageAction::RequestStop(EStageActionStopReason Reason)
 
 	ActionStopReason = Reason;
 	ActionState = EStageExecutionState::Stopping;
-	const EStageActionStopMode RequestedMode = GetStopMode(Reason);
+	const EStageActionStopMode RequestedMode = bStopImmediately ? EStageActionStopMode::StopAction : GetStopMode(Reason);
 
 	if (ActionState != EStageExecutionState::Stopping || ActionStopReason != Reason) return;
 
@@ -82,6 +83,8 @@ void UStageAction::RequestStop(EStageActionStopReason Reason)
 	{
 		OnStop(ActionStopMode);
 	}
+	if (bStopImmediately && ActionState == EStageExecutionState::Stopping && ActionStopReason == Reason)
+		Finish(EStageActionResult::Cancelled);
 }
 
 void UStageAction::Finish(EStageActionResult InResult)
