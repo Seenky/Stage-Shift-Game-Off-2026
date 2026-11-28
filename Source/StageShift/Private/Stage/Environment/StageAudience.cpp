@@ -3,6 +3,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/Dialogue/DialogueComponent.h"
+#include "Components/Physics/PhysicalMontageComponent.h"
 #include "Components/PoseableMeshComponent.h"
 #if WITH_EDITORONLY_DATA
 #include "Components/SplineComponent.h"
@@ -32,6 +33,8 @@ namespace
 	constexpr float NoticeMurmurVolume = .65f;
 	constexpr double MurmurGesturePeriod = 4.5;
 	constexpr float LaughDuration = 1.35f;
+	constexpr double WrongSoundLaughCooldown = 3.4;
+	constexpr double FallLaughCooldown = 5.0;
 	constexpr float ApplauseDuration = 2.55f;
 	constexpr double ClapPeriod = .34;
 	constexpr float SeatPelvisHeight = 10.f;
@@ -266,7 +269,13 @@ void AStageAudience::BeginPlay()
 	NoticeMurmurAudio->SetSound(NoticeMurmurSound);
 	NoticeMurmurAudio->AttenuationSettings = LaughAttenuation;
 	StageManager = Cast<AStageManager>(UGameplayStatics::GetActorOfClass(this, AStageManager::StaticClass()));
-	if (StageManager.IsValid()) StageManager->OnScoreChanged.AddUObject(this, &ThisClass::HandleScoreChanged);
+	if (auto* Manager = StageManager.Get())
+	{
+		Manager->OnScoreChanged.AddUObject(this, &ThisClass::HandleScoreChanged);
+		Manager->OnProductionPhaseChanged.AddUniqueDynamic(this, &ThisClass::HandleProductionPhaseChanged);
+		Manager->OnStageFinishedById.AddUniqueDynamic(this, &ThisClass::HandleStageFinished);
+		Manager->OnStageEvent.AddUniqueDynamic(this, &ThisClass::HandleStageEvent);
+	}
 	SoundControl = Cast<AStageSoundControl>(UGameplayStatics::GetActorOfClass(this, AStageSoundControl::StaticClass()));
 	if (SoundControl.IsValid()) SoundControl->OnCueResult.AddUniqueDynamic(this, &ThisClass::HandleSoundResult);
 }
@@ -274,7 +283,13 @@ void AStageAudience::BeginPlay()
 void AStageAudience::EndPlay(const EEndPlayReason::Type Reason)
 {
 	if (SoundControl.IsValid()) SoundControl->OnCueResult.RemoveDynamic(this, &ThisClass::HandleSoundResult);
-	if (StageManager.IsValid()) StageManager->OnScoreChanged.RemoveAll(this);
+	if (auto* Manager = StageManager.Get())
+	{
+		Manager->OnScoreChanged.RemoveAll(this);
+		Manager->OnProductionPhaseChanged.RemoveDynamic(this, &ThisClass::HandleProductionPhaseChanged);
+		Manager->OnStageFinishedById.RemoveDynamic(this, &ThisClass::HandleStageFinished);
+		Manager->OnStageEvent.RemoveDynamic(this, &ThisClass::HandleStageEvent);
+	}
 	NoticeMurmurAudio->Stop();
 	Super::EndPlay(Reason);
 }
@@ -450,13 +465,36 @@ void AStageAudience::UpdateViewer(FViewer& Viewer, int32 Index, float DeltaSecon
 
 void AStageAudience::HandleScoreChanged(int32 Amount)
 {
-	if (Amount <= 0 || !IsScenePlaying() || Viewers.IsEmpty()) return;
-	const double Now = GetWorld()->GetTimeSeconds();
-	if (Now < ApplauseAt + ApplauseDuration + .5) return;
+	if (Amount > 0 && IsScenePlaying() && GetWorld()->GetTimeSeconds() >= ApplauseAt + ApplauseDuration + .5) StartApplause();
+}
 
-	ApplauseAt = Now;
-	if (ApplauseSound) UGameplayStatics::PlaySoundAtLocation(this, ApplauseSound, GetActorLocation() + FVector(0, 0, 68),
-	    .75f, 1.f, 0.f, LaughAttenuation);
+void AStageAudience::HandleProductionPhaseChanged(EStageProductionState State, FName, int32)
+{
+	if (State == EStageProductionState::Playing) StartApplause();
+}
+
+void AStageAudience::HandleStageFinished(FName, bool bSucceeded, FText)
+{
+	if (bSucceeded) StartApplause();
+}
+
+void AStageAudience::StartApplause()
+{
+	if (Viewers.IsEmpty()) return;
+	ApplauseAt = GetWorld()->GetTimeSeconds();
+	if (auto* Audio = ActiveApplause.Get()) Audio->Stop();
+	if (ApplauseSound)
+		ActiveApplause = UGameplayStatics::SpawnSoundAttached(ApplauseSound, RootComponent, NAME_None, FVector(0, 0, 68),
+		    EAttachLocation::KeepRelativeOffset, true, .75f, 1.f, 0.f, LaughAttenuation);
+}
+
+void AStageAudience::HandleStageEvent(FStageEvent Event)
+{
+	static const FGameplayTag FallenTag = FGameplayTag::RequestGameplayTag(TEXT("State.Member.Fallen"));
+	if (Event.EventTag != FallenTag || !IsScenePlaying() || !IsValid(Event.SubjectActor)) return;
+	const auto* Physics = Event.SubjectActor->FindComponentByClass<UPhysicalMontageComponent>();
+	if (Physics && Physics->IsStayingDown()) return;
+	TryLaugh(FallLaughCooldown);
 }
 
 void AStageAudience::HandleSoundResult(const FStageSoundWindow& Window, EStageSoundResult Result)
@@ -466,10 +504,15 @@ void AStageAudience::HandleSoundResult(const FStageSoundWindow& Window, EStageSo
 
 void AStageAudience::ReactWithLaughter()
 {
+	TryLaugh(WrongSoundLaughCooldown);
+}
+
+void AStageAudience::TryLaugh(double Cooldown)
+{
 	if (!HasActorBegunPlay() || Viewers.IsEmpty()) return;
 	const double Now = GetWorld()->GetTimeSeconds();
 	if (Now < NextLaughAt) return;
-	NextLaughAt = Now + 3.4;
+	NextLaughAt = Now + Cooldown;
 	for (int32 Index = 0; Index < Viewers.Num(); ++Index)
 		if (Index % 3 == 1) Viewers[Index].LaughAt = Now + .10 * (Index / 3);
 	if (LaughSound) UGameplayStatics::PlaySoundAtLocation(this, LaughSound, GetActorLocation() + FVector(0, 0, 68),

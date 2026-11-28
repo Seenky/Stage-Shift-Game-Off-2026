@@ -7,6 +7,7 @@
 #include "StageProductionDataAsset.generated.h"
 
 class UStageDataAsset;
+class UStageShiftCharacterPreset;
 
 UENUM(BlueprintType)
 enum class EStageProductionState : uint8
@@ -64,6 +65,7 @@ struct FStageCastPlacement
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TSubclassOf<AActor> ActorClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TObjectPtr<UStageShiftCharacterPreset> AppearancePreset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TSoftObjectPtr<AActor> BackstageMark;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cast") TSoftObjectPtr<AActor> StageMark;
 };

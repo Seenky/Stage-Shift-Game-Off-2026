@@ -4,6 +4,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Chaos/ChaosEngineInterface.h"
@@ -233,34 +234,61 @@ void AStagePhysicsActor::StopWatchingThrow()
 	SetActorTickEnabled(false);
 }
 
-void AStagePhysicsActor::IgnoreThrowerDuringRelease(const AActor& Source)
+void AStagePhysicsActor::IgnoreThrowerDuringRelease(AActor& Source)
 {
 	RestoreThrowerCollision();
-	const auto* Character = Cast<ACharacter>(&Source);
+	auto* Character = Cast<ACharacter>(&Source);
 	const USkeletalMeshComponent* Mesh = Character ? Character->GetMesh() : nullptr;
+	UCapsuleComponent* Capsule = Character ? Character->GetCapsuleComponent() : nullptr;
 	const FBodyInstance* PropBody = GetStaticMeshComponent()->GetBodyInstance();
 	const FPhysicsActorHandle Prop = PropBody ? PropBody->GetPhysicsActor() : nullptr;
-	if (!Mesh || !Prop) return;
+	if (!Mesh || !Capsule || !Prop || !GetWorld()) return;
 
 	TArray<FPhysicsActorHandle> ThrowerBodies;
 	for (const FBodyInstance* Body : Mesh->Bodies)
 		if (Body)
 			if (const FPhysicsActorHandle Handle = Body->GetPhysicsActor()) ThrowerBodies.Add(Handle);
+	if (const FBodyInstance* Body = Capsule->GetBodyInstance())
+		if (const FPhysicsActorHandle Handle = Body->GetPhysicsActor()) ThrowerBodies.AddUnique(Handle);
 	if (ThrowerBodies.IsEmpty()) return;
 
 	const bool bApplied = FPhysicsCommand::ExecuteWrite(Prop, [&](const FPhysicsActorHandle& Handle)
 	{
 		FChaosEngineInterface::AddDisabledCollisionsFor_AssumesLocked({{Handle, MoveTemp(ThrowerBodies)}});
 	});
-	// Give the prop time to leave the hand while keeping every other collision active.
-	if (bApplied) GetWorld()->GetTimerManager().SetTimer(ThrowerCollisionTimer, this, &ThisClass::RestoreThrowerCollision, 0.12f);
+	if (!bApplied) return;
+	ReleaseCharacter = Character;
+	bAddedReleaseMoveIgnore = !Capsule->GetMoveIgnoreActors().Contains(this);
+	if (bAddedReleaseMoveIgnore) Capsule->IgnoreActorWhenMoving(this, true);
+	GetWorld()->GetTimerManager().SetTimer(ThrowerCollisionTimer, this, &ThisClass::CheckThrowerClearance, 0.05f, true, 0.12f);
+}
+
+void AStagePhysicsActor::CheckThrowerClearance()
+{
+	const ACharacter* Character = ReleaseCharacter.Get();
+	const UCapsuleComponent* Capsule = Character ? Character->GetCapsuleComponent() : nullptr;
+	const UStaticMeshComponent* Body = GetStaticMeshComponent();
+	if (Capsule && Body && Body->IsSimulatingPhysics())
+	{
+		const FVector Center = Capsule->GetComponentLocation();
+		const double Radius = Capsule->GetScaledCapsuleRadius();
+		const FVector Segment = Capsule->GetUpVector() * FMath::Max(0.0, Capsule->GetScaledCapsuleHalfHeight() - Radius);
+		const double Clearance = Radius + Body->Bounds.SphereRadius + 6.0;
+		if (FMath::PointDistToSegmentSquared(Body->Bounds.Origin, Center - Segment, Center + Segment) <= FMath::Square(Clearance)) return;
+	}
+	RestoreThrowerCollision();
 }
 
 void AStagePhysicsActor::RestoreThrowerCollision()
 {
 	UWorld* World = GetWorld();
-	if (!World || !ThrowerCollisionTimer.IsValid()) return;
-	World->GetTimerManager().ClearTimer(ThrowerCollisionTimer);
+	if (!ThrowerCollisionTimer.IsValid()) return;
+	if (World) World->GetTimerManager().ClearTimer(ThrowerCollisionTimer);
+	else ThrowerCollisionTimer.Invalidate();
+	if (ACharacter* Character = ReleaseCharacter.Get(); bAddedReleaseMoveIgnore && Character && Character->GetCapsuleComponent())
+		Character->GetCapsuleComponent()->IgnoreActorWhenMoving(this, false);
+	ReleaseCharacter.Reset();
+	bAddedReleaseMoveIgnore = false;
 	if (const FBodyInstance* Body = GetStaticMeshComponent()->GetBodyInstance())
 		if (const FPhysicsActorHandle Prop = Body->GetPhysicsActor())
 			FPhysicsCommand::ExecuteWrite(Prop, [](const FPhysicsActorHandle& Handle)

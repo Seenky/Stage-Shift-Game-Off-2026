@@ -99,15 +99,25 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		AimDirection = Pawn->GetActorForwardVector().GetSafeNormal2D();
 		const FVector Ground = Pawn->GetActorLocation() - FVector::UpVector * Pawn->GetSimpleCollisionHalfHeight();
 		AimReferenceZ = Ground.Z;
-		if (!bHasScreenPosition && !PC->ProjectWorldLocationToScreen(Ground + AimDirection * AimDistance, ScreenPosition))
+		const FVector StartAim = bDragging ? Ground + AimDirection * AimDistance : Ground;
+		if ((!bDragging || !bHasScreenPosition) && !PC->ProjectWorldLocationToScreen(StartAim, ScreenPosition))
 		{
 			ScreenPosition = FVector2D(Bounds.Min + Bounds.Size() / 2);
 		}
+		const bool bAbsoluteMouse = PC->bShowMouseCursor || !PC->GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture();
 		FVector2D Mouse;
-		if (PC->GetMousePosition(Mouse.X, Mouse.Y))
+		if (!bDragging && !bGamepad && bAbsoluteMouse)
+		{
+			const FIntPoint Pixel(FMath::Clamp(FMath::RoundToInt(ScreenPosition.X), Bounds.Min.X, Bounds.Max.X - 1),
+			    FMath::Clamp(FMath::RoundToInt(ScreenPosition.Y), Bounds.Min.Y, Bounds.Max.Y - 1));
+			PC->SetMouseLocation(Pixel.X, Pixel.Y);
+			LastMousePosition = ScreenPosition = FVector2D(Pixel);
+			LastCursorUpdateFrame = GFrameCounter;
+		}
+		else if (PC->GetMousePosition(Mouse.X, Mouse.Y))
 		{
 			LastMousePosition = Mouse;
-			if (!bGamepad && (PC->bShowMouseCursor || !PC->GetLocalPlayer()->ViewportClient->Viewport->HasMouseCapture())) ScreenPosition = Mouse;
+			if (bDragging && !bGamepad && bAbsoluteMouse) ScreenPosition = Mouse;
 		}
 		bHasScreenPosition = true;
 		if (!bDraggingAim)
@@ -139,8 +149,8 @@ void UThrowAimComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	{
 		if (bHasAimTarget)
 		{
-			const FVector ToTarget = (AimTarget - Pawn->GetActorLocation()).GetSafeNormal2D();
-			if (!ToTarget.IsNearlyZero()) AimDirection = ToTarget;
+			const FVector ToTarget = AimTarget - Pawn->GetActorLocation();
+			if (ToTarget.SizeSquared2D() > FMath::Square(10.0)) AimDirection = ToTarget.GetSafeNormal2D();
 		}
 		const FRotator Target(0, AimDirection.Rotation().Yaw, 0);
 		Pawn->SetActorRotation(FMath::RInterpTo(Pawn->GetActorRotation(), Target, DeltaTime, TurnSpeed));
@@ -218,7 +228,7 @@ void UThrowAimComponent::UpdateAim(APlayerController& Controller, float DeltaTim
 		LastCursorUpdateFrame = GFrameCounter;
 		bStickMoved = false;
 	}
-	else if (!bGamepad && bAbsoluteMouse && bHasMouse)
+	else if (!bGamepad && bAbsoluteMouse && bHasMouse && bHasAimTarget)
 	{
 		ScreenPosition = Mouse;
 	}

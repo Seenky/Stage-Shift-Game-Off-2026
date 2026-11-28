@@ -39,6 +39,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Character|Appearance")
 	void ApplyAppearance(const FStageShiftCharacterAppearance& Appearance);
+	void SetAppearancePreset(UStageShiftCharacterPreset* Preset);
 
 protected:
 	virtual void OnConstruction(const FTransform& Transform) override;

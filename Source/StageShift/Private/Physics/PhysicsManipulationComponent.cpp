@@ -613,7 +613,7 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 {
 	UPrimitiveComponent* Component = ManipulatedComponent.Get();
 	const bool bCarry = bCarryAttached;
-	const bool bThrow = Component && bCarry && !bCancelled && HoldDuration > TapDuration && IsValid(GetOwner()) && GetWorld();
+	const bool bThrow = Component && bCarry && !bCancelled && IsThrowCharged(HoldDuration) && IsValid(GetOwner()) && GetWorld();
 	const FThrowAim Aim = ThrowAim;
 	const FVector Center = bThrow ? Component->GetComponentTransform().TransformPosition(LocalCarryCenter) : FVector::ZeroVector;
 	const FVector Adjustment = bThrow ? GetThrowReleaseAdjustment(*Component, Center) : FVector::ZeroVector;
@@ -635,6 +635,10 @@ void UPhysicsManipulationComponent::EndManipulation(float HoldDuration, bool bCa
 				Component->SetWorldLocation(Component->GetComponentLocation() + Adjustment, false, nullptr, ETeleportType::TeleportPhysics);
 			Component->SetPhysicsLinearVelocity(Velocity);
 			if (auto* Prop = Cast<AStagePhysicsActor>(Component->GetOwner())) Prop->WatchThrownProp(GetOwner());
+		}
+		else if (!bCancelled)
+		{
+			if (auto* Prop = Cast<AStagePhysicsActor>(Component->GetOwner())) Prop->IgnoreThrowerDuringRelease(*GetOwner());
 		}
 	}
 }
@@ -785,7 +789,7 @@ bool UPhysicsManipulationComponent::PredictThrow(float HoldDuration, TArray<FVec
     bool* bOutBlocked, bool* bOutUsesHighArc) const
 {
 	UPrimitiveComponent* Component = ManipulatedComponent.Get();
-	if (!Component || !bCarryAttached || !bWasSimulatingPhysics || HoldDuration <= TapDuration || !GetWorld()) return false;
+	if (!Component || !bCarryAttached || !bWasSimulatingPhysics || !IsThrowCharged(HoldDuration) || !GetWorld()) return false;
 
 	const FVector Center = Component->GetComponentTransform().TransformPosition(LocalCarryCenter);
 	const FVector Start = Center + GetThrowReleaseAdjustment(*Component, Center);

@@ -122,6 +122,12 @@ void AStageShiftCharacter::ApplyAppearance(const FStageShiftCharacterAppearance&
 	OutfitMesh->SetLeaderPoseComponent(GetMesh());
 }
 
+void AStageShiftCharacter::SetAppearancePreset(UStageShiftCharacterPreset* Preset)
+{
+	AppearancePreset = Preset;
+	if (AppearancePreset && IsActorInitialized()) ApplyAppearance(GetPresetAppearance());
+}
+
 void AStageShiftCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();

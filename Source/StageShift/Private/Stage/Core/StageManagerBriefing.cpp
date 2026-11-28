@@ -4,6 +4,7 @@
 #include "Components/Button.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Stage/Core/Data/StageDataAsset.h"
 #include "UI/StageBriefingWidget.h"
 
@@ -69,7 +70,13 @@ bool AStageManager::ContinueSceneBriefing(FText& OutError)
 {
 	if (bShowingProductionResult)
 	{
+		if (ResultReturnLevel.IsNull())
+		{
+			OutError = NSLOCTEXT("StageBriefing", "MissingResultReturnLevel", "Укажи карту хаба в Result Return Level.");
+			return false;
+		}
 		CloseSceneBriefing();
+		UGameplayStatics::OpenLevelBySoftObjectPtr(this, ResultReturnLevel);
 		OutError = FText::GetEmpty();
 		return true;
 	}

@@ -37,6 +37,8 @@ public:
 	    FSoftObjectPath(TEXT("/Game/DEV/UI/StageSignals/W_StageBriefing.W_StageBriefing_C")));
 	UFUNCTION(BlueprintCallable, Category = "Briefing") bool ContinueSceneBriefing(FText& OutError);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Production") TObjectPtr<UStageProductionDataAsset> ConfiguredProduction;
+	UPROPERTY(EditAnywhere, Category = "Production|Result")
+	TSoftObjectPtr<UWorld> ResultReturnLevel = TSoftObjectPtr<UWorld>(FSoftObjectPath(TEXT("/Game/LVL/Hub/LVL_Hub.LVL_Hub")));
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Production") TSoftObjectPtr<AStageTurntable> Turntable;
 	UPROPERTY(EditInstanceOnly, Category = "Production|Curtain") TSoftObjectPtr<AStageCurtainRail> CurtainRail;
 	UPROPERTY(EditAnywhere, Category = "Production|Curtain") TObjectPtr<USoundBase> OpeningOverdueSound;

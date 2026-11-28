@@ -32,6 +32,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction")
 	void EndManipulation(float HoldDuration, bool bCancelled);
+	bool IsThrowCharged(float HoldDuration) const { return HoldDuration > TapDuration; }
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction")
 

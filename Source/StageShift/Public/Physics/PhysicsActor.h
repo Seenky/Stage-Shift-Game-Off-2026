@@ -11,6 +11,7 @@
 #include "PhysicsActor.generated.h"
 
 class UPhysicsManipulationComponent;
+class ACharacter;
 class AStagePhysicsActor;
 class AStageCurtainRail;
 
@@ -82,7 +83,8 @@ private:
 	int32 GetPickupOutlineMask(bool bFocused) const;
 	void ConfigureCharacterContact();
 	void StopWatchingThrow();
-	void IgnoreThrowerDuringRelease(const AActor& Source);
+	void IgnoreThrowerDuringRelease(AActor& Source);
+	void CheckThrowerClearance();
 	void RestoreThrowerCollision();
 	bool HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver, FHitResult* OutBlocker = nullptr) const;
 	UFUNCTION()
@@ -90,6 +92,8 @@ private:
 	    FVector NormalImpulse, const FHitResult& Hit);
 
 	FTimerHandle ThrowerCollisionTimer;
+	TWeakObjectPtr<ACharacter> ReleaseCharacter;
+	bool bAddedReleaseMoveIgnore = false;
 	TWeakObjectPtr<AActor> Thrower;
 	TWeakObjectPtr<AActor> IgnoredCatchActor;
 	FVector PreviousFlightPosition;

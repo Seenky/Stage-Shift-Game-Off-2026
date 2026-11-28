@@ -2,10 +2,12 @@
 
 #include "AIController.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/Customization/StageShiftCharacterPreset.h"
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Physics/DollPhysicsComponent.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
+#include "Core/StageShiftCharacter.h"
 #include "Core/StageShiftCharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -135,12 +137,17 @@ bool AStageManager::PrepareCurtainCast(const FStageProductionScene& Scene, FText
 			Error = FText::FromString(TEXT("Missing backstage mark for ") + RoleId.ToString());
 			return false;
 		}
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		const AActor* DefaultPerformer = Placement.ActorClass->GetDefaultObject<AActor>();
-		AActor* Performer = GetWorld()->SpawnActor<AActor>(Placement.ActorClass,
-		    CastLocation(*Backstage, DefaultPerformer), CastRotation(*Backstage, DefaultPerformer), Params);
-		if (!Performer || !Performer->FindComponentByClass<UStageMemberComponent>())
+		const FTransform SpawnTransform(CastRotation(*Backstage, DefaultPerformer), CastLocation(*Backstage, DefaultPerformer));
+		AActor* Performer = GetWorld()->SpawnActorDeferred<AActor>(Placement.ActorClass, SpawnTransform, nullptr, nullptr,
+		    ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		if (Performer)
+		{
+			if (auto* Character = Cast<AStageShiftCharacter>(Performer); Character && Placement.AppearancePreset)
+				Character->SetAppearancePreset(Placement.AppearancePreset);
+			Performer->FinishSpawning(SpawnTransform);
+		}
+		if (!IsValid(Performer) || !Performer->FindComponentByClass<UStageMemberComponent>())
 		{
 			if (Performer) Performer->Destroy();
 			Error = FText::FromString(TEXT("Could not spawn stage member ") + RoleId.ToString());

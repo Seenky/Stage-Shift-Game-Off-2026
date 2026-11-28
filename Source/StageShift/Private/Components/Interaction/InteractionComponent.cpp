@@ -17,6 +17,7 @@
 #include "TimerManager.h"
 #include "Misc/ScopeExit.h"
 #include "Physics/PhysicsActor.h"
+#include "Physics/PhysicsManipulationComponent.h"
 #include "DrawDebugHelpers.h"
 
 UInteractionComponent::UInteractionComponent()
@@ -162,6 +163,13 @@ bool UInteractionComponent::TryHandOff()
 void UInteractionComponent::OnInputReleased()
 {
 	if (ActiveResult != EInteractionResult::Active || ReleaseMontageId != INDEX_NONE) return;
+	const auto* Manipulation = GetOwner()->FindComponentByClass<UPhysicsManipulationComponent>();
+	if (Manipulation && Manipulation->IsCarrying() && !Manipulation->IsThrowCharged(GetInteractionHoldDuration()))
+	{
+		FinishInteraction(false);
+		StopInteractionMontage();
+		return;
+	}
 	if (UThrowAimComponent* Aim = GetOwner()->FindComponentByClass<UThrowAimComponent>()) Aim->FreezeAim();
 
 	const FInteractionAnimation* Animation = FindAnimation(ActiveInteraction);

@@ -14,6 +14,8 @@ class USkeletalMesh;
 class USoundAttenuation;
 class USoundBase;
 enum class EStageSoundResult : uint8;
+enum class EStageProductionState : uint8;
+struct FStageEvent;
 struct FStageSoundWindow;
 
 USTRUCT(BlueprintType)
@@ -111,16 +113,25 @@ private:
 	bool IsScenePlaying() const;
 	bool IsInNoticeArea(const FVector& WorldLocation) const;
 	void HandleScoreChanged(int32 Amount);
+	void StartApplause();
+	void TryLaugh(double Cooldown);
 #if WITH_EDITOR
 	void UpdateNoticeOutline();
 #endif
 
 	UFUNCTION()
 	void HandleSoundResult(const FStageSoundWindow& Window, EStageSoundResult Result);
+	UFUNCTION()
+	void HandleProductionPhaseChanged(EStageProductionState State, FName SceneId, int32 SceneIndex);
+	UFUNCTION()
+	void HandleStageFinished(FName StageKey, bool bSucceeded, FText Reason);
+	UFUNCTION()
+	void HandleStageEvent(FStageEvent Event);
 
 	TArray<FViewer> Viewers;
 	TWeakObjectPtr<AStageManager> StageManager;
 	TWeakObjectPtr<AStageSoundControl> SoundControl;
+	TWeakObjectPtr<UAudioComponent> ActiveApplause;
 	TWeakObjectPtr<AActor> Speaker;
 	double PlayerNoticeSeconds = 0.0;
 	double NextFocusCheck = 0.0;
