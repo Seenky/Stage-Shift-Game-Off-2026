@@ -16,6 +16,7 @@ public:
 	virtual bool ExpectsStageProp() const override { return true; }
 	virtual bool AcceptsStageProp(const AActor& Prop) const override;
 	virtual TOptional<TRange<double>> GetPropThrowWindow() const override { return PropThrowWindow; }
+	float GetMaxDistance() const { return MaxDistance; }
 	TConstArrayView<FName> GetPickupTargets() const;
 	void PlayWrongPropLine();
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
@@ -38,7 +39,8 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = "Scenario", meta = (AllowPrivateAccess))
 	FName TargetId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "Advanced", meta = (AllowPrivateAccess, ClampMin = "1.0", Units = "cm"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "Advanced",
+	    meta = (AllowPrivateAccess, ClampMin = "1.0", Units = "cm", ToolTip = "Maximum distance for picking up a prop from the ground or catching it in flight."))
 	float MaxDistance = 150.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Throw Window", meta = (ClampMin = "0.0", Units = "s"))

@@ -73,6 +73,7 @@ public:
 	FVector GetCheatOutAudienceDirection() const;
 
 	const TArray<FStageRootExecution>& GetRootExecutions() const { return RootExecutions; }
+	TConstArrayView<TWeakObjectPtr<UStageMemberComponent>> GetBoundMembers() const { return BoundMembers; }
 	UFUNCTION(BlueprintPure, Category = "Stage|Debug")
 
 	TArray<FStageRootExecution> GetExecutionSnapshot() const { return RootExecutions; }

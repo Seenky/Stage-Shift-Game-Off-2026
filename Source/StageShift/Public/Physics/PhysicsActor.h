@@ -20,6 +20,7 @@ enum class EStagePropTransferResult : uint8
 	HandedOff, Thrown, Caught, Missed, Recovered
 };
 
+// CatchWindowSeconds is kept for existing Blueprint bindings. Zero denotes no per-throw time limit.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FStagePropTransferEvent, AStagePhysicsActor*, Prop, AActor*, From, AActor*, To, EStagePropTransferResult, Result, float, CatchWindowSeconds);
 
 UCLASS()
@@ -68,10 +69,6 @@ protected:
 	EPhysicsInteractionType InteractionType = EPhysicsInteractionType::None;
 	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "1.0", Units = "cm"))
 	float HandoffRange = 185.f;
-	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "1.0", Units = "cm"))
-	float CatchRadius = 65.f;
-	UPROPERTY(EditAnywhere, Category = "Stage|Props", meta = (ClampMin = "0.05", Units = "s"))
-	float CatchWindow = 1.25f;
 
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	TObjectPtr<class USoundBase> ImpactSound;
@@ -87,7 +84,7 @@ private:
 	void StopWatchingThrow();
 	void IgnoreThrowerDuringRelease(const AActor& Source);
 	void RestoreThrowerCollision();
-	bool HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const;
+	bool HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver, FHitResult* OutBlocker = nullptr) const;
 	UFUNCTION()
 	void HandleImpactSound(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
 	    FVector NormalImpulse, const FHitResult& Hit);
@@ -96,7 +93,13 @@ private:
 	TWeakObjectPtr<AActor> Thrower;
 	TWeakObjectPtr<AActor> IgnoredCatchActor;
 	FVector PreviousFlightPosition;
-	double CatchDeadline = 0;
+	struct FCatchDiagnostic
+	{
+		TWeakObjectPtr<AActor> ClosestReceiver;
+		double ClosestDistanceSquared = TNumericLimits<double>::Max();
+		float ClosestMaxDistance = 0.f;
+		bool bLoggedBlocker = false;
+	} CatchDiagnostic;
 	double LastImpactSoundTime = -1.0;
 	bool bMissedThrow = false;
 	FInteractionOutlineStencil PickupOutline;

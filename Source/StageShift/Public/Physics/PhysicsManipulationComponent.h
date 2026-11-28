@@ -42,7 +42,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Physics Interaction|Stage Props")
 	bool CanReceiveStageProp() const;
-	bool CanReceiveStagePropAt(double AcceptedAt, const AActor* Prop = nullptr) const;
+	bool CanReceiveStagePropAt(double AcceptedAt, const AActor* Prop = nullptr, bool bRequirePickupWindow = false) const;
 	UFUNCTION(BlueprintCallable, Category = "Physics Interaction|Stage Props")
 	void SetAcceptStageProps(bool bAccept);
 	UPROPERTY(BlueprintAssignable, Category = "Physics Interaction|Stage Props")
@@ -154,7 +154,7 @@ protected:
 private:
 	friend class AStagePhysicsActor;
 	friend class UStageMemberComponent;
-	bool BeginCatch(class AStagePhysicsActor& Prop, AActor& Source, double ReleasedAt);
+	bool BeginCatch(class AStagePhysicsActor& Prop, AActor& Source);
 	bool TransferCarriedPropTo(UPhysicsManipulationComponent& Receiver);
 	UFUNCTION()
 	void UpdateStagePropReadiness();
@@ -207,7 +207,6 @@ private:
 	TWeakObjectPtr<AActor> CatchSource;
 	FTransform CatchStartTransform;
 	double CatchStartedAt = -1.0;
-	double CatchReleasedAt = 0.0;
 	float CatchReachTime = 0.0f;
 	bool bPickupPending = false;
 	bool bCarryAttached = false;
