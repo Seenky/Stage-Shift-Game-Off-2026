@@ -1,12 +1,19 @@
 #include "Components/Dialogue/DialogueComponent.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/Dialogue/DialogueViewModel.h"
 #include "Components/Dialogue/DialogueBubbleWidget.h"
 
+#include "Components/Dialogue/StageDialogueVoiceLibrary.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "Internationalization/BreakIterator.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/Char.h"
+#include "Sound/SoundAttenuation.h"
+#include "Sound/SoundBase.h"
+#include "Sound/SoundConcurrency.h"
 #include "TimerManager.h"
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
 
@@ -66,6 +73,7 @@ void UDialogueComponent::SetWidgetComponentProperty(FName ComponentProperty)
 void UDialogueComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	bEndingPlay = true;
+	StopVoice();
 	FinishPlayback(EDialogueEndReason::Interrupted);
 	if (UWorld* World = GetWorld())
 	{
@@ -153,6 +161,7 @@ bool UDialogueComponent::PlayLineWithId(const FDialogueLine& Line, FGuid Playbac
 	RevealedLineData.RevealedLetterCount = 0;
 	RevealedLineData.WordStartOffsets.Reset();
 	RevealedLineData.RevealedWordCount = 0;
+	NextVoiceWord = 0;
 	bRevealAllRequested = false;
 
 	TriggeredCueIndices.Reset();
@@ -203,6 +212,7 @@ bool UDialogueComponent::ResumeLine()
 	PlaybackState.PlaybackId = FGuid::NewGuid();
 	ResolvedText = PlaybackState.Line.Text.ToString();
 	RevealedLineData = LastRevealedLineData;
+	NextVoiceWord = RevealedLineData.RevealedWordCount;
 	bRevealAllRequested = false;
 
 	const float Delay = LastRevealDelay;
@@ -241,7 +251,8 @@ bool UDialogueComponent::RevealAllWords()
 	}
 
 	bRevealAllRequested = false;
-	if (NotifyWordsUpTo(ResolvedText.Len()))
+	StopVoice();
+	if (NotifyWordsUpTo(ResolvedText.Len(), false))
 	{
 		BeginHold();
 	}
@@ -249,7 +260,7 @@ bool UDialogueComponent::RevealAllWords()
 	return true;
 }
 
-bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
+bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset, bool bPlayVoice)
 {
 	const FGuid Id = PlaybackState.PlaybackId;
 	while (RevealedLineData.RevealedWordCount < RevealedLineData.WordStartOffsets.Num() && RevealedLineData.WordStartOffsets[RevealedLineData.RevealedWordCount] < EndOffset)
@@ -284,9 +295,80 @@ bool UDialogueComponent::NotifyWordsUpTo(int32 EndOffset)
 				return false;
 			}
 		}
+
+		if (bPlayVoice && !bRevealAllRequested)
+		{
+			PlayVoiceBeat(WordIndex);
+		}
 	}
 
 	return IsValid(this) && PlaybackState.PlaybackId == Id && PlaybackState.Phase == EDialoguePlaybackPhase::Revealing;
+}
+
+bool UDialogueComponent::HasDialogueVoice() const
+{
+	return VoiceLibrary && !VoiceLibrary->GetVoice(VoiceRole).Syllables.IsEmpty();
+}
+
+void UDialogueComponent::PlayVoiceBeat(int32 WordIndex)
+{
+	if (!HasDialogueVoice()) return;
+
+	const double Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastVoiceTime < 0.20) return;
+
+	const TArray<int32>& Starts = RevealedLineData.WordStartOffsets;
+	const auto Ending = [this, &Starts](int32 Index)
+	{
+		const int32 End = Starts.IsValidIndex(Index + 1) ? Starts[Index + 1] : ResolvedText.Len();
+		for (int32 CharIndex = End - 1; CharIndex >= Starts[Index]; --CharIndex)
+		{
+			const TCHAR Character = ResolvedText[CharIndex];
+			if (FChar::IsAlnum(Character)) break;
+			if (Character == '?' || Character == '!' || Character == '.' || Character == ',' || Character == 0x2026)
+				return Character;
+		}
+		return TCHAR{};
+	};
+	const TCHAR PreviousEnding = WordIndex > 0 ? Ending(WordIndex - 1) : TCHAR{};
+	const TCHAR CurrentEnding = Ending(WordIndex);
+	const bool bEmphasis = CurrentEnding == '?' || CurrentEnding == '!';
+	if (WordIndex < NextVoiceWord && !PreviousEnding && !bEmphasis) return;
+
+	const FStageDialogueVoiceProfile& Voice = VoiceLibrary->GetVoice(VoiceRole);
+	TArray<USoundBase*, TInlineAllocator<8>> Choices;
+	USoundBase* PreviousSound = nullptr;
+	for (USoundBase* Syllable : Voice.Syllables)
+	{
+		if (Syllable == LastSyllable.Get()) PreviousSound = Syllable;
+		else if (Syllable) Choices.AddUnique(Syllable);
+	}
+	USoundBase* Sound = Choices.IsEmpty() ? PreviousSound : Choices[FMath::RandHelper(Choices.Num())];
+	AActor* Owner = GetOwner();
+	if (!Sound || Voice.Volume <= 0.f || !Owner || !Owner->GetRootComponent()) return;
+
+	float Pitch = Voice.Pitch * FMath::FRandRange(0.97f, 1.03f);
+	if (CurrentEnding == '?') Pitch *= 1.13f;
+	if (CurrentEnding == '!') Pitch *= 1.07f;
+	if (CurrentEnding == '.' || CurrentEnding == 0x2026) Pitch *= 0.94f;
+	StopVoice();
+	ActiveVoice = UGameplayStatics::SpawnSoundAttached(Sound, Owner->GetRootComponent(), NAME_None, FVector(0.0, 0.0, 45.0),
+		EAttachLocation::KeepRelativeOffset, true, Voice.Volume, Pitch, 0.0f, VoiceLibrary->Attenuation, VoiceLibrary->Concurrency);
+	NextVoiceWord = WordIndex + FMath::Max(1, Voice.WordsPerBeat);
+	if (ActiveVoice.IsValid())
+	{
+		LastSyllable = Sound;
+		LastVoiceTime = Now;
+	}
+}
+
+void UDialogueComponent::StopVoice()
+{
+	if (UAudioComponent* Voice = ActiveVoice.Get())
+	{
+		Voice->FadeOut(0.035f, 0.0f);
+	}
+	ActiveVoice.Reset();
 }
 
 bool UDialogueComponent::StopPlayback()
@@ -312,7 +394,7 @@ void UDialogueComponent::RevealNextLetter()
 	{
 		const int32 EndOffset = RevealedLineData.LetterEndOffsets[RevealedLineData.RevealedLetterCount++];
 
-		if (!NotifyWordsUpTo(EndOffset))
+		if (!NotifyWordsUpTo(EndOffset, true))
 		{
 			return;
 		}
@@ -409,6 +491,8 @@ void UDialogueComponent::FinishPlayback(const EDialogueEndReason EndReason)
 		return;
 	}
 
+	if (EndReason == EDialogueEndReason::Interrupted) StopVoice();
+
 	const FGuid EndedPlaybackId = PlaybackState.PlaybackId;
 
 	const bool bCanResume = EndReason == EDialogueEndReason::Interrupted && PlaybackState.Phase == EDialoguePlaybackPhase::Revealing && !IsPlayingOptionalLine();
@@ -485,6 +569,7 @@ bool UDialogueComponent::ResumeSnapshotWithId(const FDialogueResumeData& Data, F
 	RevealedLineData.WordStartOffsets = MoveTemp(Starts);
 	RevealedLineData.RevealedLetterCount = Data.RevealedLetters;
 	RevealedLineData.RevealedWordCount = Data.RevealedWords;
+	NextVoiceWord = Data.RevealedWords;
 	TriggeredCueIndices = Data.TriggeredCueIndices;
 	bRevealAllRequested = false;
 	PlaybackState.VisibleText = FText::FromString(Text.Left(Data.RevealedLetters > 0 ? RevealedLineData.LetterEndOffsets[Data.RevealedLetters - 1] : 0));

@@ -7,7 +7,10 @@
 #include "Components/ActorComponent.h"
 #include "DialogueComponent.generated.h"
 
+class UAudioComponent;
 class UDialogueBubbleWidget;
+class USoundBase;
+class UStageDialogueVoiceLibrary;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class STAGESHIFT_API UDialogueComponent : public UActorComponent
@@ -23,6 +26,8 @@ public:
 	bool ResumeSnapshotWithId(const FDialogueResumeData& Data, FGuid PlaybackId);
 
 	void SetWidgetComponentProperty(FName ComponentProperty);
+	void SetVoiceRole(FName Role) { VoiceRole = Role; }
+	bool HasDialogueVoice() const;
 
 	virtual void BeginPlay() override;
 
@@ -70,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Settings")
 	TObjectPtr<UDialogueBubbleWidget> DialogueWidgetTemplate;
 
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Audio")
+	TObjectPtr<UStageDialogueVoiceLibrary> VoiceLibrary;
+
 private:
 	struct FRevealedLineData
 	{
@@ -91,7 +99,9 @@ private:
 
 	void RevealNextLetter();
 
-	bool NotifyWordsUpTo(int32 EndOffset);
+	bool NotifyWordsUpTo(int32 EndOffset, bool bPlayVoice);
+	void PlayVoiceBeat(int32 WordIndex);
+	void StopVoice();
 
 	void BeginHold();
 
@@ -122,4 +132,10 @@ private:
 
 	FTimerHandle RevealTimerHandle;
 	FTimerHandle HoldTimerHandle;
+
+	FName VoiceRole;
+	TWeakObjectPtr<UAudioComponent> ActiveVoice;
+	TWeakObjectPtr<USoundBase> LastSyllable;
+	double LastVoiceTime = -1.0;
+	int32 NextVoiceWord = 0;
 };

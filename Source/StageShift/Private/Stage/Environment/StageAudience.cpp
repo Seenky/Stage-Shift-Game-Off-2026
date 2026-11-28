@@ -29,7 +29,9 @@ namespace
 	constexpr int32 PointingViewerCount = 5;
 	constexpr int32 NoticeScorePenaltyPerSecond = 2;
 	constexpr double NoticeTipWidthFraction = .10;
-	constexpr float NoticeMurmurVolume = .65f;
+	constexpr float NoticeMurmurVolume = .55f;
+	constexpr float CurtainOverdueMurmurVolume = .65f;
+	constexpr double MurmurPause = 2.0;
 	constexpr double MurmurGesturePeriod = 4.5;
 	constexpr float LaughDuration = 1.35f;
 	constexpr float ApplauseDuration = 2.55f;
@@ -263,7 +265,6 @@ void AStageAudience::BeginPlay()
 {
 	Super::BeginPlay();
 	if (Viewers.IsEmpty()) RebuildViewers();
-	NoticeMurmurAudio->SetSound(NoticeMurmurSound);
 	NoticeMurmurAudio->AttenuationSettings = LaughAttenuation;
 	StageManager = Cast<AStageManager>(UGameplayStatics::GetActorOfClass(this, AStageManager::StaticClass()));
 	if (StageManager.IsValid()) StageManager->OnScoreChanged.AddUObject(this, &ThisClass::HandleScoreChanged);
@@ -300,6 +301,7 @@ void AStageAudience::UpdateFocus()
 {
 	const UStageDataAsset* Stage = IsScenePlaying() ? StageManager->GetActiveStage() : nullptr;
 	AActor* Next = Stage ? Speaker.Get() : nullptr;
+	bDialogueRevealing = false;
 	if (Stage)
 		for (FName RoleId : Stage->GetRoleOptions())
 		{
@@ -307,7 +309,11 @@ void AStageAudience::UpdateFocus()
 			const auto* Dialogue = Performer ? Performer->FindComponentByClass<UDialogueComponent>() : nullptr;
 			if (!Dialogue || !Dialogue->IsPlaying()) continue;
 			Next = Performer;
-			if (Dialogue->GetPlaybackState().Phase == EDialoguePlaybackPhase::Revealing) break;
+			if (Dialogue->GetPlaybackState().Phase == EDialoguePlaybackPhase::Revealing)
+			{
+				bDialogueRevealing = Dialogue->HasDialogueVoice();
+				break;
+			}
 		}
 	if (Speaker == Next) return;
 	Speaker = Next;
@@ -349,7 +355,8 @@ void AStageAudience::Tick(float DeltaSeconds)
 		Nearest.SetNum(FMath::Min(Nearest.Num(), PointingViewerCount));
 	}
 	const bool bPlayerNoticed = !Nearest.IsEmpty();
-	if (bPlayerNoticed && PlayerNoticedAt < 0.0)
+	const bool bNewNotice = bPlayerNoticed && PlayerNoticedAt < 0.0;
+	if (bNewNotice)
 	{
 		PlayerNoticedAt = Now;
 		StageManager->OnPlayerNoticedByAudience.Broadcast();
@@ -357,28 +364,33 @@ void AStageAudience::Tick(float DeltaSeconds)
 	else if (!bPlayerNoticed) PlayerNoticedAt = -1.0;
 
 	const bool bOpeningOverdue = StageManager.IsValid() && StageManager->IsCurtainOpeningOverdue();
-	const EAudioComponentPlayState MurmurState = NoticeMurmurAudio->GetPlayState();
-	if (NoticeMurmurSound && (bPlayerNoticed || bOpeningOverdue))
+	const bool bNewOverdue = bOpeningOverdue && !bWasOpeningOverdue;
+	bWasOpeningOverdue = bOpeningOverdue;
+	const float Gain = FMath::FInterpTo(MurmurDialogueGain, bDialogueRevealing ? .56f : 1.f, DeltaSeconds, bDialogueRevealing ? 12.f : 6.f);
+	if (Gain != MurmurDialogueGain)
 	{
-		FVector Center = GetActorLocation();
-		if (bPlayerNoticed)
-		{
-			Center = FVector::ZeroVector;
-			for (const auto& Seat : Nearest) Center += Viewers[Seat.Key].Mesh->GetComponentLocation();
-			Center /= Nearest.Num();
-		}
-		Center.Z += 68.0;
-		if (MurmurState == EAudioComponentPlayState::Stopped || MurmurState == EAudioComponentPlayState::FadingOut)
-		{
-			NoticeMurmurAudio->Stop();
-			NoticeMurmurAudio->SetWorldLocation(Center);
-			NoticeMurmurAudio->FadeIn(.12f, NoticeMurmurVolume);
-		}
-		else
-			NoticeMurmurAudio->SetWorldLocation(FMath::VInterpTo(NoticeMurmurAudio->GetComponentLocation(), Center, DeltaSeconds, 6.f));
+		MurmurDialogueGain = Gain;
+		NoticeMurmurAudio->SetVolumeMultiplier(Gain);
 	}
-	else if (MurmurState == EAudioComponentPlayState::Playing || MurmurState == EAudioComponentPlayState::FadingIn)
-		NoticeMurmurAudio->FadeOut(.22f, 0.f);
+	if ((bNewNotice || bNewOverdue) && Now >= NextMurmurAt && !NoticeMurmurAudio->IsPlaying())
+	{
+		USoundBase* Sound = bNewOverdue && CurtainOverdueMurmurSound ? CurtainOverdueMurmurSound.Get() : NoticeMurmurSound.Get();
+		if (Sound && !Sound->IsLooping())
+		{
+			FVector Center = GetActorLocation();
+			if (bNewNotice && !bNewOverdue)
+			{
+				Center = FVector::ZeroVector;
+				for (const auto& Seat : Nearest) Center += Viewers[Seat.Key].Mesh->GetComponentLocation();
+				Center /= Nearest.Num();
+			}
+			Center.Z += 68.0;
+			NoticeMurmurAudio->SetWorldLocation(Center);
+			NoticeMurmurAudio->SetSound(Sound);
+			NoticeMurmurAudio->FadeIn(.05f, bNewOverdue ? CurtainOverdueMurmurVolume : NoticeMurmurVolume);
+			NextMurmurAt = Now + Sound->GetDuration() + MurmurPause;
+		}
+	}
 	for (int32 Index = 0; Index < Viewers.Num(); ++Index)
 	{
 		const bool bPointing = Nearest.ContainsByPredicate([Index](const auto& Seat) { return Seat.Key == Index; });

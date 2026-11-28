@@ -85,12 +85,19 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stage|Audience")
 	TObjectPtr<USoundBase> ApplauseSound;
 
-	UPROPERTY(EditAnywhere, Category = "Stage|Audience", meta = (ToolTip = "Looping reaction played while the audience notices the player."))
+	UPROPERTY(EditAnywhere, Category = "Stage|Audience", meta = (ToolTip = "Short reaction when the audience notices the player."))
 	TObjectPtr<USoundBase> NoticeMurmurSound;
+
+	UPROPERTY(EditAnywhere, Category = "Stage|Audience", meta = (ToolTip = "Short reaction when curtain opening is overdue. Uses the notice reaction when unset."))
+	TObjectPtr<USoundBase> CurtainOverdueMurmurSound;
 
 private:
 	UPROPERTY()
 	TObjectPtr<UAudioComponent> NoticeMurmurAudio;
+	float MurmurDialogueGain = 1.f;
+	double NextMurmurAt = 0.0;
+	bool bWasOpeningOverdue = false;
+	bool bDialogueRevealing = false;
 
 	struct FViewer
 	{

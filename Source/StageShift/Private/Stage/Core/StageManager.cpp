@@ -1,4 +1,5 @@
 #include "Stage/Core/StageManager.h"
+#include "Components/Dialogue/DialogueComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Engine/World.h"
 #include "Stage/Core/Data/StageDataAsset.h"
@@ -142,7 +143,11 @@ bool AStageManager::StartStageWithBindings(
 	Members.Reset();
 	BoundMembers.Reset();
 	for (const auto& Pair : Resolved)
+	{
 		Members.Add(Pair.Key, Pair.Value);
+		if (auto* Dialogue = Pair.Value->FindComponentByClass<UDialogueComponent>())
+			Dialogue->SetVoiceRole(Pair.Key);
+	}
 	for (auto* Member : PreparedMembers)
 	{
 		BoundMembers.Add(Member);
@@ -577,6 +582,10 @@ void AStageManager::CleanupStage()
 		if (Member.IsValid()) Member->OnMemberFinished.RemoveDynamic(this, &AStageManager::HandleMemberFinished);
 	RootExecutions.Reset();
 	AccountedCommands.Reset();
+	for (const auto& Pair : Members)
+		if (AActor* Performer = Pair.Value.Get())
+			if (auto* Dialogue = Performer->FindComponentByClass<UDialogueComponent>())
+				Dialogue->SetVoiceRole(NAME_None);
 	Members.Reset();
 	BoundMembers.Reset();
 	CurrentStepResults.Reset();
