@@ -41,6 +41,8 @@ public:
 	UPROPERTY(EditInstanceOnly, Category = "Production|Curtain") TSoftObjectPtr<AStageCurtainRail> CurtainRail;
 	UPROPERTY(EditAnywhere, Category = "Production|Curtain") TObjectPtr<USoundBase> OpeningOverdueSound;
 	UPROPERTY(BlueprintAssignable, Category = "Production|Curtain") FStageOpeningOverdue OnOpeningOverdue;
+	FSimpleMulticastDelegate OnPlayerNoticedByAudience;
+	bool IsCurtainOpeningOverdue() const;
 	bool CanMoveCurtain() const;
 	bool CanUseTurntable() const;
 	void NotifyTurntableRotationStarted();
@@ -71,6 +73,7 @@ public:
 	FVector GetCheatOutAudienceDirection() const;
 
 	const TArray<FStageRootExecution>& GetRootExecutions() const { return RootExecutions; }
+	TConstArrayView<TWeakObjectPtr<UStageMemberComponent>> GetBoundMembers() const { return BoundMembers; }
 	UFUNCTION(BlueprintPure, Category = "Stage|Debug")
 
 	TArray<FStageRootExecution> GetExecutionSnapshot() const { return RootExecutions; }

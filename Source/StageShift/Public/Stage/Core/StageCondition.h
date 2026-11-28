@@ -7,6 +7,7 @@
 
 class AStageManager;
 class UStageDataAsset;
+class UStageMemberCommand;
 
 UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew, DefaultToInstanced)
 class STAGESHIFT_API UStageCondition : public UObject
@@ -30,10 +31,29 @@ public:
 	FName RoleId;
 	// Empty keeps the existing "any carried item" behavior.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition", meta = (GetOptions = "GetTargetOptions")) FName TargetId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Condition", meta = (GetOptions = "GetTargetOptions", ToolTip = "When set, accept any listed item instead of Target Id."))
+	TArray<FName> TargetIds;
 	UFUNCTION() TArray<FName> GetTargetOptions() const;
 
 	UFUNCTION()
 	TArray<FName> GetRoleOptions() const;
+	virtual bool Evaluate_Implementation(AStageManager* Manager) const override;
+	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
+};
+
+UCLASS(meta = (DisplayName = "Step Command Started"))
+class STAGESHIFT_API UStageStepCommandStartedCondition : public UStageCondition
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, Category = "Condition", meta = (GetOptions = "GetStepOptions"))
+	FName StepId;
+
+	UPROPERTY(EditAnywhere, Category = "Condition")
+	TSubclassOf<UStageMemberCommand> CommandClass;
+
+	UFUNCTION() TArray<FName> GetStepOptions() const;
 	virtual bool Evaluate_Implementation(AStageManager* Manager) const override;
 	virtual void ValidateDefinition(const UStageDataAsset* Data, const FString& Path, TArray<FString>& Errors) const override;
 };

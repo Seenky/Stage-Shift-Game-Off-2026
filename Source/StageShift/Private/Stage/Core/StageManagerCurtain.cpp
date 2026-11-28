@@ -52,6 +52,11 @@ AActor* AStageManager::ResolveLevelActor(const FSoftObjectPath& Reference) const
 	return IsValid(Actor) && !Actor->IsActorBeingDestroyed() && Actor->GetWorld() == World ? Actor : nullptr;
 }
 
+bool AStageManager::IsCurtainOpeningOverdue() const
+{
+	return CurtainPhase == ECurtainPhase::Opening && NextOpeningPenaltyAt >= 0.0;
+}
+
 bool AStageManager::CanMoveCurtain() const
 {
 	return ActiveProduction && (CurtainPhase == ECurtainPhase::Opening ||

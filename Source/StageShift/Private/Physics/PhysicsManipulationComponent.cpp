@@ -67,13 +67,13 @@ bool UPhysicsManipulationComponent::CanReceiveStageProp() const
 	return World && CanReceiveStagePropAt(World->GetTimeSeconds());
 }
 
-bool UPhysicsManipulationComponent::CanReceiveStagePropAt(double AcceptedAt, const AActor* Prop) const
+bool UPhysicsManipulationComponent::CanReceiveStagePropAt(double AcceptedAt, const AActor* Prop, bool bRequirePickupWindow) const
 {
 	const AActor* Owner = GetOwner();
 	if (!bAcceptStageProps || bPropPlayEnded || !IsValid(Owner) || Owner->IsActorBeingDestroyed() || !HasBegunPlay() || !CarryPoint.IsValid()
 	    || CarryPoint->GetOwner() != Owner || ManipulatedComponent.IsValid() || GetGrabbedComponent()) return false;
 	const auto* Member = Owner->FindComponentByClass<UStageMemberComponent>();
-	if (Member && !Member->IsWaitingForStageProp(AcceptedAt, Prop)) return false;
+	if (Member ? !Member->IsWaitingForStageProp(AcceptedAt, Prop, bRequirePickupWindow) : bRequirePickupWindow) return false;
 	const auto* Physics = Owner->FindComponentByClass<UPhysicalMontageComponent>();
 	return !Physics || !Physics->IsPhysicsMontageActive();
 }
@@ -166,7 +166,7 @@ void UPhysicsManipulationComponent::WatchPickupPlayback(UAnimInstance& Instance,
 	SetComponentTickEnabled(true);
 }
 
-bool UPhysicsManipulationComponent::BeginCatch(AStagePhysicsActor& Prop, AActor& Source, double ReleasedAt)
+bool UPhysicsManipulationComponent::BeginCatch(AStagePhysicsActor& Prop, AActor& Source)
 {
 	UPrimitiveComponent* Component = Prop.GetStaticMeshComponent();
 	const FHitResult Hit(&Prop, Component, Component->GetComponentLocation(), FVector::UpVector);
@@ -184,7 +184,6 @@ bool UPhysicsManipulationComponent::BeginCatch(AStagePhysicsActor& Prop, AActor&
 	ManipulatedComponent = Component;
 	ManipulatedActor = &Prop;
 	CatchSource = &Source;
-	CatchReleasedAt = ReleasedAt;
 	CatchStartedAt = GetWorld()->GetTimeSeconds();
 	CatchStartTransform = Component->GetComponentTransform();
 	CatchReachTime = CatchReachDuration;
@@ -558,7 +557,7 @@ void UPhysicsManipulationComponent::CompletePickup()
 	AStagePhysicsActor* Prop = Cast<AStagePhysicsActor>(Item);
 	if (Prop) Prop->NotifyPropCarried(GetOwner());
 	OnItemPickedUp.Broadcast(Item);
-	if (bCaught && IsValid(Prop)) Prop->OnPropTransfer.Broadcast(Prop, Source.Get(), GetOwner(), EStagePropTransferResult::Caught, Prop->CatchWindow);
+	if (bCaught && IsValid(Prop)) Prop->OnPropTransfer.Broadcast(Prop, Source.Get(), GetOwner(), EStagePropTransferResult::Caught, 0.f);
 }
 
 void UPhysicsManipulationComponent::UpdateCatch()
@@ -569,7 +568,7 @@ void UPhysicsManipulationComponent::UpdateCatch()
 	const auto* Member = Owner ? Owner->FindComponentByClass<UStageMemberComponent>() : nullptr;
 	const UWorld* World = GetWorld();
 	if (!World || !Component || !CarryPoint.IsValid() || (Physics && Physics->IsPhysicsMontageActive())
-	    || (Member && !Member->IsWaitingForStageProp(CatchReleasedAt, ManipulatedActor.Get())))
+	    || !Member || !Member->IsWaitingForStageProp(CatchStartedAt, ManipulatedActor.Get(), true))
 	{
 		ReleaseComponent();
 		return;

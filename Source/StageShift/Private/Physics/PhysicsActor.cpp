@@ -7,14 +7,18 @@
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/Stage/StageMemberComponent.h"
 #include "Chaos/ChaosEngineInterface.h"
-#include "Engine/OverlapResult.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/BodyInstance.h"
+#include "Stage/Commands/PickUpCommand.h"
+#include "Stage/Core/StageManager.h"
 #include "TimerManager.h"
 #include "Stage/Environment/StageCurtainRail.h"
 #include "StageShift/Public/Physics/PhysicsManipulationComponent.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogStagePropCatch, Log, All);
 
 AStagePhysicsActor::AStagePhysicsActor()
 {
@@ -137,12 +141,15 @@ bool AStagePhysicsActor::IsBeingManipulated() const
 	return Manipulator && Manipulator->GetManipulatedComponent() == GetStaticMeshComponent();
 }
 
-bool AStagePhysicsActor::HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver) const
+bool AStagePhysicsActor::HasClearReach(FVector From, FVector To, const AActor* Source, const AActor* Receiver, FHitResult* OutBlocker) const
 {
+	const UWorld* World = GetWorld();
+	if (!World) return false;
 	FCollisionQueryParams Query(SCENE_QUERY_STAT(StagePropReach), false, this);
 	if (Source) Query.AddIgnoredActor(Source);
 	if (Receiver) Query.AddIgnoredActor(Receiver);
-	return GetWorld() && !GetWorld()->LineTraceTestByChannel(From, To, ECC_Visibility, Query);
+	if (OutBlocker) return !World->LineTraceSingleByChannel(*OutBlocker, From, To, ECC_Visibility, Query);
+	return !World->LineTraceTestByChannel(From, To, ECC_Visibility, Query);
 }
 
 bool AStagePhysicsActor::CanHandOff(const AActor* From, const AActor* To) const
@@ -186,22 +193,42 @@ void AStagePhysicsActor::WatchThrownProp(AActor* Source)
 	Thrower = Source;
 	IgnoreThrowerDuringRelease(*Source);
 	PreviousFlightPosition = GetStaticMeshComponent()->GetCenterOfMass();
-	CatchDeadline = GetWorld()->GetTimeSeconds() + CatchWindow;
+	CatchDiagnostic = {};
 	bMissedThrow = false;
 	SetActorTickEnabled(true);
-	OnPropTransfer.Broadcast(this, Source, nullptr, EStagePropTransferResult::Thrown, CatchWindow);
+	OnPropTransfer.Broadcast(this, Source, nullptr, EStagePropTransferResult::Thrown, 0.f);
 }
 
 bool AStagePhysicsActor::IsInCatchFlight() const
 {
-	const UStaticMeshComponent* Body = GetStaticMeshComponent();
+	UStaticMeshComponent* Body = GetStaticMeshComponent();
 	const UWorld* World = GetWorld();
-	return World && Thrower.IsValid() && World->GetTimeSeconds() < CatchDeadline && Body->IsSimulatingPhysics()
-	    && Body->GetPhysicsLinearVelocity().SizeSquared() > FMath::Square(50.0);
+	if (!World || !Thrower.IsValid() || !Body->IsSimulatingPhysics() || !Body->RigidBodyIsAwake()) return false;
+	if (FMath::Abs(Body->GetPhysicsLinearVelocity().Z) > 25.0) return true;
+
+	// Near the apex of a bounce the vertical speed can be as low as on the floor.
+	const FVector Position = Body->GetComponentLocation();
+	FComponentQueryParams Query(SCENE_QUERY_STAT(StagePropSupport), this);
+	Query.bIgnoreTouches = true;
+	TArray<FHitResult> Hits;
+	World->ComponentSweepMulti(Hits, Body, Position + FVector::UpVector, Position - FVector::UpVector * 3.0, Body->GetComponentQuat(), Query);
+	return !Hits.ContainsByPredicate([](const FHitResult& Hit) { return Hit.bBlockingHit && Hit.ImpactNormal.Z > 0.6; });
 }
 
 void AStagePhysicsActor::StopWatchingThrow()
 {
+	if (CatchDiagnostic.ClosestDistanceSquared < TNumericLimits<double>::Max())
+	{
+		const AActor* Receiver = CatchDiagnostic.ClosestReceiver.Get();
+		UE_LOG(LogStagePropCatch, Display, TEXT("Prop[%s] Receiver[%s] Closest CarryPoint: %.1f cm (PickUp MaxDistance %.1f cm)"),
+		    *GetActorNameOrLabel(), Receiver ? *Receiver->GetActorNameOrLabel() : TEXT("None"),
+		    FMath::Sqrt(CatchDiagnostic.ClosestDistanceSquared), CatchDiagnostic.ClosestMaxDistance);
+	}
+	else if (Thrower.IsValid())
+	{
+		UE_LOG(LogStagePropCatch, Display, TEXT("Prop[%s] No receiver ready during the flight"), *GetActorNameOrLabel());
+	}
+	CatchDiagnostic = {};
 	Thrower.Reset();
 	SetActorTickEnabled(false);
 }
@@ -250,13 +277,13 @@ void AStagePhysicsActor::Tick(float DeltaSeconds)
 	if (!World) return;
 	auto* Body = GetStaticMeshComponent();
 	AActor* Source = Thrower.Get();
-	if (!Source || !Body->IsSimulatingPhysics() || World->GetTimeSeconds() >= CatchDeadline)
+	if (!Source || !Body->IsSimulatingPhysics() || !Body->RigidBodyIsAwake())
 	{
 		StopWatchingThrow();
 		if (Source && Body->IsSimulatingPhysics())
 		{
 			bMissedThrow = true;
-			OnPropTransfer.Broadcast(this, Source, nullptr, EStagePropTransferResult::Missed, CatchWindow);
+			OnPropTransfer.Broadcast(this, Source, nullptr, EStagePropTransferResult::Missed, 0.f);
 		}
 		return;
 	}
@@ -268,51 +295,76 @@ void AStagePhysicsActor::Tick(float DeltaSeconds)
 	// Include the upcoming physics step so a fast prop can be secured before contact.
 	const FVector Next = Current + Body->GetPhysicsLinearVelocity() * DeltaSeconds
 	    + FVector(0.0, 0.0, World->GetGravityZ() * 0.5 * FMath::Square(DeltaSeconds));
-	const FVector Midpoint = (Previous + Next) * 0.5;
-	TArray<FOverlapResult> Overlaps;
-	FCollisionQueryParams Query(SCENE_QUERY_STAT(StagePropCatch), false, this);
-	Query.AddIgnoredActor(Source);
-	World->OverlapMultiByObjectType(Overlaps, Midpoint, FQuat::Identity, FCollisionObjectQueryParams(ECC_Pawn),
-	    FCollisionShape::MakeSphere(CatchRadius + FVector::Distance(Previous, Next) * 0.5 + 75.f), Query);
-
 	UPhysicsManipulationComponent* BestReceiver = nullptr;
-	double BestDistance = FMath::Square(CatchRadius);
+	double BestDistance = TNumericLimits<double>::Max();
 	UStageMemberComponent* NearestWrongReceiver = nullptr;
 	double WrongReceiverDistance = BestDistance;
-	const double ReleasedAt = CatchDeadline - CatchWindow;
-	for (const FOverlapResult& Overlap : Overlaps)
+	const double Now = World->GetTimeSeconds();
+	for (TActorIterator<AStageManager> Stage(World); Stage; ++Stage)
 	{
-		AActor* Candidate = Overlap.GetActor();
-		if (Candidate == IgnoredCatchActor.Get()) continue;
-		auto* Receiver = IsValid(Candidate) ? Candidate->FindComponentByClass<UPhysicsManipulationComponent>() : nullptr;
-		// A throw released on time may still be in flight after the cue closes.
-		if (!Receiver || !Receiver->CanReceiveStagePropAt(ReleasedAt)) continue;
-		const FVector Hand = Receiver->GetCarryPoint()->GetComponentLocation();
-		const FVector Intercept = FMath::ClosestPointOnSegment(Hand, Previous, Next);
-		const double Distance = FVector::DistSquared(Hand, Intercept);
-		if (Distance >= BestDistance || !HasClearReach(Current, Intercept, Source, Candidate)
-		    || !HasClearReach(Intercept, Hand, Source, Candidate) || !HasClearReach(Current, Hand, Source, Candidate)) continue;
-		if (!Receiver->CanReceiveStagePropAt(ReleasedAt, this))
+		for (const auto& BoundMember : Stage->GetBoundMembers())
 		{
-			if (Distance < WrongReceiverDistance)
+			auto* Member = BoundMember.Get();
+			AActor* Candidate = Member ? Member->GetOwner() : nullptr;
+			if (!IsValid(Candidate) || Candidate == Source || Candidate == IgnoredCatchActor.Get()) continue;
+			const auto* MatchingPickUp = Member->GetOpenPickUpCommand(Now, this);
+			const auto* PickUp = MatchingPickUp ? MatchingPickUp : Member->GetOpenPickUpCommand(Now);
+			if (!PickUp) continue;
+			auto* Receiver = Candidate->FindComponentByClass<UPhysicsManipulationComponent>();
+			if (!Receiver || !Receiver->CanReceiveStagePropAt(Now, nullptr, true)) continue;
+
+			const float MaxDistance = PickUp->GetMaxDistance();
+			const FVector Hand = Receiver->GetCarryPoint()->GetComponentLocation();
+			const FVector Intercept = FMath::ClosestPointOnSegment(Hand, Previous, Next);
+			const double Distance = FVector::DistSquared(Hand, Intercept);
+			if (Distance < CatchDiagnostic.ClosestDistanceSquared)
 			{
-				NearestWrongReceiver = Candidate->FindComponentByClass<UStageMemberComponent>();
-				WrongReceiverDistance = Distance;
+				CatchDiagnostic.ClosestDistanceSquared = Distance;
+				CatchDiagnostic.ClosestReceiver = Candidate;
+				CatchDiagnostic.ClosestMaxDistance = MaxDistance;
 			}
-			continue;
+			if (Distance > FMath::Square(static_cast<double>(MaxDistance)) || Distance >= BestDistance) continue;
+
+			const auto HasClearCatchSegment = [&](const FVector& From, const FVector& To, const TCHAR* Segment)
+			{
+				FHitResult Blocker;
+				if (HasClearReach(From, To, Source, Candidate, CatchDiagnostic.bLoggedBlocker ? nullptr : &Blocker)) return true;
+				if (Blocker.bBlockingHit)
+				{
+					const AActor* Obstacle = Blocker.GetActor();
+					UE_LOG(LogStagePropCatch, Display,
+					    TEXT("Prop[%s] Receiver[%s] CarryPoint: %.1f cm (PickUp MaxDistance %.1f cm) / Trace[%s] blocked by Actor[%s] Component[%s] at %s"),
+					    *GetActorNameOrLabel(), *Candidate->GetActorNameOrLabel(), FMath::Sqrt(Distance), MaxDistance, Segment,
+					    Obstacle ? *Obstacle->GetActorNameOrLabel() : TEXT("None"), *GetNameSafe(Blocker.GetComponent()), *Blocker.ImpactPoint.ToCompactString());
+					CatchDiagnostic.bLoggedBlocker = true;
+				}
+				return false;
+			};
+			if (!HasClearCatchSegment(Current, Intercept, TEXT("Flight to Intercept"))
+			    || !HasClearCatchSegment(Intercept, Hand, TEXT("Intercept to CarryPoint"))
+			    || !HasClearCatchSegment(Current, Hand, TEXT("Flight to CarryPoint"))) continue;
+			if (!MatchingPickUp)
+			{
+				if (Distance < WrongReceiverDistance)
+				{
+					NearestWrongReceiver = Member;
+					WrongReceiverDistance = Distance;
+				}
+				continue;
+			}
+			BestReceiver = Receiver;
+			BestDistance = Distance;
 		}
-		BestReceiver = Receiver;
-		BestDistance = Distance;
 	}
 	if (!BestReceiver)
 	{
-		if (NearestWrongReceiver) NearestWrongReceiver->HandleWrongStageProp(ReleasedAt);
+		if (NearestWrongReceiver) NearestWrongReceiver->HandleWrongStageProp(Now);
 		return;
 	}
 
 	ActiveManipulator = BestReceiver;
 	RestoreThrowerCollision();
-	if (!BestReceiver->BeginCatch(*this, *Source, ReleasedAt))
+	if (!BestReceiver->BeginCatch(*this, *Source))
 	{
 		ActiveManipulator.Reset();
 		return;
@@ -324,7 +376,7 @@ void AStagePhysicsActor::NotifyPropCarried(AActor* Carrier)
 {
 	if (!bMissedThrow) return;
 	bMissedThrow = false;
-	OnPropTransfer.Broadcast(this, nullptr, Carrier, EStagePropTransferResult::Recovered, CatchWindow);
+	OnPropTransfer.Broadcast(this, nullptr, Carrier, EStagePropTransferResult::Recovered, 0.f);
 }
 
 EInteractionResult AStagePhysicsActor::OnInteraction_Implementation(const FInteractionContext& InteractionContext)

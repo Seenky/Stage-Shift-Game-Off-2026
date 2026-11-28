@@ -28,8 +28,9 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 	bool IsPhysicallyBlocked() const;
-	bool IsWaitingForStageProp(double AcceptedAt, const AActor* Prop = nullptr) const;
+	bool IsWaitingForStageProp(double AcceptedAt, const AActor* Prop = nullptr, bool bRequirePickupWindow = false) const;
 	const UPickUpCommand* GetActivePickUpCommand() const;
+	const UPickUpCommand* GetOpenPickUpCommand(double AcceptedAt, const AActor* Prop = nullptr) const;
 	void HandleWrongStageProp(double AcceptedAt);
 	TOptional<TRange<double>> GetStagePropThrowWindow() const;
 	void ShowPartnerInteractionPose();
@@ -122,7 +123,7 @@ private:
 	bool CanRememberStageMark(const UStageMemberCommand* SourceCommand) const;
 	void UpdateStageMarkStatus();
 	void UpdateStagePropReadiness() const;
-	UStageMemberCommand* FindStagePropCommand(double AcceptedAt, const AActor* Prop = nullptr) const;
+	UStageMemberCommand* FindStagePropCommand(double AcceptedAt, const AActor* Prop, bool bRequirePickupWindow) const;
 	void PumpCommands();
 	void UpdateExecutions();
 	void AdvanceExecution(UStageMemberCommand* Command);
