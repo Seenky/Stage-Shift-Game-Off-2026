@@ -93,7 +93,7 @@ protected:
 
 private:
 	void HandleScoreChanged(int32 Amount);
-	UFUNCTION() void HandleOpeningOverdue();
+	UFUNCTION() void HandleAudienceMurmur();
 	void ShowAudienceReaction(bool bPositive);
 	void PositionActorTags(const FGeometry& Geometry);
 	void UpdatePickupCueOutline(TConstArrayView<AStagePhysicsActor*> Props = {});

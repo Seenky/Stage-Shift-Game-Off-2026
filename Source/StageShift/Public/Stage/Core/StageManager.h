@@ -41,6 +41,8 @@ public:
 	UPROPERTY(EditInstanceOnly, Category = "Production|Curtain") TSoftObjectPtr<AStageCurtainRail> CurtainRail;
 	UPROPERTY(EditAnywhere, Category = "Production|Curtain") TObjectPtr<USoundBase> OpeningOverdueSound;
 	UPROPERTY(BlueprintAssignable, Category = "Production|Curtain") FStageOpeningOverdue OnOpeningOverdue;
+	FSimpleMulticastDelegate OnPlayerNoticedByAudience;
+	bool IsCurtainOpeningOverdue() const;
 	bool CanMoveCurtain() const;
 	bool CanUseTurntable() const;
 	void NotifyTurntableRotationStarted();

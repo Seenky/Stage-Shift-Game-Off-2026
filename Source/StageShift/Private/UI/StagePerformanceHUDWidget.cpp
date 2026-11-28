@@ -110,7 +110,8 @@ void UStagePerformanceHUDWidget::SetSource(AStageManager& Stage)
 {
 	Source = &Stage;
 	Stage.OnScoreChanged.AddUObject(this, &ThisClass::HandleScoreChanged);
-	Stage.OnOpeningOverdue.AddUniqueDynamic(this, &ThisClass::HandleOpeningOverdue);
+	Stage.OnOpeningOverdue.AddUniqueDynamic(this, &ThisClass::HandleAudienceMurmur);
+	Stage.OnPlayerNoticedByAudience.AddUObject(this, &ThisClass::HandleAudienceMurmur);
 }
 
 void UStagePerformanceHUDWidget::Refresh(const AStageManager& Stage, TConstArrayView<FStagePerformanceCue> Cues, TConstArrayView<FName> CastOrder)
@@ -235,7 +236,7 @@ void UStagePerformanceHUDWidget::HandleScoreChanged(int32 Amount)
 	ShowAudienceReaction(Amount > 0);
 }
 
-void UStagePerformanceHUDWidget::HandleOpeningOverdue()
+void UStagePerformanceHUDWidget::HandleAudienceMurmur()
 {
 	ShowAudienceReaction(false);
 }
@@ -340,7 +341,8 @@ void UStagePerformanceHUDWidget::NativeDestruct()
 	if (AStageManager* Stage = Source.Get())
 	{
 		Stage->OnScoreChanged.RemoveAll(this);
-		Stage->OnOpeningOverdue.RemoveDynamic(this, &ThisClass::HandleOpeningOverdue);
+		Stage->OnOpeningOverdue.RemoveDynamic(this, &ThisClass::HandleAudienceMurmur);
+		Stage->OnPlayerNoticedByAudience.RemoveAll(this);
 	}
 	Source.Reset();
 	Super::NativeDestruct();

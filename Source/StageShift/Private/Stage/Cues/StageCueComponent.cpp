@@ -79,24 +79,32 @@ float ElapsedFractionAt(const FStageCueRuntime& Cue, double Time)
 	    : 0.0f;
 }
 
-TOptional<TRange<double>> GetActiveThrowWindow(const AActor& Recipient)
+EStageCueWindowPhase GetPropSignalPhase(const FStageCueRuntime& Cue, const AStageManager* Stage, const AActor& Recipient,
+    double Now, TOptional<TRange<double>>& ActiveWindow)
 {
+	if (Cue.View.State == EStageCueState::Upcoming) return EStageCueWindowPhase::Waiting;
 	const auto* Member = Recipient.FindComponentByClass<UStageMemberComponent>();
-	return Member ? Member->GetStagePropThrowWindow() : TOptional<TRange<double>>{};
-}
+	if (const auto* StepPickup = Stage ? FindCuePickup(*Stage, Cue.Definition, Recipient) : nullptr)
+	{
+		const auto* RunningPickup = Member ? Member->GetActivePickUpCommand() : nullptr;
+		// Each step has its own prepared command tree, including nested pickups.
+		if (!RunningPickup || RunningPickup->GetRootCommand() != StepPickup->GetRootCommand())
+			return Cue.PropThrowWindow.IsSet() || StepPickup->GetState() == EStageExecutionState::Finished
+			    ? EStageCueWindowPhase::Closed : EStageCueWindowPhase::Waiting;
+		ActiveWindow = RunningPickup->GetPropThrowWindow();
+	}
+	else if (Member) ActiveWindow = Member->GetStagePropThrowWindow();
 
-EStageCueWindowPhase GetPropSignalPhase(const FStageCueRuntime& Cue, const AActor& Recipient,
-    const TOptional<TRange<double>>& ActiveWindow, double Now)
-{
 	const auto& Window = ActiveWindow.IsSet() ? ActiveWindow : Cue.PropThrowWindow;
 	if (Window.IsSet() && (!ActiveWindow.IsSet() || Now >= Window->GetUpperBoundValue())) return EStageCueWindowPhase::Closed;
 	const auto* Manipulation = Recipient.FindComponentByClass<UPhysicsManipulationComponent>();
 	if (!Manipulation) return EStageCueWindowPhase::Hidden;
-	return Cue.View.State != EStageCueState::Upcoming && Manipulation->CanReceiveStageProp()
+	return (!Window.IsSet() || Now >= Window->GetLowerBoundValue()) && Manipulation->CanReceiveStageProp()
 	    ? EStageCueWindowPhase::Open : EStageCueWindowPhase::Waiting;
 }
 
-void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UTexture2D* Icon, const AActor* Recipient, double Now, bool bShowPreparation)
+void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UTexture2D* Icon,
+    const AStageManager* Stage, const AActor* Recipient, double Now, bool bShowPreparation)
 {
 	const bool bTimed = Cue.View.bHasDeadline && !Cue.bSoundWindowClosed;
 	float Start = 0.0f;
@@ -149,14 +157,14 @@ void PresentWorldSignal(UStageCueSignalWidget& Widget, FStageCueRuntime& Cue, UT
 	}
 	else if (Cue.Definition.Kind == EStageCueKind::Props && IsValid(Recipient))
 	{
-		const auto ActiveWindow = GetActiveThrowWindow(*Recipient);
+		TOptional<TRange<double>> ActiveWindow;
+		Phase = GetPropSignalPhase(Cue, Stage, *Recipient, Now, ActiveWindow);
 		if (ActiveWindow.IsSet()) Cue.PropThrowWindow = ActiveWindow;
 		if (bTimed && Cue.PropThrowWindow.IsSet())
 		{
 			Start = ElapsedFractionAt(Cue, Cue.PropThrowWindow->GetLowerBoundValue());
 			End = ElapsedFractionAt(Cue, Cue.PropThrowWindow->GetUpperBoundValue());
 		}
-		Phase = GetPropSignalPhase(Cue, *Recipient, ActiveWindow, Now);
 		switch (Phase)
 		{
 		case EStageCueWindowPhase::Closed: Caption = NSLOCTEXT("StageCues", "PropWindowClosed", "ПОЗДНО"); break;
@@ -512,8 +520,11 @@ TArray<int32> UStageCueComponent::GetVisibleIndices(bool bSignalsOnly, bool bDed
 		{
 			if (bPreparing) continue;
 			if (RecipientMarker && Manager.IsValid())
-				if (const auto* Recipient = Manager->GetParticipant(RecipientMarker->BindingId); IsValid(Recipient)
-				    && GetPropSignalPhase(Cue, *Recipient, GetActiveThrowWindow(*Recipient), Now) == EStageCueWindowPhase::Waiting) continue;
+				if (const auto* Recipient = Manager->GetParticipant(RecipientMarker->BindingId); IsValid(Recipient))
+				{
+					TOptional<TRange<double>> ActiveWindow;
+					if (GetPropSignalPhase(Cue, Manager.Get(), *Recipient, Now, ActiveWindow) == EStageCueWindowPhase::Waiting) continue;
+				}
 		}
 		if (bSignalsOnly && !Cue.bKeepUntilStepEnds && !bPreparing)
 		{
@@ -691,9 +702,9 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 		const bool bSoundCompleted = Cue.bSoundWindowClosed && Cue.bSoundSucceeded;
 		if (bSoundCompleted && !Cue.bKeepUntilStepEnds) continue;
 
-		AActor* Actor = nullptr;
-		if (const FStageCueTarget* Recipient = Cue.Definition.Targets.FindByPredicate([](const FStageCueTarget& Target)
-		    { return Target.Type == EStageCueMarkerType::Recipient; })) Actor = Stage.GetParticipant(Recipient->BindingId);
+		const auto* Recipient = Cue.Definition.Targets.FindByPredicate([](const FStageCueTarget& Target)
+		    { return Target.Type == EStageCueMarkerType::Recipient; });
+		AActor* Actor = Recipient ? Stage.GetParticipant(Recipient->BindingId) : nullptr;
 		if (!Actor && !Cue.Definition.SubjectRoleId.IsNone()) Actor = Stage.GetParticipant(Cue.Definition.SubjectRoleId);
 		if (!Actor)
 			if (const UStageMemberComponent* Performer = Cue.Performer.Get()) Actor = Performer->GetOwner();
@@ -718,18 +729,20 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 			WindowEnd = ElapsedFractionAt(Cue, Cue.SoundLatestAt);
 			if (Phase != EStageCueWindowPhase::Closed && Now < Cue.SoundEarliestAt) Phase = EStageCueWindowPhase::Waiting;
 		}
-		else if (Kind == EStageCueKind::Props && Number > 0)
+		else if (Kind == EStageCueKind::Props && IsValid(Actor))
 		{
-			const auto ActiveWindow = GetActiveThrowWindow(*Actor);
+			TOptional<TRange<double>> ActiveWindow;
+			const EStageCueWindowPhase PropPhase = GetPropSignalPhase(Cue, &Stage, *Actor, Now, ActiveWindow);
 			if (ActiveWindow.IsSet()) Cue.PropThrowWindow = ActiveWindow;
-			const EStageCueWindowPhase PropPhase = GetPropSignalPhase(Cue, *Actor, ActiveWindow, Now);
-			if (Phase != EStageCueWindowPhase::Closed && PropPhase != EStageCueWindowPhase::Hidden) Phase = PropPhase;
+			if (Phase != EStageCueWindowPhase::Closed) Phase = PropPhase;
 			if (Cue.PropThrowWindow.IsSet())
 			{
 				WindowStart = ElapsedFractionAt(Cue, Cue.PropThrowWindow->GetLowerBoundValue());
 				WindowEnd = ElapsedFractionAt(Cue, Cue.PropThrowWindow->GetUpperBoundValue());
 			}
 		}
+		else if (Kind == EStageCueKind::Props && Recipient && Phase != EStageCueWindowPhase::Closed)
+			Phase = EStageCueWindowPhase::Hidden;
 		if (Cue.View.State == EStageCueState::Completed || bSoundCompleted || Cue.bDisplayPaused)
 			Phase = EStageCueWindowPhase::Waiting;
 		else if (Cue.bActionEnded && !Cue.bSoundWindowClosed)
@@ -907,7 +920,7 @@ void UStageCueComponent::UpdateWorldSignals()
 		}
 		Signal->SetWorldLocation(Location);
 		if (auto* Widget = Cast<UStageCueSignalWidget>(Signal->GetUserWidgetObject()))
-			PresentWorldSignal(*Widget, Cue, Icon, Recipient, GetWorld()->GetTimeSeconds(), bShowPreparation);
+			PresentWorldSignal(*Widget, Cue, Icon, Manager.Get(), Recipient, GetWorld()->GetTimeSeconds(), bShowPreparation);
 		FVector2D ScreenCenter;
 		if (Player->ProjectWorldLocationToScreen(Location, ScreenCenter))
 		{
