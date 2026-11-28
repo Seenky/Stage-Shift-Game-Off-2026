@@ -5,8 +5,10 @@
 #include "StageTurntable.generated.h"
 
 class AStagePhysicsActor;
+class UAudioComponent;
 class UStaticMeshComponent;
 class AStageManager;
+class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStageTurntableArrived, int32, SectorIndex);
 
@@ -57,7 +59,13 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UPROPERTY(EditAnywhere, Category = "Turntable|Audio")
-	TObjectPtr<class USoundBase> RotationSound;
+	TObjectPtr<USoundBase> RotationSound;
+
+	UPROPERTY(EditAnywhere, Category = "Turntable|Audio", meta = (ToolTip = "Looping sound played while the platform rotates."))
+	TObjectPtr<USoundBase> RotationLoopSound;
+
+	UPROPERTY(EditAnywhere, Category = "Turntable|Audio")
+	TObjectPtr<USoundBase> RotationStopSound;
 
 private:
 	struct FSecuredProp
@@ -71,6 +79,7 @@ private:
 	void ReleaseProps();
 
 	TWeakObjectPtr<AStageManager> StageManager;
+	TWeakObjectPtr<UAudioComponent> RotationAudio;
 	TArray<FSecuredProp> SecuredProps;
 	FRotator InitialRotation;
 	float RotationElapsed = 0.0f;

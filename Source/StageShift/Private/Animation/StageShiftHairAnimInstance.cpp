@@ -12,6 +12,10 @@ void UStageShiftHairAnimInstance::NativeInitializeAnimation()
 	{
 		PhysicsSettings = Hair->Hairstyle->Physics;
 		Strands = Hair->Hairstyle->Strands;
+		if (const FCharacterHairHatFit* Fit = Hair->Hairstyle->HatFits.Find(Hair->GetHatFitMorph()))
+		{
+			Strands.RemoveAll([Fit](const FCharacterHairStrand& Strand) { return Fit->PinnedStrands.Contains(Strand.BoundBone); });
+		}
 	}
 	else
 	{

@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Stage/Core/StageManager.h"
 #include "Stage/Core/Data/StageDataAsset.h"
+#include "UI/StageFocusableControls.h"
 
 void UStageBriefingPropWidget::SetProp(const FStageBriefingProp& Prop)
 {
@@ -63,6 +64,7 @@ void UStageBriefingWidget::SetProductionResult(AStageManager* InManager, const F
 void UStageBriefingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if (auto* Button = Cast<UStageFocusButton>(ContinueButton); Button && ContinueSound) Button->SetClickSound(nullptr);
 	ContinueButton->OnClicked.AddUniqueDynamic(this, &ThisClass::HandleContinue);
 }
 

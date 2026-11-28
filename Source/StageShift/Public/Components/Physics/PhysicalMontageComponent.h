@@ -144,6 +144,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	TObjectPtr<class USoundBase> FallSound;
 
+	UPROPERTY(EditAnywhere, Category = "Audio", meta = (ToolTip = "Plays once on the first solid floor contact during a fall. Replaces the sound played when simulation starts."))
+	TObjectPtr<USoundBase> FallImpactSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	TMap<FName, FPhysicalMontageSettings> MontageSettings;
 
@@ -172,6 +175,10 @@ private:
 	void RestoreMeshCollision();
 	void OnRecoveryMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void RetryRecovery();
+
+	UFUNCTION()
+	void OnFallFloorContact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, FVector NormalImpulse,
+	    const FHitResult& Hit);
 
 	UPROPERTY()
 	FPhysicalAnimationData PhysicalAnimationData;
@@ -206,4 +213,5 @@ private:
 	bool bIsRecovering = false;
 	bool bStayDown = false;
 	bool bQuickRecovery = false;
+	bool bAwaitingFallImpact = false;
 };

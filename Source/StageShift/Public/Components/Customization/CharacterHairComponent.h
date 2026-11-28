@@ -20,6 +20,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Hair")
 	void SetHairstyle(UCharacterHairStyle* NewHairstyle);
+
+	void SetHairstyleForHat(UCharacterHairStyle* NewHairstyle, FName MorphTarget);
+	FName GetHatFitMorph() const { return HatFitMorph; }
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "Hair")
 	void RefreshHairstyle();
 	UFUNCTION(BlueprintCallable, Category = "Hair")
@@ -31,5 +34,8 @@ public:
 	void ResetHairSimulation();
 
 private:
+	void ApplyHatFitMorph();
+
+	FName HatFitMorph;
 	bool bHairPhysicsEnabled = false;
 };

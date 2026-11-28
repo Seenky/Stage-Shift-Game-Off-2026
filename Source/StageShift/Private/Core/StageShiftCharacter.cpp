@@ -249,7 +249,7 @@ void AStageShiftCharacter::Tick(float DeltaSeconds)
 
 void AStageShiftCharacter::PlayFootstep(bool bLeftFoot) const
 {
-	if (!FootstepSound || !GetWorld() || !GetWorld()->IsGameWorld()) return;
+	if (!FootstepSound || !IsPlayerControlled() || !IsLocallyControlled() || !GetWorld() || !GetWorld()->IsGameWorld()) return;
 
 	const FName Bone = bLeftFoot ? TEXT("foot_l") : TEXT("foot_r");
 	const FVector Location = GetMesh()->GetSocketLocation(Bone);

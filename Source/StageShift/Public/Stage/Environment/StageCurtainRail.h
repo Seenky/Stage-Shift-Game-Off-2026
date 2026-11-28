@@ -6,8 +6,10 @@
 class AStageManager;
 class AStagePhysicsActor;
 class ASkeletalMeshActor;
+class UAudioComponent;
 class UMeshComponent;
 class USkeletalMeshComponent;
+class USoundBase;
 class UStageControlMeshComponent;
 class USplineComponent;
 class UStaticMeshComponent;
@@ -42,15 +44,23 @@ protected:
 	TSoftObjectPtr<AStagePhysicsActor> Lever;
 	UPROPERTY(EditInstanceOnly, Category = "Curtain")
 	TSoftObjectPtr<ASkeletalMeshActor> Curtain;
+	UPROPERTY(VisibleAnywhere, Category = "Curtain|Audio")
+	TObjectPtr<UAudioComponent> LeverMovementAudio;
+	UPROPERTY(EditAnywhere, Category = "Curtain|Audio")
+	TObjectPtr<USoundBase> LeverStopSound;
 
 private:
 	AActor* Resolve(const FSoftObjectPath& Reference) const;
 	void ApplyCurtain() const;
 	void UpdateSliderVisual() const;
+	void UpdateLeverAudio(bool bCanSlide, float Speed, const FVector& Location, float DeltaSeconds);
 
 	TWeakObjectPtr<AStageManager> StageManager;
 	TWeakObjectPtr<AStagePhysicsActor> RuntimeLever;
 	TWeakObjectPtr<USkeletalMeshComponent> CurtainMesh;
 	FRotator LeverRotation = FRotator::ZeroRotator;
 	float Progress = 0.f;
+	float LeverAudioSpeed = 0.f;
+	TOptional<float> LeverAudioStop = 0.f;
+	bool bLeverAudible = false;
 };

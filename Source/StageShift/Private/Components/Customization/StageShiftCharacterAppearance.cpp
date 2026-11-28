@@ -1,7 +1,7 @@
 #include "Components/Customization/StageShiftCharacterAppearance.h"
 
 #include "Components/Customization/CharacterHairComponent.h"
-#include "Components/Customization/CharacterHairStyle.h"
+#include "Components/Customization/CharacterHatHairProfile.h"
 #include "Engine/SkeletalMesh.h"
 
 void FStageShiftCharacterAppearance::ApplyTo(
@@ -14,8 +14,10 @@ void FStageShiftCharacterAppearance::ApplyTo(
 	}
 	OutfitMesh.SetSkeletalMesh(Outfit);
 	HatMesh.SetSkeletalMesh(Hat);
-	if (bBodyChanged || HairMesh.Hairstyle != Hairstyle)
+	const UCharacterHatHairProfile* HatProfile = Hat ? Cast<UCharacterHatHairProfile>(Hat->GetAssetUserDataOfClass(UCharacterHatHairProfile::StaticClass())) : nullptr;
+	const FName HatFitMorph = HatProfile ? HatProfile->MorphTarget : NAME_None;
+	if (bBodyChanged || HairMesh.Hairstyle != Hairstyle || HairMesh.GetHatFitMorph() != HatFitMorph)
 	{
-		HairMesh.SetHairstyle(Hairstyle);
+		HairMesh.SetHairstyleForHat(Hairstyle, HatFitMorph);
 	}
 }

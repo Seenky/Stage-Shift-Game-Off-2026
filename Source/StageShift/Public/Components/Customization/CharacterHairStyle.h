@@ -74,6 +74,16 @@ struct STAGESHIFT_API FCharacterHairPhysicsSettings
 	FVector ScalpOffset = FVector::ZeroVector;
 };
 
+USTRUCT()
+struct STAGESHIFT_API FCharacterHairHatFit
+{
+	GENERATED_BODY()
+
+	// Strands held in place by the hat. Exposed lengths can keep their usual motion.
+	UPROPERTY(EditAnywhere, Category = "Hat Fit")
+	TArray<FName> PinnedStrands;
+};
+
 UCLASS(BlueprintType)
 
 class STAGESHIFT_API UCharacterHairStyle : public UDataAsset
@@ -96,4 +106,7 @@ public:
 	FCharacterHairPhysicsSettings Physics;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Physics")
 	TArray<FCharacterHairStrand> Strands;
+
+	UPROPERTY(EditAnywhere, Category = "Hat Fit")
+	TMap<FName, FCharacterHairHatFit> HatFits;
 };

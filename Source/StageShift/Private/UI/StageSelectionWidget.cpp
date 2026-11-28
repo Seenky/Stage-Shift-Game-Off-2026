@@ -4,11 +4,17 @@
 #include "Components/TextBlock.h"
 #include "InputCoreTypes.h"
 #include "Stage/Environment/StageSelectionStation.h"
+#include "UI/StageFocusableControls.h"
 
 void UStageSelectionWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	SetIsFocusable(true);
+	// The station owns browse, confirm and back sounds, including keyboard shortcuts.
+	for (UButton* Control : {PreviousButton.Get(), NextButton.Get(), StartButton.Get(), BackButton.Get()})
+	{
+		if (auto* Button = Cast<UStageFocusButton>(Control)) Button->SetClickSound(nullptr);
+	}
 	PreviousButton->OnClicked.AddUniqueDynamic(this, &ThisClass::Previous);
 	NextButton->OnClicked.AddUniqueDynamic(this, &ThisClass::Next);
 	StartButton->OnClicked.AddUniqueDynamic(this, &ThisClass::Start);

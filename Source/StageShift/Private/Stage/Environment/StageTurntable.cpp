@@ -1,5 +1,6 @@
 #include "Stage/Environment/StageTurntable.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -41,6 +42,7 @@ void AStageTurntable::BeginPlay()
 
 void AStageTurntable::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (UAudioComponent* Audio = RotationAudio.Get()) Audio->Stop();
 	if (EndPlayReason == EEndPlayReason::Destroyed || EndPlayReason == EEndPlayReason::RemovedFromWorld) ReleaseProps();
 	Super::EndPlay(EndPlayReason);
 }
@@ -153,6 +155,11 @@ bool AStageTurntable::RotateToSector(int32 SectorIndex)
 	SecureProps();
 	if (AStageManager* Manager = StageManager.Get()) Manager->NotifyTurntableRotationStarted();
 	if (RotationSound) UGameplayStatics::PlaySoundAtLocation(this, RotationSound, GetActorLocation());
+	if (RotationLoopSound)
+	{
+		RotationAudio = UGameplayStatics::SpawnSoundAttached(RotationLoopSound, GetRootComponent(), NAME_None,
+			FVector::ZeroVector, EAttachLocation::KeepRelativeOffset, true);
+	}
 	SetActorTickEnabled(true);
 	return true;
 }
@@ -171,6 +178,9 @@ void AStageTurntable::Tick(float DeltaSeconds)
 	CurrentSector = TargetSector;
 	bRotating = false;
 	SetActorTickEnabled(false);
+	if (UAudioComponent* Audio = RotationAudio.Get()) Audio->FadeOut(0.18f, 0.0f);
+	RotationAudio.Reset();
+	if (RotationStopSound) UGameplayStatics::PlaySoundAtLocation(this, RotationStopSound, GetActorLocation());
 	ReleaseProps();
 	OnArrived.Broadcast(CurrentSector);
 }

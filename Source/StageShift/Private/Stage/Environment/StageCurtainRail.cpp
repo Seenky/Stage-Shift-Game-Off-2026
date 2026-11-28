@@ -1,11 +1,14 @@
 #include "Stage/Environment/StageCurtainRail.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "Physics/PhysicsActor.h"
+#include "Sound/SoundBase.h"
 #include "Stage/Core/StageManager.h"
 #include "Stage/Environment/StageControlMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
@@ -29,6 +32,17 @@ AStageCurtainRail::AStageCurtainRail()
 	Track->SetCanEverAffectNavigation(false);
 	ControlVisual = CreateDefaultSubobject<UStageControlMeshComponent>(TEXT("ControlVisual"));
 	ControlVisual->SetupAttachment(Rail);
+	LeverMovementAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("LeverMovementAudio"));
+	LeverMovementAudio->SetupAttachment(Rail);
+	LeverMovementAudio->SetAutoActivate(false);
+	LeverMovementAudio->bStopWhenOwnerDestroyed = true;
+	static const ConstructorHelpers::FObjectFinder<USoundBase> MovementSound(
+		TEXT("/Game/SOUNDS/SFX/Theatre/SFX_Stage_Curtain_Lever_Movement"));
+	static const ConstructorHelpers::FObjectFinder<USoundBase> StopSound(
+		TEXT("/Game/SOUNDS/SFX/Theatre/SFX_Stage_Curtain_Lever_Stop"));
+	LeverMovementAudio->SetSound(MovementSound.Object);
+	LeverStopSound = StopSound.Object;
+
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cube(TEXT("/Engine/BasicShapes/Cube"));
 	if (Cube.Succeeded()) Track->SetStaticMesh(Cube.Object);
 }
@@ -101,7 +115,11 @@ void AStageCurtainRail::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	auto* Actor = RuntimeLever.Get();
 	const float Length = Rail->GetSplineLength();
-	if (!Actor || Length <= KINDA_SMALL_NUMBER) return;
+	if (!Actor || Length <= KINDA_SMALL_NUMBER)
+	{
+		UpdateLeverAudio(false, 0.f, GetActorLocation(), DeltaSeconds);
+		return;
+	}
 
 	const float Previous = Progress;
 	const bool bDragging = CanDragLever() && Actor->IsBeingDragged();
@@ -124,10 +142,39 @@ void AStageCurtainRail::Tick(float DeltaSeconds)
 		Actor->SetActorLocationAndRotation(Location, LeverRotation, false, nullptr, ETeleportType::TeleportPhysics);
 	Mesh->SetPhysicsLinearVelocity(bCanContinue ? Tangent * Along : FVector::ZeroVector);
 	Mesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+	const bool bAtEnd = Progress == 0.f || Progress == 1.f;
+	// Small bounces at an end should not retrigger the slide or the stop sound.
+	if (LeverAudioStop.IsSet() && FMath::Abs(Progress - LeverAudioStop.GetValue()) > .025f) LeverAudioStop.Reset();
+	const float Speed = DeltaSeconds > 0.f ? FMath::Abs(Progress - Previous) / DeltaSeconds : 0.f;
+	UpdateLeverAudio(bDragging && !bAtEnd && !LeverAudioStop.IsSet(), Speed, Location, DeltaSeconds);
 	if (Previous == Progress) return;
 	ApplyCurtain();
-	if ((Progress == 0.f || Progress == 1.f) && StageManager.IsValid())
-		StageManager->HandleCurtainEnd(IsOpen());
+	if (bAtEnd)
+	{
+		if (!LeverAudioStop.IsSet() && LeverStopSound) UGameplayStatics::PlaySoundAtLocation(this, LeverStopSound, Location);
+		LeverAudioStop = Progress;
+		if (StageManager.IsValid()) StageManager->HandleCurtainEnd(IsOpen());
+	}
+}
+
+void AStageCurtainRail::UpdateLeverAudio(bool bCanSlide, float Speed, const FVector& Location, float DeltaSeconds)
+{
+	// Physics can report the same position on consecutive frames during a drag.
+	LeverAudioSpeed = bCanSlide ? FMath::FInterpTo(LeverAudioSpeed, Speed, DeltaSeconds, 22.f) : 0.f;
+	const bool bMoving = LeverAudioSpeed >= (bLeverAudible ? .015f : .03f);
+	if (!bMoving)
+	{
+		if (bLeverAudible) LeverMovementAudio->FadeOut(.09f, 0.f);
+		bLeverAudible = false;
+		return;
+	}
+
+	if (!LeverMovementAudio->GetSound()) return;
+	const float Volume = FMath::GetMappedRangeValueClamped(FVector2D(.03, .85), FVector2D(.25, 1.), LeverAudioSpeed);
+	LeverMovementAudio->SetWorldLocation(Location);
+	LeverMovementAudio->SetVolumeMultiplier(Volume);
+	if (!bLeverAudible || !LeverMovementAudio->IsPlaying()) LeverMovementAudio->FadeIn(.055f);
+	bLeverAudible = true;
 }
 
 void AStageCurtainRail::ApplyCurtain() const

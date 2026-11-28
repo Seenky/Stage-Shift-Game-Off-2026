@@ -20,6 +20,9 @@
 namespace
 {
 	const FName PelvisBone(TEXT("pelvis"));
+	const FName ChestBone(TEXT("spine_03"));
+	const FName HeadBone(TEXT("head"));
+	const FName DiveMontageName(TEXT("Jump"));
 	const FName RagdollProfile(TEXT("Ragdoll"));
 	constexpr float RecoveryRetryInterval = 0.2f;
 	constexpr float ShortcutRecoveryDelay = 0.24f;
@@ -116,10 +119,13 @@ void UPhysicalMontageComponent::BeginPlay()
 
 	SetSkeletalMeshComponent(Mesh);
 	Mesh->SetAllBodiesBelowPhysicsBlendWeight(PelvisBone, 0.0f);
+	Mesh->OnComponentHit.AddUniqueDynamic(this, &ThisClass::OnFallFloorContact);
 }
 
 void UPhysicalMontageComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (USkeletalMeshComponent* Mesh = GetSkeletalMesh())
+		Mesh->OnComponentHit.RemoveDynamic(this, &ThisClass::OnFallFloorContact);
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(LaunchTimerHandle);
@@ -318,6 +324,7 @@ bool UPhysicalMontageComponent::PreparePhysics(const FPhysicalMontageSettings& S
 	ActiveSettings = Settings;
 	bHasRecoveryTarget = false;
 	bQuickRecovery = false;
+	bAwaitingFallImpact = FallImpactSound && ActionName != DiveMontageName;
 	ActiveInput = Input;
 	if (!Settings.Montage) ActiveSettings.StrengthMultiplier = 0.0f;
 	ActiveMontageName = ActionName;
@@ -438,7 +445,7 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 		Mesh->AddImpulseAtLocation(ActiveInput.Impulse, ActiveInput.ImpulseLocation, ActiveInput.ImpulseBone);
 	}
 	bIsSimActive = true;
-	if (FallSound && MontageName != TEXT("Jump"))
+	if (FallSound && !FallImpactSound && MontageName != DiveMontageName)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, FallSound, Mesh->GetSocketLocation(PelvisBone));
 	}
@@ -446,6 +453,22 @@ void UPhysicalMontageComponent::ActivatePhysics(FName MontageName)
 	if (!bStayDown)
 		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &ThisClass::RestorePhysics,
 		    bQuickRecovery ? ShortcutRecoveryDelay : FMath::Max(ActiveSettings.TimeToRecovery, 0.1f), false);
+}
+
+void UPhysicalMontageComponent::OnFallFloorContact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent,
+    FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!bAwaitingFallImpact || !bIsSimActive || !FallImpactSound || !OtherComponent || OtherActor == GetOwner()
+	    || OtherComponent->IsSimulatingPhysics(Hit.BoneName) || FVector::DotProduct(NormalImpulse, Hit.ImpactNormal) <= UE_SMALL_NUMBER)
+		return;
+
+	const FName Bone = Hit.MyBoneName;
+	if (Bone != PelvisBone && Bone != ChestBone && Bone != HeadBone) return;
+	const ACharacter* Character = Cast<ACharacter>(GetOwner());
+	if (!Character || !Character->GetCharacterMovement()->IsWalkable(Hit)) return;
+
+	bAwaitingFallImpact = false;
+	UGameplayStatics::PlaySoundAtLocation(this, FallImpactSound, Hit.ImpactPoint);
 }
 
 void UPhysicalMontageComponent::RestorePhysics()
@@ -608,6 +631,7 @@ void UPhysicalMontageComponent::RetryRecovery()
 
 void UPhysicalMontageComponent::RestoreMeshCollision()
 {
+	bAwaitingFallImpact = false;
 	GetWorld()->GetTimerManager().ClearTimer(LaunchTimerHandle);
 	GetWorld()->GetTimerManager().ClearTimer(ActivationTimerHandle);
 	USkeletalMeshComponent* Mesh = GetSkeletalMesh();

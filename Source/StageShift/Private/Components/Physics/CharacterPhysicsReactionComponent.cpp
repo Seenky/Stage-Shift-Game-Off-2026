@@ -3,6 +3,7 @@
 #include "Components/Interaction/InteractionComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/BodyInstance.h"
 
 namespace
@@ -64,7 +65,10 @@ bool UCharacterPhysicsReactionComponent::PlayReaction(ECharacterPhysicsReaction 
 	}
 	if (!IsPlayable(*Settings)) return false;
 	if (UInteractionComponent* Interaction = GetOwner()->FindComponentByClass<UInteractionComponent>()) Interaction->CancelInteraction();
-	return Executor->PlayPhysicsAnimation(*Settings, Input);
+	if (!Executor->PlayPhysicsAnimation(*Settings, Input)) return false;
+	if (Reaction == ECharacterPhysicsReaction::Stumble && StumbleSound)
+		UGameplayStatics::PlaySoundAtLocation(this, StumbleSound, GetOwner()->GetActorLocation());
+	return true;
 }
 
 void UCharacterPhysicsReactionComponent::CaptureRecoveryFrame()

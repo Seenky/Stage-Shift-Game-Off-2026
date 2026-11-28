@@ -18,6 +18,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Physics Reaction")
 	TObjectPtr<UCharacterPhysicsAnimationSet> AnimationSet;
 
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	TObjectPtr<class USoundBase> StumbleSound;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;

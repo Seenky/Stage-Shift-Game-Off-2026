@@ -26,7 +26,13 @@ void UCharacterHairComponent::OnRegister()
 
 void UCharacterHairComponent::SetHairstyle(UCharacterHairStyle* NewHairstyle)
 {
+	SetHairstyleForHat(NewHairstyle, HatFitMorph);
+}
+
+void UCharacterHairComponent::SetHairstyleForHat(UCharacterHairStyle* NewHairstyle, FName MorphTarget)
+{
 	Hairstyle = NewHairstyle;
+	HatFitMorph = MorphTarget;
 	RefreshHairstyle();
 }
 
@@ -72,6 +78,7 @@ void UCharacterHairComponent::RefreshHairstyle()
 	SetAnimInstanceClass(Class);
 	if (!Class) InitAnim(true);
 	SetComponentTickEnabled(Class != nullptr);
+	ApplyHatFitMorph();
 	ResetHairSimulation();
 }
 
@@ -82,7 +89,17 @@ void UCharacterHairComponent::SetHairPhysicsEnabled(bool bEnabled)
 	bHairPhysicsEnabled = bEnabled;
 	// Rebuild only this component's stock AnimDynamics nodes with the new settings.
 	InitAnim(true);
+	ApplyHatFitMorph();
 	ResetHairSimulation();
+}
+
+void UCharacterHairComponent::ApplyHatFitMorph()
+{
+	const USkeletalMesh* Mesh = GetSkeletalMeshAsset();
+	if (Mesh && !HatFitMorph.IsNone() && Mesh->FindMorphTarget(HatFitMorph))
+	{
+		SetMorphTarget(HatFitMorph, 1.0f);
+	}
 }
 
 void UCharacterHairComponent::ResetHairSimulation()

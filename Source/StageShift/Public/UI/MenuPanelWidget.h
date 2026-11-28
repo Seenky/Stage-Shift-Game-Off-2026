@@ -4,6 +4,7 @@
 #include "MenuPanelWidget.generated.h"
 
 class UButton;
+class USoundBase;
 
 UCLASS(Abstract)
 class STAGESHIFT_API UMenuPanelWidget : public UUserWidget
@@ -11,6 +12,8 @@ class STAGESHIFT_API UMenuPanelWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UMenuPanelWidget(const FObjectInitializer& ObjectInitializer);
+
 	FSimpleMulticastDelegate OnCloseRequested;
 
 	virtual UWidget* GetInitialFocus() const;
@@ -23,6 +26,11 @@ protected:
 	void RequestClose();
 
 private:
+	UFUNCTION()
+	void HandleBack();
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> BackButton;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TObjectPtr<USoundBase> BackSound;
 };
