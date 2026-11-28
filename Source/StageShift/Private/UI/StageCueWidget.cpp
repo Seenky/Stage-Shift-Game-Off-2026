@@ -11,6 +11,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Stage/Cues/StageCueComponent.h"
 #include "Stage/Cues/StageCueWorldMarker.h"
+#include "UI/StagePerformanceHUDWidget.h"
 
 #define LOCTEXT_NAMESPACE "StageCues"
 
@@ -42,31 +43,42 @@ void UStageCueCardWidget::Present(const FStageCueView& View)
 	const bool bProblem = View.State == EStageCueState::Problem;
 	const bool bUpcoming = View.State == EStageCueState::Upcoming;
 	const FLinearColor Color = bCompleted ? CompletedColor : bProblem ? ProblemColor : bUpcoming ? UpcomingColor : TaskColor;
-	Accent->SetBrushColor(Color);
-	NumberText->SetText(FText::AsNumber(View.Number));
-	StatusText->SetText(bCompleted ? LOCTEXT("Done", "ГОТОВО") : bProblem ? LOCTEXT("Problem", "НУЖНО ИСПРАВИТЬ") : bUpcoming ? LOCTEXT("Next", "СКОРО") : LOCTEXT("Now", "СЕЙЧАС"));
-	StatusText->SetColorAndOpacity(FSlateColor(Color));
+	if (Accent) Accent->SetBrushColor(Color);
+	if (NumberText) NumberText->SetText(FText::AsNumber(View.Number));
+	if (StatusText)
+	{
+		StatusText->SetText(bCompleted ? LOCTEXT("Done", "ГОТОВО") : bProblem ? LOCTEXT("Problem", "НУЖНО ИСПРАВИТЬ") : bUpcoming ? LOCTEXT("Next", "СКОРО") : LOCTEXT("Now", "СЕЙЧАС"));
+		StatusText->SetColorAndOpacity(FSlateColor(Color));
+	}
 	TitleText->SetText(View.Title);
 	DetailText->SetText(View.Details);
 	DetailText->SetVisibility(View.Details.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	const bool bTimed = View.bHasDeadline && !bCompleted;
-	TimeBar->SetVisibility(bTimed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-	TimeText->SetVisibility(bTimed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-	TimeBar->SetPercent(View.TimeFraction);
-	TimeBar->SetFillColorAndOpacity(Color);
-	if (bTimed)
+	if (TimeBar)
 	{
-		const int32 Seconds = FMath::CeilToInt(FMath::Abs(View.SecondsRemaining));
-		TimeText->SetText(FText::Format(View.bOverdue ? LOCTEXT("Late", "+{0} с") : LOCTEXT("Remaining", "{0} с"), FText::AsNumber(Seconds)));
-		TimeText->SetColorAndOpacity(FSlateColor(Color));
+		TimeBar->SetVisibility(bTimed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		TimeBar->SetPercent(View.TimeFraction);
+		TimeBar->SetFillColorAndOpacity(Color);
 	}
+	if (!TimeText) return;
+	TimeText->SetVisibility(bTimed ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (!bTimed) return;
+	const int32 Seconds = FMath::CeilToInt(FMath::Abs(View.SecondsRemaining));
+	TimeText->SetText(FText::Format(View.bOverdue ? LOCTEXT("Late", "+{0} с") : LOCTEXT("Remaining", "{0} с"), FText::AsNumber(Seconds)));
+	TimeText->SetColorAndOpacity(FSlateColor(Color));
 }
 
 void UStageCueMarkerWidget::Present(const AStageCueWorldMarker* Marker)
 {
-	Badge->SetBrushColor(Marker->Tint);
-	NumberText->SetText(FText::AsNumber(Marker->CueView.Number));
-	KindText->SetText(Marker->MarkerType == EStageCueMarkerType::Zone ? LOCTEXT("Zone", "СЮДА") : Marker->MarkerType == EStageCueMarkerType::Event ? LOCTEXT("Event", "!")
+	if (CueTag)
+	{
+		const FText Caption = Marker->MarkerType == EStageCueMarkerType::Object ? LOCTEXT("TakeHere", "Взять") : LOCTEXT("Here", "Сюда");
+		CueTag->PresentUntimed(Marker->CueView.Kind, Caption);
+		return;
+	}
+	if (Badge) Badge->SetBrushColor(Marker->Tint);
+	if (NumberText) NumberText->SetText(FText::AsNumber(Marker->CueView.Number));
+	if (KindText) KindText->SetText(Marker->MarkerType == EStageCueMarkerType::Zone ? LOCTEXT("Zone", "СЮДА") : Marker->MarkerType == EStageCueMarkerType::Event ? LOCTEXT("Event", "!")
 	    : Marker->MarkerType == EStageCueMarkerType::Recipient ? LOCTEXT("Recipient", "ПЕРЕДАТЬ") : LOCTEXT("Object", "ВЗЯТЬ"));
 }
 

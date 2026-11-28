@@ -12,6 +12,10 @@ blender --background Hub_Theatre.blend --python Surfacing/HubTheatre/export_sour
 
 Для независимых предметов в `Meshes/Modular` используйте `Surfacing/HubTheatre/export_modules.py`. Он экспортирует FBX и пивоты в `Surfacing/HubTheatre/Modular` с UV исходного атласа. Перестановки предметов в Unreal сохраняются в самой карте. При обновлении отдельного предмета достаточно реимпорта его FBX.
 
+Переход в репетиционную использует отдельный исходник `Surfacing/HubTheatre/Modular/Source/Hub_Rehearsal_Threshold.blend` и `SM_Hub_Rehearsal_Threshold.fbx`. Доски и подложка используют UV действующего атласа настила `MI_Hub_PlankFloor`. При реимпорте сохраняйте слот `Hub_PlankFloor`, исходные нормали и выпуклую коллизию `UCX_SM_Hub_Rehearsal_Threshold_00`.
+
+Карнизы и полки фонарей репетиционной собираются в `Surfacing/HubTheatre/Modular/Source/Hub_Rehearsal_Hardware.blend`. В `Modular/Rehearsal.json` указаны размеры поставки и материалы слотов. Шторы прикреплены к своим карнизам, а фонари к полкам. Перемещая крепление в Unreal, сверяйте контакт подвесов с кромкой ткани и крепёжную плоскость с деревом.
+
 Подиум остаётся корневым мешем `Stage Selection Station`. Рама, стойки и рельсы вынесены в отдельные акторы. Сменные декорации используют общую точку привязки и переключаются цельными кассетами.
 
 ## Выбор постановки

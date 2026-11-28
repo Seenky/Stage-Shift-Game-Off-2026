@@ -26,6 +26,8 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	void SetStageManager(AStageManager* Manager);
+	void SetPracticeControlEnabled(bool bEnabled) { bPracticeControlEnabled = bEnabled; }
+	void ResetPracticePosition(bool bOpen);
 	bool CanDragLever() const;
 	AActor* GetLever() const;
 	const UMeshComponent* GetControlVisual() const;
@@ -63,4 +65,5 @@ private:
 	float LeverAudioSpeed = 0.f;
 	TOptional<float> LeverAudioStop = 0.f;
 	bool bLeverAudible = false;
+	bool bPracticeControlEnabled = false;
 };

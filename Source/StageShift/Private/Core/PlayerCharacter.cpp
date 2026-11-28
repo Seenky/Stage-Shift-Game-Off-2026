@@ -26,7 +26,7 @@
 
 namespace
 {
-	const FName DiveMontageName(TEXT("Jump"));
+	const FName PlayerDiveMontageName(TEXT("Jump"));
 	const FName DiveHeadBone(TEXT("head"));
 }
 
@@ -237,7 +237,7 @@ void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)
 	const APlayerController* PC = Cast<APlayerController>(GetController());
 	const UEnhancedPlayerInput* Input = PC ? Cast<UEnhancedPlayerInput>(PC->PlayerInput) : nullptr;
 	const FVector Direction = Input && MoveInputAction ? MovementInputToWorld(Input->GetActionValue(MoveInputAction)).GetSafeNormal2D() : FVector::ZeroVector;
-	PhysicalMontageComponent->StartPhysicsMontage(DiveMontageName, GetVelocity(), Direction);
+	PhysicalMontageComponent->StartPhysicsMontage(PlayerDiveMontageName, GetVelocity(), Direction);
 }
 
 void APlayerCharacter::UpdateBackstageShortcut()
@@ -271,7 +271,7 @@ void APlayerCharacter::SetNearbyShortcut(AStageBackstageShortcut* Shortcut)
 
 void APlayerCharacter::CheckDiveForBackstageShortcut()
 {
-	if (!IsLocallyControlled() || !IsPlayerControlled() || !PhysicalMontageComponent->IsPlayingPhysicsMontage(DiveMontageName))
+	if (!IsLocallyControlled() || !IsPlayerControlled() || !PhysicalMontageComponent->IsPlayingPhysicsMontage(PlayerDiveMontageName))
 	{
 		PreviousDiveHeadLocation.Reset();
 		bTraversedShortcutDuringDive = false;

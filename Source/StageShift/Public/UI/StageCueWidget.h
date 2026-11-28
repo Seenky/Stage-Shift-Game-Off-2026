@@ -12,6 +12,7 @@ class UVerticalBox;
 class UCanvasPanel;
 class UStageCueComponent;
 class AStageCueWorldMarker;
+class UStagePerformanceTagWidget;
 class UTexture2D;
 
 UCLASS(Abstract, Blueprintable)
@@ -42,13 +43,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Appearance") FLinearColor CompletedColor = FLinearColor::White;
 
 protected:
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UBorder> Accent;
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> NumberText;
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> StatusText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UBorder> Accent;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> NumberText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> StatusText;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> TitleText;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> DetailText;
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> TimeText;
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UProgressBar> TimeBar;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> TimeText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UProgressBar> TimeBar;
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -60,9 +61,10 @@ public:
 	void Present(const AStageCueWorldMarker* Marker);
 
 protected:
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UBorder> Badge;
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> NumberText;
-	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> KindText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UBorder> Badge;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> NumberText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> KindText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UStagePerformanceTagWidget> CueTag;
 };
 
 UCLASS(Abstract, Blueprintable)

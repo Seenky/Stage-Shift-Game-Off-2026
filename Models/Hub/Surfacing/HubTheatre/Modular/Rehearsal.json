@@ -1,0 +1,206 @@
+{
+  "Portal": {
+    "name": "SM_Hub_Rehearsal_Portal",
+    "atlas": "Portal",
+    "bounds": [
+      [
+        -100.0,
+        -18.299999237060547,
+        0.0
+      ],
+      [
+        100.0,
+        17.0,
+        400.0
+      ]
+    ],
+    "triangles": 2268,
+    "collider_count": 3,
+    "source_slots": [
+      "Hub_Rehearsal_Portal"
+    ],
+    "reused_geometry": false,
+    "file": "SM_Hub_Rehearsal_Portal.fbx"
+  },
+  "Sign": {
+    "name": "SM_Hub_Rehearsal_Sign",
+    "atlas": "Sign",
+    "bounds": [
+      [
+        -64.0,
+        -3.799999952316284,
+        -17.0
+      ],
+      [
+        64.0,
+        2.5,
+        17.0
+      ]
+    ],
+    "triangles": 848,
+    "collider_count": 0,
+    "source_slots": [
+      "Hub_Rehearsal_Sign"
+    ],
+    "reused_geometry": false,
+    "file": "SM_Hub_Rehearsal_Sign.fbx"
+  },
+  "DoorFlat": {
+    "name": "SM_Hub_Rehearsal_DoorFlat",
+    "atlas": "Door",
+    "bounds": [
+      [
+        -91.9989242553711,
+        -1.875,
+        0.0
+      ],
+      [
+        92.0,
+        53.70000076293945,
+        189.0
+      ]
+    ],
+    "triangles": 1968,
+    "collider_count": 1,
+    "source_slots": [
+      "Hub_Rehearsal_Door"
+    ],
+    "reused_geometry": false,
+    "file": "SM_Hub_Rehearsal_DoorFlat.fbx"
+  },
+  "TurntableDeck": {
+    "name": "SM_Hub_Rehearsal_TurntableDeck",
+    "atlas": "Stage",
+    "bounds": [
+      [
+        -161.60000610351562,
+        -161.60000610351562,
+        0.0
+      ],
+      [
+        161.60000610351562,
+        161.60000610351562,
+        21.5
+      ]
+    ],
+    "triangles": 4684,
+    "collider_count": 1,
+    "source_slots": [
+      "Hub_Rehearsal_Stage"
+    ],
+    "reused_geometry": false,
+    "file": "SM_Hub_Rehearsal_TurntableDeck.fbx"
+  },
+  "TurntableRail": {
+    "name": "SM_Hub_Rehearsal_TurntableRail",
+    "atlas": "Stage",
+    "bounds": [
+      [
+        -174.0,
+        -174.0,
+        0.0
+      ],
+      [
+        174.0,
+        174.0,
+        16.90999984741211
+      ]
+    ],
+    "triangles": 6096,
+    "collider_count": 0,
+    "source_slots": [
+      "Hub_Rehearsal_Stage"
+    ],
+    "reused_geometry": false,
+    "file": "SM_Hub_Rehearsal_TurntableRail.fbx"
+  },
+  "TargetCrate": {
+    "name": "SM_Hub_Rehearsal_TargetCrate",
+    "atlas": null,
+    "bounds": [
+      [
+        -48.70000076293945,
+        -42.70000076293945,
+        0.0
+      ],
+      [
+        48.70000076293945,
+        42.70000076293945,
+        69.0
+      ]
+    ],
+    "triangles": 1260,
+    "collider_count": 5,
+    "source_slots": [
+      "M_Theatre_Work_Crate_Open"
+    ],
+    "reused_geometry": true,
+    "file": "SM_Hub_Rehearsal_TargetCrate.fbx"
+  },
+  "Threshold": {
+    "name": "SM_Hub_Rehearsal_Threshold",
+    "atlas": "PlankFloor",
+    "bounds": [
+      [
+        -120.25,
+        -119.0,
+        -10.0
+      ],
+      [
+        120.75,
+        114.0,
+        0.52
+      ]
+    ],
+    "triangles": 220,
+    "collider_count": 1,
+    "source_slots": [
+      "Hub_PlankFloor"
+    ],
+    "reused_geometry": false,
+    "file": "SM_Hub_Rehearsal_Threshold.fbx",
+    "source_file": "Source/Hub_Rehearsal_Threshold.blend",
+    "material_path": "/Game/LVL/Hub/Theatre/HubTheatre/Materials/MI_Hub_PlankFloor"
+  },
+  "CurtainRail_HubEntry": {
+    "name": "SM_Hub_Rehearsal_CurtainRail_HubEntry",
+    "file": "SM_Hub_Rehearsal_CurtainRail_HubEntry.fbx",
+    "source_file": "Source/Hub_Rehearsal_Hardware.blend",
+    "triangles": 4896,
+    "collider_count": 0,
+    "material_slots": {
+      "Wardrobe_Brass": "/Game/LVL/Hub/Theatre/HubTheatre/Materials/MI_Hub_Wardrobe.MI_Hub_Wardrobe"
+    }
+  },
+  "CurtainRail_RoomEntry": {
+    "name": "SM_Hub_Rehearsal_CurtainRail_RoomEntry",
+    "file": "SM_Hub_Rehearsal_CurtainRail_RoomEntry.fbx",
+    "source_file": "Source/Hub_Rehearsal_Hardware.blend",
+    "triangles": 4896,
+    "collider_count": 0,
+    "material_slots": {
+      "Wardrobe_Brass": "/Game/LVL/Hub/Theatre/HubTheatre/Materials/MI_Hub_Wardrobe.MI_Hub_Wardrobe"
+    }
+  },
+  "CurtainRail_Stage": {
+    "name": "SM_Hub_Rehearsal_CurtainRail_Stage",
+    "file": "SM_Hub_Rehearsal_CurtainRail_Stage.fbx",
+    "source_file": "Source/Hub_Rehearsal_Hardware.blend",
+    "triangles": 5448,
+    "collider_count": 0,
+    "material_slots": {
+      "Wardrobe_Brass": "/Game/LVL/Hub/Theatre/HubTheatre/Materials/MI_Hub_Wardrobe.MI_Hub_Wardrobe"
+    }
+  },
+  "LanternShelf": {
+    "name": "SM_Hub_Rehearsal_LanternShelf",
+    "file": "SM_Hub_Rehearsal_LanternShelf.fbx",
+    "source_file": "Source/Hub_Rehearsal_Hardware.blend",
+    "triangles": 328,
+    "collider_count": 0,
+    "material_slots": {
+      "Hub_PlankFloor": "/Game/LVL/Hub/Theatre/HubTheatre/Materials/MI_Hub_PlankFloor",
+      "Wardrobe_Brass": "/Game/LVL/Hub/Theatre/HubTheatre/Materials/MI_Hub_Wardrobe.MI_Hub_Wardrobe"
+    }
+  }
+}

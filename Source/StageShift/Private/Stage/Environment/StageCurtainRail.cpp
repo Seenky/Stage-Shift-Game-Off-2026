@@ -97,7 +97,21 @@ void AStageCurtainRail::SetStageManager(AStageManager* Manager)
 
 bool AStageCurtainRail::CanDragLever() const
 {
-	return StageManager.IsValid() && StageManager->CanMoveCurtain();
+	const AStageManager* Manager = StageManager.Get();
+	return Manager ? Manager->CanMoveCurtain() : bPracticeControlEnabled;
+}
+
+void AStageCurtainRail::ResetPracticePosition(bool bOpen)
+{
+	if (StageManager.IsValid()) return;
+	Progress = bOpen ? 1.f : 0.f;
+	LeverAudioStop = Progress;
+	if (AStagePhysicsActor* Actor = RuntimeLever.Get())
+	{
+		const FVector Location = Rail->GetLocationAtDistanceAlongSpline(Progress * Rail->GetSplineLength(), ESplineCoordinateSpace::World);
+		Actor->SetActorLocationAndRotation(Location, LeverRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	}
+	ApplyCurtain();
 }
 
 AActor* AStageCurtainRail::GetLever() const

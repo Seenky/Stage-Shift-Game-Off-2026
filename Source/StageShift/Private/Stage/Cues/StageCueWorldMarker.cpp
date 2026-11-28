@@ -78,6 +78,7 @@ FVector AStageCueWorldMarker::GetIndicatorLocation() const
 	if (MarkerType == EStageCueMarkerType::Zone) return GetActorLocation() + FVector(0.0, 0.0, 20.0);
 	FVector Origin, Extent;
 	TrackedActor->GetActorBounds(true, Origin, Extent);
+	if (Extent.IsNearlyZero()) Origin = TrackedActor->GetActorLocation();
 	// Dialogue owns the space above actors. Actor cues sit beside their feet.
 	if (MarkerType == EStageCueMarkerType::Recipient || MarkerType == EStageCueMarkerType::Event)
 		return Origin + TargetOffset + FVector(0.0, 0.0, -Extent.Z + 25.0);

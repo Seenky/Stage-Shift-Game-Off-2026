@@ -33,7 +33,8 @@ enum class EStageCueMarkerType : uint8
 	Object,
 	Zone,
 	Event,
-	Recipient
+	Recipient,
+	Control
 };
 
 enum class EStageCueWindowPhase : uint8
@@ -91,6 +92,7 @@ struct STAGESHIFT_API FStageCueView
 	UPROPERTY(BlueprintReadOnly) FName CueId;
 	UPROPERTY(BlueprintReadOnly) FText Title;
 	UPROPERTY(BlueprintReadOnly) FText Details;
+	UPROPERTY(BlueprintReadOnly) EStageCueKind Kind = EStageCueKind::General;
 	UPROPERTY(BlueprintReadOnly) EStageCueState State = EStageCueState::Active;
 	UPROPERTY(BlueprintReadOnly) int32 Number = 0;
 	UPROPERTY(BlueprintReadOnly) bool bHasDeadline = false;

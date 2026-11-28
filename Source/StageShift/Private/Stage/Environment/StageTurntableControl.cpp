@@ -38,7 +38,7 @@ const UMeshComponent* AStageTurntableControl::GetInteractionMesh() const
 
 bool AStageTurntableControl::CanInteract_Implementation(const FInteractionContext& Context) const
 {
-	return IsValid(Context.Interactor) && IsValid(Turntable) && Turntable->CanRotate();
+	return bControlEnabled && IsValid(Context.Interactor) && IsValid(Turntable) && Turntable->CanRotate();
 }
 
 EInteractionResult AStageTurntableControl::OnInteraction_Implementation(const FInteractionContext& Context)

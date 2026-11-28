@@ -99,6 +99,17 @@ void UStagePerformanceTagWidget::Present(const FStagePerformanceCue& Cue)
 	}
 }
 
+void UStagePerformanceTagWidget::PresentUntimed(EStageCueKind Kind, const FText& Caption)
+{
+	FStagePerformanceCue Cue;
+	Cue.Kind = Kind;
+	Present(Cue);
+	if (!ActionPrompt) return;
+	ActionPrompt->SetText(Caption);
+	UWidget* Status = ActionStatus ? ActionStatus.Get() : ActionPrompt.Get();
+	Status->SetVisibility(Caption.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+}
+
 void UStagePerformanceTagWidget::NativeTick(const FGeometry& Geometry, float DeltaSeconds)
 {
 	Super::NativeTick(Geometry, DeltaSeconds);

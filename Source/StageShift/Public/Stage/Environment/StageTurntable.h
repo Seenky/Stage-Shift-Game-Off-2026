@@ -53,6 +53,7 @@ public:
 	int32 GetCurrentSector() const { return CurrentSector; }
 	bool CanRotate() const;
 	void SetStageManager(AStageManager* Manager);
+	void ResetPracticePosition();
 
 protected:
 	virtual void BeginPlay() override;

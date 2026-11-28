@@ -22,6 +22,7 @@ public:
 	virtual bool CanInteract_Implementation(const FInteractionContext& Context) const override;
 	virtual EInteractionResult OnInteraction_Implementation(const FInteractionContext& Context) override;
 	virtual FName GetInteractionAnimationId_Implementation() const override;
+	void SetControlEnabled(bool bEnabled) { bControlEnabled = bEnabled; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turntable")
 	TObjectPtr<UStaticMeshComponent> ControlMesh;
@@ -37,4 +38,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+private:
+	bool bControlEnabled = true;
 };

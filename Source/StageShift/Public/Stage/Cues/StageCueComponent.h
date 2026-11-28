@@ -42,6 +42,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Presentation", meta = (ClampMin = "0", Units = "s")) float CompletedDisplayTime = 1.5f;
 
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") bool ShowCue(const FStageCueDefinition& Definition);
+	bool ShowCueForActor(const FStageCueDefinition& Definition, AActor* Target);
+	void SetCueDetails(FName CueId, const FText& Details);
 	bool ShowActionCue(const FStageCueDefinition& Definition, UStageMemberComponent& Performer);
 	void FinishActionCue(FName CueId, bool bSucceeded);
 	UFUNCTION(BlueprintCallable, Category = "Stage|Cues") void ActivateCue(FName CueId);
@@ -68,7 +70,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 private:
-	bool ShowCueInternal(const FStageCueDefinition& Definition, UStageMemberComponent* Performer);
+	bool ShowCueInternal(const FStageCueDefinition& Definition, UStageMemberComponent* Performer, AActor* Target = nullptr);
 	void UpdateRecoveryPresentation(FStageCueRuntime& Cue) const;
 	void Refresh();
 	void UpdatePresentation();

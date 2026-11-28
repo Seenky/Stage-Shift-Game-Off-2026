@@ -260,6 +260,11 @@ void AStageSoundControl::RefreshSelector()
 void AStageSoundControl::SetTiming(float OpenedAt)
 {
 	Window.OpenedAt = OpenedAt;
+	if (WindowTiming.bUntimed)
+	{
+		Window.EarliestAt = Window.LatestAt = Window.ExpiresAt = 0.f;
+		return;
+	}
 	const float ExpectedAt = Window.OpenedAt + FMath::Max(0.f, WindowTiming.ExpectedDelay);
 	Window.EarliestAt = FMath::Max(Window.OpenedAt, ExpectedAt - FMath::Max(0.f, WindowTiming.EarlyTolerance));
 	Window.LatestAt = ExpectedAt + FMath::Max(0.f, WindowTiming.LateTolerance);
@@ -276,13 +281,14 @@ bool AStageSoundControl::PlaySignal()
 	USoundBase* Playback = Selected ? Selected->Sound.Get() : Sound.Get();
 	if (!IsValid(Playback)) return false;
 	const float Now = GetWorld()->GetTimeSeconds();
-	if (Now >= Window.ExpiresAt)
+	if (!WindowTiming.bUntimed && Now >= Window.ExpiresAt)
 	{
 		ExpireWindow();
 		return false;
 	}
 	if (Now < NextAttemptAt) return false;
 	const EStageSoundResult Result = Selected && Selected->SoundId != Window.SoundId ? EStageSoundResult::WrongSound
+	    : WindowTiming.bUntimed ? EStageSoundResult::OnTime
 	    : Now < Window.EarliestAt ? EStageSoundResult::Early
 	    : Now <= Window.LatestAt ? EStageSoundResult::OnTime : EStageSoundResult::Late;
 	++Window.Attempt;

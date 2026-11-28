@@ -208,7 +208,22 @@ bool UStageCueComponent::ShowActionCue(const FStageCueDefinition& Definition, US
 	return ShowCueInternal(Definition, &Performer);
 }
 
-bool UStageCueComponent::ShowCueInternal(const FStageCueDefinition& Definition, UStageMemberComponent* Performer)
+bool UStageCueComponent::ShowCueForActor(const FStageCueDefinition& Definition, AActor* Target)
+{
+	return ShowCueInternal(Definition, nullptr, Target);
+}
+
+void UStageCueComponent::SetCueDetails(FName CueId, const FText& Details)
+{
+	if (auto* Cue = Cues.FindByPredicate([CueId](const auto& Entry) { return Entry.View.CueId == CueId; }))
+	{
+		Cue->Definition.Details = Details;
+		Cue->View.Details = Details;
+		UpdatePresentation();
+	}
+}
+
+bool UStageCueComponent::ShowCueInternal(const FStageCueDefinition& Definition, UStageMemberComponent* Performer, AActor* Target)
 {
 	if (bEndingPlay || !GetWorld() || Definition.CueId.IsNone() || !FMath::IsFinite(Definition.TimeLimit) || Definition.TimeLimit < 0.0f)
 		return false;
@@ -224,9 +239,10 @@ bool UStageCueComponent::ShowCueInternal(const FStageCueDefinition& Definition, 
 	Cue->View.CueId = Definition.CueId;
 	Cue->View.Title = Definition.Title;
 	Cue->View.Details = Definition.Details;
+	Cue->View.Kind = Definition.Kind;
 	Cue->View.State = !Definition.ActivateAtStepId.IsNone() ? EStageCueState::Upcoming : Definition.bIsProblem ? EStageCueState::Problem : EStageCueState::Active;
 	Cue->View.bOverdue = false;
-	Cue->ActorOverride.Reset();
+	Cue->ActorOverride = Target;
 	Cue->Performer = Performer;
 	Cue->CompletedAt = 0.0;
 	Cue->PropThrowWindow.Reset();

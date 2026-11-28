@@ -40,6 +40,7 @@ struct FStageSoundTiming
 	UPROPERTY(EditAnywhere, Category = "Stage|Sound", meta = (ClampMin = "1")) int32 MaxAttempts = 2;
 	UPROPERTY(EditAnywhere, Category = "Stage|Sound", meta = (ClampMin = "0.1", Units = "s")) float RetryDelay = 0.65f;
 	UPROPERTY(EditAnywhere, Category = "Stage|Sound") bool bRetryLate = false;
+	UPROPERTY(EditAnywhere, Category = "Stage|Sound") bool bUntimed = false;
 
 	float GetDuration() const;
 };

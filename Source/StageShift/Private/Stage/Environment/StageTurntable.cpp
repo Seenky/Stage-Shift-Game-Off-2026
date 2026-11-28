@@ -125,6 +125,18 @@ void AStageTurntable::SetStageManager(AStageManager* Manager)
 	StageManager = Manager;
 }
 
+void AStageTurntable::ResetPracticePosition()
+{
+	if (StageManager.IsValid()) return;
+	if (UAudioComponent* Audio = RotationAudio.Get()) Audio->Stop();
+	RotationAudio.Reset();
+	bRotating = false;
+	SetActorTickEnabled(false);
+	CurrentSector = TargetSector = 0;
+	SetActorRotation(InitialRotation);
+	ReleaseProps();
+}
+
 bool AStageTurntable::CanRotate() const
 {
 	const AStageManager* Manager = StageManager.Get();

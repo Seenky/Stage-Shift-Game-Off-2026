@@ -35,6 +35,7 @@ class STAGESHIFT_API UStagePerformanceTagWidget : public UUserWidget
 
 public:
 	void Present(const FStagePerformanceCue& Cue);
+	void PresentUntimed(EStageCueKind Kind, const FText& Caption);
 
 protected:
 	virtual void NativeTick(const FGeometry& Geometry, float DeltaSeconds) override;
