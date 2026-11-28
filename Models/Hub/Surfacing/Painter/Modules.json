@@ -1,0 +1,514 @@
+{
+  "TimberShell": {
+    "batch": "Architecture",
+    "triangles": 11224,
+    "roles": [
+      "BackWood",
+      "Beam",
+      "OakAged",
+      "OakDark",
+      "Walnut"
+    ],
+    "surface_coverage": {
+      "BackWood": 5.55,
+      "Beam": 8.03,
+      "OakAged": 0.32,
+      "OakDark": 4.67,
+      "Walnut": 7.3
+    }
+  },
+  "PlankFloor": {
+    "batch": "Architecture",
+    "triangles": 25488,
+    "roles": [
+      "OakAged",
+      "OakAmber",
+      "OakBrown",
+      "OakCopper"
+    ],
+    "surface_coverage": {
+      "OakAged": 2.56,
+      "OakAmber": 4.39,
+      "OakBrown": 8.08,
+      "OakCopper": 2.19
+    }
+  },
+  "EntrySteps": {
+    "batch": "Architecture",
+    "triangles": 4976,
+    "roles": [
+      "Beam",
+      "Bronze",
+      "LanternGlow",
+      "OakAged",
+      "OakAmber",
+      "OakCopper"
+    ],
+    "surface_coverage": {
+      "Beam": 2.76,
+      "Bronze": 0.74,
+      "LanternGlow": 0.34,
+      "OakAged": 23.33,
+      "OakAmber": 2.26,
+      "OakCopper": 19.16
+    }
+  },
+  "BalconyRail": {
+    "batch": "Architecture",
+    "triangles": 23712,
+    "roles": [
+      "Beam",
+      "Bronze",
+      "GoldenBraid",
+      "LanternGlow",
+      "OakAmber",
+      "OakDark",
+      "OakHoney"
+    ],
+    "surface_coverage": {
+      "Beam": 4.98,
+      "Bronze": 1.68,
+      "GoldenBraid": 2.77,
+      "LanternGlow": 0.76,
+      "OakAmber": 4.05,
+      "OakDark": 7.9,
+      "OakHoney": 3.79
+    }
+  },
+  "WardrobeRiser": {
+    "batch": "Architecture",
+    "triangles": 3160,
+    "roles": [
+      "Bronze",
+      "OakAged",
+      "OakBrown"
+    ],
+    "surface_coverage": {
+      "Bronze": 1.51,
+      "OakAged": 20.24,
+      "OakBrown": 18.91
+    }
+  },
+  "ForegroundDrapes": {
+    "batch": "Textiles",
+    "triangles": 25404,
+    "roles": [
+      "GoldenBraid",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "GoldenBraid": 1.12,
+      "Wine": 14.59
+    }
+  },
+  "PortalValance": {
+    "batch": "Textiles",
+    "triangles": 53428,
+    "roles": [
+      "GoldenBraid",
+      "Velvet",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "GoldenBraid": 1.19,
+      "Velvet": 7.18,
+      "Wine": 0.9
+    }
+  },
+  "SceneryRails": {
+    "batch": "Textiles",
+    "triangles": 57296,
+    "roles": [
+      "Brass",
+      "Bronze",
+      "GoldenBraid",
+      "LanternGlow",
+      "OakAged",
+      "OakAmber",
+      "OakDark",
+      "OakHoney",
+      "Velvet",
+      "VelvetDark",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "Brass": 0.09,
+      "Bronze": 0.34,
+      "GoldenBraid": 0.65,
+      "LanternGlow": 0.02,
+      "OakAged": 0.96,
+      "OakAmber": 0.36,
+      "OakDark": 1.26,
+      "OakHoney": 0.58,
+      "Velvet": 0.28,
+      "VelvetDark": 1.21,
+      "Wine": 3.08
+    }
+  },
+  "CompanyRug": {
+    "batch": "Textiles",
+    "triangles": 5036,
+    "roles": [
+      "GoldenBraid",
+      "RugDye",
+      "RugRed"
+    ],
+    "surface_coverage": {
+      "GoldenBraid": 4.76,
+      "RugDye": 0.12,
+      "RugRed": 24.16
+    }
+  },
+  "Wardrobe": {
+    "batch": "Workshop",
+    "triangles": 26872,
+    "roles": [
+      "Beam",
+      "BlueFabric",
+      "Brass",
+      "Bronze",
+      "GoldenBraid",
+      "OakAged",
+      "OakAmber",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "PinkFabric",
+      "RugRed",
+      "Velvet",
+      "Walnut",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "Beam": 2.46,
+      "BlueFabric": 0.22,
+      "Brass": 0.17,
+      "Bronze": 0.31,
+      "GoldenBraid": 1.22,
+      "OakAged": 0.82,
+      "OakAmber": 2.87,
+      "OakDark": 2.52,
+      "OakHoney": 1.27,
+      "Paper": 0.35,
+      "PinkFabric": 0.22,
+      "RugRed": 0.36,
+      "Velvet": 6.14,
+      "Walnut": 0.94,
+      "Wine": 0.77
+    }
+  },
+  "CraftBench": {
+    "batch": "Workshop",
+    "triangles": 18716,
+    "roles": [
+      "BlueFabric",
+      "Brass",
+      "Bronze",
+      "Canvas",
+      "Ink",
+      "LanternGlow",
+      "OakAged",
+      "OakAmber",
+      "OakCopper",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "PaperLight",
+      "Rose",
+      "RugPurple",
+      "Walnut",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "BlueFabric": 0.57,
+      "Brass": 0.15,
+      "Bronze": 1.73,
+      "Canvas": 0.82,
+      "Ink": 0.31,
+      "LanternGlow": 0.14,
+      "OakAged": 10.04,
+      "OakAmber": 1.88,
+      "OakCopper": 6.74,
+      "OakDark": 9.96,
+      "OakHoney": 2.04,
+      "Paper": 1.02,
+      "PaperLight": 0.55,
+      "Rose": 0.83,
+      "RugPurple": 0.37,
+      "Walnut": 2.59,
+      "Wine": 0.19
+    }
+  },
+  "DressingCorner": {
+    "batch": "Workshop",
+    "triangles": 15876,
+    "roles": [
+      "BlueFabric",
+      "Brass",
+      "Bronze",
+      "GoldenBraid",
+      "LanternGlow",
+      "OakAged",
+      "OakAmber",
+      "OakCopper",
+      "Paper",
+      "Rose",
+      "RugDye",
+      "RugRed",
+      "Silver"
+    ],
+    "surface_coverage": {
+      "BlueFabric": 0.09,
+      "Brass": 0.08,
+      "Bronze": 7.58,
+      "GoldenBraid": 0.09,
+      "LanternGlow": 1.17,
+      "OakAged": 1.29,
+      "OakAmber": 3.79,
+      "OakCopper": 4.27,
+      "Paper": 3.06,
+      "Rose": 0.27,
+      "RugDye": 8.3,
+      "RugRed": 1.27,
+      "Silver": 4.0
+    }
+  },
+  "MusicCorner": {
+    "batch": "Workshop",
+    "triangles": 29592,
+    "roles": [
+      "Brass",
+      "Bronze",
+      "Canvas",
+      "Forest",
+      "GoldenBraid",
+      "Ink",
+      "Leaf",
+      "LeafLight",
+      "OakAmber",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "PaperLight",
+      "Rose",
+      "RoseLight",
+      "RugPurple",
+      "RugRed",
+      "Walnut",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "Brass": 0.04,
+      "Bronze": 1.67,
+      "Canvas": 4.47,
+      "Forest": 3.38,
+      "GoldenBraid": 2.03,
+      "Ink": 0.14,
+      "Leaf": 0.28,
+      "LeafLight": 0.41,
+      "OakAmber": 0.58,
+      "OakDark": 0.54,
+      "OakHoney": 0.36,
+      "Paper": 0.15,
+      "PaperLight": 0.48,
+      "Rose": 0.35,
+      "RoseLight": 0.05,
+      "RugPurple": 5.72,
+      "RugRed": 0.42,
+      "Walnut": 3.23,
+      "Wine": 0.88
+    }
+  },
+  "SoundDesk": {
+    "batch": "Workshop",
+    "triangles": 9256,
+    "roles": [
+      "Brass",
+      "Bronze",
+      "GoldenBraid",
+      "Ink",
+      "LanternGlow",
+      "OakAged",
+      "OakAmber",
+      "OakCopper",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "RugRed",
+      "Slate",
+      "Walnut"
+    ],
+    "surface_coverage": {
+      "Brass": 0.75,
+      "Bronze": 2.1,
+      "GoldenBraid": 0.16,
+      "Ink": 1.75,
+      "LanternGlow": 0.8,
+      "OakAged": 5.46,
+      "OakAmber": 0.98,
+      "OakCopper": 1.67,
+      "OakDark": 4.16,
+      "OakHoney": 3.48,
+      "Paper": 4.96,
+      "RugRed": 1.05,
+      "Slate": 1.12,
+      "Walnut": 15.19
+    }
+  },
+  "SelectionStand": {
+    "batch": "Scenography",
+    "triangles": 235264,
+    "roles": [
+      "Brass",
+      "Bronze",
+      "GoldenBraid",
+      "Ink",
+      "LanternGlow",
+      "OakAged",
+      "OakAmber",
+      "OakCopper",
+      "Paper",
+      "RimGlow",
+      "Velvet",
+      "VelvetDark",
+      "Wine"
+    ],
+    "surface_coverage": {
+      "Brass": 0.27,
+      "Bronze": 0.05,
+      "GoldenBraid": 0.9,
+      "Ink": 0.23,
+      "LanternGlow": 0.04,
+      "OakAged": 1.88,
+      "OakAmber": 0.44,
+      "OakCopper": 3.04,
+      "Paper": 0.22,
+      "RimGlow": 0.15,
+      "Velvet": 3.37,
+      "VelvetDark": 1.56,
+      "Wine": 0.68
+    }
+  },
+  "ScenicGreens": {
+    "batch": "Scenography",
+    "triangles": 40320,
+    "roles": [
+      "Canvas",
+      "Forest",
+      "Leaf",
+      "LeafLight",
+      "Rose",
+      "RoseLight"
+    ],
+    "surface_coverage": {
+      "Canvas": 16.09,
+      "Forest": 13.15,
+      "Leaf": 2.08,
+      "LeafLight": 1.34,
+      "Rose": 1.64,
+      "RoseLight": 0.22
+    }
+  },
+  "FlyRig": {
+    "batch": "Scenography",
+    "triangles": 24800,
+    "roles": [
+      "Beam",
+      "Bronze",
+      "GoldenBraid",
+      "Ink",
+      "LanternGlow",
+      "OakHoney"
+    ],
+    "surface_coverage": {
+      "Beam": 2.94,
+      "Bronze": 2.02,
+      "GoldenBraid": 9.14,
+      "Ink": 1.64,
+      "LanternGlow": 0.53,
+      "OakHoney": 2.34
+    }
+  },
+  "CrimePreview": {
+    "batch": "Scenography",
+    "triangles": 3804,
+    "roles": [
+      "Brass",
+      "LanternGlow",
+      "OakAmber",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "Plaster",
+      "RugRed",
+      "Walnut",
+      "WindowLight"
+    ],
+    "surface_coverage": {
+      "Brass": 0.12,
+      "LanternGlow": 0.09,
+      "OakAmber": 3.7,
+      "OakDark": 2.34,
+      "OakHoney": 17.52,
+      "Paper": 0.24,
+      "Plaster": 22.66,
+      "RugRed": 3.02,
+      "Walnut": 5.76,
+      "WindowLight": 2.54
+    }
+  },
+  "WinterPreview": {
+    "batch": "Scenography",
+    "triangles": 3732,
+    "roles": [
+      "Brass",
+      "Bronze",
+      "Ink",
+      "OakHoney",
+      "Paper",
+      "Slate",
+      "Snow",
+      "Storm"
+    ],
+    "surface_coverage": {
+      "Brass": 0.64,
+      "Bronze": 0.18,
+      "Ink": 0.06,
+      "OakHoney": 20.64,
+      "Paper": 0.23,
+      "Slate": 5.89,
+      "Snow": 8.43,
+      "Storm": 22.53
+    }
+  },
+  "SeaPreview": {
+    "batch": "Scenography",
+    "triangles": 3712,
+    "roles": [
+      "Brass",
+      "Bronze",
+      "Canvas",
+      "Ink",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "Slate",
+      "Snow",
+      "Storm",
+      "Walnut"
+    ],
+    "surface_coverage": {
+      "Brass": 0.76,
+      "Bronze": 0.21,
+      "Canvas": 2.91,
+      "Ink": 0.06,
+      "OakDark": 0.79,
+      "OakHoney": 24.88,
+      "Paper": 0.27,
+      "Slate": 3.61,
+      "Snow": 1.16,
+      "Storm": 27.24,
+      "Walnut": 2.11
+    }
+  }
+}

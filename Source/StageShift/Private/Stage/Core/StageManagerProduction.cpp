@@ -130,7 +130,7 @@ void AStageManager::AdvanceProduction()
 		if (bShowBriefing)
 		{
 			if (RuntimeCurtain.IsValid()) CurtainPhase = ECurtainPhase::Briefing;
-			if (!QueueSceneBriefing(Scene.Scenario->SceneBriefing, Error))
+			if (!QueueSceneBriefing(Scene.Scenario->SceneBriefing, Error, Scene.Scenario))
 			{
 				FinishProduction(false, Error);
 				return;

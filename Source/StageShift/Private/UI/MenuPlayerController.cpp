@@ -1,12 +1,14 @@
 #include "UI/MenuPlayerController.h"
 
-#include "Components/Button.h"
+#include "Components/Widget.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/LocalPlayer.h"
 #include "EngineUtils.h"
 #include "InputKeyEventArgs.h"
 #include "UI/Button3D.h"
-#include "UI/MenuOverlayWidget.h"
+#include "UI/MenuExitWidget.h"
+#include "UI/MenuPanelWidget.h"
+#include "UI/SettingsWidget.h"
 #include "Widgets/SViewport.h"
 
 void AMenuPlayerController::BeginPlay()
@@ -27,12 +29,26 @@ void AMenuPlayerController::BeginPlay()
 
 void AMenuPlayerController::OpenOverlay(EMenuOverlay Panel, AButton3D* Origin)
 {
-	if (!IsLocalController() || ActiveOverlay || !OverlayClass) return;
+	if (!IsLocalController() || ActiveOverlay) return;
 
-	auto* Widget = CreateWidget<UMenuOverlayWidget>(this, OverlayClass);
-	if (!Widget) return;
-	Widget->ShowPanel(Panel);
-	if (!Widget->AddToPlayerScreen()) return;
+	TSubclassOf<UMenuPanelWidget> PanelClass;
+	switch (Panel)
+	{
+	case EMenuOverlay::Settings:
+		PanelClass = SettingsClass;
+		break;
+	case EMenuOverlay::Coop:
+		PanelClass = CoopClass;
+		break;
+	case EMenuOverlay::Exit:
+		PanelClass = ExitClass;
+		break;
+	}
+	if (!ensureMsgf(PanelClass, TEXT("Menu panel class is missing for %s."), *UEnum::GetValueAsString(Panel))) return;
+
+	auto* Widget = CreateWidget<UMenuPanelWidget>(this, PanelClass);
+	if (!Widget || !Widget->AddToPlayerScreen()) return;
+	Widget->OnCloseRequested.AddUObject(this, &ThisClass::CloseOverlay);
 
 	ActiveOverlay = Widget;
 	if (const int32 Index = Buttons.IndexOfByKey(Origin); Index != INDEX_NONE)
@@ -45,17 +61,19 @@ void AMenuPlayerController::OpenOverlay(EMenuOverlay Panel, AButton3D* Origin)
 	bEnableMouseOverEvents = false;
 	bStickDeflected = false;
 
+	UWidget* InitialFocus = Widget->GetInitialFocus();
 	FInputModeUIOnly Mode;
-	Mode.SetWidgetToFocus(Widget->GetInitialFocus()->TakeWidget());
+	Mode.SetWidgetToFocus(InitialFocus->TakeWidget());
 	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	SetInputMode(Mode);
-	Widget->GetInitialFocus()->SetUserFocus(this);
+	InitialFocus->SetUserFocus(this);
 }
 
 void AMenuPlayerController::CloseOverlay()
 {
 	if (!ActiveOverlay) return;
 
+	ActiveOverlay->OnCloseRequested.RemoveAll(this);
 	ActiveOverlay->RemoveFromParent();
 	ActiveOverlay = nullptr;
 	bEnableClickEvents = bSavedClickEvents;

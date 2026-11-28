@@ -1,0 +1,290 @@
+{
+  "PlankFloor": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber"
+    ],
+    "emissive": false
+  },
+  "TimberShell": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber"
+    ],
+    "emissive": false
+  },
+  "BalconyRail": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass"
+    ],
+    "emissive": true
+  },
+  "EntrySteps": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass"
+    ],
+    "emissive": true
+  },
+  "WardrobeRiser": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass"
+    ],
+    "emissive": false
+  },
+  "ForegroundDrapes": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Theatre Velvet"
+    ],
+    "emissive": false
+  },
+  "PortalValance": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Antique Brass"
+    ],
+    "emissive": false
+  },
+  "CompanyRug": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Matte Carpet"
+    ],
+    "emissive": false
+  },
+  "SelectorDrapery": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Theatre Velvet",
+      "Antique Brass"
+    ],
+    "emissive": false
+  },
+  "WardrobeCostumes": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Antique Brass",
+      "Plain Canvas",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": false
+  },
+  "Wardrobe": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Matte Carpet",
+      "Antique Brass",
+      "Plain Canvas"
+    ],
+    "emissive": false
+  },
+  "DressingCorner": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Matte Carpet",
+      "Antique Brass",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": true
+  },
+  "CraftBench": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass",
+      "Plain Canvas",
+      "Paper Cream"
+    ],
+    "emissive": true
+  },
+  "WorkshopProps": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Antique Brass",
+      "Plain Canvas",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": false
+  },
+  "SoundDesk": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Matte Carpet",
+      "Antique Brass",
+      "Plain Canvas",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": true
+  },
+  "MusicCorner": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Matte Carpet",
+      "Antique Brass",
+      "Plain Canvas",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": false
+  },
+  "SelectionStand": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass",
+      "Plain Canvas",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": false
+  },
+  "SelectorHardware": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": true
+  },
+  "ScenicGreens": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber"
+    ],
+    "emissive": false
+  },
+  "FlyRig": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Antique Brass",
+      "Painted Iron"
+    ],
+    "emissive": true
+  },
+  "SelectionPreview": {
+    "size": 2048,
+    "baseline": true,
+    "masks": [
+      "Aged Wood Umber",
+      "Theatre Velvet",
+      "Antique Brass",
+      "Paper Cream",
+      "Painted Iron"
+    ],
+    "emissive": true
+  },
+  "CrimePreview": {
+    "size": 2048,
+    "baseline": false,
+    "masks": [
+      "Brass",
+      "LanternGlow",
+      "OakAmber",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "Plaster",
+      "RugRed",
+      "Walnut",
+      "WindowLight"
+    ],
+    "emissive": true
+  },
+  "CastlePreview": {
+    "size": 2048,
+    "baseline": false,
+    "masks": [
+      "BlueFabric",
+      "Forest",
+      "Leaf",
+      "LeafLight",
+      "OakAmber",
+      "OakCopper",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "PaperLight",
+      "Wine"
+    ],
+    "emissive": false
+  },
+  "WinterPreview": {
+    "size": 2048,
+    "baseline": false,
+    "masks": [
+      "OakHoney",
+      "Paper",
+      "Slate",
+      "Snow",
+      "Storm"
+    ],
+    "emissive": false
+  },
+  "SeaPreview": {
+    "size": 2048,
+    "baseline": false,
+    "masks": [
+      "Canvas",
+      "OakDark",
+      "OakHoney",
+      "Paper",
+      "Slate",
+      "Snow",
+      "Storm",
+      "Walnut"
+    ],
+    "emissive": false
+  },
+  "SelectorSign": {
+    "size": 2048,
+    "baseline": false,
+    "masks": [],
+    "emissive": false
+  }
+}

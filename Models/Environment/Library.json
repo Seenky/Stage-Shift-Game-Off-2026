@@ -1,0 +1,784 @@
+{
+  "model_root": "Models",
+  "assets": {
+    "/Game/MATERIALS/PBR/M_TheatreSurface": {
+      "class_name": "Material"
+    },
+    "/Game/MATERIALS/PBR/T_StageShiftFlatNormal": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Materials/Painter/Shared/T_StageShiftFlatNormal.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/MI_Menu_WallBeam_01": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Architecture/MI_Menu_WallBeam_02": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Architecture/MI_Menu_WallBeam_03": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Architecture/MI_Menu_WallBeam_07": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Architecture/MI_Menu_WallBeam_08": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Architecture/MI_Menu_WallBeam_09": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Architecture/SM_Menu_WallBeam_01": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Architecture/Export/SM_Menu_WallBeam_01.fbx"
+      ],
+      "geometry_library": "Environment/FrontOfHouseKit.blend"
+    },
+    "/Game/MODELS/Environment/Architecture/SM_Menu_WallBeam_07": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Architecture/Export/SM_Menu_WallBeam_07.fbx"
+      ],
+      "geometry_library": "Environment/FrontOfHouseKit.blend"
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_01_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_01_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_01_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_01_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_01_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_01_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_02_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_02_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_02_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_02_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_02_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_02_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_03_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_03_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_03_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_03_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_03_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_03_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_07_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_07_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_07_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_07_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_07_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_07_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_08_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_08_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_08_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_08_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_08_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_08_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_09_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_09_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_09_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_09_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Architecture/T_Menu_WallBeam_09_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Architecture/Export/T_Menu_WallBeam_09_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Auditorium/MI_CP_Auditorium_Seat": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Auditorium/SM_CP_Auditorium_Seat": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Auditorium/Export/SM_CP_Auditorium_Seat.fbx"
+      ],
+      "geometry_library": "Environment/Auditorium/Auditorium.blend"
+    },
+    "/Game/MODELS/Environment/Auditorium/T_Auditorium_Seat_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Auditorium/Export/T_Auditorium_Seat_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Auditorium/T_Auditorium_Seat_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Auditorium/Export/T_Auditorium_Seat_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Auditorium/T_Auditorium_Seat_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Auditorium/Export/T_Auditorium_Seat_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/MI_CP_Coat_Linen": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Costumes/MI_CP_Coat_Oxblood": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Costumes/MI_CP_Coat_Teal": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Costumes/SM_CP_Coat_Linen": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Costumes/Export/SM_CP_Coat_Linen.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Linen_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Linen_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Linen_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Linen_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Linen_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Linen_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Oxblood_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Oxblood_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Oxblood_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Oxblood_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Oxblood_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Oxblood_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Teal_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Teal_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Teal_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Teal_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Costumes/T_Coat_Teal_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Costumes/Export/T_Coat_Teal_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/MI_CP_Dressing_Table": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Furniture/MI_CP_Vanity_Stool": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Furniture/MI_Menu_VanityMirror": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Furniture/SM_CP_Dressing_Table": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Furniture/Export/SM_CP_Dressing_Table.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Furniture/SM_CP_Vanity_Stool": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Furniture/Export/SM_CP_Vanity_Stool.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Furniture/SM_Menu_VanityMirror": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Furniture/Export/SM_Menu_VanityMirror.fbx"
+      ],
+      "geometry_library": "Environment/FrontOfHouseKit.blend"
+    },
+    "/Game/MODELS/Environment/Furniture/T_Dressing_Table_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Dressing_Table_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Dressing_Table_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Dressing_Table_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Dressing_Table_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Dressing_Table_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Menu_VanityMirror_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Menu_VanityMirror_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Menu_VanityMirror_Emissive": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Menu_VanityMirror_Emissive.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Menu_VanityMirror_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Menu_VanityMirror_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Menu_VanityMirror_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Menu_VanityMirror_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Vanity_Stool_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Vanity_Stool_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Vanity_Stool_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Vanity_Stool_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Furniture/T_Vanity_Stool_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Furniture/Export/T_Vanity_Stool_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/MI_Menu_BackstageLantern": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Lighting/MI_Menu_Spotlight_01": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Lighting/MI_Menu_Spotlight_02": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Lighting/SM_Menu_BackstageLantern": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Lighting/Export/SM_Menu_BackstageLantern.fbx"
+      ],
+      "geometry_library": "Environment/FrontOfHouseKit.blend"
+    },
+    "/Game/MODELS/Environment/Lighting/SM_Menu_Spotlight_01": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Lighting/Export/SM_Menu_Spotlight_01.fbx"
+      ],
+      "geometry_library": "Environment/FrontOfHouseKit.blend"
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_BackstageLantern_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_BackstageLantern_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_BackstageLantern_Emissive": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_BackstageLantern_Emissive.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_BackstageLantern_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_BackstageLantern_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_BackstageLantern_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_BackstageLantern_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_01_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_01_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_01_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_01_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_01_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_01_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_02_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_02_BaseColor.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_02_Emissive": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_02_Emissive.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_02_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_02_Normal_DX.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Lighting/T_Menu_Spotlight_02_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Lighting/Export/T_Menu_Spotlight_02_ORM.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Backstage_Ladder": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Book_Blue": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Book_Green": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Book_Open": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Book_Red": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Travel_Case_Kraft": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Travel_Case_Teal": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Work_Crate_Large": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Work_Crate_Open": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/MI_CP_Work_Crate_Small": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Backstage_Ladder": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Backstage_Ladder.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Book_Open": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Book_Open.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Book_Red": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Book_Red.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Travel_Case_Kraft": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Travel_Case_Kraft.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Work_Crate_Large": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Work_Crate_Large.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Work_Crate_Open": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Work_Crate_Open.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/SM_CP_Work_Crate_Small": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Props/Export/SM_CP_Work_Crate_Small.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Props/T_Backstage_Ladder_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Backstage_Ladder_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Backstage_Ladder_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Backstage_Ladder_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Backstage_Ladder_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Backstage_Ladder_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Blue_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Blue_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Blue_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Blue_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Blue_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Blue_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Green_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Green_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Green_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Green_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Green_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Green_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Open_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Open_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Open_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Open_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Open_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Open_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Red_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Red_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Red_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Red_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Book_Red_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Book_Red_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Travel_Case_Kraft_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Travel_Case_Kraft_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Travel_Case_Kraft_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Travel_Case_Kraft_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Travel_Case_Kraft_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Travel_Case_Kraft_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Travel_Case_Teal_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Travel_Case_Teal_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Travel_Case_Teal_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Travel_Case_Teal_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Travel_Case_Teal_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Travel_Case_Teal_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Large_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Large_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Large_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Large_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Large_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Large_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Open_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Open_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Open_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Open_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Open_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Open_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Small_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Small_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Small_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Small_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Props/T_Work_Crate_Small_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Props/Export/T_Work_Crate_Small_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Rigging/MI_CP_Coiled_Ropes_and_Pulley_Rack": {
+      "class_name": "MaterialInstanceConstant"
+    },
+    "/Game/MODELS/Environment/Rigging/MI_TheatreRope_Hemp": {
+      "class_name": "MaterialInstanceConstant",
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/MI_TheatreRope_Wood": {
+      "class_name": "MaterialInstanceConstant",
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/SM_CP_Coiled_Ropes_and_Pulley_Rack": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Rigging/Export/SM_CP_Coiled_Ropes_and_Pulley_Rack.fbx"
+      ],
+      "geometry_library": "Environment/BackstageKit.blend"
+    },
+    "/Game/MODELS/Environment/Rigging/SM_TheatreRope_Grip": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Rigging/Export/SM_TheatreRope_Grip.fbx"
+      ],
+      "geometry_library": "Environment/Rigging/TheatreRope.blend",
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/SM_TheatreRope_Segment": {
+      "class_name": "StaticMesh",
+      "import_sources": [
+        "Environment/Rigging/Export/SM_TheatreRope_Segment.fbx"
+      ],
+      "geometry_library": "Environment/Rigging/TheatreRope.blend",
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/T_Coiled_Ropes_and_Pulley_Rack_BaseColor_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_Coiled_Ropes_and_Pulley_Rack_BaseColor_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Rigging/T_Coiled_Ropes_and_Pulley_Rack_Normal_DX_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_Coiled_Ropes_and_Pulley_Rack_Normal_DX_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Rigging/T_Coiled_Ropes_and_Pulley_Rack_ORM_FlatHP": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_Coiled_Ropes_and_Pulley_Rack_ORM_FlatHP.png"
+      ]
+    },
+    "/Game/MODELS/Environment/Rigging/T_TheatreRope_Hemp_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_TheatreRope_Hemp_BaseColor.png"
+      ],
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/T_TheatreRope_Hemp_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_TheatreRope_Hemp_Normal_DX.png"
+      ],
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/T_TheatreRope_Hemp_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_TheatreRope_Hemp_ORM.png"
+      ],
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/T_TheatreRope_Wood_BaseColor": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_TheatreRope_Wood_BaseColor.png"
+      ],
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/T_TheatreRope_Wood_Normal_DX": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_TheatreRope_Wood_Normal_DX.png"
+      ],
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    },
+    "/Game/MODELS/Environment/Rigging/T_TheatreRope_Wood_ORM": {
+      "class_name": "Texture2D",
+      "import_sources": [
+        "Environment/Rigging/Export/T_TheatreRope_Wood_ORM.png"
+      ],
+      "painter_project": "Environment/Rigging/Painter/TheatreRope.spp"
+    }
+  }
+}

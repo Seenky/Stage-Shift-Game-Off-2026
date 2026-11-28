@@ -767,6 +767,11 @@ void UStageCueComponent::UpdatePerformanceHUD(AStageManager& Stage)
 						if (auto* Prop = Cast<AStagePhysicsActor>(Stage.GetTarget(Id)); IsValid(Prop)) Tag.PickupTargets.AddUnique(Prop);
 			}
 		}
+		if (!bUpcoming && bWaitingForSound)
+		{
+			Preparations.Add({Tag, 0});
+			continue;
+		}
 		if (!bUpcoming)
 		{
 			if (Tags.Num() < Limit && !HasActiveCard(Tag)) Tags.Add(Tag);

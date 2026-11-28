@@ -1,0 +1,1821 @@
+{
+  "source": "Existing Substance Painter texture sets",
+  "source_export_preset": "Stage Shift Unreal ORM",
+  "iterations": "Preserve the full resolution Painter project and source bakes. Export at source resolution, then resample only documented channels with linear RGB / normalized normals.",
+  "texture_sets": {
+    "Arched_Window": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Auditorium_Aisle": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Auditorium_Deck": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Auditorium_Front_Landing": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Auditorium_Seat": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Backstage_Costume_Rack": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Backstage_Floor_Around_Rail": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Backstage_Ladder": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Backstage_Mask_Cloth": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Backstage_Mask_Frame": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Backstage_Mask_Hanging_Tab": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Backstage_Mask_Rod": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Backstage_Storage_Shelf": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Backstage_Tile_146x140": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Book_Blue": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Book_Green": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Book_Open": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Book_Red": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Chair_Investigator": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Chair_Pawnbroker": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Chair_Walnut": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Coat_Brown": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Coat_Linen": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Coat_Oxblood": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Coat_Teal": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Coiled_Ropes_and_Pulley_Rack": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Costume_Hanger": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "CurtainControl": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Curved_Stage_Apron": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Desk_Investigator": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Dressing_Mirror_Bulb": {
+      "BaseColor": 512,
+      "Emissive": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Dressing_Mirror_Frame": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Dressing_Mirror_Glass": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Dressing_Table": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Flat_Office_Blue": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Flat_Pawnbroker_Door": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Flat_Pawnbroker_Window": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Flat_Scenery_Back": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Flat_Sonya_Green": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Folded_Bed_Blanket": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Folded_Letter": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Framed_Paper_Icon": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Hatbox_Oxblood": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Hatbox_Teal": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "LightControl": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Linen_Pillow": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Main_Curtain_Leaf": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Offcuts_Bin": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Offcuts_and_Paper_Rolls": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Paneled_Door_Frame": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Paneled_Door_Leaf": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Paper_Oil_Lamp": {
+      "BaseColor": 1024,
+      "Emissive": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Pawnbroker_Cabinet": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Peg_Rail": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Prop_Theatre_Axe": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Prop_Tied_Parcel": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Proscenium_Curved_Header": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Proscenium_Pier": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Proscenium_Tied_Drape": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Proscenium_Valance": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Rug_Burgundy": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Rug_Slate": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Rug_Sonya": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Sash_Window": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Scenery_Pilaster": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Scenery_Reverse_Brace": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Scenery_Trolley": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Sonya_Bed": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Sonya_Wall_Shelf": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Sonya_Window_Drapes": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "SoundControl": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Sound_Console_Stand": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "StageControl": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Stage_Footlight": {
+      "BaseColor": 512,
+      "Emissive": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Stage_Foundation": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Stage_Steps": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Table_Pawnbroker": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Table_Simple": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "TheatreAxe": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "TheatreBook": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "TheatreLedger": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "TheatrePackage": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Theatre_Spotlight_Fixture": {
+      "BaseColor": 2048,
+      "Emissive": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Theatre_Wall_4m": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Theatre_Wall_Sconce": {
+      "BaseColor": 1024,
+      "Emissive": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Timber_Beam_4m": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Timber_Knee_Brace": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Timber_Post": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Torn_Paper_Brick_Inset": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Travel_Case_Kraft": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Travel_Case_Oxblood": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Travel_Case_Teal": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Turntable_Deck": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Turntable_Hub_and_Cap": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Turntable_Plank_Surface": {
+      "BaseColor": 2048,
+      "Normal": 2048,
+      "ORM": 2048
+    },
+    "Turntable_Rail_30deg": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Vanity_Bottle": {
+      "BaseColor": 512,
+      "Normal": 512,
+      "ORM": 512
+    },
+    "Vanity_Stool": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Work_Crate_Large": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Work_Crate_Open": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    },
+    "Work_Crate_Small": {
+      "BaseColor": 1024,
+      "Normal": 1024,
+      "ORM": 1024
+    }
+  },
+  "maps": [
+    {
+      "file": "PBR/Backstage/T_Backstage_Costume_Rack_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Costume_Rack_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Costume_Rack_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Ladder_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Ladder_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Ladder_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Storage_Shelf_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Storage_Shelf_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Backstage_Storage_Shelf_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Costume_Hanger_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Costume_Hanger_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Costume_Hanger_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Hatbox_Oxblood_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Hatbox_Oxblood_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Hatbox_Oxblood_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Hatbox_Teal_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Hatbox_Teal_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Hatbox_Teal_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Offcuts_Bin_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Offcuts_Bin_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Offcuts_Bin_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Offcuts_and_Paper_Rolls_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Offcuts_and_Paper_Rolls_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Offcuts_and_Paper_Rolls_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Scenery_Trolley_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Scenery_Trolley_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Scenery_Trolley_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Kraft_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Kraft_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Kraft_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Oxblood_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Oxblood_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Oxblood_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Teal_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Teal_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Travel_Case_Teal_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Large_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Large_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Large_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Open_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Open_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Open_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Small_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Small_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Backstage/T_Work_Crate_Small_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Auditorium_Aisle_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Auditorium_Aisle_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Auditorium_Aisle_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Auditorium_Seat_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Auditorium_Seat_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Auditorium_Seat_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Backstage_Mask_Hanging_Tab_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Backstage_Mask_Hanging_Tab_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Backstage_Mask_Hanging_Tab_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Brown_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Brown_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Brown_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Linen_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Linen_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Linen_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Oxblood_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Oxblood_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Oxblood_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Teal_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Teal_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Coat_Teal_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Folded_Bed_Blanket_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Folded_Bed_Blanket_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Folded_Bed_Blanket_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Linen_Pillow_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Linen_Pillow_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Linen_Pillow_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Rug_Slate_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Rug_Slate_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Rug_Slate_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Rug_Sonya_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Fabric/T_Rug_Sonya_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Fabric/T_Rug_Sonya_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Blue_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Blue_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Blue_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Green_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Green_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Green_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Open_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Open_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Open_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Red_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Red_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Book_Red_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Folded_Letter_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Folded_Letter_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Folded_Letter_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Framed_Paper_Icon_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Framed_Paper_Icon_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Framed_Paper_Icon_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Paper_Oil_Lamp_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Paper_Oil_Lamp_Emissive.png",
+      "size": 1024,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Paper_Oil_Lamp_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Paper_Oil_Lamp_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Prop_Tied_Parcel_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/HandProps/T_Prop_Tied_Parcel_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/HandProps/T_Prop_Tied_Parcel_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Chair_Pawnbroker_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Chair_Pawnbroker_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Chair_Pawnbroker_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Paneled_Door_Frame_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Paneled_Door_Frame_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Paneled_Door_Frame_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Paneled_Door_Leaf_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Paneled_Door_Leaf_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Paneled_Door_Leaf_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Pawnbroker_Cabinet_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Pawnbroker_Cabinet_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Pawnbroker_Cabinet_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Peg_Rail_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Peg_Rail_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Peg_Rail_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Sash_Window_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Sash_Window_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Sash_Window_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Table_Pawnbroker_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Table_Pawnbroker_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Table_Pawnbroker_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Torn_Paper_Brick_Inset_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Torn_Paper_Brick_Inset_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Pawnbroker/T_Torn_Paper_Brick_Inset_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Coiled_Ropes_and_Pulley_Rack_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Coiled_Ropes_and_Pulley_Rack_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Coiled_Ropes_and_Pulley_Rack_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Bulb_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Bulb_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Bulb_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Bulb_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Frame_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Frame_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Frame_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Glass_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Glass_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Mirror_Glass_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Table_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Table_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Dressing_Table_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Sound_Console_Stand_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Sound_Console_Stand_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Sound_Console_Stand_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Stage_Footlight_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Stage_Footlight_Emissive.png",
+      "size": 512,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Stage_Footlight_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Stage_Footlight_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Theatre_Wall_Sconce_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Theatre_Wall_Sconce_Emissive.png",
+      "size": 1024,
+      "channel": "Emissive",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Theatre_Wall_Sconce_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Theatre_Wall_Sconce_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Vanity_Bottle_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Vanity_Bottle_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Vanity_Bottle_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Vanity_Stool_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Practical/T_Vanity_Stool_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Practical/T_Vanity_Stool_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Arched_Window_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Arched_Window_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Arched_Window_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Chair_Investigator_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Chair_Investigator_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Chair_Investigator_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Chair_Walnut_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Chair_Walnut_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Chair_Walnut_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Desk_Investigator_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Desk_Investigator_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Desk_Investigator_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Flat_Scenery_Back_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Flat_Scenery_Back_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Flat_Scenery_Back_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Sonya_Bed_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Sonya_Bed_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Sonya_Bed_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Sonya_Wall_Shelf_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Sonya_Wall_Shelf_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Sonya_Wall_Shelf_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Table_Simple_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Scenery/T_Table_Simple_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Scenery/T_Table_Simple_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Scenery_Pilaster_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Stage/T_Scenery_Pilaster_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Scenery_Pilaster_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Scenery_Reverse_Brace_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Stage/T_Scenery_Reverse_Brace_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Scenery_Reverse_Brace_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Stage_Steps_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Stage/T_Stage_Steps_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Stage_Steps_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Turntable_Hub_and_Cap_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Stage/T_Turntable_Hub_and_Cap_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Turntable_Hub_and_Cap_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Turntable_Rail_30deg_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/Stage/T_Turntable_Rail_30deg_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/Stage/T_Turntable_Rail_30deg_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Backstage_Mask_Frame_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/TheatreShell/T_Backstage_Mask_Frame_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Backstage_Mask_Frame_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Backstage_Mask_Rod_BaseColor.png",
+      "size": 512,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/TheatreShell/T_Backstage_Mask_Rod_Normal_GL.png",
+      "size": 512,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Backstage_Mask_Rod_ORM.png",
+      "size": 512,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Proscenium_Pier_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/TheatreShell/T_Proscenium_Pier_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Proscenium_Pier_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Beam_4m_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Beam_4m_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Beam_4m_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Knee_Brace_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Knee_Brace_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Knee_Brace_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Post_BaseColor.png",
+      "size": 1024,
+      "channel": "BaseColor",
+      "srgb": true
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Post_Normal_GL.png",
+      "size": 1024,
+      "channel": "Normal",
+      "srgb": false
+    },
+    {
+      "file": "PBR/TheatreShell/T_Timber_Post_ORM.png",
+      "size": 1024,
+      "channel": "ORM",
+      "srgb": false
+    }
+  ]
+}

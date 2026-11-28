@@ -1,0 +1,84 @@
+{
+  "BalconyRail": [
+    "HoneyCard",
+    "ToastedCard"
+  ],
+  "CraftBench": [
+    "ToastedCard",
+    "HoneyCard",
+    "Corrugation"
+  ],
+  "DressingCorner": [
+    "HoneyCard",
+    "ToastedCard",
+    "Corrugation"
+  ],
+  "EntrySteps": [
+    "HoneyCard",
+    "ToastedCard",
+    "Corrugation"
+  ],
+  "ForegroundDrapes": [
+    "WineFabric",
+    "WineDeep"
+  ],
+  "MusicCorner": [
+    "HoneyCard",
+    "ToastedCard"
+  ],
+  "PlankFloor": [
+    "FloorOakBrown",
+    "FloorOakAged",
+    "FloorOakAmber",
+    "FloorOakCopper"
+  ],
+  "PortalValance": [
+    "WineFabric",
+    "WineDeep"
+  ],
+  "ScenicGreens": [
+    "Corrugation"
+  ],
+  "SelectionPreview": [
+    "HoneyCard",
+    "ToastedCard",
+    "IvoryScenery"
+  ],
+  "SelectionStand": [
+    "HoneyCard",
+    "ToastedCard",
+    "WallSage"
+  ],
+  "SelectorDrapery": [
+    "WineFabric",
+    "WineDeep"
+  ],
+  "SelectorHardware": [
+    "HoneyCard",
+    "ToastedCard"
+  ],
+  "SoundDesk": [
+    "HoneyCard",
+    "ToastedCard",
+    "OxideBlue"
+  ],
+  "TimberShell": [
+    "WallSageDeep",
+    "Stiles",
+    "WallSage"
+  ],
+  "Wardrobe": [
+    "HoneyCard",
+    "WallSageDeep",
+    "Corrugation",
+    "ToastedCard"
+  ],
+  "WardrobeRiser": [
+    "HoneyCard",
+    "ToastedCard"
+  ],
+  "WorkshopProps": [
+    "HoneyCard",
+    "ToastedCard"
+  ]
+}

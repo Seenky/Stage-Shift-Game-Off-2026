@@ -2,6 +2,7 @@
 
 #include "GameFramework/Character.h"
 #include "Animation/CharacterPhysicsAnimationSet.h"
+#include "Components/Customization/StageShiftCharacterAppearance.h"
 #include "StageShiftCharacter.generated.h"
 
 class UMeshDeformer;
@@ -12,6 +13,7 @@ class UDialogueComponent;
 class UFacialAnimationComponent;
 class UWidgetComponent;
 class UCharacterHairComponent;
+class UStageShiftCharacterPreset;
 class UStageShiftAnimInstance;
 class USoundBase;
 
@@ -32,7 +34,14 @@ public:
 	UDollPhysicsComponent* GetDollPhysics() const { return DollPhysicsComponent; }
 	void PlayFootstep(bool bLeftFoot) const;
 
+	UFUNCTION(BlueprintPure, Category = "Character|Appearance")
+	FStageShiftCharacterAppearance GetAppearance() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Character|Appearance")
+	void ApplyAppearance(const FStageShiftCharacterAppearance& Appearance);
+
 protected:
+	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void PostRegisterAllComponents() override;
 	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
@@ -63,6 +72,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Meshes")
 	TObjectPtr<USkeletalMeshComponent> OutfitMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Appearance")
+	TObjectPtr<UStageShiftCharacterPreset> AppearancePreset;
+
 	// Keep the animation graph out of native CDO construction: its editor node module must load first.
 	UPROPERTY(EditDefaultsOnly, Category = "Character|Meshes")
 	TSoftClassPtr<UStageShiftAnimInstance> DefaultAnimationClass;
@@ -101,6 +114,8 @@ private:
 	friend class UStageShiftCharacterMovementComponent;
 	friend class UDollPhysicsComponent;
 
+	void PreviewAppearancePreset();
+	FStageShiftCharacterAppearance GetPresetAppearance() const;
 	void ConfigureMovementCollision();
 	void UpdateDollPress();
 	void ApplyDollContact(const FHitResult& Impact);

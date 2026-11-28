@@ -1,0 +1,431 @@
+{
+  "PinkFabric": {
+    "material": "Plain Canvas",
+    "color": [
+      0.5400000214576721,
+      0.1599999964237213,
+      0.23199999332427979
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "BackWood": {
+    "material": "Wood Shadow",
+    "color": [
+      0.06159999966621399,
+      0.034979999810457234,
+      0.03302000068128109
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Storm": {
+    "material": "Plain Canvas",
+    "color": [
+      0.15199999511241913,
+      0.1599999964237213,
+      0.25999999046325684
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Snow": {
+    "material": "Scenic Plaster",
+    "color": [
+      0.3700000047683716,
+      0.43700000643730164,
+      0.5299999713897705
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Slate": {
+    "material": "Painted Iron",
+    "color": [
+      0.10199999809265137,
+      0.125,
+      0.1940000057220459
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "VelvetDark": {
+    "material": "Theatre Velvet",
+    "color": [
+      0.08459999710321427,
+      0.01143999993801117,
+      0.028500000424683092
+    ],
+    "roughness": 0.84,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Velvet": {
+    "material": "Theatre Velvet",
+    "color": [
+      0.30600000321865084,
+      0.02600000038743019,
+      0.04902000166475772
+    ],
+    "roughness": 0.84,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "OakBrown": {
+    "material": "Wood Russet",
+    "color": [
+      0.20799999237060549,
+      0.11129999652504921,
+      0.05587999969720841
+    ],
+    "roughness": 0.6700000166893005,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "RoseLight": {
+    "material": "Scenic Paint Rose",
+    "color": [
+      0.7099999785423279,
+      0.2199999988079071,
+      0.23999999463558197
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "LeafLight": {
+    "material": "Scenic Paint Light",
+    "color": [
+      0.3700000047683716,
+      0.4449999928474426,
+      0.17100000381469727
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Leaf": {
+    "material": "Scenic Paint Green",
+    "color": [
+      0.2199999988079071,
+      0.3179999887943268,
+      0.12800000607967377
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Forest": {
+    "material": "Scenic Paint Shadow",
+    "color": [
+      0.10000000149011612,
+      0.20399999618530273,
+      0.10700000077486038
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Silver": {
+    "material": "Painted Iron",
+    "color": [
+      0.10000000149011612,
+      0.11500000208616257,
+      0.12999999523162842
+    ],
+    "roughness": 0.7200000286102295,
+    "metallic": 0.550000011920929,
+    "emissive": 0.0
+  },
+  "WindowLight": {
+    "material": null,
+    "color": [
+      0.8100000023841858,
+      0.41999998688697815,
+      0.1599999964237213
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.10000000149011612
+  },
+  "Plaster": {
+    "material": "Scenic Plaster",
+    "color": [
+      0.49000000953674316,
+      0.3449999988079071,
+      0.2199999988079071
+    ],
+    "roughness": 0.85,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Wine": {
+    "material": "Theatre Velvet",
+    "color": [
+      0.1665000021457672,
+      0.018719999194145204,
+      0.030780000798404213
+    ],
+    "roughness": 0.84,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Walnut": {
+    "material": "Aged Wood Umber",
+    "color": [
+      0.12400000095367432,
+      0.06254000037908554,
+      0.041909999772906305
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "RugPurple": {
+    "material": "Matte Carpet",
+    "color": [
+      0.1476000040769577,
+      0.07696000099182129,
+      0.22800000339746473
+    ],
+    "roughness": 0.91,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Rose": {
+    "material": "Scenic Paint Rose",
+    "color": [
+      0.5400000214576721,
+      0.10000000149011612,
+      0.12999999523162842
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "PaperLight": {
+    "material": "Warm Paper",
+    "color": [
+      0.6966000020503997,
+      0.7175999975204468,
+      0.5999999865889549
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Paper": {
+    "material": "Warm Paper",
+    "color": [
+      0.6105999815464019,
+      0.5501599836349488,
+      0.3500000014901161
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "OakCopper": {
+    "material": "Wood Russet",
+    "color": [
+      0.3119999885559082,
+      0.1802000018954277,
+      0.09398000121116638
+    ],
+    "roughness": 0.6700000166893005,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "OakAged": {
+    "material": "Aged Wood Umber",
+    "color": [
+      0.16799999475479127,
+      0.08797999665141105,
+      0.049530001021921635
+    ],
+    "roughness": 0.6700000166893005,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Ink": {
+    "material": "Painted Iron",
+    "color": [
+      0.14000000059604645,
+      0.05700000002980232,
+      0.041999999433755875
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Canvas": {
+    "material": "Plain Canvas",
+    "color": [
+      0.5899999737739563,
+      0.3799999952316284,
+      0.1899999976158142
+    ],
+    "roughness": 0.85,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Brass": {
+    "material": "Antique Brass",
+    "color": [
+      0.6100000143051147,
+      0.3409999907016754,
+      0.10199999809265137
+    ],
+    "roughness": 0.53,
+    "metallic": 0.550000011920929,
+    "emissive": 0.0
+  },
+  "BlueFabric": {
+    "material": "Plain Canvas",
+    "color": [
+      0.04800000041723251,
+      0.10300000011920929,
+      0.20000000298023224
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "RugRed": {
+    "material": "Matte Carpet",
+    "color": [
+      0.3240000128746033,
+      0.06759999752044678,
+      0.08892000183463096
+    ],
+    "roughness": 0.91,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "RugDye": {
+    "material": "Matte Carpet",
+    "color": [
+      0.18899999409914017,
+      0.032239999473094944,
+      0.06498000003397464
+    ],
+    "roughness": 0.91,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "OakHoney": {
+    "material": "Oak Honey",
+    "color": [
+      0.35999999046325687,
+      0.24909999936819077,
+      0.11811000280082226
+    ],
+    "roughness": 0.67,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "OakDark": {
+    "material": "Wood Shadow",
+    "color": [
+      0.08399999737739564,
+      0.04663999974727631,
+      0.03429000088945031
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "OakAmber": {
+    "material": "Oak Honey",
+    "color": [
+      0.24800000190734864,
+      0.14840000063180925,
+      0.08381999954581261
+    ],
+    "roughness": 0.6700000166893005,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "GoldenBraid": {
+    "material": "Gold Cloth Trim",
+    "color": [
+      0.56,
+      0.32,
+      0.111
+    ],
+    "roughness": 0.84,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Bronze": {
+    "material": "Antique Brass",
+    "color": [
+      0.38999998569488525,
+      0.16599999368190765,
+      0.05000000074505806
+    ],
+    "roughness": 0.53,
+    "metallic": 0.550000011920929,
+    "emissive": 0.0
+  },
+  "Beam": {
+    "material": "Aged Wood Umber",
+    "color": [
+      0.12799999713897706,
+      0.06995999962091447,
+      0.05333999928086996
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "Indigo": {
+    "material": "Plain Canvas",
+    "color": [
+      0.07199999690055847,
+      0.0689999982714653,
+      0.1289999932050705
+    ],
+    "roughness": 0.7799999713897705,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "LanternGlow": {
+    "material": null,
+    "color": [
+      0.9,
+      0.67,
+      0.31
+    ],
+    "roughness": 0.67,
+    "metallic": 0.0,
+    "emissive": 1.0
+  },
+  "GoldThread": {
+    "material": "Gold Cloth Trim",
+    "color": [
+      0.56,
+      0.32,
+      0.111
+    ],
+    "roughness": 0.84,
+    "metallic": 0.019999999552965164,
+    "emissive": 0.0
+  },
+  "RimGlow": {
+    "material": null,
+    "color": [
+      0.9,
+      0.55,
+      0.19
+    ],
+    "roughness": 0.71,
+    "metallic": 0.0,
+    "emissive": 0.62
+  }
+}

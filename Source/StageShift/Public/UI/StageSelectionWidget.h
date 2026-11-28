@@ -19,6 +19,9 @@ public:
 	void FocusSelection();
 
 protected:
+	UFUNCTION(BlueprintImplementableEvent, Category = "Appearance")
+	void OnSelectionPreviewChanged();
+
 	virtual void NativeOnInitialized() override;
 	virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
 	virtual FReply NativeOnAnalogValueChanged(const FGeometry& Geometry, const FAnalogInputEvent& Event) override;

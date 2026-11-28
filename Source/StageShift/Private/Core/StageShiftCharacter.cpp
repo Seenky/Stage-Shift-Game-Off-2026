@@ -5,6 +5,8 @@
 #include "Animation/StageShiftAnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Customization/CharacterHairComponent.h"
+#include "Components/Customization/CharacterHairStyle.h"
+#include "Components/Customization/StageShiftCharacterPreset.h"
 #include "Components/FacialAnimation/FacialAnimationComponent.h"
 #include "Components/FacialAnimation/FacialAnimationProfile.h"
 #include "Components/Physics/PhysicalMontageComponent.h"
@@ -70,10 +72,54 @@ AStageShiftCharacter::AStageShiftCharacter(const FObjectInitializer& ObjectIniti
 	}
 }
 
+void AStageShiftCharacter::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	PreviewAppearancePreset();
+}
+
 void AStageShiftCharacter::PostRegisterAllComponents()
 {
 	Super::PostRegisterAllComponents();
 	if (!IsTemplate() && GetMesh() && !GetMesh()->GetAnimClass() && !DefaultAnimationClass.IsNull()) GetMesh()->SetAnimInstanceClass(DefaultAnimationClass.LoadSynchronous());
+	PreviewAppearancePreset();
+}
+
+void AStageShiftCharacter::PreviewAppearancePreset()
+{
+	if (AppearancePreset && !IsTemplate() && GetWorld() && !GetWorld()->IsGameWorld())
+	{
+		ApplyAppearance(GetPresetAppearance());
+	}
+}
+
+FStageShiftCharacterAppearance AStageShiftCharacter::GetPresetAppearance() const
+{
+	FStageShiftCharacterAppearance Appearance;
+	Appearance.Body = GetMesh()->GetSkeletalMeshAsset();
+	Appearance.Outfit = AppearancePreset->Outfit;
+	Appearance.Hat = AppearancePreset->Hat;
+	Appearance.Hairstyle = AppearancePreset->Hairstyle;
+	return Appearance;
+}
+
+FStageShiftCharacterAppearance AStageShiftCharacter::GetAppearance() const
+{
+	if (IsTemplate() && AppearancePreset) return GetPresetAppearance();
+
+	FStageShiftCharacterAppearance Appearance;
+	Appearance.Body = GetMesh()->GetSkeletalMeshAsset();
+	Appearance.Outfit = OutfitMesh->GetSkeletalMeshAsset();
+	Appearance.Hat = HatMesh->GetSkeletalMeshAsset();
+	Appearance.Hairstyle = HairMesh->Hairstyle;
+	return Appearance;
+}
+
+void AStageShiftCharacter::ApplyAppearance(const FStageShiftCharacterAppearance& Appearance)
+{
+	Appearance.ApplyTo(*GetMesh(), *OutfitMesh, *HatMesh, *HairMesh);
+	HatMesh->SetLeaderPoseComponent(GetMesh());
+	OutfitMesh->SetLeaderPoseComponent(GetMesh());
 }
 
 void AStageShiftCharacter::PostInitializeComponents()
@@ -89,11 +135,8 @@ void AStageShiftCharacter::PostInitializeComponents()
 	}
 	if (!PhysicsReactionComponent->AnimationSet) PhysicsReactionComponent->AnimationSet = Defaults->PhysicsReactionComponent->AnimationSet;
 
+	ApplyAppearance(AppearancePreset ? GetPresetAppearance() : GetAppearance());
 	HairMesh->RefreshHairstyle();
-	for (USkeletalMeshComponent* Part : {HatMesh.Get(), OutfitMesh.Get()})
-	{
-		Part->SetLeaderPoseComponent(GetMesh());
-	}
 }
 
 void AStageShiftCharacter::ConfigureMovementCollision()

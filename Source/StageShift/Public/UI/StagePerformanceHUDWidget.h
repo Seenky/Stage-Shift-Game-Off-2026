@@ -39,6 +39,9 @@ public:
 protected:
 	virtual void NativeTick(const FGeometry& Geometry, float DeltaSeconds) override;
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Appearance")
+	void OnCueAppearanceChanged(bool bPreparation, bool bLate);
+
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ActorNumber;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UWidget> NumberBadge;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> CueIcon;
@@ -52,9 +55,8 @@ protected:
 
 private:
 	int32 LastNumber = INDEX_NONE;
-	EStageCueKind LastKind = EStageCueKind::General;
-	TOptional<FLinearColor> DefaultFaceColor;
-	EStageCueWindowPhase LastPhase = EStageCueWindowPhase::Hidden;
+	TOptional<EStageCueKind> LastKind;
+	TOptional<EStageCueWindowPhase> LastPhase;
 	bool bLastPreparation = false;
 	double StartsAt = 0.0;
 	double EndsAt = 0.0;

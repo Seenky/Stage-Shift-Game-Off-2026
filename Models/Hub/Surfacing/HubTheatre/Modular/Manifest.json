@@ -1,0 +1,8899 @@
+[
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_01_01",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 01 01",
+    "pivot": [
+      -450.22137451171875,
+      464.5852355957031,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -51.46760559082031,
+        -103.36349487304688,
+        0.0
+      ],
+      [
+        51.46760559082031,
+        103.36349487304688,
+        12.0
+      ]
+    ],
+    "triangles": 44,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_01_02",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 01 02",
+    "pivot": [
+      -473.1866455078125,
+      291.0704345703125,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -90.36370849609375,
+        -193.33526611328125,
+        0.0
+      ],
+      [
+        90.36370849609375,
+        193.33526611328125,
+        12.0
+      ]
+    ],
+    "triangles": 92,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_01_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 01 03",
+    "pivot": [
+      -491.782470703125,
+      53.95142364501953,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -89.65679931640625,
+        -198.60171508789062,
+        0.0
+      ],
+      [
+        89.65676879882812,
+        198.60171508789062,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_01_04",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 01 04",
+    "pivot": [
+      -483.87603759765625,
+      -144.78656005859375,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -94.35064697265625,
+        -202.96676635742188,
+        0.0
+      ],
+      [
+        94.35061645507812,
+        202.96676635742188,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_01_05",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 01 05",
+    "pivot": [
+      -446.5011901855469,
+      -428.908935546875,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -85.62710571289062,
+        -172.72842407226562,
+        0.0
+      ],
+      [
+        85.62710571289062,
+        172.72845458984375,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_02_01",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 02 01",
+    "pivot": [
+      -320.08892822265625,
+      491.5414733886719,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -109.14654541015625,
+        -115.65383911132812,
+        0.0
+      ],
+      [
+        109.14657592773438,
+        115.65383911132812,
+        12.0
+      ]
+    ],
+    "triangles": 108,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_02_02",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 02 02",
+    "pivot": [
+      -305.3771667480469,
+      299.3591613769531,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -111.34915161132812,
+        -187.26382446289062,
+        0.0
+      ],
+      [
+        111.34916687011719,
+        187.2637939453125,
+        12.0
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_02_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 02 03",
+    "pivot": [
+      -307.66925048828125,
+      63.177764892578125,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -95.5462646484375,
+        -160.5037841796875,
+        0.0
+      ],
+      [
+        95.54629516601562,
+        160.5037841796875,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_02_04",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 02 04",
+    "pivot": [
+      -306.26513671875,
+      -169.3476104736328,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -96.91317749023438,
+        -113.35926818847656,
+        0.0
+      ],
+      [
+        96.91317749023438,
+        113.35926818847656,
+        12.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_02_05",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 02 05",
+    "pivot": [
+      -310.80462646484375,
+      -423.1209411621094,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -113.18923950195312,
+        -199.80471801757812,
+        0.0
+      ],
+      [
+        113.18922424316406,
+        199.80471801757812,
+        12.0
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_02_06",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 02 06",
+    "pivot": [
+      -298.7200012207031,
+      -538.1865844726562,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -102.61822509765625,
+        -102.07424926757812,
+        0.0
+      ],
+      [
+        102.61824035644531,
+        102.07427978515625,
+        12.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_03_01",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 03 01",
+    "pivot": [
+      -135.93296813964844,
+      480.2559509277344,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -103.56724548339844,
+        -148.39749145507812,
+        0.0
+      ],
+      [
+        103.56723022460938,
+        148.39749145507812,
+        12.0
+      ]
+    ],
+    "triangles": 144,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_03_02",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 03 02",
+    "pivot": [
+      -123.41059112548828,
+      293.4209289550781,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -88.6115951538086,
+        -156.69808959960938,
+        0.0
+      ],
+      [
+        88.6115951538086,
+        156.69808959960938,
+        12.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_03_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 03 03",
+    "pivot": [
+      -127.27671813964844,
+      71.37501525878906,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -91.23861694335938,
+        -143.4012451171875,
+        0.0
+      ],
+      [
+        91.23861694335938,
+        143.4012451171875,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_03_04",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 03 04",
+    "pivot": [
+      -126.92010498046875,
+      -188.2085723876953,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -91.58926391601562,
+        -197.57281494140625,
+        0.0
+      ],
+      [
+        91.5892562866211,
+        197.5728302001953,
+        12.0
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_03_05",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 03 05",
+    "pivot": [
+      -131.64161682128906,
+      -453.63568115234375,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.00650024414062,
+        -201.02685546875,
+        0.0
+      ],
+      [
+        98.00651550292969,
+        201.02685546875,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_03_06",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 03 06",
+    "pivot": [
+      -108.48371887207031,
+      -552.0405883789062,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -76.395751953125,
+        -105.42544555664062,
+        0.0
+      ],
+      [
+        76.39574432373047,
+        105.42547607421875,
+        12.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_04_01",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 04 01",
+    "pivot": [
+      59.401512145996094,
+      472.13922119140625,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -93.98544311523438,
+        -156.73895263671875,
+        0.0
+      ],
+      [
+        93.9854507446289,
+        156.73898315429688,
+        12.0
+      ]
+    ],
+    "triangles": 156,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_04_02",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 04 02",
+    "pivot": [
+      46.66919708251953,
+      298.374755859375,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -82.23175811767578,
+        -240.74029541015625,
+        0.0
+      ],
+      [
+        82.23175811767578,
+        240.74029541015625,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_04_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 04 03",
+    "pivot": [
+      48.640480041503906,
+      16.61450958251953,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -84.20492553710938,
+        -170.58682250976562,
+        0.0
+      ],
+      [
+        84.2049331665039,
+        170.58682250976562,
+        12.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_04_04",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 04 04",
+    "pivot": [
+      48.706382751464844,
+      -225.93817138671875,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -84.12092590332031,
+        -171.85487365722656,
+        0.0
+      ],
+      [
+        84.12091827392578,
+        171.85488891601562,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_04_05",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 04 05",
+    "pivot": [
+      56.16029357910156,
+      -468.0979309082031,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -90.23973083496094,
+        -189.60305786132812,
+        0.0
+      ],
+      [
+        90.23973083496094,
+        189.60305786132812,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_04_06",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 04 06",
+    "pivot": [
+      80.3901596069336,
+      -549.59716796875,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -87.33854675292969,
+        -108.100830078125,
+        0.0
+      ],
+      [
+        87.33853912353516,
+        108.100830078125,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_05_01",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 05 01",
+    "pivot": [
+      221.8827362060547,
+      469.3665466308594,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -103.92292785644531,
+        -140.80850219726562,
+        0.0
+      ],
+      [
+        103.92292785644531,
+        140.80850219726562,
+        12.0
+      ]
+    ],
+    "triangles": 144,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_05_02",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 05 02",
+    "pivot": [
+      236.30050659179688,
+      276.64276123046875,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -118.6874771118164,
+        -183.75051879882812,
+        0.0
+      ],
+      [
+        118.68746948242188,
+        183.75050354003906,
+        12.0
+      ]
+    ],
+    "triangles": 120,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_05_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 05 03",
+    "pivot": [
+      232.62930297851562,
+      15.678604125976562,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -100.67597961425781,
+        -150.1987762451172,
+        0.0
+      ],
+      [
+        100.67596435546875,
+        150.1987762451172,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_05_04",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 05 04",
+    "pivot": [
+      225.70074462890625,
+      -170.43289184570312,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.6400375366211,
+        -204.1514434814453,
+        0.0
+      ],
+      [
+        107.64004516601562,
+        204.15145874023438,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_05_05",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 05 05",
+    "pivot": [
+      246.5745391845703,
+      -433.6178283691406,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -120.71272277832031,
+        -204.52279663085938,
+        0.0
+      ],
+      [
+        120.71272277832031,
+        204.52279663085938,
+        12.0
+      ]
+    ],
+    "triangles": 108,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_05_06",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 05 06",
+    "pivot": [
+      245.0417022705078,
+      -533.461669921875,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -84.49305725097656,
+        -93.185546875,
+        0.0
+      ],
+      [
+        84.49305725097656,
+        93.185546875,
+        12.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_06_01",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 06 01",
+    "pivot": [
+      363.53045654296875,
+      462.5970458984375,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -82.3128662109375,
+        -102.2374267578125,
+        0.0
+      ],
+      [
+        82.31283569335938,
+        102.2374267578125,
+        12.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_06_02",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 06 02",
+    "pivot": [
+      398.7502746582031,
+      304.2552185058594,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -112.63290405273438,
+        -192.39727783203125,
+        0.0
+      ],
+      [
+        112.63290405273438,
+        192.39727783203125,
+        12.0
+      ]
+    ],
+    "triangles": 84,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_06_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 06 03",
+    "pivot": [
+      409.8811340332031,
+      76.15471649169922,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -86.59832763671875,
+        -192.02352905273438,
+        0.0
+      ],
+      [
+        86.59832763671875,
+        192.02352905273438,
+        12.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_06_04",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 06 04",
+    "pivot": [
+      411.773193359375,
+      -165.43983459472656,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -113.94992065429688,
+        -206.6334228515625,
+        0.0
+      ],
+      [
+        113.94989013671875,
+        206.63343811035156,
+        12.0
+      ]
+    ],
+    "triangles": 108,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_06_05",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 06 05",
+    "pivot": [
+      366.9219665527344,
+      -436.6953125,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -83.80084228515625,
+        -146.16702270507812,
+        0.0
+      ],
+      [
+        83.80084228515625,
+        146.16705322265625,
+        12.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_panel_07_03",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor panel 07 03",
+    "pivot": [
+      505.5166931152344,
+      35.38396072387695,
+      -12.0
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -26.698333740234375,
+        -137.14923095703125,
+        0.0
+      ],
+      [
+        26.698333740234375,
+        137.14923095703125,
+        12.0
+      ]
+    ],
+    "triangles": 24,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PlankFloor_Floor_rounded_support_plinth",
+    "parent_mesh": "PlankFloor",
+    "atlas": "PlankFloor",
+    "label": "Floor rounded support plinth",
+    "pivot": [
+      -23.55133056640625,
+      -0.03045654296875,
+      -76.69999694824219
+    ],
+    "old_pivot": [
+      0,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -557.36328125,
+        -635.2537841796875,
+        -0.00011002190149156377
+      ],
+      [
+        557.36328125,
+        635.325927734375,
+        67.20010375976562
+      ]
+    ],
+    "triangles": 532,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Left_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Left 01",
+    "pivot": [
+      -357.6789855957031,
+      -581.4249267578125,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.69821166992188,
+        -36.5377197265625,
+        0.0
+      ],
+      [
+        107.69822692871094,
+        36.63920974731445,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Left_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Left 02",
+    "pivot": [
+      -156.03872680664062,
+      -619.39208984375,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.9627685546875,
+        -24.9058837890625,
+        0.0
+      ],
+      [
+        98.90680694580078,
+        25.143287658691406,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Left_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Left 03",
+    "pivot": [
+      21.887731552124023,
+      -628.3364868164062,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -80.10277557373047,
+        -17.1131591796875,
+        0.0
+      ],
+      [
+        80.10277557373047,
+        17.143714904785156,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Left_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Left 04",
+    "pivot": [
+      152.0074920654297,
+      -607.487548828125,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -55.04644012451172,
+        -27.19915771484375,
+        0.0
+      ],
+      [
+        55.04643249511719,
+        27.19921875,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Left_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Left 05",
+    "pivot": [
+      259.0782470703125,
+      -575.4857177734375,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -59.539344787597656,
+        -27.68949317932129,
+        0.0
+      ],
+      [
+        59.50273132324219,
+        27.6026611328125,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Right_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Right 01",
+    "pivot": [
+      -357.6789855957031,
+      581.4249267578125,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.69821166992188,
+        -36.63920974731445,
+        0.0
+      ],
+      [
+        107.69822692871094,
+        36.5377197265625,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Right_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Right 02",
+    "pivot": [
+      -156.03872680664062,
+      619.39208984375,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.9627685546875,
+        -25.143287658691406,
+        0.0
+      ],
+      [
+        98.90680694580078,
+        24.9058837890625,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Right_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Right 03",
+    "pivot": [
+      21.887731552124023,
+      628.3364868164062,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -80.10277557373047,
+        -17.143714904785156,
+        0.0
+      ],
+      [
+        80.10277557373047,
+        17.1131591796875,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Right_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Right 04",
+    "pivot": [
+      152.0074920654297,
+      607.487548828125,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -55.04644012451172,
+        -27.19921875,
+        0.0
+      ],
+      [
+        55.04643249511719,
+        27.19915771484375,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Midrail_Right_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Midrail Right 05",
+    "pivot": [
+      259.0782470703125,
+      575.4857177734375,
+      260.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -59.539344787597656,
+        -27.6026611328125,
+        0.0
+      ],
+      [
+        59.50273132324219,
+        27.68949317932129,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Rear_upright",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Rear upright",
+    "pivot": [
+      313.7217712402344,
+      -535.92626953125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -19.999858856201172,
+        -16.737518310546875,
+        0.0
+      ],
+      [
+        20.000940322875977,
+        16.749074935913086,
+        456.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Rear_upright_001",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Rear upright 001",
+    "pivot": [
+      396.23992919921875,
+      -376.2658386230469,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -18.50370216369629,
+        -15.805437088012695,
+        0.0
+      ],
+      [
+        18.50458335876465,
+        15.824318885803223,
+        456.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Rear_upright_002",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Rear upright 002",
+    "pivot": [
+      467.8399353027344,
+      -165.2270050048828,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -16.06402015686035,
+        -14.701772689819336,
+        0.35256698727607727
+      ],
+      [
+        16.07056427001953,
+        14.715802192687988,
+        455.6474914550781
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Rear_upright_003",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Rear upright 003",
+    "pivot": [
+      467.8399353027344,
+      165.2270050048828,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -16.064067840576172,
+        -14.715803146362305,
+        0.35255441069602966
+      ],
+      [
+        16.070514678955078,
+        14.701772689819336,
+        455.6474304199219
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Rear_upright_004",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Rear upright 004",
+    "pivot": [
+      396.23992919921875,
+      376.2658386230469,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -18.503746032714844,
+        -15.824419975280762,
+        0.0
+      ],
+      [
+        18.504535675048828,
+        15.80533504486084,
+        456.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Rear_upright_005",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Rear upright 005",
+    "pivot": [
+      313.72174072265625,
+      535.92626953125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -19.999881744384766,
+        -16.749197006225586,
+        0.0
+      ],
+      [
+        20.00090217590332,
+        16.737394332885742,
+        456.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_L_bay_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall L bay 02",
+    "pivot": [
+      -326.74908447265625,
+      -599.5040283203125,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -94.2236328125,
+        -29.4129638671875,
+        0.0
+      ],
+      [
+        94.22364807128906,
+        29.4129638671875,
+        400.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_L_bay_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall L bay 03",
+    "pivot": [
+      -145.789306640625,
+      -633.2640380859375,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -89.27993774414062,
+        -19.13201904296875,
+        0.0
+      ],
+      [
+        89.27993774414062,
+        19.13201904296875,
+        400.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_L_bay_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall L bay 04",
+    "pivot": [
+      43.76304244995117,
+      -634.3258056640625,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -100.333251953125,
+        -19.20648193359375,
+        0.0
+      ],
+      [
+        100.333251953125,
+        19.20654296875,
+        400.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_L_bay_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall L bay 05",
+    "pivot": [
+      236.15997314453125,
+      -595.28857421875,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -96.3924560546875,
+        -34.64105224609375,
+        0.0
+      ],
+      [
+        96.3924560546875,
+        34.64111328125,
+        400.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_R_bay_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall R bay 02",
+    "pivot": [
+      -326.74908447265625,
+      599.5040283203125,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -94.2236328125,
+        -29.4129638671875,
+        0.0
+      ],
+      [
+        94.22364807128906,
+        29.4129638671875,
+        400.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_R_bay_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall R bay 03",
+    "pivot": [
+      -145.789306640625,
+      633.2640380859375,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -89.27993774414062,
+        -19.13201904296875,
+        0.0
+      ],
+      [
+        89.27993774414062,
+        19.13201904296875,
+        400.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_R_bay_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall R bay 04",
+    "pivot": [
+      43.76304244995117,
+      634.3258056640625,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -100.333251953125,
+        -19.20654296875,
+        0.0
+      ],
+      [
+        100.333251953125,
+        19.20648193359375,
+        400.0
+      ]
+    ],
+    "triangles": 72,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Side_wall_R_bay_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Side wall R bay 05",
+    "pivot": [
+      236.15997314453125,
+      595.28857421875,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -96.3924560546875,
+        -34.64111328125,
+        0.0
+      ],
+      [
+        96.3924560546875,
+        34.64105224609375,
+        400.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Left_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Left 01",
+    "pivot": [
+      -357.6789855957031,
+      -581.4249267578125,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.69821166992188,
+        -36.5377197265625,
+        0.0
+      ],
+      [
+        107.69822692871094,
+        36.63920974731445,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Left_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Left 02",
+    "pivot": [
+      -156.03872680664062,
+      -619.39208984375,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.9627685546875,
+        -24.9058837890625,
+        0.0
+      ],
+      [
+        98.90680694580078,
+        25.143287658691406,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Left_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Left 03",
+    "pivot": [
+      21.887731552124023,
+      -628.3364868164062,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -80.10277557373047,
+        -17.1131591796875,
+        0.0
+      ],
+      [
+        80.10277557373047,
+        17.143714904785156,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Left_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Left 04",
+    "pivot": [
+      152.0074920654297,
+      -607.487548828125,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -55.04644012451172,
+        -27.19915771484375,
+        0.0
+      ],
+      [
+        55.04643249511719,
+        27.19921875,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Left_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Left 05",
+    "pivot": [
+      259.0782470703125,
+      -575.4857177734375,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -59.539344787597656,
+        -27.68949317932129,
+        0.0
+      ],
+      [
+        59.50273132324219,
+        27.6026611328125,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Right_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Right 01",
+    "pivot": [
+      -357.6789855957031,
+      581.4249267578125,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.69821166992188,
+        -36.63920974731445,
+        0.0
+      ],
+      [
+        107.69822692871094,
+        36.5377197265625,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Right_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Right 02",
+    "pivot": [
+      -156.03872680664062,
+      619.39208984375,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.9627685546875,
+        -25.143287658691406,
+        0.0
+      ],
+      [
+        98.90680694580078,
+        24.9058837890625,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Right_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Right 03",
+    "pivot": [
+      21.887731552124023,
+      628.3364868164062,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -80.10277557373047,
+        -17.143714904785156,
+        0.0
+      ],
+      [
+        80.10277557373047,
+        17.1131591796875,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Right_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Right 04",
+    "pivot": [
+      152.0074920654297,
+      607.487548828125,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -55.04644012451172,
+        -27.19921875,
+        0.0
+      ],
+      [
+        55.04643249511719,
+        27.19915771484375,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Sill_Right_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Sill Right 05",
+    "pivot": [
+      259.0782470703125,
+      575.4857177734375,
+      33.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -59.539344787597656,
+        -27.6026611328125,
+        0.0
+      ],
+      [
+        59.50273132324219,
+        27.68949317932129,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_angled_corner_upright",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber angled corner upright",
+    "pivot": [
+      161.930419921875,
+      604.5572509765625,
+      -2.5
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -9.0,
+        -10.0,
+        0.0
+      ],
+      [
+        9.0,
+        10.0,
+        443.0
+      ]
+    ],
+    "triangles": 26,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_angled_corner_upright_001",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber angled corner upright 001",
+    "pivot": [
+      161.930419921875,
+      -604.5572509765625,
+      -2.5
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -9.0,
+        -10.0,
+        0.0
+      ],
+      [
+        9.0,
+        10.0,
+        443.0
+      ]
+    ],
+    "triangles": 26,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_angled_corner_upright_002",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber angled corner upright 002",
+    "pivot": [
+      268.2502746582031,
+      571.0333862304688,
+      -2.5
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -9.0,
+        -10.0,
+        0.0
+      ],
+      [
+        9.0,
+        10.0,
+        443.0
+      ]
+    ],
+    "triangles": 26,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_angled_corner_upright_003",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber angled corner upright 003",
+    "pivot": [
+      268.2502746582031,
+      -571.0333862304688,
+      -2.5
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -9.0,
+        -10.0,
+        0.0
+      ],
+      [
+        9.0,
+        10.0,
+        443.0
+      ]
+    ],
+    "triangles": 26,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_curved_rear_rail_1",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber curved rear rail 1",
+    "pivot": [
+      391.1951904296875,
+      2.3035888671875,
+      147.8000030517578
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -101.88778686523438,
+        -565.6602783203125,
+        -0.03994343429803848
+      ],
+      [
+        101.69599914550781,
+        565.6602783203125,
+        12.440037727355957
+      ]
+    ],
+    "triangles": 138,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_curved_rear_rail_2",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber curved rear rail 2",
+    "pivot": [
+      391.1951904296875,
+      2.3035888671875,
+      330.79998779296875
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -101.88778686523438,
+        -565.6602783203125,
+        -0.03994330018758774
+      ],
+      [
+        101.69599914550781,
+        565.6602783203125,
+        12.440069198608398
+      ]
+    ],
+    "triangles": 138,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_curved_rear_rail_3",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber curved rear rail 3",
+    "pivot": [
+      391.1951904296875,
+      2.3035888671875,
+      421.79998779296875
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -101.88778686523438,
+        -565.6602783203125,
+        -0.03994330018758774
+      ],
+      [
+        101.69599914550781,
+        565.6602783203125,
+        12.440069198608398
+      ]
+    ],
+    "triangles": 138,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace",
+    "pivot": [
+      -407.88311767578125,
+      -560.4527587890625,
+      280.27392578125
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -39.97579574584961,
+        -15.92287826538086,
+        -0.05261274427175522
+      ],
+      [
+        39.958003997802734,
+        15.878168106079102,
+        114.50506591796875
+      ]
+    ],
+    "triangles": 88,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_001",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 001",
+    "pivot": [
+      -109.65800476074219,
+      -617.2080078125,
+      280.2735290527344
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -36.01413345336914,
+        -11.728490829467773,
+        -0.05571574717760086
+      ],
+      [
+        36.00402069091797,
+        11.735238075256348,
+        114.51053619384766
+      ]
+    ],
+    "triangles": 64,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_002",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 002",
+    "pivot": [
+      118.0594482421875,
+      -607.9471435546875,
+      280.3194274902344
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -23.169384002685547,
+        -13.379693031311035,
+        0.0005108396871946752
+      ],
+      [
+        23.14857292175293,
+        13.447458267211914,
+        114.34909057617188
+      ]
+    ],
+    "triangles": 92,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_003",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 003",
+    "pivot": [
+      323.892333984375,
+      -552.0538330078125,
+      280.2902526855469
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -41.32795333862305,
+        -13.406694412231445,
+        -0.016551069915294647
+      ],
+      [
+        41.36569595336914,
+        13.441740036010742,
+        114.41910552978516
+      ]
+    ],
+    "triangles": 88,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_004",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 004",
+    "pivot": [
+      -407.88311767578125,
+      560.4528198242188,
+      280.27392578125
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -39.96025085449219,
+        -15.878029823303223,
+        -0.05273312330245972
+      ],
+      [
+        39.9598388671875,
+        15.922956466674805,
+        114.42330932617188
+      ]
+    ],
+    "triangles": 88,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_005",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 005",
+    "pivot": [
+      -109.65798950195312,
+      617.2080078125,
+      280.2735290527344
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -36.014320373535156,
+        -11.735207557678223,
+        -0.05601801723241806
+      ],
+      [
+        36.004150390625,
+        11.728409767150879,
+        114.51075744628906
+      ]
+    ],
+    "triangles": 64,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_006",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 006",
+    "pivot": [
+      118.0594253540039,
+      607.947021484375,
+      280.31939697265625
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -23.169675827026367,
+        -13.44521713256836,
+        -0.00017174806271214038
+      ],
+      [
+        23.148771286010742,
+        13.380292892456055,
+        114.3502197265625
+      ]
+    ],
+    "triangles": 92,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Timber_knee_brace_007",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Timber knee brace 007",
+    "pivot": [
+      323.89239501953125,
+      552.0538940429688,
+      280.29034423828125
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -41.327415466308594,
+        -13.441811561584473,
+        -0.016955194994807243
+      ],
+      [
+        41.36557388305664,
+        13.406946182250977,
+        114.4190673828125
+      ]
+    ],
+    "triangles": 88,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Left_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Left 01",
+    "pivot": [
+      -357.6789855957031,
+      -581.4249267578125,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.69821166992188,
+        -36.5377197265625,
+        0.0
+      ],
+      [
+        107.69822692871094,
+        36.63920974731445,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Left_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Left 02",
+    "pivot": [
+      -156.03872680664062,
+      -619.39208984375,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.9627685546875,
+        -24.9058837890625,
+        0.0
+      ],
+      [
+        98.90680694580078,
+        25.143287658691406,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Left_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Left 03",
+    "pivot": [
+      21.887731552124023,
+      -628.3364868164062,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -80.10277557373047,
+        -17.1131591796875,
+        0.0
+      ],
+      [
+        80.10277557373047,
+        17.143714904785156,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Left_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Left 04",
+    "pivot": [
+      152.0074920654297,
+      -607.487548828125,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -55.04644012451172,
+        -27.19915771484375,
+        0.0
+      ],
+      [
+        55.04643249511719,
+        27.19921875,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Left_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Left 05",
+    "pivot": [
+      259.0782470703125,
+      -575.4857177734375,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -59.539344787597656,
+        -27.68949317932129,
+        0.0
+      ],
+      [
+        59.50273132324219,
+        27.6026611328125,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Right_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Right 01",
+    "pivot": [
+      -357.6789855957031,
+      581.4249267578125,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -107.69821166992188,
+        -36.63920974731445,
+        0.0
+      ],
+      [
+        107.69822692871094,
+        36.5377197265625,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Right_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Right 02",
+    "pivot": [
+      -156.03872680664062,
+      619.39208984375,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -98.9627685546875,
+        -25.143287658691406,
+        0.0
+      ],
+      [
+        98.90680694580078,
+        24.9058837890625,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Right_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Right 03",
+    "pivot": [
+      21.887731552124023,
+      628.3364868164062,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -80.10277557373047,
+        -17.143714904785156,
+        0.0
+      ],
+      [
+        80.10277557373047,
+        17.1131591796875,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Right_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Right 04",
+    "pivot": [
+      152.0074920654297,
+      607.487548828125,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -55.04644012451172,
+        -27.19921875,
+        0.0
+      ],
+      [
+        55.04643249511719,
+        27.19915771484375,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Toprail_Right_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Toprail Right 05",
+    "pivot": [
+      259.0782470703125,
+      575.4857177734375,
+      388.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -59.539344787597656,
+        -27.6026611328125,
+        0.0
+      ],
+      [
+        59.50273132324219,
+        27.68949317932129,
+        18.0
+      ]
+    ],
+    "triangles": 30,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_01",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 01",
+    "pivot": [
+      330.7937316894531,
+      534.6708374023438,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -33.835968017578125,
+        -44.44549560546875,
+        0.0
+      ],
+      [
+        33.835968017578125,
+        44.445465087890625,
+        452.0
+      ]
+    ],
+    "triangles": 24,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_02",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 02",
+    "pivot": [
+      397.5277099609375,
+      406.54376220703125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -49.915802001953125,
+        -86.7369384765625,
+        0.0
+      ],
+      [
+        49.915771484375,
+        86.73696899414062,
+        452.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_03",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 03",
+    "pivot": [
+      465.3966979980469,
+      235.49887084960938,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -35.42218017578125,
+        -86.11065673828125,
+        0.0
+      ],
+      [
+        35.42218017578125,
+        86.11065673828125,
+        452.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_04",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 04",
+    "pivot": [
+      500.74176025390625,
+      64.37669372558594,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -17.724884033203125,
+        -85.5616455078125,
+        0.0
+      ],
+      [
+        17.72491455078125,
+        85.5616455078125,
+        452.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_05",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 05",
+    "pivot": [
+      489.4119873046875,
+      -128.67410278320312,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -29.029632568359375,
+        -107.09983825683594,
+        0.0
+      ],
+      [
+        29.02960205078125,
+        107.09983825683594,
+        452.0
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_06",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 06",
+    "pivot": [
+      435.1518859863281,
+      -321.02130126953125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -42.881195068359375,
+        -86.42381286621094,
+        0.0
+      ],
+      [
+        42.881195068359375,
+        86.423828125,
+        452.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wall_board_bay_07",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wall board bay 07",
+    "pivot": [
+      353.24310302734375,
+      -492.06622314453125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -56.28533935546875,
+        -87.05014038085938,
+        0.0
+      ],
+      [
+        56.285308837890625,
+        87.05010986328125,
+        452.0
+      ]
+    ],
+    "triangles": 48,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_plank",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing plank",
+    "pivot": [
+      -445.13726806640625,
+      -572.2127685546875,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -28.617156982421875,
+        -11.56524658203125,
+        0.0
+      ],
+      [
+        28.617156982421875,
+        11.5653076171875,
+        400.0
+      ]
+    ],
+    "triangles": 12,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_plank_020",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing plank 020",
+    "pivot": [
+      -445.13726806640625,
+      572.2127685546875,
+      -8.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -28.617156982421875,
+        -11.5653076171875,
+        0.0
+      ],
+      [
+        28.617156982421875,
+        11.56524658203125,
+        400.0
+      ]
+    ],
+    "triangles": 12,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post",
+    "pivot": [
+      -437.41766357421875,
+      -560.04150390625,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -20.173824310302734,
+        -17.06720542907715,
+        0.0
+      ],
+      [
+        20.172508239746094,
+        17.095081329345703,
+        396.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_001",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 001",
+    "pivot": [
+      -138.87059020996094,
+      -622.5772705078125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -14.26778507232666,
+        -16.66718864440918,
+        0.5268256068229675
+      ],
+      [
+        14.220199584960938,
+        16.68423080444336,
+        395.4733581542969
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_002",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 002",
+    "pivot": [
+      97.79127502441406,
+      -620.4550170898438,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -11.121963500976562,
+        -16.67047691345215,
+        0.6531649827957153
+      ],
+      [
+        10.961678504943848,
+        16.882850646972656,
+        395.3468322753906
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_003",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 003",
+    "pivot": [
+      286.22967529296875,
+      -564.7613525390625,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -21.114633560180664,
+        -17.035049438476562,
+        0.0
+      ],
+      [
+        21.115966796875,
+        17.063034057617188,
+        396.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_004",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 004",
+    "pivot": [
+      -437.41766357421875,
+      560.04150390625,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -20.17388153076172,
+        -17.094921112060547,
+        0.0
+      ],
+      [
+        20.172454833984375,
+        17.06736946105957,
+        396.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_005",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 005",
+    "pivot": [
+      -138.87059020996094,
+      622.5772705078125,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -14.267830848693848,
+        -16.684232711791992,
+        0.5267224311828613
+      ],
+      [
+        14.220160484313965,
+        16.667186737060547,
+        395.47314453125
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_006",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 006",
+    "pivot": [
+      97.79127502441406,
+      620.4550170898438,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -11.121963500976562,
+        -16.882850646972656,
+        0.6529088616371155
+      ],
+      [
+        10.961609840393066,
+        16.670198440551758,
+        395.34710693359375
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_TimberShell_Wing_post_007",
+    "parent_mesh": "TimberShell",
+    "atlas": "TimberShell",
+    "label": "Wing post 007",
+    "pivot": [
+      286.22967529296875,
+      564.7613525390625,
+      0.0
+    ],
+    "old_pivot": [
+      485,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -21.11203384399414,
+        -17.05679702758789,
+        0.0
+      ],
+      [
+        21.115966796875,
+        17.035049438476562,
+        396.0
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Apron_vertical_board_006",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Apron vertical board 006",
+    "pivot": [
+      -432.526123046875,
+      -554.099609375,
+      -53.0
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -10.9398193359375,
+        -11.138168334960938,
+        0.0
+      ],
+      [
+        10.939849853515625,
+        11.138267517089844,
+        58.0
+      ]
+    ],
+    "triangles": 12,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_apron_bay_02",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony apron bay 02",
+    "pivot": [
+      -538.9754638671875,
+      170.52615356445312,
+      -81.08999633789062
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -19.6328125,
+        -54.05690002441406,
+        0.0
+      ],
+      [
+        19.63287353515625,
+        54.05689239501953,
+        86.08999633789062
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_apron_bay_03",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony apron bay 03",
+    "pivot": [
+      -559.8768310546875,
+      32.966949462890625,
+      -81.08999633789062
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -14.22369384765625,
+        -83.01606750488281,
+        0.0
+      ],
+      [
+        14.2237548828125,
+        83.01606750488281,
+        86.08999633789062
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_apron_bay_04",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony apron bay 04",
+    "pivot": [
+      -558.8458251953125,
+      -132.05862426757812,
+      -81.08999633789062
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -15.1737060546875,
+        -81.91484069824219,
+        0.0
+      ],
+      [
+        15.17364501953125,
+        81.91485595703125,
+        86.08999633789062
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_apron_bay_05",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony apron bay 05",
+    "pivot": [
+      -528.6312255859375,
+      -294.5792236328125,
+      -81.08999633789062
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -27.967529296875,
+        -80.85208129882812,
+        0.0
+      ],
+      [
+        27.967559814453125,
+        80.85205078125,
+        86.08999633789062
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_apron_bay_06",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony apron bay 06",
+    "pivot": [
+      -472.5262756347656,
+      -459.3056335449219,
+      -81.08999633789062
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -40.610565185546875,
+        -84.40390014648438,
+        0.0
+      ],
+      [
+        40.610565185546875,
+        84.40390014648438,
+        86.08999633789062
+      ]
+    ],
+    "triangles": 96,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_curved_railing_bay_01",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · curved railing bay 01",
+    "pivot": [
+      -561.8497314453125,
+      140.356689453125,
+      2.380000114440918
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -26.359664916992188,
+        -81.42816162109375,
+        -1.8929948055301793e-05
+      ],
+      [
+        26.100616455078125,
+        81.57489776611328,
+        72.12467956542969
+      ]
+    ],
+    "triangles": 2222,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_curved_railing_bay_02",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · curved railing bay 02",
+    "pivot": [
+      -572.2134399414062,
+      -45.92720031738281,
+      2.380000114440918
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -20.370681762695312,
+        -106.05962371826172,
+        -9.726377174956724e-05
+      ],
+      [
+        19.99064064025879,
+        105.93424987792969,
+        72.4105224609375
+      ]
+    ],
+    "triangles": 3498,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_curved_railing_bay_03",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · curved railing bay 03",
+    "pivot": [
+      -534.7247924804688,
+      -256.7811279296875,
+      2.380000114440918
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -40.232452392578125,
+        -106.65960693359375,
+        -7.26848520571366e-05
+      ],
+      [
+        39.94264221191406,
+        106.45577239990234,
+        72.412353515625
+      ]
+    ],
+    "triangles": 3528,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_curved_railing_bay_04",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · curved railing bay 04",
+    "pivot": [
+      -461.19775390625,
+      -467.08148193359375,
+      2.380000114440918
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -53.71953201293945,
+        -105.55276489257812,
+        -2.9775175789836794e-05
+      ],
+      [
+        53.60704040527344,
+        105.49139404296875,
+        72.21546173095703
+      ]
+    ],
+    "triangles": 3052,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_lantern_newel_01",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · lantern newel 01",
+    "pivot": [
+      -542.515869140625,
+      218.142333984375,
+      0.0
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -16.698394775390625,
+        -16.352479934692383,
+        0.15581482648849487
+      ],
+      [
+        16.482593536376953,
+        16.22747802734375,
+        92.10535430908203
+      ]
+    ],
+    "triangles": 252,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_lantern_newel_02",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · lantern newel 02",
+    "pivot": [
+      -572.8477783203125,
+      58.23689270019531,
+      0.0
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -16.2303466796875,
+        -15.24179458618164,
+        0.13288907706737518
+      ],
+      [
+        16.227357864379883,
+        15.241793632507324,
+        92.1305923461914
+      ]
+    ],
+    "triangles": 320,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_lantern_newel_03",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · lantern newel 03",
+    "pivot": [
+      -559.2394409179688,
+      -148.4383087158203,
+      0.0
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -16.637725830078125,
+        -16.038471221923828,
+        0.15581797063350677
+      ],
+      [
+        16.158767700195312,
+        16.038471221923828,
+        92.1053466796875
+      ]
+    ],
+    "triangles": 252,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_lantern_newel_04",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · lantern newel 04",
+    "pivot": [
+      -499.5648193359375,
+      -357.64178466796875,
+      0.0
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -17.56371307373047,
+        -17.562477111816406,
+        0.13288724422454834
+      ],
+      [
+        17.56249237060547,
+        17.5653076171875,
+        92.12403106689453
+      ]
+    ],
+    "triangles": 308,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Balcony_lantern_newel_05",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Balcony · lantern newel 05",
+    "pivot": [
+      -411.355712890625,
+      -565.3468627929688,
+      0.0
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -18.240455627441406,
+        -18.240827560424805,
+        0.13288676738739014
+      ],
+      [
+        18.240455627441406,
+        18.240827560424805,
+        92.1281967163086
+      ]
+    ],
+    "triangles": 320,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Caged_lantern_BalconyRail_1",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Caged lantern · BalconyRail 1",
+    "pivot": [
+      -411.146484375,
+      -565.3351440429688,
+      92.19999694824219
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -9.954764366149902,
+        -9.947216033935547,
+        -0.007709341123700142
+      ],
+      [
+        10.030847549438477,
+        9.878999710083008,
+        24.421531677246094
+      ]
+    ],
+    "triangles": 900,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Caged_lantern_BalconyRail_2",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Caged lantern · BalconyRail 2",
+    "pivot": [
+      -499.53057861328125,
+      -357.60791015625,
+      92.19999694824219
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -9.954733848571777,
+        -9.947216033935547,
+        -0.007709341123700142
+      ],
+      [
+        10.030878067016602,
+        9.878999710083008,
+        24.421531677246094
+      ]
+    ],
+    "triangles": 900,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Caged_lantern_BalconyRail_3",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Caged lantern · BalconyRail 3",
+    "pivot": [
+      -558.8385009765625,
+      -148.39427185058594,
+      92.19999694824219
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -9.952702522277832,
+        -9.934253692626953,
+        -0.007709341123700142
+      ],
+      [
+        10.030862808227539,
+        9.928732872009277,
+        24.421531677246094
+      ]
+    ],
+    "triangles": 900,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Caged_lantern_BalconyRail_4",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Caged lantern · BalconyRail 4",
+    "pivot": [
+      -571.872314453125,
+      58.162506103515625,
+      92.19999694824219
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -9.952641487121582,
+        -9.934253692626953,
+        -0.007709341123700142
+      ],
+      [
+        10.030923843383789,
+        9.928732872009277,
+        24.421531677246094
+      ]
+    ],
+    "triangles": 900,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Caged_lantern_BalconyRail_5",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Caged lantern · BalconyRail 5",
+    "pivot": [
+      -542.357421875,
+      218.10556030273438,
+      92.19999694824219
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -9.952702522277832,
+        -9.934253692626953,
+        -0.007709341123700142
+      ],
+      [
+        10.030862808227539,
+        9.928732872009277,
+        24.421531677246094
+      ]
+    ],
+    "triangles": 900,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_BalconyRail_Curved_balcony_base_lower",
+    "parent_mesh": "BalconyRail",
+    "atlas": "BalconyRail",
+    "label": "Curved balcony base lower",
+    "pivot": [
+      -504.4414978027344,
+      -166.1904296875,
+      -88.73999786376953
+    ],
+    "old_pivot": [
+      -493,
+      -240,
+      0
+    ],
+    "bounds": [
+      [
+        -74.2142105102539,
+        -390.75390625,
+        -0.010845312848687172
+      ],
+      [
+        74.1275634765625,
+        390.7417297363281,
+        18.37094497680664
+      ]
+    ],
+    "triangles": 400,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_left_closed_stringer",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · left closed stringer",
+    "pivot": [
+      -611.2938842773438,
+      237.0623779296875,
+      -76.81999969482422
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -70.15375518798828,
+        -24.28506088256836,
+        0.0
+      ],
+      [
+        70.15382385253906,
+        24.285085678100586,
+        74.62000274658203
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_left_foot_newel",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · left foot newel",
+    "pivot": [
+      -684.9235229492188,
+      258.6408386230469,
+      -77.08000183105469
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -17.577497482299805,
+        -17.575538635253906,
+        0.13367940485477448
+      ],
+      [
+        17.577497482299805,
+        17.575538635253906,
+        89.96905517578125
+      ]
+    ],
+    "triangles": 166,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_left_raked_guard",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · left raked guard",
+    "pivot": [
+      -613.31689453125,
+      238.29867553710938,
+      -61.84000015258789
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -65.25078582763672,
+        -26.38922882080078,
+        0.012230862863361835
+      ],
+      [
+        65.25078582763672,
+        26.38922882080078,
+        128.46597290039062
+      ]
+    ],
+    "triangles": 1466,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_level_landing",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · level landing",
+    "pivot": [
+      -523.25830078125,
+      336.3832092285156,
+      -23.790000915527344
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -48.81303787231445,
+        -128.28952026367188,
+        -0.005186793394386768
+      ],
+      [
+        48.68397521972656,
+        128.30787658691406,
+        23.730756759643555
+      ]
+    ],
+    "triangles": 184,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_lower_level_threshold",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · lower level threshold",
+    "pivot": [
+      -663.443603515625,
+      376.26483154296875,
+      -82.0
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -53.51317596435547,
+        -133.41616821289062,
+        -0.006040081847459078
+      ],
+      [
+        53.466331481933594,
+        133.4293670654297,
+        5.3060431480407715
+      ]
+    ],
+    "triangles": 192,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_right_closed_stringer",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · right closed stringer",
+    "pivot": [
+      -545.498779296875,
+      467.1116943359375,
+      -76.81999969482422
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -69.67280578613281,
+        -24.42172622680664,
+        0.0
+      ],
+      [
+        69.67279815673828,
+        24.421730041503906,
+        74.62000274658203
+      ]
+    ],
+    "triangles": 60,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_right_foot_newel",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · right foot newel",
+    "pivot": [
+      -619.8854370117188,
+      487.58197021484375,
+      -77.08000183105469
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -17.574756622314453,
+        -17.574756622314453,
+        0.13368237018585205
+      ],
+      [
+        17.574756622314453,
+        17.574756622314453,
+        114.47154235839844
+      ]
+    ],
+    "triangles": 1066,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_right_landing_newel",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · right landing newel",
+    "pivot": [
+      -477.3262939453125,
+      447.0834655761719,
+      -0.3199999928474426
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -17.575498580932617,
+        -17.57745933532715,
+        0.13277427852153778
+      ],
+      [
+        17.575498580932617,
+        17.57745933532715,
+        116.9515380859375
+      ]
+    ],
+    "triangles": 1066,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_right_raked_guard",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · right raked guard",
+    "pivot": [
+      -548.27880859375,
+      467.23980712890625,
+      -61.84000015258789
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -65.25078582763672,
+        -26.38923454284668,
+        0.012230899184942245
+      ],
+      [
+        65.25078582763672,
+        26.389232635498047,
+        128.46597290039062
+      ]
+    ],
+    "triangles": 1466,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_step_01",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · step 01",
+    "pivot": [
+      -535.90234375,
+      340.2437438964844,
+      -16.295000076293945
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -35.26893615722656,
+        -114.01541900634766,
+        0.04598090052604675
+      ],
+      [
+        35.15424346923828,
+        114.02422332763672,
+        16.265974044799805
+      ]
+    ],
+    "triangles": 92,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_step_02",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · step 02",
+    "pivot": [
+      -550.6497192382812,
+      344.0477600097656,
+      -31.635000228881836
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -48.03309631347656,
+        -122.91594696044922,
+        0.045980822294950485
+      ],
+      [
+        47.99601745605469,
+        122.95428466796875,
+        16.30103874206543
+      ]
+    ],
+    "triangles": 220,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_step_03",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · step 03",
+    "pivot": [
+      -578.1611328125,
+      351.86328125,
+      -46.974998474121094
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -48.03310012817383,
+        -122.9159164428711,
+        0.0459819920361042
+      ],
+      [
+        47.99607849121094,
+        122.95428466796875,
+        16.30103874206543
+      ]
+    ],
+    "triangles": 220,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_step_04",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · step 04",
+    "pivot": [
+      -605.6725463867188,
+      359.67877197265625,
+      -62.31500244140625
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -48.03303909301758,
+        -122.91386413574219,
+        0.0459817610681057
+      ],
+      [
+        47.99601745605469,
+        122.95425415039062,
+        16.301042556762695
+      ]
+    ],
+    "triangles": 220,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_EntrySteps_Entry_stair_step_05",
+    "parent_mesh": "EntrySteps",
+    "atlas": "EntrySteps",
+    "label": "Entry stair · step 05",
+    "pivot": [
+      -633.1839599609375,
+      367.4942626953125,
+      -77.65499877929688
+    ],
+    "old_pivot": [
+      -532,
+      420,
+      0
+    ],
+    "bounds": [
+      [
+        -48.040218353271484,
+        -122.90994262695312,
+        0.0717804953455925
+      ],
+      [
+        47.997745513916016,
+        122.95472717285156,
+        16.301042556762695
+      ]
+    ],
+    "triangles": 220,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Drapery_rolled_gold_binding_01",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Drapery · rolled gold binding 01",
+    "pivot": [
+      317.41064453125,
+      -564.9749755859375,
+      27.520153045654297
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -26.244384765625,
+        -59.1876220703125,
+        0.0
+      ],
+      [
+        26.244415283203125,
+        59.18768310546875,
+        11.672042846679688
+      ]
+    ],
+    "triangles": 488,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Drapery_rolled_gold_binding_02",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Drapery · rolled gold binding 02",
+    "pivot": [
+      316.4375,
+      565.0116577148438,
+      27.520206451416016
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -26.948822021484375,
+        -58.85614013671875,
+        0.0
+      ],
+      [
+        27.31317138671875,
+        58.867828369140625,
+        11.671989440917969
+      ]
+    ],
+    "triangles": 396,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Left_proscenium_curtain",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Left proscenium curtain",
+    "pivot": [
+      317.0560302734375,
+      -580.7003784179688,
+      24.397815704345703
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -27.778656005859375,
+        -75.93868255615234,
+        7.301568984985352e-07
+      ],
+      [
+        27.7786865234375,
+        75.93865966796875,
+        446.63287353515625
+      ]
+    ],
+    "triangles": 3542,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Right_proscenium_curtain",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Right proscenium curtain",
+    "pivot": [
+      316.99139404296875,
+      580.730712890625,
+      24.3927001953125
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -28.084442138671875,
+        -75.88336181640625,
+        -4.842877388000488e-07
+      ],
+      [
+        28.08441162109375,
+        75.88336181640625,
+        446.6315612792969
+      ]
+    ],
+    "triangles": 3542,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Upper_pelmet_swag_01",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Upper pelmet · swag 01",
+    "pivot": [
+      315.32208251953125,
+      400.9925842285156,
+      369.2698059082031
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -34.210838317871094,
+        -159.63540649414062,
+        -0.019555114209651947
+      ],
+      [
+        34.184844970703125,
+        159.6354217529297,
+        112.58074951171875
+      ]
+    ],
+    "triangles": 6734,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Upper_pelmet_swag_02",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Upper pelmet · swag 02",
+    "pivot": [
+      290.53179931640625,
+      123.12924194335938,
+      402.5709228515625
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -20.529848098754883,
+        -130.2952423095703,
+        -0.009118557907640934
+      ],
+      [
+        20.5098876953125,
+        130.3272705078125,
+        84.684814453125
+      ]
+    ],
+    "triangles": 6202,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Upper_pelmet_swag_03",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Upper pelmet · swag 03",
+    "pivot": [
+      286.82830810546875,
+      -123.8846435546875,
+      405.07025146484375
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -17.834474563598633,
+        -130.28134155273438,
+        -0.009117797017097473
+      ],
+      [
+        17.814453125,
+        130.30740356445312,
+        82.2430419921875
+      ]
+    ],
+    "triangles": 7252,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_PortalValance_Upper_pelmet_swag_04",
+    "parent_mesh": "PortalValance",
+    "atlas": "PortalValance",
+    "label": "Upper pelmet · swag 04",
+    "pivot": [
+      319.5030517578125,
+      -400.9921569824219,
+      371.3691711425781
+    ],
+    "old_pivot": [
+      456,
+      0,
+      385
+    ],
+    "bounds": [
+      [
+        -31.539878845214844,
+        -159.6189422607422,
+        -0.019555116072297096
+      ],
+      [
+        31.513916015625,
+        159.61892700195312,
+        110.53890991210938
+      ]
+    ],
+    "triangles": 10632,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ForegroundDrapes_Left_balcony_drape",
+    "parent_mesh": "ForegroundDrapes",
+    "atlas": "ForegroundDrapes",
+    "label": "Left balcony drape",
+    "pivot": [
+      -529.7275390625,
+      -325.020751953125,
+      -156.18194580078125
+    ],
+    "old_pivot": [
+      -492,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -87.17144775390625,
+        -249.21041870117188,
+        2.8461217880249023e-06
+      ],
+      [
+        87.17145538330078,
+        249.2104034423828,
+        295.1783752441406
+      ]
+    ],
+    "triangles": 2956,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ForegroundDrapes_Left_entrance_curtain",
+    "parent_mesh": "ForegroundDrapes",
+    "atlas": "ForegroundDrapes",
+    "label": "Left entrance curtain",
+    "pivot": [
+      -556.458251953125,
+      -380.1933898925781,
+      -69.0586929321289
+    ],
+    "old_pivot": [
+      -492,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -39.583980560302734,
+        -285.45391845703125,
+        -2.0073784980922937e-06
+      ],
+      [
+        39.583984375,
+        285.4538879394531,
+        553.390380859375
+      ]
+    ],
+    "triangles": 4156,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ForegroundDrapes_Left_overhead_curtain",
+    "parent_mesh": "ForegroundDrapes",
+    "atlas": "ForegroundDrapes",
+    "label": "Left overhead curtain",
+    "pivot": [
+      -499.9739990234375,
+      -321.5916442871094,
+      530.4663696289062
+    ],
+    "old_pivot": [
+      -492,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -16.009521484375,
+        -133.3097381591797,
+        -3.7366990000009537e-06
+      ],
+      [
+        16.009563446044922,
+        133.30975341796875,
+        215.6287841796875
+      ]
+    ],
+    "triangles": 2116,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ForegroundDrapes_Right_balcony_drape",
+    "parent_mesh": "ForegroundDrapes",
+    "atlas": "ForegroundDrapes",
+    "label": "Right balcony drape",
+    "pivot": [
+      -594.8116455078125,
+      584.4982299804688,
+      -145.00035095214844
+    ],
+    "old_pivot": [
+      -492,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -20.489669799804688,
+        -81.50049591064453,
+        2.2092717699706554e-07
+      ],
+      [
+        20.489635467529297,
+        81.50050354003906,
+        254.99844360351562
+      ]
+    ],
+    "triangles": 938,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ForegroundDrapes_Right_entrance_curtain",
+    "parent_mesh": "ForegroundDrapes",
+    "atlas": "ForegroundDrapes",
+    "label": "Right entrance curtain",
+    "pivot": [
+      -535.923583984375,
+      577.9258422851562,
+      19.516260147094727
+    ],
+    "old_pivot": [
+      -492,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -19.0489501953125,
+        -72.09295654296875,
+        -3.501772880554199e-07
+      ],
+      [
+        19.0489501953125,
+        72.09297180175781,
+        428.1269836425781
+      ]
+    ],
+    "triangles": 3946,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ForegroundDrapes_Right_overhead_curtain",
+    "parent_mesh": "ForegroundDrapes",
+    "atlas": "ForegroundDrapes",
+    "label": "Right overhead curtain",
+    "pivot": [
+      -499.97369384765625,
+      362.53204345703125,
+      548.19140625
+    ],
+    "old_pivot": [
+      -492,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -16.009765625,
+        -124.36031341552734,
+        9.48319211602211e-06
+      ],
+      [
+        16.0097599029541,
+        124.36031341552734,
+        203.55430603027344
+      ]
+    ],
+    "triangles": 2116,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_dark_stage_backing",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · dark stage backing",
+    "pivot": [
+      394.14996337890625,
+      -1.52587890625e-05,
+      88.05000305175781
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -83.5999984741211,
+        -210.4149932861328,
+        0.0
+      ],
+      [
+        83.54521942138672,
+        210.4149932861328,
+        186.1961212158203
+      ]
+    ],
+    "triangles": 868,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_horizontal_scenery_slide",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · horizontal scenery slide",
+    "pivot": [
+      402.95001220703125,
+      9.094947017729282e-13,
+      85.67000579833984
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -46.54008102416992,
+        -213.0,
+        0.02829671837389469
+      ],
+      [
+        46.54004669189453,
+        213.00001525878906,
+        2.6999969482421875
+      ]
+    ],
+    "triangles": 832,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_left_timber_wing",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · left timber wing",
+    "pivot": [
+      384.3499755859375,
+      -201.45001220703125,
+      76.89999389648438
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -96.69646453857422,
+        -20.830175399780273,
+        0.1399277001619339
+      ],
+      [
+        96.74870300292969,
+        20.836912155151367,
+        207.08396911621094
+      ]
+    ],
+    "triangles": 1526,
+    "station_base": false,
+    "collision": "selector"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_right_timber_wing",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · right timber wing",
+    "pivot": [
+      384.35003662109375,
+      201.4499969482422,
+      76.89999389648438
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -96.69646453857422,
+        -20.834745407104492,
+        0.1399277001619339
+      ],
+      [
+        96.74870300292969,
+        20.810365676879883,
+        207.08396911621094
+      ]
+    ],
+    "triangles": 1526,
+    "station_base": false,
+    "collision": "selector"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_sculpted_proscenium_crown",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · sculpted proscenium crown",
+    "pivot": [
+      300.9700012207031,
+      -6.821210263296962e-13,
+      232.7884521484375
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -10.345540046691895,
+        -217.0,
+        0.09388735890388489
+      ],
+      [
+        10.330065727233887,
+        217.0,
+        105.07598876953125
+      ]
+    ],
+    "triangles": 852,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_small_parked_scenery_edge_L",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · small parked scenery edge L",
+    "pivot": [
+      464.533935546875,
+      -184.00003051757812,
+      87.44999694824219
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -4.956416130065918,
+        -19.94999885559082,
+        0.04244494065642357
+      ],
+      [
+        4.956084728240967,
+        19.94999885559082,
+        105.95513916015625
+      ]
+    ],
+    "triangles": 202,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_small_parked_scenery_edge_R",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector · small parked scenery edge R",
+    "pivot": [
+      464.44122314453125,
+      183.99996948242188,
+      87.44999694824219
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -4.869010925292969,
+        -19.94999885559082,
+        0.04244494065642357
+      ],
+      [
+        4.868216037750244,
+        19.94999885559082,
+        102.17135620117188
+      ]
+    ],
+    "triangles": 176,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SelectionStand_Selector_stepped_podium",
+    "parent_mesh": "SelectionStand",
+    "atlas": "SelectionStand",
+    "label": "Selector podium",
+    "pivot": [
+      310.0,
+      -0.0,
+      0.0
+    ],
+    "old_pivot": [
+      310,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -112.12744140625,
+        -233.0000457763672,
+        -0.2702307403087616
+      ],
+      [
+        177.0000762939453,
+        233.0000457763672,
+        86.0
+      ]
+    ],
+    "triangles": 2714,
+    "station_base": true,
+    "collision": "selector"
+  },
+  {
+    "asset": "SM_Hub_ScenicGreens_Foliage_flat_scenic_cutout_01",
+    "parent_mesh": "ScenicGreens",
+    "atlas": "ScenicGreens",
+    "label": "Foliage · flat scenic cutout 01",
+    "pivot": [
+      316.07373046875,
+      -247.0,
+      -0.05000000074505806
+    ],
+    "old_pivot": [
+      260,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -9.6361083984375,
+        -18.272193908691406,
+        0.0
+      ],
+      [
+        10.112569808959961,
+        20.989179611206055,
+        43.47999572753906
+      ]
+    ],
+    "triangles": 130,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ScenicGreens_Foliage_flat_scenic_cutout_02",
+    "parent_mesh": "ScenicGreens",
+    "atlas": "ScenicGreens",
+    "label": "Foliage · flat scenic cutout 02",
+    "pivot": [
+      315.84735107421875,
+      249.0,
+      -0.05000000074505806
+    ],
+    "old_pivot": [
+      260,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -9.144124031066895,
+        -22.042720794677734,
+        0.0
+      ],
+      [
+        10.235456466674805,
+        19.22687339782715,
+        36.121734619140625
+      ]
+    ],
+    "triangles": 130,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ScenicGreens_Foliage_flat_scenic_cutout_03",
+    "parent_mesh": "ScenicGreens",
+    "atlas": "ScenicGreens",
+    "label": "Foliage · flat scenic cutout 03",
+    "pivot": [
+      179.8625030517578,
+      -332.107421875,
+      -0.05999999865889549
+    ],
+    "old_pivot": [
+      260,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -16.020160675048828,
+        -39.69813537597656,
+        0.0
+      ],
+      [
+        16.020174026489258,
+        39.660850524902344,
+        78.47672271728516
+      ]
+    ],
+    "triangles": 130,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_ScenicGreens_Foliage_flat_scenic_cutout_04",
+    "parent_mesh": "ScenicGreens",
+    "atlas": "ScenicGreens",
+    "label": "Foliage · flat scenic cutout 04",
+    "pivot": [
+      188.61849975585938,
+      319.1011047363281,
+      -0.05999999865889549
+    ],
+    "old_pivot": [
+      260,
+      0,
+      0
+    ],
+    "bounds": [
+      [
+        -16.539499282836914,
+        -37.412017822265625,
+        0.0
+      ],
+      [
+        16.53840446472168,
+        37.44380569458008,
+        69.43053436279297
+      ]
+    ],
+    "triangles": 130,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Curtain_Wardrobe_01",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Curtain · Wardrobe 01",
+    "pivot": [
+      233.36993408203125,
+      -477.30718994140625,
+      2.299335479736328
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -36.19629669189453,
+        -53.01776123046875,
+        -0.05551996827125549
+      ],
+      [
+        34.85480499267578,
+        46.43191909790039,
+        229.41250610351562
+      ]
+    ],
+    "triangles": 2112,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Fitting_booth_curtain_tie",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Fitting booth curtain tie",
+    "pivot": [
+      229.54837036132812,
+      -497.00775146484375,
+      65.53738403320312
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -23.623748779296875,
+        -27.453338623046875,
+        2.86102294921875e-06
+      ],
+      [
+        23.623748779296875,
+        27.453277587890625,
+        36.33435821533203
+      ]
+    ],
+    "triangles": 906,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Fitting_booth_pelmet",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Fitting booth pelmet",
+    "pivot": [
+      232.68064880371094,
+      -461.8607177734375,
+      206.90000915527344
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -25.106277465820312,
+        -38.679931640625,
+        0.0
+      ],
+      [
+        25.106277465820312,
+        38.679931640625,
+        30.9866943359375
+      ]
+    ],
+    "triangles": 2332,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Fitting_booth_framed_canopy",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Fitting booth · framed canopy",
+    "pivot": [
+      264.42767333984375,
+      -481.5880126953125,
+      -0.4499969482421875
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -58.763267517089844,
+        -58.76506042480469,
+        -0.01253457460552454
+      ],
+      [
+        58.70830535888672,
+        58.80171203613281,
+        232.07147216796875
+      ]
+    ],
+    "triangles": 874,
+    "station_base": false,
+    "collision": "surface"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Fitting_rug",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Fitting rug",
+    "pivot": [
+      264.937255859375,
+      -471.31622314453125,
+      -1.0
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -39.68593215942383,
+        -39.62028503417969,
+        -0.0037202402018010616
+      ],
+      [
+        39.68593215942383,
+        39.75722885131836,
+        4.402838706970215
+      ]
+    ],
+    "triangles": 148,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Gilt_braid_007",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Gilt braid 007",
+    "pivot": [
+      229.3565216064453,
+      -460.32586669921875,
+      204.3472900390625
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -24.491897583007812,
+        -37.81583786010742,
+        -0.10968981683254242
+      ],
+      [
+        24.811851501464844,
+        38.14149856567383,
+        33.6569709777832
+      ]
+    ],
+    "triangles": 406,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Pelmet_fringe_01_002",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Pelmet fringe 01 002",
+    "pivot": [
+      227.72372436523438,
+      -458.3706970214844,
+      199.01312255859375
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -21.545259475708008,
+        -35.10445785522461,
+        -0.01814362034201622
+      ],
+      [
+        21.545270919799805,
+        35.10445785522461,
+        33.77394485473633
+      ]
+    ],
+    "triangles": 342,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Round_hatbox_lift_off_lid",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Round hatbox · lift-off lid",
+    "pivot": [
+      113.7060775756836,
+      -570.1162109375,
+      296.296142578125
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -24.579524993896484,
+        -24.593128204345703,
+        5.249399691820145e-06
+      ],
+      [
+        24.579524993896484,
+        24.593128204345703,
+        9.757461547851562
+      ]
+    ],
+    "triangles": 258,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Round_hatbox_lift_off_lid_001",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Round hatbox · lift-off lid.001",
+    "pivot": [
+      130.52920532226562,
+      -505.1776428222656,
+      328.5965270996094
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -24.196144104003906,
+        -24.158061981201172,
+        1.421431079506874e-05
+      ],
+      [
+        24.196144104003906,
+        24.158061981201172,
+        9.757095336914062
+      ]
+    ],
+    "triangles": 258,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Round_hatbox_lift_off_lid_002",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Round hatbox · lift-off lid.002",
+    "pivot": [
+      107.74189758300781,
+      -536.2463989257812,
+      66.79542541503906
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -27.900707244873047,
+        -27.891613006591797,
+        -2.169981598854065e-06
+      ],
+      [
+        27.900707244873047,
+        27.891613006591797,
+        9.758188247680664
+      ]
+    ],
+    "triangles": 258,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Travel_case_Wardrobe_01",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Travel case · Wardrobe 01",
+    "pivot": [
+      129.89114379882812,
+      -504.33770751953125,
+      279.5000305175781
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -40.65414810180664,
+        -41.556968688964844,
+        -0.004839560016989708
+      ],
+      [
+        40.37371826171875,
+        41.17058181762695,
+        32.25398254394531
+      ]
+    ],
+    "triangles": 1342,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Travel_case_lid_005",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Travel case · lid.005",
+    "pivot": [
+      130.43658447265625,
+      -504.4403381347656,
+      306.5240173339844
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -40.5781364440918,
+        -41.748291015625,
+        0.0
+      ],
+      [
+        40.51968002319336,
+        41.78729248046875,
+        9.03001594543457
+      ]
+    ],
+    "triangles": 264,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Travel_case_lid_006",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Travel case · lid.006",
+    "pivot": [
+      143.98660278320312,
+      -487.48504638671875,
+      64.05000305175781
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -21.086505889892578,
+        -22.062097549438477,
+        0.0
+      ],
+      [
+        21.08647918701172,
+        22.062070846557617,
+        9.03000259399414
+      ]
+    ],
+    "triangles": 448,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_dress_form_fitting",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe dress form fitting",
+    "pivot": [
+      255.05496215820312,
+      -399.8541564941406,
+      77.0
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -19.816539764404297,
+        -23.00906753540039,
+        -0.013933509588241577
+      ],
+      [
+        19.8165225982666,
+        23.009063720703125,
+        79.0
+      ]
+    ],
+    "triangles": 252,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_finial_fitting",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe finial fitting",
+    "pivot": [
+      255.05496215820312,
+      -399.8541259765625,
+      156.0
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -5.061983585357666,
+        -5.0619683265686035,
+        0.0
+      ],
+      [
+        5.061977386474609,
+        5.061986923217773,
+        10.0
+      ]
+    ],
+    "triangles": 92,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_mannequin_post_fitting",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe mannequin post fitting",
+    "pivot": [
+      255.05494689941406,
+      -399.8541259765625,
+      8.5
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -3.6833953857421875,
+        -4.014636516571045,
+        -0.0038052222225815058
+      ],
+      [
+        3.859707832336426,
+        4.014673233032227,
+        83.01905822753906
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_turned_mannequin_base_fitting",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe turned mannequin base fitting",
+    "pivot": [
+      255.05494689941406,
+      -399.8541564941406,
+      0.0
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -24.996192932128906,
+        -24.996196746826172,
+        -0.0052608298137784
+      ],
+      [
+        24.996192932128906,
+        24.996196746826172,
+        14.007988929748535
+      ]
+    ],
+    "triangles": 136,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_brass_hanger_rail",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · brass hanger rail",
+    "pivot": [
+      110.16184997558594,
+      -508.95074462890625,
+      244.32998657226562
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -39.23823165893555,
+        -65.4967041015625,
+        -0.003428654745221138
+      ],
+      [
+        39.243045806884766,
+        65.49687194824219,
+        4.940000057220459
+      ]
+    ],
+    "triangles": 82,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_burgundy_hat_case",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · burgundy hat case",
+    "pivot": [
+      107.6614761352539,
+      -536.2463989257812,
+      44.1200065612793
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -26.796751022338867,
+        -26.894638061523438,
+        -0.004038436803966761
+      ],
+      [
+        26.966026306152344,
+        26.897056579589844,
+        24.5
+      ]
+    ],
+    "triangles": 480,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_fitted_costume_rack",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · fitted costume rack",
+    "pivot": [
+      128.13433837890625,
+      -519.32568359375,
+      0.6500015258789062
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -74.5135269165039,
+        -90.78863525390625,
+        -0.009541232138872147
+      ],
+      [
+        74.44903564453125,
+        90.8310775756836,
+        277.7664794921875
+      ]
+    ],
+    "triangles": 1920,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_plum_hatbox",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · plum hatbox",
+    "pivot": [
+      113.61030578613281,
+      -570.1162109375,
+      278.41998291015625
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -23.615562438964844,
+        -23.721511840820312,
+        -0.0010246648453176022
+      ],
+      [
+        23.773679733276367,
+        23.69632339477539,
+        19.700000762939453
+      ]
+    ],
+    "triangles": 548,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_small_cedar_accessories_box",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · small cedar accessories box",
+    "pivot": [
+      143.46694946289062,
+      -487.46990966796875,
+      44.130001068115234
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -21.490575790405273,
+        -21.84705352783203,
+        -0.02649996057152748
+      ],
+      [
+        21.0625,
+        21.48093032836914,
+        25.149993896484375
+      ]
+    ],
+    "triangles": 1794,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_soft_period_cap",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · soft period cap",
+    "pivot": [
+      78.89576721191406,
+      -556.0518798828125,
+      278.4100036621094
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -21.29555320739746,
+        -24.088239669799805,
+        -0.03616392984986305
+      ],
+      [
+        24.226877212524414,
+        24.75886344909668,
+        18.176555633544922
+      ]
+    ],
+    "triangles": 746,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_Wardrobe_Wardrobe_wrapped_hatbox_atop_case",
+    "parent_mesh": "Wardrobe",
+    "atlas": "Wardrobe",
+    "label": "Wardrobe · wrapped hatbox atop case",
+    "pivot": [
+      130.52920532226562,
+      -505.1776428222656,
+      315.57000732421875
+    ],
+    "old_pivot": [
+      162,
+      -500,
+      0
+    ],
+    "bounds": [
+      [
+        -23.240652084350586,
+        -23.2767391204834,
+        -0.00310964765958488
+      ],
+      [
+        23.26972007751465,
+        23.28789710998535,
+        14.850000381469727
+      ]
+    ],
+    "triangles": 480,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Stool_DressingCorner",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Stool · DressingCorner",
+    "pivot": [
+      -50.932373046875,
+      -514.9336547851562,
+      -0.6165714263916016
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -24.092565536499023,
+        -23.966089248657227,
+        -0.01146798487752676
+      ],
+      [
+        24.08329963684082,
+        23.954084396362305,
+        57.706886291503906
+      ]
+    ],
+    "triangles": 1222,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_mat",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity mat",
+    "pivot": [
+      -25.90030288696289,
+      -527.5941162109375,
+      0.0540006160736084
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -75.8475341796875,
+        -87.55288696289062,
+        0.0
+      ],
+      [
+        75.8475341796875,
+        87.5528564453125,
+        5.1775007247924805
+      ]
+    ],
+    "triangles": 1736,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_cosmetic_pot_01",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · cosmetic pot 01",
+    "pivot": [
+      -18.330244064331055,
+      -567.9048461914062,
+      87.1300048828125
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -5.099999904632568,
+        -5.097836494445801,
+        -0.0020833685994148254
+      ],
+      [
+        5.097836494445801,
+        5.097836494445801,
+        22.690731048583984
+      ]
+    ],
+    "triangles": 338,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_cosmetic_pot_02",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · cosmetic pot 02",
+    "pivot": [
+      -22.41269302368164,
+      -550.687744140625,
+      87.1300048828125
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -6.41539192199707,
+        -6.41539192199707,
+        -0.006522304378449917
+      ],
+      [
+        6.41539192199707,
+        6.41539192199707,
+        13.189997673034668
+      ]
+    ],
+    "triangles": 338,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_cosmetic_pot_03",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · cosmetic pot 03",
+    "pivot": [
+      -5.499332427978516,
+      -540.7000732421875,
+      87.1300048828125
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -4.400000095367432,
+        -4.3975348472595215,
+        -0.002393086440861225
+      ],
+      [
+        4.3975348472595215,
+        4.3975348472595215,
+        19.69056510925293
+      ]
+    ],
+    "triangles": 338,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_cosmetic_pot_04",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · cosmetic pot 04",
+    "pivot": [
+      -10.527277946472168,
+      -523.1572875976562,
+      87.1300048828125
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -6.900000095367432,
+        -6.900000095367432,
+        -0.0038619134575128555
+      ],
+      [
+        6.900000095367432,
+        6.900000095367432,
+        9.99000072479248
+      ]
+    ],
+    "triangles": 396,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_cosmetic_pot_05",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · cosmetic pot 05",
+    "pivot": [
+      -3.3038954734802246,
+      -509.8331298828125,
+      87.1300048828125
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -4.900000095367432,
+        -4.900000095367432,
+        -0.0026305560022592545
+      ],
+      [
+        4.900000095367432,
+        4.900000095367432,
+        14.189997673034668
+      ]
+    ],
+    "triangles": 358,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_drawer",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · drawer",
+    "pivot": [
+      -8.902846336364746,
+      -527.950439453125,
+      63.68000411987305
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -24.491413116455078,
+        -31.42732048034668,
+        0.08270854502916336
+      ],
+      [
+        24.358985900878906,
+        31.420513153076172,
+        13.303628921508789
+      ]
+    ],
+    "triangles": 368,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_lighted_mirror",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · lighted mirror",
+    "pivot": [
+      23.705272674560547,
+      -539.8096313476562,
+      87.13999938964844
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -27.268945693969727,
+        -47.21159362792969,
+        0.0
+      ],
+      [
+        26.25724983215332,
+        47.21156311035156,
+        131.46514892578125
+      ]
+    ],
+    "triangles": 3596,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_DressingCorner_Vanity_table",
+    "parent_mesh": "DressingCorner",
+    "atlas": "DressingCorner",
+    "label": "Vanity · table",
+    "pivot": [
+      3.0359268188476562,
+      -532.6694946289062,
+      0.0
+    ],
+    "old_pivot": [
+      65,
+      -495,
+      0
+    ],
+    "bounds": [
+      [
+        -49.452919006347656,
+        -67.185791015625,
+        -0.012245790101587772
+      ],
+      [
+        49.02334976196289,
+        67.06289672851562,
+        87.14209747314453
+      ]
+    ],
+    "triangles": 1090,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Backboard",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Backboard",
+    "pivot": [
+      -267.8722839355469,
+      -453.82623291015625,
+      108.46684265136719
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -42.708656311035156,
+        -98.33839416503906,
+        -7.62939453125e-06
+      ],
+      [
+        42.48757553100586,
+        98.42849731445312,
+        33.643707275390625
+      ]
+    ],
+    "triangles": 864,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Craft_comedy_paper_mask",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Craft comedy paper mask",
+    "pivot": [
+      -297.9579772949219,
+      -471.6428527832031,
+      111.06741333007812
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -12.336912155151367,
+        -20.025182723999023,
+        0.0
+      ],
+      [
+        12.336913108825684,
+        20.025184631347656,
+        43.3663330078125
+      ]
+    ],
+    "triangles": 1138,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Craft_cut_cardboard_star",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Craft cut cardboard star",
+    "pivot": [
+      -280.62750244140625,
+      -411.4926452636719,
+      152.86474609375
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -8.009490013122559,
+        -13.083195686340332,
+        0.0
+      ],
+      [
+        8.009490013122559,
+        13.083195686340332,
+        27.13525390625
+      ]
+    ],
+    "triangles": 36,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Craft_star_dowel",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Craft star dowel",
+    "pivot": [
+      -278.8782653808594,
+      -412.4622802734375,
+      115.5
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -1.1735973358154297,
+        -1.1793185472488403,
+        0.05393074452877045
+      ],
+      [
+        1.1735973358154297,
+        1.1793185472488403,
+        40.946067810058594
+      ]
+    ],
+    "triangles": 28,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Craft_tragedy_paper_mask",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Craft tragedy paper mask",
+    "pivot": [
+      -281.08721923828125,
+      -439.1379089355469,
+      110.9457778930664
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -9.95114517211914,
+        -16.1363525390625,
+        0.0
+      ],
+      [
+        9.951129913330078,
+        16.136343002319336,
+        35.27246856689453
+      ]
+    ],
+    "triangles": 1144,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Drawer_01_slide_on_local_Y",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Drawer 01 · slide on local Y",
+    "pivot": [
+      -304.7537536621094,
+      -368.4888916015625,
+      25.589750289916992
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -52.070701599121094,
+        -36.37300491333008,
+        0.10728724300861359
+      ],
+      [
+        50.75761413574219,
+        36.09612274169922,
+        21.99942398071289
+      ]
+    ],
+    "triangles": 556,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Drawer_02_slide_on_local_Y",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Drawer 02 · slide on local Y",
+    "pivot": [
+      -304.7537536621094,
+      -368.4888916015625,
+      49.05397415161133
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -52.070701599121094,
+        -36.37300491333008,
+        0.1072891503572464
+      ],
+      [
+        50.75761413574219,
+        36.09612274169922,
+        21.999425888061523
+      ]
+    ],
+    "triangles": 556,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Drawer_03_slide_on_local_Y",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Drawer 03 · slide on local Y",
+    "pivot": [
+      -304.7537536621094,
+      -368.4888916015625,
+      72.51820373535156
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -52.070701599121094,
+        -36.37300491333008,
+        0.10730059444904327
+      ],
+      [
+        50.75761413574219,
+        36.09612274169922,
+        21.999441146850586
+      ]
+    ],
+    "triangles": 556,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Open_drawing_sheet",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Open drawing sheet",
+    "pivot": [
+      -318.60308837890625,
+      -408.7921142578125,
+      109.20000457763672
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -34.76802062988281,
+        -36.57132339477539,
+        -2.4437904357910156e-06
+      ],
+      [
+        34.76802062988281,
+        36.57132339477539,
+        1.119997501373291
+      ]
+    ],
+    "triangles": 12,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Open_shelf",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Open shelf",
+    "pivot": [
+      -328.53955078125,
+      -462.6968994140625,
+      19.105735778808594
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -71.153076171875,
+        -74.90834045410156,
+        1.9073486328125e-06
+      ],
+      [
+        71.01294708251953,
+        74.86985778808594,
+        10.1079740524292
+      ]
+    ],
+    "triangles": 204,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_SM_Hub_Workbench",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "SM_Hub_Workbench",
+    "pivot": [
+      -317.1312255859375,
+      -435.9808349609375,
+      0.0
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -90.14974212646484,
+        -116.61393737792969,
+        -0.01037502195686102
+      ],
+      [
+        92.06513214111328,
+        117.01991271972656,
+        99.71737670898438
+      ]
+    ],
+    "triangles": 2230,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Workbench_task_lamp",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Workbench task lamp",
+    "pivot": [
+      -343.9736328125,
+      -512.1018676757812,
+      106.32447052001953
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -33.861541748046875,
+        -21.266895294189453,
+        -1.2362143024802208e-06
+      ],
+      [
+        33.861576080322266,
+        21.26691246032715,
+        101.99553680419922
+      ]
+    ],
+    "triangles": 452,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_CraftBench_Worktop",
+    "parent_mesh": "CraftBench",
+    "atlas": "CraftBench",
+    "label": "Worktop",
+    "pivot": [
+      -317.1311950683594,
+      -435.98077392578125,
+      99.16474914550781
+    ],
+    "old_pivot": [
+      -283,
+      -435,
+      0
+    ],
+    "bounds": [
+      [
+        -100.09056854248047,
+        -124.61569213867188,
+        -0.026791822165250778
+      ],
+      [
+        99.25760650634766,
+        124.03773498535156,
+        9.49313735961914
+      ]
+    ],
+    "triangles": 410,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_small_supply_case_01",
+    "parent_mesh": "WorkshopProps_SM_Hub_Workbench_01",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · small supply case 01",
+    "pivot": [
+      -366.252197265625,
+      -486.1895751953125,
+      29.269004821777344
+    ],
+    "old_pivot": [
+      -356.6541748046875,
+      -454.0869140625,
+      29.26205825805664
+    ],
+    "bounds": [
+      [
+        -25.420791625976562,
+        -25.38716697692871,
+        -0.0069457897916436195
+      ],
+      [
+        25.382034301757812,
+        25.41310691833496,
+        24.60000228881836
+      ]
+    ],
+    "triangles": 380,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_small_supply_case_02",
+    "parent_mesh": "WorkshopProps_SM_Hub_Workbench_01",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · small supply case 02",
+    "pivot": [
+      -363.6966857910156,
+      -484.99957275390625,
+      53.85300064086914
+    ],
+    "old_pivot": [
+      -356.6541748046875,
+      -454.0869140625,
+      29.26205825805664
+    ],
+    "bounds": [
+      [
+        -19.957988739013672,
+        -19.23259735107422,
+        -0.00665103318169713
+      ],
+      [
+        19.94086265563965,
+        19.24923324584961,
+        16.59999656677246
+      ]
+    ],
+    "triangles": 396,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_small_supply_case_03",
+    "parent_mesh": "WorkshopProps_SM_Hub_Workbench_01",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · small supply case 03",
+    "pivot": [
+      -354.0288391113281,
+      -443.8213806152344,
+      29.269004821777344
+    ],
+    "old_pivot": [
+      -356.6541748046875,
+      -454.0869140625,
+      29.26205825805664
+    ],
+    "bounds": [
+      [
+        -23.55475616455078,
+        -24.525854110717773,
+        -0.006652933079749346
+      ],
+      [
+        23.52893829345703,
+        24.543004989624023,
+        24.60000228881836
+      ]
+    ],
+    "triangles": 380,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_small_supply_case_04",
+    "parent_mesh": "WorkshopProps_SM_Hub_Workbench_01",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · small supply case 04",
+    "pivot": [
+      -340.8598327636719,
+      -413.49365234375,
+      29.269004821777344
+    ],
+    "old_pivot": [
+      -356.6541748046875,
+      -454.0869140625,
+      29.26205825805664
+    ],
+    "bounds": [
+      [
+        -19.24563980102539,
+        -16.922548294067383,
+        -0.006651031784713268
+      ],
+      [
+        19.224422454833984,
+        16.943519592285156,
+        18.60000228881836
+      ]
+    ],
+    "triangles": 404,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Paint_brush_01",
+    "parent_mesh": "WorkshopProps_Workshop_hollow_brush_jar_03",
+    "atlas": "WorkshopProps",
+    "label": "Paint brush · 01",
+    "pivot": [
+      -278.7479553222656,
+      -407.5832824707031,
+      111.4343490600586
+    ],
+    "old_pivot": [
+      -273.54949951171875,
+      -403.9552001953125,
+      108.63700103759766
+    ],
+    "bounds": [
+      [
+        -3.5640177726745605,
+        -3.4885904788970947,
+        -0.0059151602908968925
+      ],
+      [
+        3.5256497859954834,
+        3.185546398162842,
+        45.896026611328125
+      ]
+    ],
+    "triangles": 168,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Paint_brush_02",
+    "parent_mesh": "WorkshopProps_Workshop_hollow_brush_jar_03",
+    "atlas": "WorkshopProps",
+    "label": "Paint brush · 02",
+    "pivot": [
+      -274.16998291015625,
+      -397.15203857421875,
+      111.40189361572266
+    ],
+    "old_pivot": [
+      -273.54949951171875,
+      -403.9552001953125,
+      108.63700103759766
+    ],
+    "bounds": [
+      [
+        -3.372235059738159,
+        -4.624516487121582,
+        -0.007288942579180002
+      ],
+      [
+        3.324753522872925,
+        4.514593124389648,
+        51.20891189575195
+      ]
+    ],
+    "triangles": 176,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Paint_brush_03",
+    "parent_mesh": "WorkshopProps_Workshop_hollow_brush_jar_03",
+    "atlas": "WorkshopProps",
+    "label": "Paint brush · 03",
+    "pivot": [
+      -268.32666015625,
+      -407.40106201171875,
+      111.44585418701172
+    ],
+    "old_pivot": [
+      -273.54949951171875,
+      -403.9552001953125,
+      108.63700103759766
+    ],
+    "bounds": [
+      [
+        -3.957946300506592,
+        -3.190495014190674,
+        -0.007815795950591564
+      ],
+      [
+        3.6104681491851807,
+        3.271392345428467,
+        58.70753479003906
+      ]
+    ],
+    "triangles": 176,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Paint_brush_04",
+    "parent_mesh": "WorkshopProps_Workshop_hollow_brush_jar_03",
+    "atlas": "WorkshopProps",
+    "label": "Paint brush · 04",
+    "pivot": [
+      -267.1203308105469,
+      -401.31170654296875,
+      111.46321868896484
+    ],
+    "old_pivot": [
+      -273.54949951171875,
+      -403.9552001953125,
+      108.63700103759766
+    ],
+    "bounds": [
+      [
+        -2.9803056716918945,
+        -2.4366068840026855,
+        0.008433045819401741
+      ],
+      [
+        2.998162269592285,
+        2.7452516555786133,
+        42.6931037902832
+      ]
+    ],
+    "triangles": 168,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_hollow_brush_jar",
+    "parent_mesh": "WorkshopProps_Workshop_hollow_brush_jar_03",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · hollow brush jar",
+    "pivot": [
+      -273.54949951171875,
+      -403.9552001953125,
+      108.63700103759766
+    ],
+    "old_pivot": [
+      -273.54949951171875,
+      -403.9552001953125,
+      108.63700103759766
+    ],
+    "bounds": [
+      [
+        -15.625974655151367,
+        -15.625974655151367,
+        -0.0021760889794677496
+      ],
+      [
+        15.625974655151367,
+        15.625974655151367,
+        27.001298904418945
+      ]
+    ],
+    "triangles": 534,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_open_canvas_chest",
+    "parent_mesh": "WorkshopProps_Workshop_open_canvas_chest_05",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · open canvas chest",
+    "pivot": [
+      -226.53382873535156,
+      -315.7047424316406,
+      0.0
+    ],
+    "old_pivot": [
+      -226.53382873535156,
+      -315.7047424316406,
+      0.0
+    ],
+    "bounds": [
+      [
+        -34.79908752441406,
+        -37.71985626220703,
+        -0.004839560016989708
+      ],
+      [
+        34.80487060546875,
+        37.73404312133789,
+        42.00498962402344
+      ]
+    ],
+    "triangles": 1308,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_roll_of_canvas_01",
+    "parent_mesh": "WorkshopProps_Workshop_open_canvas_chest_05",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · roll of canvas 01",
+    "pivot": [
+      -223.9293670654297,
+      -336.3025817871094,
+      3.099514961242676
+    ],
+    "old_pivot": [
+      -226.53382873535156,
+      -315.7047424316406,
+      0.0
+    ],
+    "bounds": [
+      [
+        -10.077143669128418,
+        -10.912897109985352,
+        -0.08028443157672882
+      ],
+      [
+        10.741278648376465,
+        11.531167984008789,
+        107.09134674072266
+      ]
+    ],
+    "triangles": 212,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_roll_of_canvas_02",
+    "parent_mesh": "WorkshopProps_Workshop_open_canvas_chest_05",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · roll of canvas 02",
+    "pivot": [
+      -219.02169799804688,
+      -316.84515380859375,
+      3.1119601726531982
+    ],
+    "old_pivot": [
+      -226.53382873535156,
+      -315.7047424316406,
+      0.0
+    ],
+    "bounds": [
+      [
+        -11.976447105407715,
+        -11.646143913269043,
+        -0.014394693076610565
+      ],
+      [
+        11.128820419311523,
+        12.605194091796875,
+        127.02452087402344
+      ]
+    ],
+    "triangles": 212,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_roll_of_canvas_03",
+    "parent_mesh": "WorkshopProps_Workshop_open_canvas_chest_05",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · roll of canvas 03",
+    "pivot": [
+      -215.65032958984375,
+      -299.0072326660156,
+      3.1195435523986816
+    ],
+    "old_pivot": [
+      -226.53382873535156,
+      -315.7047424316406,
+      0.0
+    ],
+    "bounds": [
+      [
+        -8.777280807495117,
+        -8.2988862991333,
+        -0.04122123494744301
+      ],
+      [
+        8.736555099487305,
+        8.661046028137207,
+        112.03448486328125
+      ]
+    ],
+    "triangles": 212,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_roll_of_canvas_04",
+    "parent_mesh": "WorkshopProps_Workshop_open_canvas_chest_05",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · roll of canvas 04",
+    "pivot": [
+      -241.34686279296875,
+      -315.96826171875,
+      2.7670342922210693
+    ],
+    "old_pivot": [
+      -226.53382873535156,
+      -315.7047424316406,
+      0.0
+    ],
+    "bounds": [
+      [
+        -12.09122085571289,
+        -14.904362678527832,
+        -0.5089235901832581
+      ],
+      [
+        11.084959030151367,
+        13.514880180358887,
+        84.86837005615234
+      ]
+    ],
+    "triangles": 212,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_kraft_offcut_01",
+    "parent_mesh": "WorkshopProps_Workshop_open_offcut_crate_06",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · kraft offcut 01",
+    "pivot": [
+      -286.52203369140625,
+      -311.3663330078125,
+      2.208791971206665
+    ],
+    "old_pivot": [
+      -290.41436767578125,
+      -292.44415283203125,
+      0.0
+    ],
+    "bounds": [
+      [
+        -12.214109420776367,
+        -9.76712417602539,
+        -0.20113936066627502
+      ],
+      [
+        12.764363288879395,
+        9.744653701782227,
+        60.20561218261719
+      ]
+    ],
+    "triangles": 120,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_kraft_offcut_02",
+    "parent_mesh": "WorkshopProps_Workshop_open_offcut_crate_06",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · kraft offcut 02",
+    "pivot": [
+      -280.14532470703125,
+      -296.7439880371094,
+      2.5882046222686768
+    ],
+    "old_pivot": [
+      -290.41436767578125,
+      -292.44415283203125,
+      0.0
+    ],
+    "bounds": [
+      [
+        -10.6827392578125,
+        -8.841052055358887,
+        -0.2084815800189972
+      ],
+      [
+        11.229629516601562,
+        8.71617317199707,
+        64.88801574707031
+      ]
+    ],
+    "triangles": 120,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_kraft_offcut_03",
+    "parent_mesh": "WorkshopProps_Workshop_open_offcut_crate_06",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · kraft offcut 03",
+    "pivot": [
+      -279.8174743652344,
+      -280.392578125,
+      2.3297266960144043
+    ],
+    "old_pivot": [
+      -290.41436767578125,
+      -292.44415283203125,
+      0.0
+    ],
+    "bounds": [
+      [
+        -11.51142406463623,
+        -9.763429641723633,
+        -0.01142183504998684
+      ],
+      [
+        11.944639205932617,
+        9.733660697937012,
+        53.460147857666016
+      ]
+    ],
+    "triangles": 120,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_kraft_offcut_04",
+    "parent_mesh": "WorkshopProps_Workshop_open_offcut_crate_06",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · kraft offcut 04",
+    "pivot": [
+      -300.784912109375,
+      -285.3953857421875,
+      2.9985101222991943
+    ],
+    "old_pivot": [
+      -290.41436767578125,
+      -292.44415283203125,
+      0.0
+    ],
+    "bounds": [
+      [
+        -7.619815826416016,
+        -7.358915328979492,
+        -0.010961534455418587
+      ],
+      [
+        8.09885311126709,
+        7.145979404449463,
+        46.4696044921875
+      ]
+    ],
+    "triangles": 120,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_WorkshopProps_Workshop_open_offcut_crate",
+    "parent_mesh": "WorkshopProps_Workshop_open_offcut_crate_06",
+    "atlas": "WorkshopProps",
+    "label": "Workshop · open offcut crate",
+    "pivot": [
+      -290.41436767578125,
+      -292.44415283203125,
+      0.0
+    ],
+    "old_pivot": [
+      -290.41436767578125,
+      -292.44415283203125,
+      0.0
+    ],
+    "bounds": [
+      [
+        -38.5941162109375,
+        -39.07079315185547,
+        -0.004839560016989708
+      ],
+      [
+        38.560672760009766,
+        39.10248565673828,
+        38.00498962402344
+      ]
+    ],
+    "triangles": 1308,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_01",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console fader 01",
+    "pivot": [
+      150.51039123535156,
+      442.3493347167969,
+      106.18456268310547
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -7.784034729003906,
+        -8.362154960632324,
+        -0.12759369611740112
+      ],
+      [
+        7.826432704925537,
+        8.424636840820312,
+        17.354127883911133
+      ]
+    ],
+    "triangles": 174,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_02",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console fader 02",
+    "pivot": [
+      155.35784912109375,
+      463.6708984375,
+      110.74505615234375
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -7.784019470214844,
+        -8.3621244430542,
+        -0.12760895490646362
+      ],
+      [
+        7.8264479637146,
+        8.424667358398438,
+        17.354127883911133
+      ]
+    ],
+    "triangles": 174,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_03",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console fader 03",
+    "pivot": [
+      154.3173828125,
+      481.8616943359375,
+      113.17732238769531
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -7.784095764160156,
+        -8.3621244430542,
+        -0.12760132551193237
+      ],
+      [
+        7.826371669769287,
+        8.424667358398438,
+        17.354127883911133
+      ]
+    ],
+    "triangles": 174,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_04",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console fader 04",
+    "pivot": [
+      134.7715301513672,
+      490.2129821777344,
+      108.92086029052734
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -7.784049987792969,
+        -8.3621244430542,
+        -0.12757843732833862
+      ],
+      [
+        7.826417446136475,
+        8.424667358398438,
+        17.354127883911133
+      ]
+    ],
+    "triangles": 174,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_05",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console fader 05",
+    "pivot": [
+      133.73095703125,
+      508.4037780761719,
+      111.3531265258789
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -7.784065246582031,
+        -8.36206340789795,
+        -0.12760132551193237
+      ],
+      [
+        7.826402187347412,
+        8.424728393554688,
+        17.354135513305664
+      ]
+    ],
+    "triangles": 174,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_06",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console fader 06",
+    "pivot": [
+      104.93243408203125,
+      511.8353271484375,
+      103.7522964477539
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -7.7840423583984375,
+        -8.36218547821045,
+        -0.12757843732833862
+      ],
+      [
+        7.826425075531006,
+        8.424606323242188,
+        17.354150772094727
+      ]
+    ],
+    "triangles": 174,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Console_fader_and_switch_face",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Console · fader and switch face",
+    "pivot": [
+      135.397216796875,
+      496.4490966796875,
+      97.9463119506836
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -70.50057220458984,
+        -80.55191040039062,
+        7.643587196071167e-06
+      ],
+      [
+        70.50064086914062,
+        80.55198669433594,
+        35.89706802368164
+      ]
+    ],
+    "triangles": 1088,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Cue_board_paper_notes_and_clips",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Cue board · paper notes and clips",
+    "pivot": [
+      186.35498046875,
+      534.949951171875,
+      164.72000122070312
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -36.74150085449219,
+        -65.42813873291016,
+        -0.017368381842970848
+      ],
+      [
+        36.770084381103516,
+        67.02335357666016,
+        93.06309509277344
+      ]
+    ],
+    "triangles": 860,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Lantern_assembly_01_002",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Lantern assembly 01 002",
+    "pivot": [
+      156.13369750976562,
+      567.104736328125,
+      272.5999755859375
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -15.48254108428955,
+        -15.23889446258545,
+        -0.004306640941649675
+      ],
+      [
+        15.48254108428955,
+        15.408230781555176,
+        40.832000732421875
+      ]
+    ],
+    "triangles": 500,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Rolled_scenery_plans_two_stackable_crates",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Rolled scenery plans · two stackable crates",
+    "pivot": [
+      177.8704071044922,
+      396.22412109375,
+      0.0
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -36.780609130859375,
+        -39.461788177490234,
+        -0.004839560016989708
+      ],
+      [
+        36.796321868896484,
+        39.479820251464844,
+        26.82453727722168
+      ]
+    ],
+    "triangles": 788,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Scroll_crate_removable_upper",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Scroll crate · removable upper",
+    "pivot": [
+      180.05592346191406,
+      400.63983154296875,
+      26.649999618530273
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -27.769641876220703,
+        -29.234731674194336,
+        -0.004839558620005846
+      ],
+      [
+        27.755050659179688,
+        29.21120834350586,
+        30.237998962402344
+      ]
+    ],
+    "triangles": 844,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Sound_copper_hook",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Sound copper hook",
+    "pivot": [
+      66.63827514648438,
+      607.246337890625,
+      179.0
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -11.186532020568848,
+        -12.321013450622559,
+        -2.384185791015625e-06
+      ],
+      [
+        11.186532020568848,
+        12.321013450622559,
+        6.000002384185791
+      ]
+    ],
+    "triangles": 44,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Sound_desk_rope_coil",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Sound desk rope coil",
+    "pivot": [
+      66.364013671875,
+      608.2120361328125,
+      79.0866928100586
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -22.922433853149414,
+        -21.251895904541016,
+        -1.8477439880371094e-06
+      ],
+      [
+        22.922435760498047,
+        21.251888275146484,
+        117.90547180175781
+      ]
+    ],
+    "triangles": 936,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Sound_desk_framed_cue_board",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Sound desk · framed cue board",
+    "pivot": [
+      194.98760986328125,
+      537.40966796875,
+      154.8599853515625
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -43.661190032958984,
+        -76.86585235595703,
+        0.0944039598107338
+      ],
+      [
+        43.66204071044922,
+        76.86748504638672,
+        128.17356872558594
+      ]
+    ],
+    "triangles": 1252,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Sound_desk_timber_housing",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Sound desk · timber housing",
+    "pivot": [
+      136.89508056640625,
+      496.723876953125,
+      0.0
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -79.14602661132812,
+        -88.29254150390625,
+        -0.012200419791042805
+      ],
+      [
+        78.64219665527344,
+        88.79898834228516,
+        135.6878662109375
+      ]
+    ],
+    "triangles": 2464,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Stool_SoundDesk",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Stool · SoundDesk",
+    "pivot": [
+      59.41477966308594,
+      453.42462158203125,
+      0.02273409813642502
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -24.09531593322754,
+        -23.968629837036133,
+        -0.011555721051990986
+      ],
+      [
+        24.090290069580078,
+        23.95680046081543,
+        61.37757110595703
+      ]
+    ],
+    "triangles": 1222,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Storage_rolled_scenery_plan_01",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Storage · rolled scenery plan 01",
+    "pivot": [
+      178.0834197998047,
+      388.1458740234375,
+      29.501388549804688
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -8.858817100524902,
+        -10.088142395019531,
+        -0.1957000494003296
+      ],
+      [
+        8.744287490844727,
+        11.17922592163086,
+        76.78376007080078
+      ]
+    ],
+    "triangles": 190,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Storage_rolled_scenery_plan_02",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Storage · rolled scenery plan 02",
+    "pivot": [
+      167.93910217285156,
+      407.1981506347656,
+      29.52820587158203
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -12.35672664642334,
+        -10.473014831542969,
+        -0.30342522263526917
+      ],
+      [
+        12.49873161315918,
+        9.814672470092773,
+        95.8204116821289
+      ]
+    ],
+    "triangles": 204,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Storage_rolled_scenery_plan_03",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Storage · rolled scenery plan 03",
+    "pivot": [
+      187.60829162597656,
+      405.3238220214844,
+      29.74357795715332
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -10.455636978149414,
+        -10.929454803466797,
+        -0.27074185013771057
+      ],
+      [
+        10.166983604431152,
+        9.656214714050293,
+        85.4850082397461
+      ]
+    ],
+    "triangles": 176,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Travel_case_SoundDesk_01",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Travel case · SoundDesk 01",
+    "pivot": [
+      126.62836456298828,
+      589.7620849609375,
+      0.0
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -36.667930603027344,
+        -35.155330657958984,
+        -0.004839560016989708
+      ],
+      [
+        36.30322265625,
+        35.492767333984375,
+        34.35000228881836
+      ]
+    ],
+    "triangles": 1342,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Travel_case_SoundDesk_02",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Travel case · SoundDesk 02",
+    "pivot": [
+      158.25721740722656,
+      596.056396484375,
+      0.0
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -35.21900177001953,
+        -34.171321868896484,
+        -0.004839560016989708
+      ],
+      [
+        34.854408264160156,
+        34.508636474609375,
+        34.35000228881836
+      ]
+    ],
+    "triangles": 1358,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Travel_case_SoundDesk_03",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Travel case · SoundDesk 03",
+    "pivot": [
+      178.9302978515625,
+      618.00244140625,
+      0.0
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -40.531532287597656,
+        -37.779537200927734,
+        -0.004839560016989708
+      ],
+      [
+        40.16693878173828,
+        38.116973876953125,
+        34.35000228881836
+      ]
+    ],
+    "triangles": 1342,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Travel_case_lid",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Travel case · lid",
+    "pivot": [
+      127.09874725341797,
+      589.913818359375,
+      29.119998931884766
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -36.47356414794922,
+        -35.72696304321289,
+        0.0
+      ],
+      [
+        36.510093688964844,
+        35.78177261352539,
+        9.029998779296875
+      ]
+    ],
+    "triangles": 272,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Travel_case_lid_001",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Travel case · lid.001",
+    "pivot": [
+      158.7276611328125,
+      596.2081909179688,
+      29.119998931884766
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -35.02461624145508,
+        -34.74281311035156,
+        0.0
+      ],
+      [
+        35.0612678527832,
+        34.79774475097656,
+        9.029998779296875
+      ]
+    ],
+    "triangles": 280,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_SoundDesk_Travel_case_lid_002",
+    "parent_mesh": "SoundDesk",
+    "atlas": "SoundDesk",
+    "label": "Travel case · lid.002",
+    "pivot": [
+      179.4007110595703,
+      618.1541748046875,
+      29.119998931884766
+    ],
+    "old_pivot": [
+      159,
+      493,
+      0
+    ],
+    "bounds": [
+      [
+        -40.337158203125,
+        -38.3511962890625,
+        0.0
+      ],
+      [
+        40.203651428222656,
+        38.08596420288086,
+        9.029998779296875
+      ]
+    ],
+    "triangles": 264,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Built_up_tan_scenery_flat",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Built-up tan scenery flat",
+    "pivot": [
+      -184.7343292236328,
+      344.0,
+      0.0
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -21.61932945251465,
+        -57.26224899291992,
+        0.0
+      ],
+      [
+        21.620407104492188,
+        57.26704788208008,
+        86.99535369873047
+      ]
+    ],
+    "triangles": 220,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Drum_tapered_rope_tension_shell",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Drum · tapered rope tension shell",
+    "pivot": [
+      -305.0,
+      503.0,
+      3.680000066757202
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -25.44894790649414,
+        -25.44894790649414,
+        -0.0031348189804702997
+      ],
+      [
+        25.44894790649414,
+        25.44894790649414,
+        37.235286712646484
+      ]
+    ],
+    "triangles": 1370,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Instrument_trunk_small_storage",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Instrument trunk · small storage",
+    "pivot": [
+      -223.51966857910156,
+      533.9871215820312,
+      3.6700000762939453
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -21.7320499420166,
+        -21.925703048706055,
+        -0.02650010772049427
+      ],
+      [
+        21.324172973632812,
+        22.321739196777344,
+        32.75
+      ]
+    ],
+    "triangles": 1560,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Instrument_trunk_upright",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Instrument trunk · upright",
+    "pivot": [
+      -212.54855346679688,
+      499.01513671875,
+      3.680000066757202
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -28.41504669189453,
+        -29.890626907348633,
+        -0.004839560016989708
+      ],
+      [
+        27.989042282104492,
+        30.14542579650879,
+        66.25
+      ]
+    ],
+    "triangles": 1414,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Lute_pear_body_and_fretted_neck",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Lute · pear body and fretted neck",
+    "pivot": [
+      -239.74432373046875,
+      487.6604919433594,
+      3.6999998092651367
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -22.524160385131836,
+        -25.50084686279297,
+        -5.987847328186035
+      ],
+      [
+        19.522476196289062,
+        28.095699310302734,
+        108.8008804321289
+      ]
+    ],
+    "triangles": 1826,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Music_rug_braided_oval",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Music rug · braided oval",
+    "pivot": [
+      -254.0,
+      422.0,
+      0.24399971961975098
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -116.03179931640625,
+        -151.29420471191406,
+        -1.4901161193847656e-08
+      ],
+      [
+        116.03179931640625,
+        151.29420471191406,
+        4.312000274658203
+      ]
+    ],
+    "triangles": 6056,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Music_stand_hinged_tray",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Music stand · hinged tray",
+    "pivot": [
+      -236.29806518554688,
+      373.58599853515625,
+      97.68000030517578
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -25.837142944335938,
+        -34.10679244995117,
+        -21.60805320739746
+      ],
+      [
+        22.134824752807617,
+        35.2139778137207,
+        20.41870880126953
+      ]
+    ],
+    "triangles": 1124,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Music_stand_open_score",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Music stand · open score",
+    "pivot": [
+      -237.462646484375,
+      372.923095703125,
+      3.7899999618530273
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -25.372861862182617,
+        -27.699146270751953,
+        0.0
+      ],
+      [
+        25.37289047241211,
+        17.488874435424805,
+        94.09000396728516
+      ]
+    ],
+    "triangles": 580,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Rose_garden_outer_return",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Rose garden outer return",
+    "pivot": [
+      -196.88046264648438,
+      543.4796752929688,
+      0.0
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -24.456850051879883,
+        -24.973636627197266,
+        0.0
+      ],
+      [
+        24.456096649169922,
+        25.148313522338867,
+        71.06861114501953
+      ]
+    ],
+    "triangles": 292,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Rose_garden_scenery_flat",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Rose garden scenery flat",
+    "pivot": [
+      -169.97918701171875,
+      474.1744079589844,
+      0.0
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -30.915386199951172,
+        -64.90925598144531,
+        0.0
+      ],
+      [
+        30.928359985351562,
+        65.00205993652344,
+        129.77896118164062
+      ]
+    ],
+    "triangles": 342,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Stool_MusicCorner",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Stool · MusicCorner",
+    "pivot": [
+      -272.0,
+      433.0,
+      3.680000066757202
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -33.34873962402344,
+        -32.74333190917969,
+        -0.011506556533277035
+      ],
+      [
+        33.02610778808594,
+        33.63151550292969,
+        59.254878997802734
+      ]
+    ],
+    "triangles": 1222,
+    "station_base": false,
+    "collision": "box"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Travel_case_lid_003",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Travel case · lid.003",
+    "pivot": [
+      -212.21116638183594,
+      499.0000305175781,
+      64.69999694824219
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -28.250045776367188,
+        -30.57741355895996,
+        0.0
+      ],
+      [
+        28.250038146972656,
+        30.57741355895996,
+        9.029998779296875
+      ]
+    ],
+    "triangles": 272,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_MusicCorner_Travel_case_lid_004",
+    "parent_mesh": "MusicCorner",
+    "atlas": "MusicCorner",
+    "label": "Travel case · lid.004",
+    "pivot": [
+      -223.0,
+      534.0,
+      31.190000534057617
+    ],
+    "old_pivot": [
+      -220,
+      439,
+      0
+    ],
+    "bounds": [
+      [
+        -21.461872100830078,
+        -22.616777420043945,
+        0.0
+      ],
+      [
+        21.461872100830078,
+        22.616777420043945,
+        9.029998779296875
+      ]
+    ],
+    "triangles": 324,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Fly_spot_01",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Fly spot · 01",
+    "pivot": [
+      283.056396484375,
+      -129.99388122558594,
+      335.10479736328125
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -32.97808837890625,
+        -23.926671981811523,
+        1.098279062716756e-05
+      ],
+      [
+        30.71975326538086,
+        24.576255798339844,
+        91.05793762207031
+      ]
+    ],
+    "triangles": 1136,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Fly_spot_02",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Fly spot · 02",
+    "pivot": [
+      283.056396484375,
+      -41.99388122558594,
+      331.7169189453125
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -32.97808837890625,
+        -23.92667579650879,
+        1.098279062716756e-05
+      ],
+      [
+        30.719783782958984,
+        24.576255798339844,
+        94.4277572631836
+      ]
+    ],
+    "triangles": 1136,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Fly_spot_03",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Fly spot · 03",
+    "pivot": [
+      282.3856506347656,
+      41.52131271362305,
+      334.7169189453125
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -32.307342529296875,
+        -25.04888153076172,
+        9.514687008049805e-06
+      ],
+      [
+        31.390472412109375,
+        23.897689819335938,
+        91.43722534179688
+      ]
+    ],
+    "triangles": 1136,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Fly_spot_04",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Fly spot · 04",
+    "pivot": [
+      282.3856506347656,
+      129.5213165283203,
+      332.10479736328125
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -32.307342529296875,
+        -25.04888153076172,
+        4.00322642235551e-05
+      ],
+      [
+        31.3905029296875,
+        23.897689819335938,
+        94.04803466796875
+      ]
+    ],
+    "triangles": 1136,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Left_coiled_hemp",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Left coiled hemp",
+    "pivot": [
+      237.97703552246094,
+      -581.0,
+      125.7486801147461
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -3.9218719005584717,
+        -27.06529426574707,
+        -3.7103891372680664e-06
+      ],
+      [
+        3.9218811988830566,
+        27.06529426574707,
+        92.50264739990234
+      ]
+    ],
+    "triangles": 936,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Pulley_assembly_01",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Pulley assembly 01",
+    "pivot": [
+      362.7734375,
+      466.0,
+      277.9255676269531
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -67.92273712158203,
+        -17.078996658325195,
+        -5.234032869338989e-07
+      ],
+      [
+        67.92269897460938,
+        17.078996658325195,
+        186.9600067138672
+      ]
+    ],
+    "triangles": 1700,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Pulley_assembly_02",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Pulley assembly 02",
+    "pivot": [
+      425.77008056640625,
+      300.0,
+      277.9255676269531
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -35.422733306884766,
+        -17.078996658325195,
+        -5.234032869338989e-07
+      ],
+      [
+        35.422698974609375,
+        17.078996658325195,
+        186.94459533691406
+      ]
+    ],
+    "triangles": 1700,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Pulley_assembly_03",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Pulley assembly 03",
+    "pivot": [
+      425.77008056640625,
+      -300.0,
+      277.9255676269531
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -35.422733306884766,
+        -17.078996658325195,
+        -5.234032869338989e-07
+      ],
+      [
+        35.422698974609375,
+        17.078996658325195,
+        186.94459533691406
+      ]
+    ],
+    "triangles": 1700,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Pulley_assembly_04",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Pulley assembly 04",
+    "pivot": [
+      363.80535888671875,
+      -461.0,
+      277.9255676269531
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -67.92273712158203,
+        -17.078996658325195,
+        -5.234032869338989e-07
+      ],
+      [
+        67.92269897460938,
+        17.078996658325195,
+        186.9600067138672
+      ]
+    ],
+    "triangles": 1700,
+    "station_base": false,
+    "collision": "none"
+  },
+  {
+    "asset": "SM_Hub_FlyRig_Right_coiled_hemp",
+    "parent_mesh": "FlyRig",
+    "atlas": "FlyRig",
+    "label": "Right coiled hemp",
+    "pivot": [
+      237.74057006835938,
+      582.0,
+      125.7486801147461
+    ],
+    "old_pivot": [
+      442,
+      0,
+      355
+    ],
+    "bounds": [
+      [
+        -3.9218719005584717,
+        -27.06529426574707,
+        -3.7103891372680664e-06
+      ],
+      [
+        3.9218811988830566,
+        27.06529426574707,
+        92.50264739990234
+      ]
+    ],
+    "triangles": 936,
+    "station_base": false,
+    "collision": "none"
+  }
+]

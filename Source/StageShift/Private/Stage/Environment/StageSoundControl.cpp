@@ -205,7 +205,7 @@ void AStageSoundControl::SetSelectorFocused(bool bFocused)
 
 void AStageSoundControl::CycleSound(int32 Direction)
 {
-	if (SoundOptions.Num() <= 1 || Direction == 0) return;
+	if (!CanCycleSound() || Direction == 0) return;
 	SelectedSoundIndex = (SelectedSoundIndex + FMath::Sign(Direction) + SoundOptions.Num()) % SoundOptions.Num();
 	const int32 BoneIndex = ControlVisual->GetBoneIndex(SelectorBone);
 	if (BoneIndex != INDEX_NONE)

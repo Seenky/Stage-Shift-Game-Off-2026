@@ -1,0 +1,66 @@
+{
+  "PlankFloor": [
+    "QuietTimber",
+    "BrushGrain"
+  ],
+  "EntrySteps": [
+    "HoneyPaper",
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners"
+  ],
+  "SelectionStand": [
+    "HoneyPaper",
+    "KraftCut",
+    "FlutedPaper",
+    "ToastedPaper"
+  ],
+  "SelectorHardware": [
+    "PanelKraft",
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners",
+    "ToastedPaper"
+  ],
+  "ScenicGreens": [
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners"
+  ],
+  "Wardrobe": [
+    "QuietTimber",
+    "BrushGrain",
+    "HoneyPaper",
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners"
+  ],
+  "DressingCorner": [
+    "HoneyPaper",
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners"
+  ],
+  "CraftBench": [
+    "HoneyPaper",
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners"
+  ],
+  "SoundDesk": [
+    "HoneyPaper"
+  ],
+  "MusicCorner": [
+    "KraftCut",
+    "FlutedPaper",
+    "PaperLiners"
+  ],
+  "CompanyRug": [
+    "RugGround",
+    "RugBorderStitches",
+    "RugFineWeave",
+    "GoldApplique",
+    "MaskStitches",
+    "PlumApplique"
+  ]
+}

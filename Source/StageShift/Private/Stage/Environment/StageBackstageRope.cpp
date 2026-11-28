@@ -13,7 +13,6 @@
 #include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Materials/MaterialInterface.h"
 #include "Physics/PhysicsManipulationComponent.h"
 #include "UI/StageCueWidget.h"
 #include "UObject/ConstructorHelpers.h"
@@ -24,6 +23,7 @@ namespace
 	constexpr float TravelHeight = 1800.0f;
 	constexpr float DropHeight = 1300.0f;
 	constexpr float LandingOffset = 55.0f;
+	constexpr float RopeSectionLength = 100.0f;
 	constexpr float PullEnd = 0.38f;
 	constexpr float TravelSpeedScale = 1.15f;
 	constexpr float LiftEnd = PullEnd + 0.57f / TravelSpeedScale;
@@ -54,21 +54,17 @@ AStageBackstageRope::AStageBackstageRope()
 	UseTarget->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	UseTarget->SetCanEverAffectNavigation(false);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Linen(
-	    TEXT("/Game/LVL/Game/CrimeAndPunishment/Theatre/Materials/Fabric/MI_CP_Linen_Pillow.MI_CP_Linen_Pillow"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Wood(
-	    TEXT("/Game/LVL/Game/CrimeAndPunishment/Blocking/Materials/MI_CAP_Wood.MI_CAP_Wood"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RopeMesh(
+	    TEXT("/Game/MODELS/Environment/Rigging/SM_TheatreRope_Segment.SM_TheatreRope_Segment"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> GripMesh(
+	    TEXT("/Game/MODELS/Environment/Rigging/SM_TheatreRope_Grip.SM_TheatreRope_Grip"));
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MechanismIcon(
 	    TEXT("/Game/DEV/UI/StageSignals/Icons/T_Cue_Mechanism.T_Cue_Mechanism"));
 	Icon = MechanismIcon.Object;
 
 	Grip = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Grip"));
 	Grip->SetupAttachment(GetRootComponent());
-	Grip->SetStaticMesh(Sphere.Object);
-	Grip->SetMaterial(0, Wood.Object);
-	Grip->SetRelativeScale3D(FVector(0.18, 0.18, 0.31));
+	Grip->SetStaticMesh(GripMesh.Object);
 	Grip->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Grip->SetCanEverAffectNavigation(false);
 
@@ -76,8 +72,7 @@ AStageBackstageRope::AStageBackstageRope()
 	{
 		auto* Section = CreateDefaultSubobject<UStaticMeshComponent>(*FString::Printf(TEXT("RopeSection%d"), Index + 1));
 		Section->SetupAttachment(GetRootComponent());
-		Section->SetStaticMesh(Cylinder.Object);
-		Section->SetMaterial(0, Linen.Object);
+		Section->SetStaticMesh(RopeMesh.Object);
 		Section->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Section->SetCanEverAffectNavigation(false);
 		RopeSections.Add(Section);
@@ -195,14 +190,15 @@ void AStageBackstageRope::SetGripOffset(const FVector& Offset)
 	const FVector Bottom = GetActorLocation() + FVector::UpVector * GripHeight + Offset;
 	Grip->SetWorldLocation(Bottom);
 	const FVector Bow(Offset.X * 0.46, Offset.Y * 0.46, 0.0);
+	const FVector RopeSide = GetActorForwardVector();
 	FVector Start = Top;
 	for (int32 Index = 0; Index < RopeSections.Num(); ++Index)
 	{
 		const double Alpha = static_cast<double>(Index + 1) / RopeSections.Num();
 		const FVector End = FMath::Lerp(Top, Bottom, Alpha) + Bow * FMath::Sin(UE_DOUBLE_PI * Alpha);
 		const FVector Segment = End - Start;
-		RopeSections[Index]->SetWorldLocationAndRotation((Start + End) * 0.5, FRotationMatrix::MakeFromZ(Segment).Rotator());
-		RopeSections[Index]->SetWorldScale3D(FVector(0.075, 0.075, (Segment.Size() + 1) / 100.0));
+		RopeSections[Index]->SetWorldLocationAndRotation((Start + End) * 0.5, FRotationMatrix::MakeFromZX(Segment, RopeSide).Rotator());
+		RopeSections[Index]->SetWorldScale3D(FVector(1.0, 1.0, (Segment.Size() + 1) / RopeSectionLength));
 		Start = End;
 	}
 }

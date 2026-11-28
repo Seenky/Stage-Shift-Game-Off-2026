@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UI/MenuOverlayWidget.h"
+#include "UI/MenuPanel.h"
 #include "UI/UIClickEventBase.h"
 #include "ClickMenuOverlayEvent.generated.h"
 

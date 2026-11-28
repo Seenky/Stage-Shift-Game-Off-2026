@@ -95,3 +95,7 @@ Before considering any Material or Material Function complete:
 - Validate that the Material compiles and retains its intended behavior.
 
 **Important:** These requirements apply continuously throughout material creation and modification. Do not postpone graph organization until the end. Every newly created section must already follow these conventions.
+
+## Визуальные задачи Stage Shift
+
+Для моделинга, UV, текстур, материалов, риггинга, анимации, окружения, света, UI и VFX обязательно применяй навык `visual-quality-control`. Начинай с [художественного руководства](Docs/ArtDirection.md) и [библиотеки Painter](Models/Materials/Painter/Library.json). Геометрия готовится в Blender, финальные PBR-текстуры авторятся в Substance Painter, материалы и кадры проверяются в Unreal.

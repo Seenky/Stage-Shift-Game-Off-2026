@@ -19,7 +19,9 @@
 #include "Components/Interaction/ThrowAimComponent.h"
 #include "Components/Interaction/InteractionOutlineComponent.h"
 #include "Stage/Environment/StageBackstageShortcut.h"
+#include "Stage/Environment/StageSelectionStation.h"
 #include "Stage/Environment/StageSoundControl.h"
+#include "UI/StageInteractionHintWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -74,6 +76,7 @@ void APlayerCharacter::BeginPlay()
 
 void APlayerCharacter::UnPossessed()
 {
+	RemoveInteractionHint();
 	SetNearbyShortcut(nullptr);
 	PreviousDiveHeadLocation.Reset();
 	bTraversedShortcutDuringDive = false;
@@ -85,6 +88,12 @@ void APlayerCharacter::UnPossessed()
 	ThrowAimComponent->StopAiming();
 	Super::UnPossessed();
 	OnInteractionCandidateChanged(nullptr);
+}
+
+void APlayerCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+	RemoveInteractionHint();
+	Super::EndPlay(EndPlayReason);
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -188,11 +197,38 @@ void APlayerCharacter::OnCycleStageSound(const FInputActionValue& Value)
 void APlayerCharacter::OnInteractionCandidateChanged(AActor* Candidate)
 {
 	auto* Console = IsLocallyControlled() ? Cast<AStageSoundControl>(Candidate) : nullptr;
+	UpdateInteractionHint(IsValid(Candidate) && Candidate->IsA<AStageSelectionStation>(), Console && Console->CanCycleSound());
 	if (Console == FocusedSoundControl.Get()) return;
 	if (auto* Previous = FocusedSoundControl.Get()) Previous->SetSelectorFocused(false);
 	FocusedSoundControl = Console;
 	bSoundStickHeld = false;
 	if (Console) Console->SetSelectorFocused(true);
+}
+
+void APlayerCharacter::UpdateInteractionHint(bool bStageSelection, bool bSoundSelection)
+{
+	auto* Player = Cast<APlayerController>(GetController());
+	if ((!bStageSelection && !bSoundSelection) || !Player || !Player->IsLocalController())
+	{
+		if (InteractionHint) InteractionHint->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+	if (!InteractionHint)
+	{
+		const auto HintClass = GetClass()->GetDefaultObject<APlayerCharacter>()->InteractionHintClass;
+		if (!HintClass) return;
+		InteractionHint = CreateWidget<UStageInteractionHintWidget>(Player, HintClass);
+		if (InteractionHint && !InteractionHint->AddToPlayerScreen())
+			InteractionHint = nullptr;
+	}
+	if (InteractionHint) InteractionHint->Present(bSoundSelection);
+}
+
+void APlayerCharacter::RemoveInteractionHint()
+{
+	if (!InteractionHint) return;
+	InteractionHint->RemoveFromParent();
+	InteractionHint = nullptr;
 }
 
 void APlayerCharacter::OnJumpInput(const FInputActionInstance& Instance)

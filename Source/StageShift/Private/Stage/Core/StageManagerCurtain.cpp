@@ -242,7 +242,7 @@ void AStageManager::FinishCurtainCastMoves(bool bEntering)
 		{
 			CurtainPhase = ECurtainPhase::Briefing;
 			FText Error;
-			if (!QueueSceneBriefing(Scenario->SceneBriefing, Error)) FinishProduction(false, Error);
+			if (!QueueSceneBriefing(Scenario->SceneBriefing, Error, Scenario)) FinishProduction(false, Error);
 		}
 		else BeginCurtainOpening(false);
 		return;

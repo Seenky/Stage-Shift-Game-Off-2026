@@ -16,6 +16,7 @@ class UThrowAimComponent;
 class UInteractionOutlineComponent;
 class AStageBackstageShortcut;
 class AStageSoundControl;
+class UStageInteractionHintWidget;
 
 UCLASS()
 
@@ -28,6 +29,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 	virtual void UnPossessed() override;
 
 	virtual void Tick(float DeltaSeconds) override;
@@ -53,6 +55,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> SprintInputAction = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UStageInteractionHintWidget> InteractionHintClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UInteractionComponent> InteractionComponent = nullptr;
@@ -94,6 +99,8 @@ private:
 	void OnCameraInput(const FInputActionInstance& Instance);
 	void OnCycleStageSound(const FInputActionValue& Value);
 	void OnInteractionCandidateChanged(AActor* Candidate);
+	void UpdateInteractionHint(bool bStageSelection, bool bSoundSelection);
+	void RemoveInteractionHint();
 
 	UFUNCTION()
 	void OnJumpInput(const FInputActionInstance& Instance);
@@ -110,5 +117,8 @@ private:
 	TOptional<FVector> PreviousDiveHeadLocation;
 	bool bTraversedShortcutDuringDive = false;
 	TWeakObjectPtr<AStageSoundControl> FocusedSoundControl;
+	UPROPERTY(Transient)
+	TObjectPtr<UStageInteractionHintWidget> InteractionHint;
+
 	bool bSoundStickHeld = false;
 };
